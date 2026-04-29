@@ -587,6 +587,93 @@
     <div id="sr-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
   </div>
 
+  <!-- ==================== FALLBACK: Pure HTML button handlers (works even if modules crash) ==================== -->
+  <script>
+  (function() {
+    'use strict';
+
+    // Immediately hide the loading overlay so the user can interact
+    var overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.classList.add('hidden');
+
+    // Wire landing screen buttons as soon as DOM is ready
+    function wireButtons() {
+      var btnPlay = document.getElementById('btn-play');
+      var screenLanding = document.getElementById('screen-landing');
+      var screenChar = document.getElementById('screen-charselect');
+      var screenGame = document.getElementById('screen-game');
+
+      if (btnPlay && screenLanding && screenChar) {
+        btnPlay.addEventListener('click', function() {
+          console.log('[Fallback] Enter World clicked');
+          screenLanding.classList.remove('active');
+          screenChar.classList.add('active');
+        });
+      }
+
+      var btnGuest = document.getElementById('btn-guest');
+      if (btnGuest && screenLanding && screenChar) {
+        btnGuest.addEventListener('click', function() {
+          console.log('[Fallback] Play as Guest clicked');
+          screenLanding.classList.remove('active');
+          screenChar.classList.add('active');
+        });
+      }
+
+      var btnBack = document.getElementById('btn-back');
+      if (btnBack && screenLanding && screenChar) {
+        btnBack.addEventListener('click', function() {
+          console.log('[Fallback] Back clicked');
+          screenChar.classList.remove('active');
+          screenLanding.classList.add('active');
+        });
+      }
+
+      var btnContinue = document.getElementById('btn-continue');
+      if (btnContinue && screenChar && screenGame) {
+        btnContinue.addEventListener('click', function() {
+          console.log('[Fallback] Continue clicked');
+          var nameInput = document.getElementById('char-name-input');
+          if (nameInput && nameInput.value.trim()) {
+            // If the module-loaded game exists, save the name
+            if (window.StarlightInn && window.StarlightInn.state) {
+              window.StarlightInn.state.player.name = nameInput.value.trim();
+            }
+          }
+          screenChar.classList.remove('active');
+          screenGame.classList.add('active');
+        });
+      }
+
+      var btnSettings = document.getElementById('btn-settings');
+      if (btnSettings) {
+        btnSettings.addEventListener('click', function() {
+          var panel = document.getElementById('settings-panel');
+          if (panel) panel.classList.add('active');
+        });
+      }
+
+      var settingsPanel = document.getElementById('settings-panel');
+      if (settingsPanel) {
+        var closeBtn = settingsPanel.querySelector('.panel-close');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', function() {
+            settingsPanel.classList.remove('active');
+          });
+        }
+      }
+
+      console.log('[Fallback] Landing & char-select buttons wired');
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', wireButtons);
+    } else {
+      wireButtons();
+    }
+  })();
+  </script>
+
   <!-- ==================== MODULE ENTRY ==================== -->
   <script type="module" src="js/main.js"></script>
 </body>
