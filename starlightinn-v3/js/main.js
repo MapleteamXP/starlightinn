@@ -423,6 +423,14 @@ window.addEventListener('offline', () => {
 function boot() {
   try {
     initializeGame();
+
+    // Hide loading overlay once game is ready
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+      overlay.classList.add('hidden');
+    }
+
+    // Post-init: set up service worker for offline support (if supported)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => { /* navigator.serviceWorker.register('/sw.js'); */ });
     }
@@ -434,6 +442,8 @@ function boot() {
       const sub = overlay.querySelector('.loading-subtext');
       if (text) text.textContent = 'Something went wrong ✨';
       if (sub) sub.textContent = 'Please refresh the page to try again';
+      // Hide overlay so user can still interact with landing screen
+      overlay.classList.add('hidden');
     }
   }
 }

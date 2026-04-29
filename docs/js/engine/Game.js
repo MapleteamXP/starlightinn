@@ -121,7 +121,7 @@ export class Game {
     }
 
     // Wire modules
-    Object.assign(this, modules);
+    Object.assign(this, modules || {});
 
     this.resize();
     window.addEventListener('resize', this.resize);
