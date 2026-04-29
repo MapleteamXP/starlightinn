@@ -528,18 +528,12 @@ export class Renderer {
     /** @type {CanvasFallbackRenderer|null} */
     this.canvasRenderer = null;
 
-    try {
-      this.webgl = new WebGLRenderer(game.canvas);
-      this.webgl.init();
-      this.webgl.updateProjection(this.W, this.H);
-      this.useWebGL = true;
-      console.log('[Renderer] WebGL 2D renderer initialized successfully.');
-    } catch (e) {
-      console.warn('[Renderer] WebGL unavailable, falling back to Canvas 2D:', e.message);
-      this.canvasRenderer = new CanvasFallbackRenderer(game.canvas);
-      this.canvasRenderer.setGame(game);
-      this.useWebGL = false;
-    }
+    // NOTE: WebGL disabled by default — too many compatibility issues.
+    // Always use Canvas 2D for reliable cross-browser rendering.
+    this.canvasRenderer = new CanvasFallbackRenderer(game.canvas);
+    this.canvasRenderer.setGame(game);
+    this.useWebGL = false;
+    console.log('[Renderer] Canvas 2D renderer initialized (WebGL disabled).');
 
     // Animation phase
     this.envPhase = 0;

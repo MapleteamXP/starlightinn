@@ -635,13 +635,23 @@
           console.log('[Fallback] Continue clicked');
           var nameInput = document.getElementById('char-name-input');
           if (nameInput && nameInput.value.trim()) {
-            // If the module-loaded game exists, save the name
             if (window.StarlightInn && window.StarlightInn.state) {
               window.StarlightInn.state.player.name = nameInput.value.trim();
             }
           }
           screenChar.classList.remove('active');
           screenGame.classList.add('active');
+
+          // ── CRITICAL: try to start the game loop if the module loaded ──
+          if (window.StarlightInn) {
+            try {
+              window.StarlightInn.setScreen('game');
+              window.StarlightInn.start();
+              console.log('[Fallback] Game loop started via StarlightInn');
+            } catch (e) {
+              console.warn('[Fallback] Could not start game loop:', e);
+            }
+          }
         });
       }
 
