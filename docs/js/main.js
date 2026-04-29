@@ -509,6 +509,70 @@ function boot() {
       overlay.classList.add('hidden');
     }
 
+    // ── Wire landing screen button handlers (mouse / touch) ──
+    const btnPlay = document.getElementById('btn-play');
+    if (btnPlay) {
+      btnPlay.addEventListener('click', () => {
+        console.log('[UI] Enter World clicked');
+        game.setScreen('charselect');
+      });
+    }
+
+    const btnGuest = document.getElementById('btn-guest');
+    if (btnGuest) {
+      btnGuest.addEventListener('click', () => {
+        console.log('[UI] Play as Guest clicked');
+        game.state.player.name = 'Guest_' + Math.floor(Math.random() * 1000);
+        game.setScreen('charselect');
+      });
+    }
+
+    const btnSettings = document.getElementById('btn-settings');
+    if (btnSettings) {
+      btnSettings.addEventListener('click', () => {
+        console.log('[UI] Settings clicked');
+        const panel = document.getElementById('settings-panel');
+        if (panel) panel.classList.add('active');
+      });
+    }
+
+    const btnAbout = document.getElementById('btn-about');
+    if (btnAbout) {
+      btnAbout.addEventListener('click', () => {
+        alert('Starlight Inn v3.5\nA cozy-core social virtual world.\nGather, explore, and play together under the stars. 🌟');
+      });
+    }
+
+    // ── Wire character select screen handlers ──
+    const btnBack = document.getElementById('btn-back');
+    if (btnBack) {
+      btnBack.addEventListener('click', () => {
+        console.log('[UI] Back clicked');
+        game.setScreen('landing');
+      });
+    }
+
+    const btnContinue = document.getElementById('btn-continue');
+    if (btnContinue) {
+      btnContinue.addEventListener('click', () => {
+        console.log('[UI] Continue clicked');
+        const nameInput = document.getElementById('char-name-input');
+        if (nameInput && nameInput.value.trim()) {
+          game.state.player.name = nameInput.value.trim();
+        }
+        game.setScreen('game');
+        game.start();
+      });
+    }
+
+    const btnRandom = document.getElementById('btn-randomize');
+    if (btnRandom && game.customizer) {
+      btnRandom.addEventListener('click', () => {
+        console.log('[UI] Randomize clicked');
+        game.customizer.randomize();
+      });
+    }
+
     // Post-init: set up service worker for offline support (if supported)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
