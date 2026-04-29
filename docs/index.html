@@ -1,936 +1,593 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Starlight Inn ✨</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=VT323&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg-deep: #1a1428; --bg-panel: #2a2040; --bg-panel-light: #3a3060;
-  --accent-gold: #ffd700; --accent-warm: #ff9f5e; --accent-cozy: #c78d6e;
-  --accent-mint: #7dd3c0; --accent-lavender: #b8a9d9;
-  --text-main: #f0e6ff; --text-muted: #a090c0;
-  --rare: #4fc3f7; --vrare: #ba68c8; --aunique: #ff8a65; --unique: #ffd54f; --ltd: #ff5252;
-  --pixel: 'VT323', monospace; --body: 'Nunito', sans-serif;
-}
-* { margin:0; padding:0; box-sizing:border-box; image-rendering: pixelated; }
-html, body { width:100%; height:100%; background: var(--bg-deep); color: var(--text-main); font-family: var(--body); overflow: hidden; touch-action: none; }
-
-/* LANDING */
-#landing { position: fixed; inset:0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  background: linear-gradient(180deg, #1a1428 0%, #2a1a40 40%, #3a2a50 100%); z-index: 1000;
-  transition: opacity 0.8s ease, transform 0.8s ease; }
-#landing.hidden { opacity:0; pointer-events:none; transform: scale(1.05); }
-.landing-stars { position: absolute; inset:0; overflow: hidden; }
-.star { position: absolute; width: 3px; height: 3px; background: white; border-radius: 50%; animation: twinkle 2s infinite ease-in-out alternate; }
-@keyframes twinkle { 0%{opacity:0.3; transform:scale(1);} 100%{opacity:1; transform:scale(1.5);} }
-.landing-logo { font-family: var(--pixel); font-size: clamp(2rem, 6vw, 4rem); color: var(--accent-gold);
-  text-shadow: 0 0 20px rgba(255,215,0,0.4), 0 4px 0 #8b6914; letter-spacing: 0.1em; margin-bottom: 0.5rem; z-index: 2; }
-.landing-sub { font-size: clamp(0.8rem, 2vw, 1.1rem); color: var(--text-muted); margin-bottom: 2rem; z-index: 2; letter-spacing: 0.05em; }
-.landing-card { background: var(--bg-panel); border: 2px solid var(--bg-panel-light); border-radius: 16px;
-  padding: 2rem; max-width: 420px; width: 90%; z-index: 2; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
-.landing-card h2 { font-family: var(--pixel); font-size: 1.5rem; color: var(--accent-warm); margin-bottom: 1rem; text-align: center; }
-.landing-input { width: 100%; padding: 0.75rem 1rem; border-radius: 10px; border: 2px solid var(--bg-panel-light);
-  background: var(--bg-deep); color: var(--text-main); font-family: var(--body); font-size: 1rem;
-  margin-bottom: 1rem; outline: none; transition: border-color 0.2s; }
-.landing-input:focus { border-color: var(--accent-gold); }
-.btn { display: inline-block; padding: 0.75rem 1.5rem; border-radius: 12px; border: none;
-  font-family: var(--body); font-weight: 800; font-size: 1rem; cursor: pointer; transition: all 0.2s; text-align: center; }
-.btn-primary { background: linear-gradient(135deg, var(--accent-gold), var(--accent-warm)); color: #2a1a00;
-  width: 100%; box-shadow: 0 4px 15px rgba(255,159,94,0.3); }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,159,94,0.4); }
-.btn-secondary { background: var(--bg-panel-light); color: var(--text-main); border: 2px solid var(--accent-lavender); }
-.btn-secondary:hover { background: var(--accent-lavender); color: var(--bg-deep); }
-.landing-footer { margin-top: 2rem; font-size: 0.75rem; color: var(--text-muted); z-index: 2; text-align: center; }
-
-/* GAME */
-#game-container { position: fixed; inset:0; display: none; }
-#game-container.active { display: block; }
-#game-canvas { position: absolute; inset:0; width: 100%; height: 100%; cursor: crosshair; }
-
-.ui-panel { position: absolute; background: rgba(26, 20, 40, 0.92); border: 2px solid var(--bg-panel-light);
-  border-radius: 12px; padding: 0.75rem; backdrop-filter: blur(8px); z-index: 100; }
-.ui-topbar { top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; align-items: center;
-  padding: 0.5rem 1rem; height: 52px; }
-.ui-topbar .player-info { display: flex; align-items: center; gap: 0.75rem; }
-.ui-topbar .avatar-mini { width: 36px; height: 36px; border-radius: 8px; border: 2px solid var(--accent-gold); background: var(--bg-panel); image-rendering: pixelated; }
-.ui-topbar .player-name { font-family: var(--pixel); font-size: 1.1rem; color: var(--accent-gold); }
-.ui-topbar .player-badges { display: flex; gap: 0.25rem; }
-.badge { font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700; font-family: var(--pixel); }
-.badge-rare { background: var(--rare); color: #001; } .badge-vrare { background: var(--vrare); color: #fff; }
-.badge-aunique { background: var(--aunique); color: #001; } .badge-unique { background: var(--unique); color: #001; }
-.badge-ltd { background: var(--ltd); color: #fff; }
-.ui-topbar .actions { display: flex; gap: 0.5rem; }
-.ui-btn { width: 38px; height: 38px; border-radius: 10px; border: 2px solid var(--bg-panel-light); background: var(--bg-panel);
-  color: var(--text-main); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-.ui-btn:hover { border-color: var(--accent-gold); background: var(--bg-panel-light); }
-.ui-btn.active { border-color: var(--accent-mint); background: rgba(125,211,192,0.15); }
-
-.ui-dock { bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 0.5rem; padding: 0.5rem; }
-.dock-btn { min-width: 64px; padding: 0.4rem 0.6rem; border-radius: 10px; border: 2px solid var(--bg-panel-light);
-  background: var(--bg-panel); color: var(--text-main); font-family: var(--pixel); font-size: 0.85rem;
-  cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; transition: all 0.2s; }
-.dock-btn .icon { font-size: 1.3rem; }
-.dock-btn:hover, .dock-btn.active { border-color: var(--accent-gold); background: var(--bg-panel-light); transform: translateY(-3px); }
-
-#chat-panel { bottom: 80px; left: 10px; width: 320px; max-height: 240px; display: flex; flex-direction: column; gap: 0.5rem; }
-#chat-messages { flex: 1; overflow-y: auto; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.3rem; max-height: 180px; }
-.chat-msg { padding: 0.3rem 0.5rem; border-radius: 6px; background: rgba(58,48,96,0.5); }
-.chat-msg .chat-name { font-family: var(--pixel); color: var(--accent-warm); font-weight: 700; }
-.chat-msg .chat-text { color: var(--text-main); }
-.chat-msg.system { background: rgba(255,215,0,0.1); } .chat-msg.system .chat-name { color: var(--accent-gold); }
-#chat-input-row { display: flex; gap: 0.4rem; }
-#chat-input { flex: 1; padding: 0.4rem 0.6rem; border-radius: 8px; border: 2px solid var(--bg-panel-light);
-  background: var(--bg-deep); color: var(--text-main); font-family: var(--body); outline: none; }
-#chat-input:focus { border-color: var(--accent-mint); }
-
-#trade-window { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 520px;
-  max-height: 80vh; display: none; flex-direction: column; z-index: 200; }
-#trade-window.active { display: flex; }
-.trade-header { display: flex; justify-content: space-between; align-items: center;
-  padding-bottom: 0.5rem; border-bottom: 2px solid var(--bg-panel-light); }
-.trade-header h3 { font-family: var(--pixel); font-size: 1.2rem; color: var(--accent-gold); }
-.trade-columns { display: flex; gap: 1rem; padding: 1rem 0; }
-.trade-column { flex: 1; background: var(--bg-deep); border-radius: 10px; padding: 0.75rem; min-height: 200px; }
-.trade-column h4 { font-family: var(--pixel); font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem; }
-.trade-slot { width: 56px; height: 56px; border-radius: 8px; border: 2px dashed var(--bg-panel-light);
-  background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer;
-  font-size: 1.5rem; position: relative; transition: all 0.2s; }
-.trade-slot:hover { border-color: var(--accent-gold); } .trade-slot.filled { border-style: solid; }
-.trade-slot.rare { border-color: var(--rare); box-shadow: 0 0 8px var(--rare); }
-.trade-slot.vrare { border-color: var(--vrare); box-shadow: 0 0 8px var(--vrare); }
-.trade-slot.aunique { border-color: var(--aunique); box-shadow: 0 0 10px var(--aunique); }
-.trade-slot.unique { border-color: var(--unique); box-shadow: 0 0 12px var(--unique); }
-.trade-slot.ltd { border-color: var(--ltd); box-shadow: 0 0 14px var(--ltd); animation: ltdPulse 1.5s infinite; }
-@keyframes ltdPulse { 0%,100%{box-shadow:0 0 10px var(--ltd);} 50%{box-shadow:0 0 20px var(--ltd);} }
-.trade-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; }
-.trade-actions { display: flex; gap: 0.5rem; justify-content: center; padding-top: 0.5rem; }
-
-#inventory-panel { top: 70px; right: 10px; width: 240px; display: none; flex-direction: column; max-height: 70vh; }
-#inventory-panel.active { display: flex; }
-.inv-header { font-family: var(--pixel); font-size: 1rem; color: var(--accent-gold);
-  padding-bottom: 0.5rem; border-bottom: 2px solid var(--bg-panel-light); display: flex; justify-content: space-between; }
-.inv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; padding-top: 0.5rem; }
-.inv-item { width: 48px; height: 48px; border-radius: 8px; border: 2px solid var(--bg-panel-light); background: var(--bg-deep);
-  display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.3rem;
-  position: relative; transition: all 0.15s; }
-.inv-item:hover { transform: scale(1.1); z-index: 10; }
-.inv-item.rare { border-color: var(--rare); } .inv-item.vrare { border-color: var(--vrare); }
-.inv-item.aunique { border-color: var(--aunique); } .inv-item.unique { border-color: var(--unique); }
-.inv-item.ltd { border-color: var(--ltd); animation: ltdPulse 2s infinite; }
-
-#area-selector { top: 70px; left: 10px; width: 200px; display: none; flex-direction: column; }
-#area-selector.active { display: flex; }
-.area-list { display: flex; flex-direction: column; gap: 0.3rem; padding-top: 0.5rem; }
-.area-btn { padding: 0.5rem 0.75rem; border-radius: 8px; border: 2px solid var(--bg-panel-light); background: var(--bg-panel);
-  color: var(--text-main); font-family: var(--pixel); font-size: 0.9rem; cursor: pointer;
-  display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s; }
-.area-btn:hover, .area-btn.active { border-color: var(--accent-mint); background: rgba(125,211,192,0.1); }
-.area-btn .area-icon { font-size: 1.2rem; }
-
-#char-select-overlay { position: fixed; inset:0; background: linear-gradient(180deg, #1a1428 0%, #2a2040 100%);
-  z-index: 500; display: none; flex-direction: column; align-items: center; padding: 2rem; overflow-y: auto; }
-#char-select-overlay.active { display: flex; }
-.char-select-title { font-family: var(--pixel); font-size: 2rem; color: var(--accent-gold);
-  margin-bottom: 1.5rem; text-shadow: 0 0 15px rgba(255,215,0,0.3); }
-.char-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; max-width: 700px; width: 100%; }
-.char-card { background: var(--bg-panel); border: 3px solid var(--bg-panel-light); border-radius: 14px;
-  padding: 1rem; cursor: pointer; display: flex; flex-direction: column; align-items: center;
-  gap: 0.5rem; transition: all 0.25s; }
-.char-card:hover { border-color: var(--accent-gold); transform: translateY(-5px); }
-.char-card.selected { border-color: var(--accent-mint); background: rgba(125,211,192,0.1); box-shadow: 0 0 20px rgba(125,211,192,0.2); }
-.char-canvas { width: 80px; height: 80px; border-radius: 10px; background: var(--bg-deep); image-rendering: pixelated; }
-.char-name { font-family: var(--pixel); font-size: 1rem; color: var(--accent-warm); }
-.char-desc { font-size: 0.7rem; color: var(--text-muted); text-align: center; }
-
-#toast-container { position: fixed; top: 70px; right: 10px; display: flex; flex-direction: column; gap: 0.4rem; z-index: 300; pointer-events: none; }
-.toast { background: var(--bg-panel); border: 2px solid var(--bg-panel-light); border-radius: 10px;
-  padding: 0.6rem 1rem; font-size: 0.85rem; color: var(--text-main);
-  animation: toastIn 0.4s ease, toastOut 0.4s ease 2.6s forwards; pointer-events: auto; max-width: 260px; }
-.toast.success { border-color: var(--accent-mint); } .toast.warning { border-color: var(--accent-warm); }
-.toast.rare { border-color: var(--rare); } .toast.vrare { border-color: var(--vrare); } .toast.unique { border-color: var(--unique); }
-@keyframes toastIn { from{opacity:0; transform:translateX(30px);} to{opacity:1; transform:translateX(0);} }
-@keyframes toastOut { from{opacity:1; transform:translateX(0);} to{opacity:0; transform:translateX(30px);} }
-
-.daily-reward-popup { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
-  z-index: 600; animation: fadeIn 0.3s ease; }
-.reward-card { background: var(--bg-panel); border: 3px solid var(--accent-gold); border-radius: 20px;
-  padding: 2rem; text-align: center; max-width: 320px; animation: popIn 0.4s ease; box-shadow: 0 0 40px rgba(255,215,0,0.2); }
-.reward-title { font-family: var(--pixel); font-size: 1.3rem; color: var(--accent-gold); margin-bottom: 1rem; }
-.reward-item { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1rem;
-  border-radius: 12px; background: var(--bg-deep); margin-bottom: 1rem; }
-.reward-item .reward-emoji { font-size: 3rem; } .reward-item .reward-name { font-family: var(--pixel); font-size: 1.1rem; color: var(--text-main); }
-.reward-item .reward-rarity { font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 6px; }
-.reward-item.rare .reward-rarity { background: var(--rare); color: #001; } .reward-item.vrare .reward-rarity { background: var(--vrare); color: #fff; }
-.reward-item.aunique .reward-rarity { background: var(--aunique); color: #001; } .reward-item.unique .reward-rarity { background: var(--unique); color: #001; }
-.reward-item.ltd .reward-rarity { background: var(--ltd); color: #fff; }
-
-#profile-panel { display: none; z-index: 110; position: absolute; top: 70px; left: 50%; transform: translateX(-50%); width: 360px;
-  max-height: 70vh; flex-direction: column; background: rgba(26, 20, 40, 0.92); border: 2px solid var(--bg-panel-light);
-  border-radius: 12px; padding: 0.75rem; backdrop-filter: blur(8px); }
-#profile-panel.active { display: flex; }
-
-@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
-@keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 80% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); } }
-
-@media (max-width: 640px) {
-  .ui-dock { gap: 0.3rem; } .dock-btn { min-width: 50px; font-size: 0.7rem; }
-  #chat-panel { width: calc(100% - 20px); } #trade-window { width: calc(100% - 20px); }
-  .trade-columns { flex-direction: column; } #profile-panel { width: calc(100% - 20px) !important; }
-  .reward-card { padding: 1.5rem; }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="description" content="Starlight Inn — A cozy social world where friends gather, explore, and play together in a twilight pixel-art universe.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Starlight Inn — A Cozy Social World</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/mobile.css">
+  <!-- Socket.IO client (loaded from CDN or server) -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" defer></script>
 </head>
 <body>
-
-<div id="landing">
-  <div class="landing-stars" id="landing-stars"></div>
-  <div class="landing-logo">✨ STARLIGHT INN ✨</div>
-  <div class="landing-sub">A cozy world of islands, trades, and starlit chats</div>
-  <div class="landing-card">
-    <h2>🌙 Enter the Inn</h2>
-    <input type="text" class="landing-input" id="username-input" placeholder="Your name..." maxlength="16" autocomplete="off">
-    <button class="btn btn-primary" id="btn-enter" onclick="enterGame()">Enter World</button>
-    <div style="margin-top:1rem; text-align:center; font-size:0.75rem; color:var(--text-muted);">No account needed. Your journey begins now.</div>
-  </div>
-  <div class="landing-footer">Desktop Edition v0.1 · Works offline! · Made with 💜</div>
-</div>
-
-<div id="char-select-overlay">
-  <div class="char-select-title">Choose Your Starlight</div>
-  <div class="char-grid" id="char-grid"></div>
-  <div style="margin-top:1.5rem; display:flex; gap:1rem;">
-    <button class="btn btn-secondary" onclick="showLanding()">← Back</button>
-    <button class="btn btn-primary" style="min-width:160px;" id="btn-confirm-char" onclick="confirmChar()">Let's Go! ✨</button>
-  </div>
-</div>
-
-<div id="game-container">
-  <canvas id="game-canvas"></canvas>
-
-  <div class="ui-panel ui-topbar">
-    <div class="player-info">
-      <canvas class="avatar-mini" id="avatar-mini" width="36" height="36"></canvas>
-      <div>
-        <div class="player-name" id="ui-player-name">Guest</div>
-        <div class="player-badges" id="ui-badges"><span class="badge badge-rare">R1</span></div>
+  <!-- ==================== LANDING SCREEN ==================== -->
+  <div id="screen-landing" class="screen active" role="main" aria-label="Landing screen">
+    <div class="landing-bg">
+      <div class="stars" aria-hidden="true"></div>
+      <div class="twinkle" aria-hidden="true"></div>
+      <div class="aurora" aria-hidden="true"></div>
+    </div>
+    <div class="landing-content">
+      <div class="logo-container" aria-hidden="true">
+        <div class="logo-glow"></div>
+        <h1 class="game-title">Starlight Inn</h1>
+      </div>
+      <p class="game-subtitle">A cozy social world where friends gather under the stars</p>
+      <p class="game-tagline">Make friends, decorate your space, play games, and explore together</p>
+      <div class="landing-actions">
+        <button id="btn-play" class="btn btn-primary btn-glow" aria-label="Enter the world">
+          <span class="btn-icon">✨</span>
+          <span class="btn-text">Enter World</span>
+        </button>
+        <button id="btn-guest" class="btn btn-ghost" aria-label="Play as guest">
+          <span class="btn-text">Play as Guest</span>
+        </button>
+        <button id="btn-settings" class="btn btn-secondary" aria-label="Open settings">
+          <span class="btn-icon">⚙️</span>
+          <span class="btn-text">Settings</span>
+        </button>
+      </div>
+      <div class="landing-features" aria-hidden="true">
+        <span class="feature-dot">🎮</span>
+        <span class="feature-dot">💬</span>
+        <span class="feature-dot">🏠</span>
+        <span class="feature-dot">🎵</span>
+      </div>
+      <div class="landing-footer">
+        <span class="version">v3.0</span>
+        <span class="separator">|</span>
+        <span class="online-count"><span id="online-count">0</span> stars online</span>
+        <span class="separator">|</span>
+        <span class="server-status" id="server-status">Connecting...</span>
       </div>
     </div>
-    <div class="actions">
-      <button class="ui-btn" id="btn-profile" onclick="toggleProfile()" title="Profile">👤</button>
-      <button class="ui-btn" id="btn-areas" onclick="toggleAreas()" title="Areas">🗺️</button>
-      <button class="ui-btn" id="btn-inventory" onclick="toggleInventory()" title="Inventory">🎒</button>
-      <button class="ui-btn" id="btn-trade" onclick="toggleTrade()" title="Trade">💱</button>
-      <button class="ui-btn" id="btn-customize" onclick="toggleCustomize()" title="Customize">🎨</button>
-      <button class="ui-btn" id="btn-settings" onclick="toggleSettings()" title="Settings">⚙️</button>
-      <button class="ui-btn" id="btn-publish" onclick="showPublishModal()" title="Publish Online">🌐</button>
+    <button id="btn-about" class="landing-about" aria-label="About Starlight Inn">ⓘ About</button>
+  </div>
+
+  <!-- ==================== CHARACTER SELECT ==================== -->
+  <div id="screen-charselect" class="screen" role="dialog" aria-modal="true" aria-label="Character creation screen">
+    <div class="charselect-bg" aria-hidden="true">
+      <div class="stars-dim"></div>
+    </div>
+    <div class="charselect-header">
+      <h2>Choose Your Star</h2>
+      <p>Pick a base and customize your colors to shine bright</p>
+    </div>
+    <div class="charselect-preview" id="char-preview-container" aria-label="Character preview">
+      <canvas id="char-preview-canvas" width="200" height="200" aria-hidden="true"></canvas>
+      <div class="char-preview-name">
+        <input type="text" id="char-name-input" placeholder="Your Name" maxlength="20" aria-label="Character name">
+        <button id="btn-name-random" class="btn-icon-only" title="Random name" aria-label="Generate random name">🎲</button>
+      </div>
+    </div>
+    <div class="charselect-grid" id="char-grid" role="list" aria-label="Character base options">
+      <!-- 12 character cards generated by JS -->
+    </div>
+    <div class="charselect-customize" id="char-customize">
+      <div class="color-group">
+        <label for="color-skin">Skin Tone</label>
+        <input type="range" id="color-skin" min="0" max="360" value="30" class="hue-slider" aria-label="Skin tone hue">
+        <span class="color-preview" id="preview-skin"></span>
+      </div>
+      <div class="color-group">
+        <label for="color-hair">Hair Color</label>
+        <input type="range" id="color-hair" min="0" max="360" value="200" class="hue-slider" aria-label="Hair color hue">
+        <span class="color-preview" id="preview-hair"></span>
+      </div>
+      <div class="color-group">
+        <label for="color-clothes">Clothes Color</label>
+        <input type="range" id="color-clothes" min="0" max="360" value="280" class="hue-slider" aria-label="Clothes color hue">
+        <span class="color-preview" id="preview-clothes"></span>
+      </div>
+      <div class="color-group">
+        <label for="color-accent">Accent Color</label>
+        <input type="range" id="color-accent" min="0" max="360" value="45" class="hue-slider" aria-label="Accent color hue">
+        <span class="color-preview" id="preview-accent"></span>
+      </div>
+    </div>
+    <div class="charselect-actions">
+      <button id="btn-back" class="btn btn-secondary" aria-label="Go back">
+        <span class="btn-text">Back</span>
+      </button>
+      <button id="btn-randomize" class="btn btn-ghost" aria-label="Randomize character">
+        <span class="btn-icon">🎲</span>
+        <span class="btn-text">Randomize</span>
+      </button>
+      <button id="btn-continue" class="btn btn-primary" aria-label="Continue to game">
+        <span class="btn-text">Continue</span>
+        <span class="btn-icon">➡️</span>
+      </button>
+    </div>
+    <div class="charselect-footer">
+      <span class="hint">Arrow keys to navigate · Space to select · Enter to continue</span>
     </div>
   </div>
 
-  <div class="ui-panel" id="area-selector">
-    <div class="inv-header">Areas</div>
-    <div class="area-list" id="area-list"></div>
-  </div>
+  <!-- ==================== GAME SCREEN ==================== -->
+  <div id="screen-game" class="screen" role="application" aria-label="Game screen">
+    <!-- Game Canvas Layer -->
+    <canvas id="game-canvas" width="960" height="540" role="img" aria-label="Game world canvas"></canvas>
 
-  <div class="ui-panel" id="inventory-panel">
-    <div class="inv-header"><span>🎒 Inventory</span><span style="font-size:0.75rem; color:var(--text-muted);" id="inv-count">0/40</span></div>
-    <div class="inv-grid" id="inv-grid"></div>
-  </div>
-
-  <div class="ui-panel" id="chat-panel">
-    <div id="chat-messages"></div>
-    <div id="chat-input-row">
-      <input type="text" id="chat-input" placeholder="Say something..." maxlength="120" autocomplete="off">
-      <button class="ui-btn" onclick="sendChat()">📤</button>
+    <!-- ==================== TOP HUD BAR ==================== -->
+    <div id="hud-top" class="hud-panel" role="toolbar" aria-label="Top HUD bar">
+      <div class="hud-area">
+        <span id="hud-area-icon" aria-hidden="true">🌟</span>
+        <span id="hud-area-name">Starlight Hub</span>
+        <span id="hud-area-pop" class="area-pop" aria-label="Players in area">(<span id="hud-pop-count">1</span>)</span>
+      </div>
+      <div class="hud-level">
+        <div class="level-badge">
+          <span class="level-star" aria-hidden="true">⭐</span>
+          <span id="hud-level">1</span>
+        </div>
+        <div class="level-bar">
+          <div id="hud-xp-fill" class="xp-fill" style="width: 0%"></div>
+        </div>
+      </div>
+      <div class="hud-currency">
+        <div class="currency-silver" title="Silver Coins" aria-label="Silver coins">
+          <span class="currency-icon" aria-hidden="true">🪙</span>
+          <span id="hud-silver">500</span>
+        </div>
+        <div class="currency-gold" title="Gold Stars" aria-label="Gold stars">
+          <span class="currency-icon" aria-hidden="true">⭐</span>
+          <span id="hud-gold">100</span>
+        </div>
+      </div>
+      <div class="hud-actions">
+        <button id="btn-area-browser" class="hud-btn" title="Areas (A)" aria-label="Area browser">
+          <span aria-hidden="true">🗺️</span>
+        </button>
+        <button id="btn-friends" class="hud-btn" title="Friends (F)" aria-label="Friends list">
+          <span aria-hidden="true">👥</span>
+          <span id="badge-friends" class="hud-badge hidden">0</span>
+        </button>
+        <button id="btn-inventory" class="hud-btn" title="Inventory (I)" aria-label="Inventory">
+          <span aria-hidden="true">🎒</span>
+        </button>
+        <button id="btn-catalog" class="hud-btn" title="Shop (B)" aria-label="Catalog shop">
+          <span aria-hidden="true">🏪</span>
+        </button>
+        <button id="btn-missions" class="hud-btn" title="Missions (M)" aria-label="Missions">
+          <span aria-hidden="true">📜</span>
+          <span id="badge-missions" class="hud-badge hidden">0</span>
+        </button>
+        <button id="btn-minigames" class="hud-btn" title="Games (G)" aria-label="Mini games">
+          <span aria-hidden="true">🎮</span>
+        </button>
+        <button id="btn-notifications" class="hud-btn" title="Notifications (N)" aria-label="Notifications">
+          <span aria-hidden="true">🔔</span>
+          <span id="badge-notifications" class="hud-badge hidden">0</span>
+        </button>
+        <button id="btn-settings-game" class="hud-btn" title="Settings (,)" aria-label="Settings">
+          <span aria-hidden="true">⚙️</span>
+        </button>
+      </div>
     </div>
-  </div>
 
-  <div class="ui-panel" id="trade-window">
-    <div class="trade-header"><h3>💱 Trade</h3><button class="ui-btn" onclick="toggleTrade()" style="width:28px;height:28px;">✕</button></div>
-    <div class="trade-columns">
-      <div class="trade-column"><h4>Your Offer</h4><div class="trade-grid" id="trade-my-slots"></div></div>
-      <div class="trade-column"><h4>Their Offer</h4><div class="trade-grid" id="trade-their-slots"></div></div>
+    <!-- ==================== MISSION TRACKER (top-left) ==================== -->
+    <div id="hud-missions" class="hud-missions" role="complementary" aria-label="Active missions">
+      <div class="mission-header">
+        <span aria-hidden="true">📜</span>
+        <span>Active Missions</span>
+      </div>
+      <div id="mission-list" class="mission-list"></div>
     </div>
-    <div class="trade-actions">
-      <button class="btn btn-secondary" onclick="addItemToTrade()">+ Add Item</button>
-      <button class="btn btn-primary" onclick="confirmTrade()">✅ Confirm</button>
-      <button class="btn btn-secondary" onclick="cancelTrade()">❌ Cancel</button>
+
+    <!-- ==================== BOTTOM DOCK ==================== -->
+    <div id="hud-dock" class="hud-panel" role="toolbar" aria-label="Action dock">
+      <div class="dock-gestures">
+        <button class="gesture-btn" data-gesture="wave" title="Wave (1)" aria-label="Wave gesture">
+          <span aria-hidden="true">👋</span>
+        </button>
+        <button class="gesture-btn" data-gesture="dance" title="Dance (2)" aria-label="Dance gesture">
+          <span aria-hidden="true">💃</span>
+        </button>
+        <button class="gesture-btn" data-gesture="sit" title="Sit (3)" aria-label="Sit gesture">
+          <span aria-hidden="true">🧘</span>
+        </button>
+        <button class="gesture-btn" data-gesture="sleep" title="Sleep (4)" aria-label="Sleep gesture">
+          <span aria-hidden="true">😴</span>
+        </button>
+        <button class="gesture-btn" data-gesture="laugh" title="Laugh (5)" aria-label="Laugh gesture">
+          <span aria-hidden="true">😂</span>
+        </button>
+        <button class="gesture-btn" data-gesture="cry" title="Cry (6)" aria-label="Cry gesture">
+          <span aria-hidden="true">😢</span>
+        </button>
+        <button class="gesture-btn" data-gesture="heart" title="Heart (7)" aria-label="Heart gesture">
+          <span aria-hidden="true">❤️</span>
+        </button>
+        <button class="gesture-btn" data-gesture="clap" title="Clap (8)" aria-label="Clap gesture">
+          <span aria-hidden="true">👏</span>
+        </button>
+      </div>
+      <div class="dock-expressions">
+        <button class="expr-btn active" data-expr="happy" title="Happy" aria-label="Happy expression">
+          <span aria-hidden="true">😊</span>
+        </button>
+        <button class="expr-btn" data-expr="sad" title="Sad" aria-label="Sad expression">
+          <span aria-hidden="true">😔</span>
+        </button>
+        <button class="expr-btn" data-expr="cool" title="Cool" aria-label="Cool expression">
+          <span aria-hidden="true">😎</span>
+        </button>
+        <button class="expr-btn" data-expr="love" title="Love" aria-label="Love expression">
+          <span aria-hidden="true">😍</span>
+        </button>
+        <button class="expr-btn" data-expr="surprised" title="Surprised" aria-label="Surprised expression">
+          <span aria-hidden="true">😲</span>
+        </button>
+        <button class="expr-btn" data-expr="sleepy" title="Sleepy" aria-label="Sleepy expression">
+          <span aria-hidden="true">😪</span>
+        </button>
+        <button class="expr-btn" data-expr="angry" title="Angry" aria-label="Angry expression">
+          <span aria-hidden="true">😠</span>
+        </button>
+        <button class="expr-btn" data-expr="confused" title="Confused" aria-label="Confused expression">
+          <span aria-hidden="true">😵</span>
+        </button>
+      </div>
+      <div class="dock-chat-toggle">
+        <button id="btn-chat-toggle" class="hud-btn" aria-label="Toggle chat panel">
+          <span aria-hidden="true">💬</span>
+        </button>
+      </div>
     </div>
-  </div>
 
-  <div class="ui-panel ui-dock">
-    <button class="dock-btn active" id="dock-hub" onclick="goToArea('hub')"><span class="icon">🏨</span><span>Inn</span></button>
-    <button class="dock-btn" id="dock-beach" onclick="goToArea('beach')"><span class="icon">🏖️</span><span>Beach</span></button>
-    <button class="dock-btn" id="dock-forest" onclick="goToArea('forest')"><span class="icon">🌲</span><span>Forest</span></button>
-    <button class="dock-btn" id="dock-treehouse" onclick="goToArea('treehouse')"><span class="icon">🏡</span><span>Treehouse</span></button>
-    <button class="dock-btn" id="dock-park" onclick="goToArea('park')"><span class="icon">🌸</span><span>Park</span></button>
-    <button class="dock-btn" id="dock-island" onclick="goToArea('island')"><span class="icon">🏝️</span><span>My Island</span></button>
-  </div>
+    <!-- ==================== QUICK EMOTE BAR ==================== -->
+    <div id="hud-emotes" class="hud-emotes" role="toolbar" aria-label="Quick emotes">
+      <button class="emote-btn" data-emote="greet" aria-label="Greet">🙋</button>
+      <button class="emote-btn" data-emote="thank" aria-label="Thank">🙏</button>
+      <button class="emote-btn" data-emote="bye" aria-label="Goodbye">👋</button>
+      <button class="emote-btn" data-emote="hug" aria-label="Hug">🤗</button>
+    </div>
 
-  <div id="toast-container"></div>
-  <div id="profile-panel"></div>
-</div>
+    <!-- ==================== CHAT PANEL ==================== -->
+    <div id="chat-panel" class="panel panel-chat" role="log" aria-live="polite" aria-label="Chat panel">
+      <div class="panel-header">
+        <div class="chat-tabs" role="tablist">
+          <button class="chat-tab active" data-channel="area" role="tab" aria-selected="true" aria-controls="chat-messages">Area</button>
+          <button class="chat-tab" data-channel="whisper" role="tab" aria-selected="false" aria-controls="chat-messages">Whisper</button>
+          <button class="chat-tab" data-channel="party" role="tab" aria-selected="false" aria-controls="chat-messages">Party</button>
+          <button class="chat-tab" data-channel="system" role="tab" aria-selected="false" aria-controls="chat-messages">System</button>
+        </div>
+        <button id="btn-chat-close" class="panel-close" aria-label="Close chat panel">×</button>
+      </div>
+      <div id="chat-messages" class="chat-messages" role="tabpanel"></div>
+      <div class="chat-input-area">
+        <button id="btn-chat-emoji" class="btn-icon-only" aria-label="Open emoji picker">😊</button>
+        <input id="chat-input" type="text" placeholder="Say something cozy..." maxlength="200" aria-label="Chat input" autocomplete="off">
+        <button id="btn-chat-send" class="btn btn-primary" aria-label="Send message">Send</button>
+      </div>
+    </div>
 
-<script>
-// ═══════════════════════════════════════════════════════════════
-// STARLIGHT INN — Monolithic Build (single-file deployment)
-// ═══════════════════════════════════════════════════════════════
-
-// ─── Data ─────────────────────────────────────────────────────
-const PALETTES = {
-  skin: ['#f5d0b5','#e8b896','#d4a07a','#c28b65','#a06d4f','#7d5239','#5a3a28','#3d2719'],
-  hair: ['#1a1a1a','#4a3018','#8b6914','#c9a227','#e85d75','#7dd3c0','#b8a9d9','#ff9f5e','#ff5252','#4fc3f7'],
-  clothes: ['#ff9f5e','#7dd3c0','#b8a9d9','#ffd54f','#ff8a65','#ba68c8','#4fc3f7','#e0e0e0','#ff5252','#2a2040'],
-};
-const RARITY = {
-  common:{name:'Common',color:'#888',glow:null}, rare:{name:'Rare',color:'#4fc3f7',glow:'0 0 6px #4fc3f7'},
-  vrare:{name:'Very Rare',color:'#ba68c8',glow:'0 0 8px #ba68c8'}, aunique:{name:'Almost Unique',color:'#ff8a65',glow:'0 0 10px #ff8a65'},
-  unique:{name:'Unique',color:'#ffd54f',glow:'0 0 12px #ffd54f'}, ltd:{name:'LTD',color:'#ff5252',glow:'0 0 14px #ff5252'},
-};
-const CHARACTERS = [
-  {id:'catgirl',name:'Neko',desc:'Playful cat ears & soft purr',base:'catgirl',defaultHair:4,defaultSkin:1,defaultOutfit:0,accessories:['cat_ears','tail','bell']},
-  {id:'rasta',name:'Rasta',desc:'Chill vibes & golden dreads',base:'human',defaultHair:2,defaultSkin:4,defaultOutfit:5,accessories:['headband','sunglasses']},
-  {id:'mage',name:'Luna',desc:'Starlight sorceress',base:'human',defaultHair:6,defaultSkin:0,defaultOutfit:3,accessories:['hat_witch','staff','cape']},
-  {id:'pirate',name:'Cpt. Kiko',desc:'Treasure hunter of the Inn',base:'human',defaultHair:0,defaultSkin:2,defaultOutfit:8,accessories:['hat_pirate','eyepatch']},
-  {id:'bunny',name:'Bun-Bun',desc:'Hoppy and fluffy friend',base:'bunny',defaultHair:1,defaultSkin:0,defaultOutfit:1,accessories:['bunny_ears','carrot']},
-  {id:'robot',name:'Byte',desc:'Cute bot with a heart of gold',base:'robot',defaultHair:0,defaultSkin:0,defaultOutfit:6,accessories:['antenna','screen_face']},
-];
-const ITEMS = [
-  {id:'star_lamp',name:'Star Lamp',emoji:'🌟',rarity:'rare',type:'furniture',area:'all'},
-  {id:'cozy_bed',name:'Cozy Bed',emoji:'🛏️',rarity:'common',type:'furniture',area:'island'},
-  {id:'palm_tree',name:'Palm Tree',emoji:'🌴',rarity:'common',type:'furniture',area:'beach'},
-  {id:'crystal_chair',name:'Crystal Chair',emoji:'💎',rarity:'vrare',type:'furniture',area:'all'},
-  {id:'golden_throne',name:'Golden Throne',emoji:'👑',rarity:'unique',type:'furniture',area:'all'},
-  {id:'moon_rug',name:'Moon Rug',emoji:'🌙',rarity:'aunique',type:'furniture',area:'all'},
-  {id:'neon_sign',name:'Neon Sign',emoji:'📛',rarity:'rare',type:'furniture',area:'hub'},
-  {id:'campfire',name:'Campfire',emoji:'🔥',rarity:'common',type:'furniture',area:'forest'},
-  {id:'hammock',name:'Hammock',emoji:'🏖️',rarity:'common',type:'furniture',area:'beach'},
-  {id:'tree_swing',name:'Tree Swing',emoji:'🪵',rarity:'rare',type:'furniture',area:'treehouse'},
-  {id:'flower_pot',name:'Flower Pot',emoji:'🪴',rarity:'common',type:'furniture',area:'park'},
-  {id:'fountain',name:'Fountain',emoji:'⛲',rarity:'vrare',type:'furniture',area:'park'},
-  {id:'dj_booth',name:'DJ Booth',emoji:'🎧',rarity:'unique',type:'furniture',area:'hub'},
-  {id:'ltd_statue',name:'LTD Statue 2026',emoji:'🏆',rarity:'ltd',type:'furniture',area:'all'},
-  {id:'magic_chest',name:'Magic Chest',emoji:'📦',rarity:'vrare',type:'container',area:'all'},
-  {id:'starlight_hat',name:'Starlight Hat',emoji:'🎩',rarity:'rare',type:'wearable',area:'all'},
-  {id:'pixel_shades',name:'Pixel Shades',emoji:'🕶️',rarity:'common',type:'wearable',area:'all'},
-  {id:'angel_wings',name:'Angel Wings',emoji:'🪽',rarity:'aunique',type:'wearable',area:'all'},
-];
-const AREAS = {
-  hub:{name:'Starlight Inn Lobby',desc:'The heart of the world. Warm lights, soft music, friends everywhere.',bg:'#2a2040',floorColor:'#3d3060',accentColor:'#ffd700',emoji:'🏨',
-    npcs:[{name:'Innkeeper Elara',x:0.5,y:0.4,emoji:'🧙‍♀️',color:'#b8a9d9'},{name:'Barista Milo',x:0.3,y:0.5,emoji:'☕',color:'#c78d6e'}],
-    decorations:[{x:0.2,y:0.3,emoji:'🕯️'},{x:0.8,y:0.3,emoji:'🕯️'},{x:0.5,y:0.2,emoji:'🌟'},{x:0.1,y:0.6,emoji:'🪴'},{x:0.9,y:0.6,emoji:'🪴'},{x:0.5,y:0.7,emoji:'🔥'}],
-    size:{w:1200,h:800}},
-  beach:{name:'Sunset Beach',desc:'Golden sands, gentle waves, and bonfire nights.',bg:'#1a3040',floorColor:'#d4a07a',accentColor:'#ff9f5e',emoji:'🏖️',
-    npcs:[{name:'Surfer Kai',x:0.7,y:0.5,emoji:'🏄',color:'#4fc3f7'},{name:'Shell Collector',x:0.2,y:0.7,emoji:'🐚',color:'#ffd54f'}],
-    decorations:[{x:0.1,y:0.2,emoji:'🌴'},{x:0.3,y:0.15,emoji:'🌴'},{x:0.9,y:0.3,emoji:'🌊'},{x:0.5,y:0.6,emoji:'🔥'},{x:0.7,y:0.4,emoji:'🏖️'},{x:0.2,y:0.5,emoji:'☂️'}],
-    size:{w:1400,h:800}},
-  forest:{name:'Whisperwood Forest',desc:'Tall trees, firefly glades, and hidden paths.',bg:'#142818',floorColor:'#2a5018',accentColor:'#7dd3c0',emoji:'🌲',
-    npcs:[{name:'Ranger Oak',x:0.4,y:0.4,emoji:'🧝',color:'#7dd3c0'},{name:'Fox Spirit',x:0.7,y:0.6,emoji:'🦊',color:'#ff9f5e'}],
-    decorations:[{x:0.1,y:0.2,emoji:'🌲'},{x:0.3,y:0.15,emoji:'🌲'},{x:0.6,y:0.1,emoji:'🌲'},{x:0.9,y:0.2,emoji:'🌲'},{x:0.2,y:0.6,emoji:'🍄'},{x:0.8,y:0.5,emoji:'🦋'},{x:0.5,y:0.3,emoji:'✨'},{x:0.4,y:0.7,emoji:'🪵'}],
-    size:{w:1400,h:900}},
-  treehouse:{name:'Canopy Treehouse',desc:'High above the forest, a cozy hideaway among the branches.',bg:'#1a2818',floorColor:'#5a3a28',accentColor:'#c78d6e',emoji:'🏡',
-    npcs:[{name:'Treekeeper Yew',x:0.5,y:0.4,emoji:'🧙‍♂️',color:'#7dd3c0'},{name:'Squirrel Friend',x:0.8,y:0.3,emoji:'🐿️',color:'#c78d6e'}],
-    decorations:[{x:0.05,y:0.5,emoji:'🌳'},{x:0.95,y:0.5,emoji:'🌳'},{x:0.3,y:0.2,emoji:'🍃'},{x:0.7,y:0.2,emoji:'🍃'},{x:0.5,y:0.3,emoji:'🏡'},{x:0.2,y:0.6,emoji:'🪜'},{x:0.8,y:0.7,emoji:'🐦'}],
-    size:{w:1200,h:700}},
-  park:{name:'Blossom Park',desc:'Cherry trees, gentle streams, and picnic spots.',bg:'#281830',floorColor:'#3a5030',accentColor:'#ff8a65',emoji:'🌸',
-    npcs:[{name:'Gardener Rose',x:0.3,y:0.5,emoji:'👩‍🌾',color:'#ff8a65'},{name:'Poet Willow',x:0.7,y:0.4,emoji:'📜',color:'#b8a9d9'}],
-    decorations:[{x:0.1,y:0.2,emoji:'🌸'},{x:0.4,y:0.1,emoji:'🌸'},{x:0.7,y:0.15,emoji:'🌸'},{x:0.9,y:0.2,emoji:'🌸'},{x:0.5,y:0.5,emoji:'⛲'},{x:0.2,y:0.7,emoji:'🧺'},{x:0.8,y:0.6,emoji:'🦆'},{x:0.5,y:0.8,emoji:'🌿'}],
-    size:{w:1300,h:800}},
-  island:{name:'Your Island',desc:'Your personal paradise. Decorate, invite friends, make it yours.',bg:'#1a2040',floorColor:'#4a6a3a',accentColor:'#ffd700',emoji:'🏝️',
-    npcs:[],
-    decorations:[{x:0.1,y:0.1,emoji:'🌊'},{x:0.9,y:0.1,emoji:'🌊'},{x:0.1,y:0.9,emoji:'🌊'},{x:0.9,y:0.9,emoji:'🌊'},{x:0.5,y:0.2,emoji:'🏠'}],
-    size:{w:1000,h:800}},
-};
-
-// ─── Engine ─────────────────────────────────────────────────────
-class StarlightEngine {
-  constructor(canvasId) {
-    this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext('2d');
-    this.ctx.imageSmoothingEnabled = false;
-    this.state = {
-      screen: 'landing', area: 'hub',
-      player: { name: 'Guest', charId: null, skinColor: 0, hairColor: 0, outfitColor: 0, x: 0.5, y: 0.7, facing: 'down', moving: false, accessories: [] },
-      inventory: this.generateStarterInventory(),
-      islandItems: [],
-      chatMessages: [
-        { name: 'Innkeeper Elara', text: 'Welcome to Starlight Inn, traveler! ✨', system: true },
-        { name: 'Surfer Kai', text: 'Catch you at the beach! 🏄', system: false },
-      ],
-      tradeOffer: [],
-      otherOffer: [{ id: 'golden_throne', name: 'Golden Throne', emoji: '👑', rarity: 'unique' }],
-      onlinePlayers: [
-        { name: 'NekoStar', x: 0.3, y: 0.5, charId: 'catgirl', skinColor: 1, hairColor: 4, outfitColor: 0 },
-        { name: 'RastaVibes', x: 0.7, y: 0.4, charId: 'rasta', skinColor: 4, hairColor: 2, outfitColor: 5 },
-        { name: 'LunaMage', x: 0.5, y: 0.3, charId: 'mage', skinColor: 0, hairColor: 6, outfitColor: 3 },
-      ],
-      selectedChar: null, areaSelectorOpen: false, inventoryOpen: false, tradeOpen: false,
-      customizeOpen: false, settingsOpen: false, frameCount: 0, lastTime: 0,
-      keys: {}, mouse: { x: 0, y: 0, down: false }, camera: { x: 0, y: 0 },
-      particles: [],
-    };
-    this.resize();
-    window.addEventListener('resize', () => this.resize());
-    this.setupInput();
-    this.populateCharSelect();
-    this.populateAreaList();
-    this.populateInventory();
-    this.populateTradeSlots();
-    this.startBotChat();
-    this.startLoop();
-  }
-  resize() { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; this.W = this.canvas.width; this.H = this.canvas.height; }
-  setupInput() {
-    window.addEventListener('keydown', (e) => { this.state.keys[e.key.toLowerCase()] = true;
-      if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(e.key.toLowerCase())) e.preventDefault(); });
-    window.addEventListener('keyup', (e) => this.state.keys[e.key.toLowerCase()] = false);
-    this.canvas.addEventListener('mousemove', (e) => { const rect = this.canvas.getBoundingClientRect(); this.state.mouse.x = e.clientX - rect.left; this.state.mouse.y = e.clientY - rect.top; });
-    this.canvas.addEventListener('mousedown', () => this.state.mouse.down = true);
-    this.canvas.addEventListener('mouseup', () => this.state.mouse.down = false);
-  }
-  generateStarterInventory() {
-    const items = [];
-    for (let i = 0; i < 8; i++) { const item = { ...ITEMS[Math.floor(Math.random() * ITEMS.length)] }; item.uid = `item_${Date.now()}_${i}`; items.push(item); }
-    return items;
-  }
-
-  enterGame() {
-    const name = document.getElementById('username-input').value.trim();
-    if (!name) { this.toast('Please enter your name first!', 'warning'); return; }
-    this.state.player.name = name;
-    document.getElementById('ui-player-name').textContent = name;
-    document.getElementById('landing').classList.add('hidden');
-    document.getElementById('char-select-overlay').classList.add('active');
-    this.state.screen = 'charselect';
-  }
-  showLanding() { document.getElementById('landing').classList.remove('hidden'); document.getElementById('char-select-overlay').classList.remove('active'); this.state.screen = 'landing'; }
-  confirmChar() {
-    if (this.state.selectedChar === null) { this.toast('Select a character first!', 'warning'); return; }
-    const char = CHARACTERS[this.state.selectedChar];
-    this.state.player.charId = char.id;
-    this.state.player.skinColor = char.defaultSkin;
-    this.state.player.hairColor = char.defaultHair;
-    this.state.player.outfitColor = char.defaultOutfit;
-    this.state.player.accessories = [...char.accessories];
-    document.getElementById('char-select-overlay').classList.remove('active');
-    document.getElementById('game-container').classList.add('active');
-    this.state.screen = 'game';
-    this.toast(`Welcome to Starlight Inn, ${this.state.player.name}! ✨`, 'success');
-    this.drawMiniAvatar();
-    this.showDailyReward();
-  }
-
-  populateCharSelect() {
-    const grid = document.getElementById('char-grid');
-    CHARACTERS.forEach((char, idx) => {
-      const card = document.createElement('div'); card.className = 'char-card'; card.dataset.idx = idx;
-      card.innerHTML = `<canvas class="char-canvas" id="char-preview-${idx}" width="80" height="80"></canvas><div class="char-name">${char.name}</div><div class="char-desc">${char.desc}</div>`;
-      card.addEventListener('click', () => this.selectChar(idx));
-      grid.appendChild(card);
-      setTimeout(() => this.drawCharPreview(idx, char), 50);
-    });
-  }
-  selectChar(idx) { document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected')); document.querySelector(`.char-card[data-idx="${idx}"]`).classList.add('selected'); this.state.selectedChar = idx; }
-
-  populateAreaList() {
-    const list = document.getElementById('area-list');
-    Object.entries(AREAS).forEach(([key, area]) => {
-      const btn = document.createElement('button'); btn.className = 'area-btn'; btn.dataset.area = key;
-      btn.innerHTML = `<span class="area-icon">${area.emoji}</span><span>${area.name}</span>`;
-      btn.addEventListener('click', () => this.goToArea(key));
-      list.appendChild(btn);
-    });
-  }
-  goToArea(areaId) {
-    if (!AREAS[areaId]) return;
-    this.state.area = areaId;
-    this.state.areaSelectorOpen = false;
-    document.getElementById('area-selector').classList.remove('active');
-    this.state.player.x = 0.5; this.state.player.y = areaId === 'island' ? 0.5 : 0.7;
-    document.querySelectorAll('.dock-btn').forEach(b => b.classList.remove('active'));
-    const dockBtn = document.getElementById(`dock-${areaId}`);
-    if (dockBtn) dockBtn.classList.add('active');
-    this.toast(`Arrived at ${AREAS[areaId].name} ${AREAS[areaId].emoji}`, 'success');
-  }
-  toggleAreas() { this.state.areaSelectorOpen = !this.state.areaSelectorOpen; document.getElementById('area-selector').classList.toggle('active', this.state.areaSelectorOpen); }
-
-  populateInventory() { this.renderInventory(); }
-  renderInventory() {
-    const grid = document.getElementById('inv-grid'); grid.innerHTML = '';
-    this.state.inventory.forEach((item) => {
-      const el = document.createElement('div'); el.className = `inv-item ${item.rarity}`; el.innerHTML = item.emoji;
-      el.title = `${item.name} [${RARITY[item.rarity].name}]`;
-      el.addEventListener('click', () => this.toast(`${item.name} — ${RARITY[item.rarity].name}`, item.rarity));
-      grid.appendChild(el);
-    });
-    document.getElementById('inv-count').textContent = `${this.state.inventory.length}/40`;
-  }
-  toggleInventory() { this.state.inventoryOpen = !this.state.inventoryOpen; document.getElementById('inventory-panel').classList.toggle('active', this.state.inventoryOpen); }
-
-  populateTradeSlots() {
-    const myGrid = document.getElementById('trade-my-slots'); const theirGrid = document.getElementById('trade-their-slots');
-    for (let i = 0; i < 8; i++) { myGrid.appendChild(document.createElement('div')).className = 'trade-slot'; }
-    for (let i = 0; i < 8; i++) { theirGrid.appendChild(document.createElement('div')).className = 'trade-slot'; }
-  }
-  toggleTrade() { this.state.tradeOpen = !this.state.tradeOpen; document.getElementById('trade-window').classList.toggle('active', this.state.tradeOpen); if (this.state.tradeOpen) this.renderTrade(); }
-  renderTrade() {
-    document.querySelectorAll('#trade-my-slots .trade-slot').forEach((slot, i) => {
-      slot.className = 'trade-slot'; slot.innerHTML = '';
-      if (this.state.tradeOffer[i]) { slot.classList.add('filled', this.state.tradeOffer[i].rarity); slot.innerHTML = this.state.tradeOffer[i].emoji; }
-    });
-    document.querySelectorAll('#trade-their-slots .trade-slot').forEach((slot, i) => {
-      slot.className = 'trade-slot'; slot.innerHTML = '';
-      if (this.state.otherOffer[i]) { slot.classList.add('filled', this.state.otherOffer[i].rarity); slot.innerHTML = this.state.otherOffer[i].emoji; }
-    });
-  }
-  addItemToTrade() {
-    if (this.state.inventory.length === 0) { this.toast('Your inventory is empty!', 'warning'); return; }
-    const item = this.state.inventory.pop(); this.state.tradeOffer.push(item); this.renderInventory(); this.renderTrade(); this.toast(`Added ${item.name} to trade`, item.rarity);
-  }
-  confirmTrade() {
-    if (this.state.tradeOffer.length === 0) { this.toast('Add items to your offer first!', 'warning'); return; }
-    const received = [...this.state.otherOffer]; this.state.inventory.push(...received); this.state.tradeOffer = []; this.state.otherOffer = [];
-    this.renderInventory(); this.renderTrade(); this.toggleTrade(); this.toast('Trade complete! 🎉 Check your inventory.', 'success');
-  }
-  cancelTrade() { this.state.inventory.push(...this.state.tradeOffer); this.state.tradeOffer = []; this.renderInventory(); this.renderTrade(); this.toggleTrade(); }
-
-  sendChat() {
-    const input = document.getElementById('chat-input'); const text = input.value.trim(); if (!text) return;
-    this.state.chatMessages.push({ name: this.state.player.name, text, system: false }); input.value = '';
-    this.renderChat(); this.scrollChat();
-  }
-  renderChat() {
-    const container = document.getElementById('chat-messages'); container.innerHTML = '';
-    this.state.chatMessages.slice(-30).forEach(msg => {
-      const div = document.createElement('div'); div.className = `chat-msg ${msg.system ? 'system' : ''}`;
-      div.innerHTML = `<span class="chat-name">${msg.name}:</span> <span class="chat-text">${this.escapeHtml(msg.text)}</span>`;
-      container.appendChild(div);
-    });
-  }
-  scrollChat() { document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight; }
-  escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
-
-  toggleCustomize() { this.toast('Character customization coming in next update! 🎨', 'warning'); }
-  toggleSettings() { this.toast('Settings panel coming soon! ⚙️', 'warning'); }
-  toggleProfile() {
-    let panel = document.getElementById('profile-panel');
-    if (!panel.innerHTML) {
-      panel.innerHTML = `
-        <div class="inv-header"><span>👤 ${this.state.player.name}</span><span style="font-size:0.75rem;color:var(--text-muted);">Lvl 1</span></div>
-        <div style="padding:1rem 0;display:flex;flex-direction:column;gap:0.75rem;">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;font-size:0.85rem;">
-            <div style="background:var(--bg-deep);padding:0.5rem;border-radius:8px;"><div style="color:var(--text-muted);font-size:0.7rem;">Items</div><div>${this.state.inventory.length}</div></div>
-            <div style="background:var(--bg-deep);padding:0.5rem;border-radius:8px;"><div style="color:var(--text-muted);font-size:0.7rem;">Area</div><div>${this.state.area}</div></div>
+    <!-- ==================== INVENTORY PANEL ==================== -->
+    <div id="inventory-panel" class="panel panel-inventory" role="dialog" aria-label="Inventory panel" aria-modal="false">
+      <div class="panel-header">
+        <h3><span aria-hidden="true">🎒</span> Inventory</h3>
+        <div class="panel-search">
+          <input type="text" id="inventory-search" placeholder="Search items..." aria-label="Search inventory">
+        </div>
+        <button class="panel-close" aria-label="Close inventory">×</button>
+      </div>
+      <div class="inventory-filters" role="tablist">
+        <button class="filter-btn active" data-filter="all" role="tab" aria-selected="true">All</button>
+        <button class="filter-btn" data-filter="wearable" role="tab" aria-selected="false">Wear</button>
+        <button class="filter-btn" data-filter="consumable" role="tab" aria-selected="false">Use</button>
+        <button class="filter-btn" data-filter="furniture" role="tab" aria-selected="false">Place</button>
+        <button class="filter-btn" data-filter="collectible" role="tab" aria-selected="false">Collect</button>
+      </div>
+      <div id="inventory-grid" class="inventory-grid" role="grid"></div>
+      <div class="inventory-info">
+        <span id="inventory-count">0 / 40</span>
+        <span id="inventory-weight" class="weight-bar">
+          <span class="weight-fill" style="width: 0%"></span>
+        </span>
+      </div>
+      <div id="inventory-detail" class="inventory-detail hidden">
+        <div class="detail-icon" aria-hidden="true">❓</div>
+        <div class="detail-info">
+          <h4 id="detail-name">Item Name</h4>
+          <p id="detail-desc">Item description goes here.</p>
+          <div class="detail-tags" id="detail-tags"></div>
+          <div class="detail-actions">
+            <button id="btn-use-item" class="btn btn-primary">Use</button>
+            <button id="btn-equip-item" class="btn btn-secondary">Equip</button>
+            <button id="btn-drop-item" class="btn btn-danger">Drop</button>
           </div>
-        </div>`;
-    }
-    panel.classList.toggle('active');
-  }
-
-  toast(message, type = '') {
-    const container = document.getElementById('toast-container');
-    const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.textContent = message;
-    container.appendChild(toast); setTimeout(() => toast.remove(), 3000);
-  }
-
-  showDailyReward() {
-    const rewards = [
-      { day: 1, item: { id: 'star_cookie', name: 'Star Cookie', emoji: '🍪', rarity: 'common', type: 'consumable' } },
-      { day: 2, item: { id: 'moon_lantern', name: 'Moon Lantern', emoji: '🏮', rarity: 'rare', type: 'furniture' } },
-    ];
-    const reward = rewards[0];
-    const div = document.createElement('div'); div.className = 'daily-reward-popup';
-    div.innerHTML = `<div class="reward-card"><div class="reward-title">✨ Day ${reward.day} Reward ✨</div><div class="reward-item ${reward.item.rarity}"><span class="reward-emoji">${reward.item.emoji}</span><span class="reward-name">${reward.item.name}</span><span class="reward-rarity">${reward.item.rarity.toUpperCase()}</span></div><button class="btn btn-primary" id="claim-reward">Claim</button></div>`;
-    document.body.appendChild(div);
-    document.getElementById('claim-reward').addEventListener('click', () => {
-      this.state.inventory.push({ ...reward.item, uid: `daily_${Date.now()}` }); this.renderInventory();
-      this.toast(`Claimed ${reward.item.name}! 🎉`, 'success'); div.remove();
-    });
-  }
-
-  startBotChat() {
-    const bots = [
-      { name: 'NekoStar', responses: ['mew~ anyone wanna trade? 🐱', 'just found a rare lamp!', 'the treehouse is so cozy'] },
-      { name: 'RastaVibes', responses: ['chill vibes only 🌿', 'the sunset here is beautiful mon', 'peace and love friends'] },
-      { name: 'LunaMage', responses: ['the stars align tonight ✨', 'I sense rare items in the forest...', 'any mages online?'] },
-    ];
-    setInterval(() => {
-      if (this.state.screen !== 'game') return; if (Math.random() > 0.3) return;
-      const bot = bots[Math.floor(Math.random() * bots.length)];
-      const msg = bot.responses[Math.floor(Math.random() * bot.responses.length)];
-      this.state.chatMessages.push({ name: bot.name, text: msg, system: false });
-      if (this.state.chatMessages.length > 50) this.state.chatMessages.shift();
-      this.renderChat(); this.scrollChat();
-    }, 8000);
-  }
-
-  drawCharPreview(idx, char) {
-    const canvas = document.getElementById(`char-preview-${idx}`); if (!canvas) return;
-    const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, 80, 80);
-    this.drawAvatar(ctx, 40, 50, 1.2, char.base, char.defaultSkin, char.defaultHair, char.defaultOutfit, char.accessories);
-  }
-  drawMiniAvatar() {
-    const canvas = document.getElementById('avatar-mini'); if (!canvas) return;
-    const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, 36, 36);
-    const char = CHARACTERS.find(c => c.id === this.state.player.charId) || CHARACTERS[0];
-    this.drawAvatar(ctx, 18, 24, 0.5, char.base, this.state.player.skinColor, this.state.player.hairColor, this.state.player.outfitColor, this.state.player.accessories);
-  }
-  drawAvatar(ctx, cx, cy, scale, base, skinIdx, hairIdx, outfitIdx, accessories = []) {
-    const skin = PALETTES.skin[skinIdx % PALETTES.skin.length];
-    const hair = PALETTES.hair[hairIdx % PALETTES.hair.length];
-    const outfit = PALETTES.clothes[outfitIdx % PALETTES.clothes.length];
-    const s = scale * 4; // Scale up 4x for chibi proportions
-    
-    // Use SpriteForge-style pixel-perfect drawing
-    ctx.save(); ctx.translate(cx, cy);
-    ctx.imageSmoothingEnabled = false;
-    
-    // ─── DRAW PROPER CHIBI SPRITE (32×48 grid, scaled) ───────────
-    
-    // 1. LEGS (behind everything)
-    ctx.fillStyle = skin;
-    ctx.fillRect(-2*s, 14*s, 3*s, 8*s); // left leg
-    ctx.fillRect(1*s, 14*s, 3*s, 8*s);  // right leg
-    
-    // 2. FEET
-    ctx.fillStyle = '#3d2719';
-    ctx.fillRect(-3*s, 22*s, 4*s, 2*s);
-    ctx.fillRect(1*s, 22*s, 4*s, 2*s);
-    
-    // 3. TORSO (outfit)
-    ctx.fillStyle = outfit;
-    ctx.fillRect(-3*s, 8*s, 8*s, 8*s); // main torso
-    ctx.fillRect(-2*s, 16*s, 6*s, 2*s); // hem
-    
-    // 4. ARMS
-    ctx.fillStyle = skin;
-    ctx.fillRect(-5*s, 9*s, 2*s, 7*s);  // left arm
-    ctx.fillRect(5*s, 9*s, 2*s, 7*s);   // right arm
-    
-    // 5. HANDS
-    ctx.fillStyle = skin;
-    ctx.fillRect(-6*s, 16*s, 3*s, 2*s);
-    ctx.fillRect(5*s, 16*s, 3*s, 2*s);
-    
-    // 6. HEAD (oversized chibi! 60% of sprite)
-    ctx.fillStyle = skin;
-    ctx.fillRect(-6*s, -8*s, 14*s, 14*s); // main head block
-    // Round corners for circle feel
-    ctx.clearRect(-6*s, -8*s, 2*s, 2*s);
-    ctx.clearRect(6*s, -8*s, 2*s, 2*s);
-    ctx.fillRect(-5*s, -7*s, 12*s, 13*s);
-    
-    // 7. FACE (highlight area)
-    ctx.fillStyle = lightenColor(skin, 10);
-    ctx.fillRect(-4*s, -6*s, 10*s, 10*s);
-    
-    // 8. EYES (large, expressive — signature chibi feature)
-    // Sclera (white)
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(-3*s, -2*s, 3*s, 3*s);  // left eye
-    ctx.fillRect(2*s, -2*s, 3*s, 3*s);   // right eye
-    
-    // Pupils (dark, slightly offset down-right for cuteness)
-    ctx.fillStyle = '#1a1a1a';
-    ctx.fillRect(-2*s, -1*s, 2*s, 2*s);
-    ctx.fillRect(3*s, -1*s, 2*s, 2*s);
-    
-    // Highlights (1×1 sparkle)
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(-2*s, -1*s, 1*s, 1*s);
-    ctx.fillRect(3*s, -1*s, 1*s, 1*s);
-    
-    // 9. BLUSH (soft pink under eyes)
-    ctx.fillStyle = 'rgba(255,150,150,0.5)';
-    ctx.fillRect(-4*s, 2*s, 3*s, 1*s);
-    ctx.fillRect(3*s, 2*s, 3*s, 1*s);
-    
-    // 10. MOUTH (tiny, happy)
-    ctx.fillStyle = '#a06060';
-    ctx.fillRect(-1*s, 3*s, 2*s, 1*s);
-    
-    // 11. HAIR (style varies by character)
-    ctx.fillStyle = hair;
-    
-    if (base === 'catgirl') {
-      // Twintails + cat ears
-      ctx.fillRect(-8*s, -10*s, 6*s, 8*s);  // left tail base
-      ctx.fillRect(8*s, -10*s, 6*s, 8*s);   // right tail base
-      ctx.fillRect(-10*s, -6*s, 6*s, 18*s); // left tail flow
-      ctx.fillRect(10*s, -6*s, 6*s, 18*s);  // right tail flow
-      ctx.fillRect(-4*s, -10*s, 10*s, 6*s); // bangs
-      ctx.fillStyle = hairShadow(hair, 20); // shadow
-      ctx.fillRect(-4*s, 4*s, 14*s, 2*s);
-      // Cat ears
-      ctx.fillStyle = hair;
-      ctx.fillRect(-7*s, -14*s, 5*s, 6*s);
-      ctx.fillRect(6*s, -14*s, 5*s, 6*s);
-      ctx.fillStyle = '#ffb7c5'; // inner ear
-      ctx.fillRect(-6*s, -12*s, 3*s, 3*s);
-      ctx.fillRect(7*s, -12*s, 3*s, 3*s);
-    } else if (base === 'human') {
-      // Standard hair with variations by hairIdx
-      if (hairIdx % 3 === 0) {
-        // Long flowing
-        ctx.fillRect(-7*s, -10*s, 6*s, 22*s);
-        ctx.fillRect(9*s, -10*s, 6*s, 22*s);
-        ctx.fillRect(-5*s, -10*s, 18*s, 6*s);
-      } else if (hairIdx % 3 === 1) {
-        // Short spiky
-        ctx.fillRect(-5*s, -11*s, 8*s, 5*s);
-        ctx.fillRect(5*s, -11*s, 8*s, 5*s);
-        ctx.fillRect(-3*s, -12*s, 10*s, 5*s);
-      } else {
-        // Medium wavy
-        ctx.fillRect(-6*s, -10*s, 18*s, 5*s);
-        ctx.fillRect(-4*s, -8*s, 5*s, 12*s);
-        ctx.fillRect(11*s, -8*s, 5*s, 12*s);
-      }
-      // Hair shadow
-      ctx.fillStyle = hairShadow(hair, 20);
-      ctx.fillRect(-4*s, 4*s, 14*s, 2*s);
-    } else if (base === 'bunny') {
-      // Bunny ears
-      ctx.fillStyle = hair;
-      ctx.fillRect(-4*s, -22*s, 4*s, 20*s);
-      ctx.fillRect(8*s, -22*s, 4*s, 20*s);
-      ctx.fillStyle = '#ffb7c5'; // inner ear
-      ctx.fillRect(-3*s, -20*s, 2*s, 16*s);
-      ctx.fillRect(9*s, -20*s, 2*s, 16*s);
-      // Head fluff
-      ctx.fillStyle = hair;
-      ctx.fillRect(-4*s, -8*s, 16*s, 8*s);
-    } else if (base === 'robot') {
-      // Dome + antenna
-      ctx.fillStyle = '#888888';
-      ctx.fillRect(-4*s, -10*s, 16*s, 12*s);
-      ctx.fillStyle = '#1a1a2e'; // face screen
-      ctx.fillRect(-2*s, -6*s, 12*s, 8*s);
-      ctx.fillStyle = '#4fc3f7'; // screen eyes
-      ctx.fillRect(0, -3*s, 2*s, 2*s);
-      ctx.fillRect(5*s, -3*s, 2*s, 2*s);
-      ctx.fillStyle = '#7dd3c0'; // screen mouth
-      ctx.fillRect(2*s, 0, 4*s, 1*s);
-      // Antenna
-      ctx.fillStyle = '#ff5252';
-      ctx.fillRect(5*s, -16*s, 2*s, 8*s);
-      ctx.fillRect(4*s, -18*s, 4*s, 3*s);
-    }
-    
-    // 12. ACCESSORIES
-    accessories.forEach(acc => {
-      if (acc === 'sunglasses') {
-        ctx.fillStyle = '#1a1a1a';
-        ctx.fillRect(-4*s, -2*s, 4*s, 3*s);
-        ctx.fillRect(3*s, -2*s, 4*s, 3*s);
-        ctx.fillRect(0, -1*s, 3*s, 1*s);
-      }
-      if (acc === 'headband') {
-        ctx.fillStyle = '#4a3018';
-        ctx.fillRect(-5*s, -9*s, 16*s, 2*s);
-      }
-      if (acc === 'witch_hat') {
-        ctx.fillStyle = '#2a2040';
-        ctx.fillRect(-2*s, -18*s, 10*s, 14*s);
-        ctx.fillRect(-6*s, -6*s, 18*s, 3*s);
-        ctx.fillStyle = '#b8a9d9';
-        ctx.fillRect(2*s, -10*s, 4*s, 2*s);
-      }
-      if (acc === 'staff') {
-        ctx.fillStyle = '#8b6914';
-        ctx.fillRect(8*s, 4*s, 2*s, 20*s);
-        ctx.fillStyle = '#4fc3f7';
-        ctx.fillRect(7*s, 0, 4*s, 4*s);
-      }
-      if (acc === 'cape') {
-        ctx.fillStyle = '#b8a9d9';
-        ctx.fillRect(-4*s, 8*s, 16*s, 16*s);
-      }
-      if (acc === 'pirate_hat') {
-        ctx.fillStyle = '#1a1a1a';
-        ctx.fillRect(-4*s, -14*s, 16*s, 8*s);
-        ctx.fillRect(-8*s, -8*s, 24*s, 3*s);
-        ctx.fillStyle = '#ffd700';
-        ctx.fillRect(2*s, -10*s, 4*s, 2*s);
-      }
-      if (acc === 'eyepatch') {
-        ctx.fillStyle = '#1a1a1a';
-        ctx.fillRect(3*s, -2*s, 4*s, 3*s);
-      }
-      if (acc === 'carrot') {
-        ctx.fillStyle = '#ff9f5e';
-        ctx.fillRect(8*s, 12*s, 3*s, 8*s);
-        ctx.fillStyle = '#7dd3c0';
-        ctx.fillRect(8*s, 8*s, 3*s, 4*s);
-      }
-    });
-    
-    // 13. OUTLINE (subtle dark edge for pop)
-    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-    ctx.lineWidth = 0.5 * s;
-    ctx.strokeRect(-6*s, -8*s, 14*s, 30*s);
-    
-    ctx.restore();
-  }
-
-  startLoop() {
-    const loop = (timestamp) => { this.update(timestamp); this.render(); requestAnimationFrame(loop); };
-    requestAnimationFrame(loop);
-  }
-  update(timestamp) {
-    if (this.state.screen !== 'game') return;
-    const dt = (timestamp - this.state.lastTime) / 1000; this.state.lastTime = timestamp; this.state.frameCount++;
-    const speed = 0.35; let dx = 0, dy = 0;
-    if (this.state.keys['w'] || this.state.keys['arrowup']) dy -= speed;
-    if (this.state.keys['s'] || this.state.keys['arrowdown']) dy += speed;
-    if (this.state.keys['a'] || this.state.keys['arrowleft']) dx -= speed;
-    if (this.state.keys['d'] || this.state.keys['arrowright']) dx += speed;
-    if (dx !== 0 || dy !== 0) {
-      this.state.player.x = Math.max(0.02, Math.min(0.98, this.state.player.x + dx * dt));
-      this.state.player.y = Math.max(0.02, Math.min(0.98, this.state.player.y + dy * dt));
-      this.state.player.moving = true;
-      if (dx > 0) this.state.player.facing = 'right'; else if (dx < 0) this.state.player.facing = 'left'; else if (dy < 0) this.state.player.facing = 'up'; else this.state.player.facing = 'down';
-    } else { this.state.player.moving = false; }
-    this.state.onlinePlayers.forEach(p => {
-      if (Math.random() < 0.01) { p.tx = Math.max(0.1, Math.min(0.9, p.x + (Math.random() - 0.5) * 0.3)); p.ty = Math.max(0.1, Math.min(0.9, p.y + (Math.random() - 0.5) * 0.3)); }
-      if (p.tx != null) { p.x += (p.tx - p.x) * 0.02; p.y += (p.ty - p.y) * 0.02; if (Math.abs(p.tx - p.x) < 0.01) p.tx = null; }
-    });
-    if (Math.random() < 0.05) {
-      this.state.particles.push({ x: Math.random() * this.W, y: Math.random() * this.H, vx: (Math.random() - 0.5) * 0.5, vy: -Math.random() * 1,
-        life: 1, color: Math.random() > 0.5 ? '#ffd700' : '#b8a9d9', size: Math.random() * 2 + 1 });
-    }
-    this.state.particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life -= 0.008; });
-    this.state.particles = this.state.particles.filter(p => p.life > 0);
-  }
-  render() {
-    if (this.state.screen !== 'game') return;
-    const ctx = this.ctx; const W = this.W; const H = this.H; const area = AREAS[this.state.area];
-    ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = area.bg; ctx.fillRect(0, 0, W, H);
-    const groundY = H * 0.35; ctx.fillStyle = area.floorColor; ctx.fillRect(0, groundY, W, H - groundY);
-    ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth = 1; const gridSize = 40;
-    for (let x = 0; x < W; x += gridSize) { ctx.beginPath(); ctx.moveTo(x, groundY); ctx.lineTo(x, H); ctx.stroke(); }
-    for (let y = groundY; y < H; y += gridSize) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
-    ctx.font = '16px "VT323", monospace'; ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fillText(`${area.emoji} ${area.name}`, 20, H - 80);
-    area.decorations.forEach(d => {
-      const x = d.x * W; const y = groundY + (d.y * (H - groundY)) * 0.7;
-      ctx.font = '28px serif'; ctx.textAlign = 'center'; ctx.globalAlpha = 0.7; ctx.fillText(d.emoji, x, y); ctx.globalAlpha = 1;
-    });
-    area.npcs.forEach(npc => {
-      const x = npc.x * W; const y = groundY + (npc.y * (H - groundY)) * 0.8;
-      ctx.font = '32px serif'; ctx.textAlign = 'center'; ctx.fillText(npc.emoji, x, y);
-      ctx.font = '12px "Nunito", sans-serif'; ctx.fillStyle = npc.color; ctx.fillText(npc.name, x, y + 20);
-    });
-    this.state.onlinePlayers.forEach(p => {
-      const char = CHARACTERS.find(c => c.id === p.charId) || CHARACTERS[0];
-      const px = p.x * W; const py = groundY + (p.y * (H - groundY)) * 0.8;
-      this.drawAvatar(ctx, px, py, 0.8, char.base, p.skinColor, p.hairColor, p.outfitColor, char.accessories);
-      ctx.font = '11px "Nunito", sans-serif'; ctx.fillStyle = '#b8a9d9'; ctx.textAlign = 'center'; ctx.fillText(p.name, px, py + 28);
-    });
-    const px = this.state.player.x * W; const py = groundY + (this.state.player.y * (H - groundY)) * 0.8;
-    const char = CHARACTERS.find(c => c.id === this.state.player.charId) || CHARACTERS[0];
-    const bob = this.state.player.moving ? Math.sin(this.state.frameCount * 0.15) * 2 : 0;
-    this.drawAvatar(ctx, px, py + bob, 1.0, char.base, this.state.player.skinColor, this.state.player.hairColor, this.state.player.outfitColor, this.state.player.accessories);
-    ctx.font = 'bold 13px "Nunito", sans-serif'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'center'; ctx.fillText(this.state.player.name, px, py + 36);
-    ctx.strokeStyle = 'rgba(255,215,0,0.3)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px, py + 4, 22, 0, Math.PI * 2); ctx.stroke();
-    if (this.state.area === 'island') {
-      this.state.islandItems.forEach(item => {
-        const ix = item.x * W; const iy = groundY + (item.y * (H - groundY)) * 0.7;
-        ctx.font = '24px serif'; ctx.textAlign = 'center'; ctx.fillText(item.emoji, ix, iy);
-      });
-    }
-    this.state.particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); });
-    ctx.globalAlpha = 1;
-    const grad = ctx.createRadialGradient(W / 2, H / 2, W * 0.3, W / 2, H / 2, W * 0.8);
-    grad.addColorStop(0, 'rgba(0,0,0,0)'); grad.addColorStop(1, 'rgba(0,0,0,0.4)');
-    ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
-    if (this.state.area === 'island' && this.state.mouse.down) {
-      const mx = this.state.mouse.x / W; const my = (this.state.mouse.y - groundY) / (H - groundY);
-      if (my > 0.1 && my < 0.9 && mx > 0.05 && mx < 0.95) {
-        const selectedItem = this.state.inventory[0];
-        if (selectedItem && selectedItem.type === 'furniture') {
-          this.state.islandItems.push({ ...selectedItem, x: mx, y: my * 1.2 });
-          this.state.inventory.shift(); this.renderInventory(); this.toast(`Placed ${selectedItem.name}! 🏝️`, 'success');
-        }
-      }
-      this.state.mouse.down = false;
-    }
-  }
-}
-
-// ─── Init ─────────────────────────────────────────────────────
-const engine = new StarlightEngine('game-canvas');
-window.gameEngine = engine;
-
-// Color helpers for pixel art shading
-function lightenColor(color, percent) {
-  const num = parseInt(color.replace('#', ''), 16);
-  const amt = Math.round(2.55 * percent);
-  const R = Math.min(255, (num >> 16) + amt);
-  const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
-  const B = Math.min(255, (num & 0x0000FF) + amt);
-  return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
-}
-function hairShadow(color, percent) {
-  const num = parseInt(color.replace('#', ''), 16);
-  const amt = Math.round(2.55 * percent);
-  const R = Math.max(0, (num >> 16) - amt);
-  const G = Math.max(0, ((num >> 8) & 0x00FF) - amt);
-  const B = Math.max(0, (num & 0x0000FF) - amt);
-  return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
-}
-
-function enterGame() { engine.enterGame(); }
-function showLanding() { engine.showLanding(); }
-function confirmChar() { engine.confirmChar(); }
-function toggleAreas() { engine.toggleAreas(); }
-function toggleInventory() { engine.toggleInventory(); }
-function toggleTrade() { engine.toggleTrade(); }
-function toggleCustomize() { engine.toggleCustomize(); }
-function toggleSettings() { engine.toggleSettings(); }
-function toggleProfile() { engine.toggleProfile(); }
-function goToArea(area) { engine.goToArea(area); }
-function sendChat() { engine.sendChat(); }
-function addItemToTrade() { engine.addItemToTrade(); }
-function confirmTrade() { engine.confirmTrade(); }
-function cancelTrade() { engine.cancelTrade(); }
-function showPublishModal() {
-  const modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:600;';
-  modal.innerHTML = `
-    <div style="background:#2a2040;border:3px solid #ffd700;border-radius:20px;padding:2rem;max-width:420px;text-align:center;box-shadow:0 0 40px rgba(255,215,0,0.2);">
-      <div style="font-family:VT323,monospace;font-size:1.5rem;color:#ffd700;margin-bottom:1rem;">🌐 Publish Starlight Inn</div>
-      <p style="color:#f0e6ff;font-size:0.9rem;margin-bottom:1rem;">Your game is ready to share with the world!</p>
-      <div style="background:#1a1428;border-radius:12px;padding:1rem;margin-bottom:1rem;text-align:left;">
-        <div style="font-size:0.8rem;color:#a090c0;margin-bottom:0.5rem;">📦 Deploy Package:</div>
-        <div style="font-family:VT323,monospace;font-size:0.85rem;color:#7dd3c0;">starlight-inn-desktop.zip</div>
-        <div style="font-size:0.75rem;color:#a090c0;margin-top:0.5rem;">Contains: index.html + server.js + launcher</div>
+        </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:0.5rem;">
-        <a href="https://app.netlify.com/drop" target="_blank" style="display:block;padding:0.75rem;border-radius:10px;background:linear-gradient(135deg,#ffd700,#ff9f5e);color:#2a1a00;font-weight:800;text-decoration:none;">📤 Deploy to Netlify Drop</a>
-        <a href="https://tiiny.host" target="_blank" style="display:block;padding:0.75rem;border-radius:10px;background:#3a3060;color:#f0e6ff;text-decoration:none;border:2px solid #b8a9d9;">🚀 Deploy to Tiiny.host</a>
-        <a href="https://github.com/new" target="_blank" style="display:block;padding:0.75rem;border-radius:10px;background:#3a3060;color:#f0e6ff;text-decoration:none;border:2px solid #b8a9d9;">🐙 Create GitHub Repo + Pages</a>
-      </div>
-      <button class="btn btn-secondary" style="margin-top:1rem;" onclick="this.closest('div[style*=\"position:fixed\"]').remove()">Close</button>
     </div>
-  `;
-  document.body.appendChild(modal);
-}
 
-// Starfield
-const starContainer = document.getElementById('landing-stars');
-for (let i = 0; i < 60; i++) {
-  const star = document.createElement('div'); star.className = 'star';
-  star.style.left = Math.random() * 100 + '%'; star.style.top = Math.random() * 100 + '%';
-  star.style.animationDelay = Math.random() * 2 + 's'; starContainer.appendChild(star);
-}
+    <!-- ==================== CATALOG / SHOP PANEL ==================== -->
+    <div id="catalog-panel" class="panel panel-catalog" role="dialog" aria-label="Catalog shop" aria-modal="false">
+      <div class="panel-header">
+        <h3><span aria-hidden="true">🏪</span> Starlight Catalog</h3>
+        <button class="panel-close" aria-label="Close catalog">×</button>
+      </div>
+      <div class="catalog-currency">
+        <span class="catalog-silver"><span aria-hidden="true">🪙</span> <span id="catalog-silver">500</span></span>
+        <span class="catalog-gold"><span aria-hidden="true">⭐</span> <span id="catalog-gold">100</span></span>
+      </div>
+      <div class="catalog-categories" role="tablist">
+        <button class="cat-btn active" data-category="featured" role="tab" aria-selected="true">⭐ Featured</button>
+        <button class="cat-btn" data-category="wearable" role="tab" aria-selected="false">👕 Wearables</button>
+        <button class="cat-btn" data-category="furniture" role="tab" aria-selected="false">🛋️ Furniture</button>
+        <button class="cat-btn" data-category="room" role="tab" aria-selected="false">🏠 Rooms</button>
+        <button class="cat-btn" data-category="decor" role="tab" aria-selected="false">🎨 Decor</button>
+        <button class="cat-btn" data-category="pets" role="tab" aria-selected="false">🐾 Pets</button>
+        <button class="cat-btn" data-category="effects" role="tab" aria-selected="false">✨ Effects</button>
+        <button class="cat-btn" data-category="consumable" role="tab" aria-selected="false">🍵 Consumables</button>
+        <button class="cat-btn" data-category="music" role="tab" aria-selected="false">🎵 Music</button>
+        <button class="cat-btn" data-category="currency" role="tab" aria-selected="false">🪙 Currency</button>
+        <button class="cat-btn" data-category="limited" role="tab" aria-selected="false">🔥 Limited</button>
+        <button class="cat-btn" data-category="seasonal" role="tab" aria-selected="false">🎄 Seasonal</button>
+      </div>
+      <div id="catalog-grid" class="catalog-grid" role="grid"></div>
+      <div class="catalog-footer">
+        <span id="catalog-page-info">Page 1 of 1</span>
+        <div class="catalog-pagination">
+          <button id="btn-catalog-prev" class="btn btn-secondary" aria-label="Previous page">←</button>
+          <button id="btn-catalog-next" class="btn btn-secondary" aria-label="Next page">→</button>
+        </div>
+      </div>
+    </div>
 
-const nameInput = document.getElementById('username-input');
-if (nameInput) nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') engine.enterGame(); });
-const chatInput = document.getElementById('chat-input');
-if (chatInput) chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') engine.sendChat(); });
-</script>
+    <!-- ==================== TRADE WINDOW ==================== -->
+    <div id="trade-panel" class="panel panel-trade" role="dialog" aria-label="Trade window" aria-modal="true">
+      <div class="panel-header">
+        <h3><span aria-hidden="true">🤝</span> Trading with <span id="trade-partner">Player</span></h3>
+        <button class="panel-close" aria-label="Cancel trade">×</button>
+      </div>
+      <div class="trade-status" id="trade-status" role="status" aria-live="polite">Waiting for both parties to lock...</div>
+      <div class="trade-content">
+        <div class="trade-side trade-my">
+          <h4>Your Offer</h4>
+          <div id="trade-my-offer" class="trade-offer" role="list"></div>
+          <div class="trade-value">
+            <span>Value: </span><span id="trade-my-value">0</span> <span aria-hidden="true">🪙</span>
+          </div>
+          <button id="btn-add-trade" class="btn btn-secondary">+ Add Item</button>
+        </div>
+        <div class="trade-center">
+          <div id="trade-fairness" class="trade-fairness">Fair</div>
+          <div class="trade-locks">
+            <div id="lock-my" class="lock-indicator" aria-label="Your lock status">🔓</div>
+            <div class="lock-vs">vs</div>
+            <div id="lock-their" class="lock-indicator" aria-label="Their lock status">🔓</div>
+          </div>
+          <button id="btn-trade-lock" class="btn btn-primary">Lock Offer</button>
+          <button id="btn-trade-confirm" class="btn btn-success" disabled>Confirm (5)</button>
+          <button id="btn-trade-cancel" class="btn btn-danger">Cancel</button>
+        </div>
+        <div class="trade-side trade-their">
+          <h4>Their Offer</h4>
+          <div id="trade-their-offer" class="trade-offer" role="list"></div>
+          <div class="trade-value">
+            <span>Value: </span><span id="trade-their-value">0</span> <span aria-hidden="true">🪙</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== FRIEND LIST PANEL ==================== -->
+    <div id="friends-panel" class="panel panel-friends" role="dialog" aria-label="Friends list" aria-modal="false">
+      <div class="panel-header">
+        <h3><span aria-hidden="true">👥</span> Friends</h3>
+        <div class="panel-search">
+          <input type="text" id="friends-search" placeholder="Search friends..." aria-label="Search friends">
+        </div>
+        <button class="panel-close" aria-label="Close friends">×</button>
+      </div>
+      <div class="friends-tabs" role="tablist">
+        <button class="friends-tab active" role="tab" aria-selected="true">Online</button>
+        <button class="friends-tab" role="tab" aria-selected="false">All</button>
+        <button class="friends-tab" role="tab" aria-selected="false">Requests</button>
+        <button class="friends-tab" role="tab" aria-selected="false">Blocked</button>
+      </div>
+      <div id="friends-list" class="friends-list" role="list"></div>
+      <div class="friends-actions">
+        <button id="btn-add-friend" class="btn btn-primary">+ Add Friend</button>
+        <button id="btn-invite-party" class="btn btn-secondary" disabled>Invite to Party</button>
+      </div>
+    </div>
+
+    <!-- ==================== AREA BROWSER ==================== -->
+    <div id="area-panel" class="panel panel-area" role="dialog" aria-label="Area browser" aria-modal="false">
+      <div class="panel-header">
+        <h3><span aria-hidden="true">🗺️</span> Areas</h3>
+        <button class="panel-close" aria-label="Close area browser">×</button>
+      </div>
+      <div class="area-filters">
+        <button class="area-filter active" data-filter="all">All</button>
+        <button class="area-filter" data-filter="social">Social</button>
+        <button class="area-filter" data-filter="game">Games</button>
+        <button class="area-filter" data-filter="home">Homes</button>
+        <button class="area-filter" data-filter="event">Events</button>
+      </div>
+      <div id="area-grid" class="area-grid" role="grid"></div>
+    </div>
+
+    <!-- ==================== MINIGAME HUB ==================== -->
+    <div id="minigame-panel" class="panel panel-minigame" role="dialog" aria-label="Mini games" aria-modal="false">
+      <div class="panel-header">
+        <h3><span aria-hidden="true">🎮</span> Mini Games</h3>
+        <button class="panel-close" aria-label="Close mini games">×</button>
+      </div>
+      <div class="minigame-list" id="minigame-list" role="list">
+        <!-- Generated by JS -->
+      </div>
+    </div>
+
+    <!-- ==================== NOTIFICATIONS PANEL ==================== -->
+    <div id="notifications-panel" class="panel panel-notifications" role="dialog" aria-label="Notifications" aria-modal="false">
+      <div class="panel-header">
+        <h3><span aria-hidden="true">🔔</span> Notifications</h3>
+        <button id="btn-clear-notifications" class="btn btn-ghost" aria-label="Clear all notifications">Clear All</button>
+        <button class="panel-close" aria-label="Close notifications">×</button>
+      </div>
+      <div id="notifications-list" class="notifications-list" role="list"></div>
+    </div>
+
+    <!-- ==================== SETTINGS PANEL ==================== -->
+    <div id="settings-panel" class="panel panel-settings" role="dialog" aria-label="Settings panel" aria-modal="false">
+      <div class="panel-header">
+        <h3><span aria-hidden="true">⚙️</span> Settings</h3>
+        <button class="panel-close" aria-label="Close settings">×</button>
+      </div>
+      <div class="settings-body">
+        <div class="settings-section">
+          <h4>Sound</h4>
+          <label>Master Volume
+            <input type="range" id="vol-master" min="0" max="100" value="80" aria-label="Master volume">
+            <span class="range-value" id="val-master">80%</span>
+          </label>
+          <label>Music Volume
+            <input type="range" id="vol-music" min="0" max="100" value="60" aria-label="Music volume">
+            <span class="range-value" id="val-music">60%</span>
+          </label>
+          <label>SFX Volume
+            <input type="range" id="vol-sfx" min="0" max="100" value="80" aria-label="Sound effects volume">
+            <span class="range-value" id="val-sfx">80%</span>
+          </label>
+          <label>Voice Volume
+            <input type="range" id="vol-voice" min="0" max="100" value="100" aria-label="Voice volume">
+            <span class="range-value" id="val-voice">100%</span>
+          </label>
+        </div>
+        <div class="settings-section">
+          <h4>Graphics</h4>
+          <label>Quality
+            <select id="setting-quality" aria-label="Graphics quality">
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </label>
+          <label>Particles
+            <input type="checkbox" id="setting-particles" checked aria-label="Enable particles">
+          </label>
+          <label>Show Player Names
+            <input type="checkbox" id="setting-names" checked aria-label="Show player names">
+          </label>
+          <label>Show Player Avatars
+            <input type="checkbox" id="setting-avatars" checked aria-label="Show player avatars">
+          </label>
+          <label>Fullscreen Mode
+            <input type="checkbox" id="setting-fullscreen" aria-label="Enable fullscreen">
+          </label>
+        </div>
+        <div class="settings-section">
+          <h4>Gameplay</h4>
+          <label>Auto-Save
+            <input type="checkbox" id="setting-autosave" checked aria-label="Auto save">
+          </label>
+          <label>Show Hints
+            <input type="checkbox" id="setting-hints" checked aria-label="Show hints">
+          </label>
+          <label>Double-Tap to Move
+            <input type="checkbox" id="setting-doubletap" aria-label="Double tap to move">
+          </label>
+        </div>
+        <div class="settings-section">
+          <h4>Safety & Privacy</h4>
+          <label>Child Safety Mode
+            <input type="checkbox" id="setting-child" aria-label="Enable child safety mode">
+          </label>
+          <label>Hide Online Status
+            <input type="checkbox" id="setting-hide" aria-label="Hide online status">
+          </label>
+          <label>Only Friends Can Whisper
+            <input type="checkbox" id="setting-friend-whisper" aria-label="Only friends can whisper">
+          </label>
+          <label>Filter Mature Content
+            <input type="checkbox" id="setting-filter" checked aria-label="Filter mature content">
+          </label>
+        </div>
+        <div class="settings-section">
+          <h4>Account</h4>
+          <button id="btn-logout" class="btn btn-danger">Log Out</button>
+          <button id="btn-report" class="btn btn-secondary">Report a Problem</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== PLAYER RADIAL MENU (right-click) ==================== -->
+    <div id="radial-menu" class="radial-menu hidden" role="menu" aria-label="Player actions">
+      <button class="radial-item" data-action="profile" role="menuitem">👤 Profile</button>
+      <button class="radial-item" data-action="whisper" role="menuitem">💬 Whisper</button>
+      <button class="radial-item" data-action="friend" role="menuitem">⭐ Friend</button>
+      <button class="radial-item" data-action="trade" role="menuitem">🤝 Trade</button>
+      <button class="radial-item" data-action="ignore" role="menuitem">🚫 Ignore</button>
+      <button class="radial-item" data-action="report" role="menuitem">⚠️ Report</button>
+    </div>
+
+    <!-- ==================== TOAST / NOTIFICATION CONTAINER ==================== -->
+    <div id="toast-container" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- ==================== LOADING OVERLAY ==================== -->
+    <div id="loading-overlay" class="loading-overlay" role="alert" aria-live="assertive" aria-label="Loading overlay">
+      <div class="loading-bg" aria-hidden="true"></div>
+      <div class="loading-content">
+        <div class="loading-spinner" aria-hidden="true">🌟</div>
+        <div class="loading-text">Entering Starlight Inn...</div>
+        <div class="loading-subtext">Gathering stardust and warming the hearth</div>
+        <div class="loading-bar">
+          <div class="loading-fill" id="loading-fill" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== DISCONNECT OVERLAY ==================== -->
+    <div id="disconnect-overlay" class="disconnect-overlay hidden" role="alert" aria-live="assertive">
+      <div class="disconnect-content">
+        <div class="disconnect-icon" aria-hidden="true">💫</div>
+        <h2>Connection Lost</h2>
+        <p>The stars have drifted apart. Trying to reconnect...</p>
+        <button id="btn-reconnect" class="btn btn-primary">Reconnect Now</button>
+        <button id="btn-offline" class="btn btn-ghost">Play Offline</button>
+      </div>
+    </div>
+
+    <!-- ==================== MOBILE VIRTUAL JOYSTICK ==================== -->
+    <div id="mobile-joystick" class="mobile-joystick" aria-hidden="true">
+      <div class="joystick-base">
+        <div class="joystick-knob"></div>
+      </div>
+    </div>
+
+    <!-- ==================== MOBILE ACTION BUTTONS ==================== -->
+    <div id="mobile-actions" class="mobile-actions" aria-label="Mobile action buttons">
+      <button class="mobile-btn mobile-interact" aria-label="Interact">👆</button>
+      <button class="mobile-btn mobile-chat" aria-label="Open chat">💬</button>
+      <button class="mobile-btn mobile-emote" aria-label="Open emotes">😊</button>
+      <button class="mobile-btn mobile-menu" aria-label="Open menu">☰</button>
+    </div>
+
+    <!-- ==================== SCREEN READER LIVE REGION ==================== -->
+    <div id="sr-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+  <!-- ==================== MODULE ENTRY ==================== -->
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

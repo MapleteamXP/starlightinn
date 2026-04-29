@@ -1,15 +1,15 @@
 /**
- * Starlight Inn v3.5 — Main Entry Point
- * AAA-grade cozy-core social virtual world web game
+ * Starlight Inn v4.0 — Main Entry Point
+ * Premium polished cozy-core social virtual world web game
  *
  * Wires all engine, world, avatar, social, economy, minigame,
- * event, safety, and network modules together into a cohesive Game instance.
+ * event, safety, audio, atmosphere, and network modules together.
  *
- * Features WebGL rendering, A* pathfinding, seasonal content,
- * AI moderation, debug console, and island creator.
+ * Features procedural area backgrounds, living avatars, immersive audio,
+ * social atmosphere effects, scene transitions, and premium presentation.
  *
  * @module main
- * @version 3.5.0
+ * @version 4.0.0
  * @author Starlight Inn Team
  */
 
@@ -23,7 +23,17 @@ import { Camera } from './engine/Camera.js';
 import { Input } from './engine/Input.js';
 import { Assets } from './engine/Assets.js';
 import { Audio } from './engine/Audio.js';
-import { DebugConsole } from './engine/DebugConsole.js';
+import DebugConsole from './engine/DebugConsole.js';
+
+// ============================================================
+// v4.0 Presentation Polish
+// ============================================================
+
+import LoadingScreen from './engine/LoadingScreen.js';
+import SceneTransitions from './engine/SceneTransitions.js';
+import ResponsiveLayout from './engine/ResponsiveLayout.js';
+import TutorialOverlay from './engine/TutorialOverlay.js';
+import PerformanceHUD from './engine/PerformanceHUD.js';
 
 // ============================================================
 // World Systems
@@ -31,11 +41,21 @@ import { DebugConsole } from './engine/DebugConsole.js';
 
 import { AreaManager } from './world/AreaManager.js';
 import { NPCManager } from './world/NPC.js';
-import { GridPathfinding } from './world/GridPathfinding.js';
-import { CollisionSystem } from './world/CollisionSystem.js';
-import { SeasonalContent } from './world/SeasonalContent.js';
+import GridPathfinding from './world/GridPathfinding.js';
+import CollisionSystem from './world/CollisionSystem.js';
+import SeasonalContent from './world/SeasonalContent.js';
 import { IslandEditor } from './world/IslandEditor.js';
 import { IslandEditorUI } from './world/IslandEditorUI.js';
+
+// ============================================================
+// v4.0 Area Visuals & Atmosphere
+// ============================================================
+
+import AreaBackgrounds from './world/AreaBackgrounds.js';
+import ParallaxSystem from './world/ParallaxSystem.js';
+import PropSystem from './world/PropSystem.js';
+import DepthSorter from './world/DepthSorter.js';
+import AtmosphereEngine from './world/AtmosphereEngine.js';
 
 // ============================================================
 // Avatar Systems
@@ -47,6 +67,16 @@ import { Gestures } from './avatar/Gestures.js';
 import { Presets } from './avatar/Presets.js';
 
 // ============================================================
+// v4.0 Living Avatar Animation
+// ============================================================
+
+import WalkCycle from './avatar/WalkCycle.js';
+import IdleAnimation from './avatar/IdleAnimation.js';
+import EmotionSystem from './avatar/EmotionSystem.js';
+import AvatarEntryExit from './avatar/AvatarEntryExit.js';
+import CharacterPreview from './avatar/CharacterPreview.js';
+
+// ============================================================
 // Social Systems
 // ============================================================
 
@@ -54,6 +84,16 @@ import { Chat } from './social/Chat.js';
 import { RadialMenu } from './social/RadialMenu.js';
 import { Friends } from './social/Friends.js';
 import { TradeWindow } from './social/Trade.js';
+
+// ============================================================
+// v4.0 Social Atmosphere
+// ============================================================
+
+import ChatBubbles from './social/ChatBubbles.js';
+import Nameplates from './social/Nameplates.js';
+import SocialAnimations from './social/SocialAnimations.js';
+import PresenceIndicators from './social/PresenceIndicators.js';
+import WelcomeFlow from './social/WelcomeFlow.js';
 
 // ============================================================
 // Economy Systems
@@ -92,7 +132,7 @@ import { SpamDetector } from './safety/SpamDetector.js';
 import { Report } from './safety/Report.js';
 import { Moderation } from './safety/Moderation.js';
 import { ChildSafety } from './safety/ChildSafety.js';
-import { AIModeration } from './safety/AIModeration.js';
+import AIModeration from './safety/AIModeration.js';
 
 // ============================================================
 // Game Feel Mechanics
@@ -101,6 +141,16 @@ import { AIModeration } from './safety/AIModeration.js';
 import { FartMechanic } from './FartMechanic.js';
 import { UppercutEjection } from './UppercutEjection.js';
 import { ScreenEffects } from './ScreenEffects.js';
+
+// ============================================================
+// v4.0 Audio Systems
+// ============================================================
+
+import SoundBank from './audio/SoundBank.js';
+import AmbientAudio from './audio/AmbientAudio.js';
+import FootstepSystem from './audio/FootstepSystem.js';
+import UISounds from './audio/UISounds.js';
+import AudioMixer from './audio/AudioMixer.js';
 
 // ============================================================
 // Network Layer
@@ -115,223 +165,128 @@ import { SocketClient } from './net/SocketClient.js';
 /** @type {Game} The primary game instance */
 const game = new Game('game-canvas');
 
-/**
- * Wire all engine subsystems into the game instance.
- * This centralizes module initialization order and dependency injection.
- *
- * @param {Game} game - The game instance to wire modules into
- */
 function wireEngineModules(game) {
-  // Rendering & display (WebGL with Canvas 2D fallback)
+  game.loadingScreen = new LoadingScreen();
+  game.loadingScreen.show();
+  game.loadingScreen.setStage('Loading engine...');
+  game.loadingScreen.setProgress(5);
   game.renderer = new Renderer(game);
   game.camera = new Camera(game);
-
-  // Input handling (keyboard, mouse, touch)
   game.input = new Input(game);
-
-  // Audio system (music, SFX, voice)
   game.audio = new Audio();
-
-  // Asset loader (sprites, textures, maps)
   game.assets = new Assets();
-
-  // Debug console overlay (backtick toggle)
   game.debugConsole = new DebugConsole(game);
+  game.sceneTransitions = new SceneTransitions(game);
+  game.responsiveLayout = new ResponsiveLayout(game);
+  game.tutorialOverlay = new TutorialOverlay(game);
+  game.performanceHUD = new PerformanceHUD(game);
 }
 
-/**
- * Wire world-building modules for areas, NPCs, pathfinding,
- * collision, seasonal content, and island editor.
- *
- * @param {Game} game - The game instance
- */
 function wireWorldModules(game) {
-  // Area/world management (rooms, loading, transitions)
+  game.loadingScreen.setStage('Building world...');
+  game.loadingScreen.setProgress(20);
   game.areaManager = new AreaManager(game);
-
-  // NPC spawning, behavior, and dialog
   game.npcManager = new NPCManager(game);
-
-  // Grid-based A* pathfinding (8-directional, tap-to-move)
   game.pathfinding = new GridPathfinding(game);
-
-  // Collision detection (spatial hash, portals, social zones)
   game.collision = new CollisionSystem(game);
-
-  // Seasonal limited-time content (Christmas, Halloween, Easter, Tribal)
   game.seasonal = new SeasonalContent(game);
-
-  // Island Creator Suite (HSL paint, furniture, grid, undo/redo)
   game.islandEditor = new IslandEditor(game);
   game.islandEditorUI = new IslandEditorUI(game);
+  game.areaBackgrounds = new AreaBackgrounds(game);
+  game.parallax = new ParallaxSystem(game);
+  game.propSystem = new PropSystem(game);
+  game.depthSorter = new DepthSorter(game);
+  game.atmosphere = new AtmosphereEngine(game);
 }
 
-/**
- * Wire avatar systems for player appearance and expression.
- *
- * @param {Game} game - The game instance
- */
 function wireAvatarModules(game) {
-  // Player avatar rendering and state
+  game.loadingScreen.setStage('Creating avatars...');
+  game.loadingScreen.setProgress(35);
   game.avatar = new Avatar(game);
-
-  // Avatar customization UI (colors, bases)
   game.customizer = new Customizer(game);
-
-  // Gesture/emote system
   game.gestures = new Gestures(game);
-
-  // Preset avatar configurations
   game.presets = new Presets();
+  game.walkCycle = new WalkCycle(game);
+  game.idleAnimation = new IdleAnimation(game);
+  game.emotionSystem = new EmotionSystem(game);
+  game.avatarEntryExit = new AvatarEntryExit(game);
+  game.characterPreview = new CharacterPreview(game);
 }
 
-/**
- * Wire social interaction modules.
- *
- * @param {Game} game - The game instance
- */
 function wireSocialModules(game) {
-  // Chat system (area, whisper, party, system channels)
+  game.loadingScreen.setStage('Setting up social...');
+  game.loadingScreen.setProgress(50);
   game.chat = new Chat(game);
-
-  // Right-click radial menu on players
   game.radialMenu = new RadialMenu(game);
-
-  // Friend list, requests, status
   game.friends = new Friends(game);
-
-  // Trade window UI
   game.tradeWindow = new TradeWindow(game);
+  game.chatBubbles = new ChatBubbles(game);
+  game.nameplates = new Nameplates(game);
+  game.socialAnimations = new SocialAnimations(game);
+  game.presenceIndicators = new PresenceIndicators(game);
+  game.welcomeFlow = new WelcomeFlow(game);
 }
 
-/**
- * Wire economy modules for currency, shop, inventory, and trading.
- *
- * @param {Game} game - The game instance
- */
 function wireEconomyModules(game) {
-  // Currency wallets (silver, gold)
+  game.loadingScreen.setStage('Loading economy...');
+  game.loadingScreen.setProgress(60);
   game.currency = new Currency(game);
-
-  // Shop/catalog browsing and purchasing
   game.catalog = new Catalog(game);
-
-  // Player inventory management
   game.inventory = new Inventory(game);
-
-  // Trade engine (validation, fairness, confirmation)
   game.tradeEngine = new TradeEngine(game);
 }
 
-/**
- * Register all available mini-games with the hub.
- *
- * @param {Game} game - The game instance
- */
 function wireMinigameModules(game) {
-  // Mini-game hub (lobby, matchmaking, scoring)
+  game.loadingScreen.setStage('Loading mini-games...');
+  game.loadingScreen.setProgress(70);
   game.minigameHub = new MinigameHub(game);
-
-  // Register: Star Catcher (1-4 players)
-  game.minigameHub.register('starcatcher', StarCatcher, {
-    minPlayers: 1,
-    maxPlayers: 4,
-    description: 'Catch falling stars before they fade!',
-    icon: '⭐'
-  });
-
-  // Register: Memory Match (1-2 players)
-  game.minigameHub.register('memorymatch', MemoryMatch, {
-    minPlayers: 1,
-    maxPlayers: 2,
-    description: 'Match pairs of starlight cards.',
-    icon: '🃏'
-  });
-
-  // Register: Rhythm Dance (1-4 players)
-  game.minigameHub.register('rhythmdance', RhythmDance, {
-    minPlayers: 1,
-    maxPlayers: 4,
-    description: 'Dance to the rhythm of the cosmos.',
-    icon: '💃'
-  });
-
-  // Register: Trivia (1-4 players)
-  game.minigameHub.register('trivia', Trivia, {
-    minPlayers: 1,
-    maxPlayers: 4,
-    description: 'Test your knowledge of the starlight world.',
-    icon: '🧠'
-  });
+  game.minigameHub.register('starcatcher', StarCatcher, { minPlayers: 1, maxPlayers: 4, description: 'Catch falling stars before they fade!', icon: '⭐' });
+  game.minigameHub.register('memorymatch', MemoryMatch, { minPlayers: 1, maxPlayers: 2, description: 'Match pairs of starlight cards.', icon: '🃏' });
+  game.minigameHub.register('rhythmdance', RhythmDance, { minPlayers: 1, maxPlayers: 4, description: 'Dance to the rhythm of the cosmos.', icon: '💃' });
+  game.minigameHub.register('trivia', Trivia, { minPlayers: 1, maxPlayers: 4, description: 'Test your knowledge of the starlight world.', icon: '🧠' });
 }
 
-/**
- * Wire event and reward systems.
- *
- * @param {Game} game - The game instance
- */
 function wireEventModules(game) {
-  // Treasure chest spawning and loot
+  game.loadingScreen.setStage('Loading events...');
+  game.loadingScreen.setProgress(75);
   game.chestManager = new ChestManager(game);
-
-  // Power-up items (speed, invisibility, magnet)
   game.powerUps = new PowerUps(game);
-
-  // Event calendar (holidays, seasonal events)
   game.eventCalendar = new EventCalendar(game);
 }
 
-/**
- * Wire safety and moderation systems.
- *
- * @param {Game} game - The game instance
- */
 function wireSafetyModules(game) {
-  // Chat filter (profanity, PII)
+  game.loadingScreen.setStage('Setting up safety...');
+  game.loadingScreen.setProgress(80);
   game.filter = new Filter();
-
-  // Rate limiter (messages, actions)
   game.rateLimit = new RateLimit();
-
-  // Spam detection algorithm
   game.spamDetector = new SpamDetector();
-
-  // Player report system
   game.report = new Report(game);
-
-  // Moderation tools
   game.moderation = new Moderation(game);
-
-  // Child safety mode (restricted chat, safe names)
   game.childSafety = new ChildSafety(game);
-
-  // AI-assisted moderation (sentiment analysis, reputation)
   game.aiModeration = new AIModeration(game);
 }
 
-/**
- * Wire game feel mechanics — signature social interactions.
- *
- * @param {Game} game - The game instance
- */
 function wireGameFeelModules(game) {
-  // Fart mechanic (social emote with particles + audio)
+  game.loadingScreen.setStage('Loading interactions...');
+  game.loadingScreen.setProgress(85);
   game.fartMechanic = new FartMechanic(game);
-
-  // Uppercut ejection (physics arc + re-entry portal)
   game.uppercutEjection = new UppercutEjection(game);
-
-  // Screen effects (flash, shake, hitstop, slowMo, floating text)
   game.screenEffects = new ScreenEffects(game);
 }
 
-/**
- * Attempt to establish a network connection.
- * Falls back gracefully to offline single-player mode.
- *
- * @param {Game} game - The game instance
- */
+function wireAudioModules(game) {
+  game.loadingScreen.setStage('Initializing audio...');
+  game.loadingScreen.setProgress(88);
+  game.audioMixer = new AudioMixer(game);
+  game.soundBank = new SoundBank(game);
+  game.ambientAudio = new AmbientAudio(game);
+  game.footstepSystem = new FootstepSystem(game);
+  game.uiSounds = new UISounds(game);
+}
+
 function wireNetworkModule(game) {
+  game.loadingScreen.setStage('Connecting...');
+  game.loadingScreen.setProgress(95);
   try {
     game.socket = new SocketClient(game);
     game.socket.connect();
@@ -341,14 +296,6 @@ function wireNetworkModule(game) {
   }
 }
 
-// ============================================================
-// Initialization Orchestration
-// ============================================================
-
-/**
- * Bootstrap all game modules in dependency order.
- * Engine -> World -> Avatar -> Social -> Economy -> Minigames -> Events -> Safety -> GameFeel -> Network
- */
 function initializeGame() {
   wireEngineModules(game);
   wireWorldModules(game);
@@ -359,66 +306,57 @@ function initializeGame() {
   wireEventModules(game);
   wireSafetyModules(game);
   wireGameFeelModules(game);
+  wireAudioModules(game);
   wireNetworkModule(game);
-
-  // Kick off game initialization
+  game.loadingScreen.setStage('Entering Starlight Inn...');
+  game.loadingScreen.setProgress(100);
   game.init();
-
-  console.log('🌟 Starlight Inn v3.5 — All modules wired and initialized');
+  setTimeout(() => {
+    game.loadingScreen.hide();
+    game.welcomeFlow?.showWelcome();
+    if (!game.tutorialOverlay?.isCompleted()) {
+      setTimeout(() => game.tutorialOverlay?.startTutorial(), 500);
+    }
+  }, 600);
+  console.log('🌟 Starlight Inn v4.0 — All modules wired and initialized');
 }
 
 // ============================================================
 // Global Event Handlers
 // ============================================================
 
-/**
- * Handle page visibility changes to pause/resume the game loop.
- * Saves battery and prevents desync when tab is hidden.
- */
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     game.stop();
+    game.audioMixer?.muteAll();
     console.log('[Game] Paused — tab hidden');
   } else {
     game.start();
+    game.audioMixer?.unmuteAll();
     console.log('[Game] Resumed — tab visible');
   }
 });
 
-/**
- * Prevent default context menu on canvas to allow custom right-click radial menu.
- */
 document.getElementById('game-canvas').addEventListener('contextmenu', (event) => {
   event.preventDefault();
 });
 
-/**
- * Handle window resize to update canvas scaling and UI layout.
- */
 let resizeTimeout;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimeout);
   resizeTimeout = setTimeout(() => {
-    if (game.renderer) {
-      game.renderer.resize();
-    }
-    if (game.camera) {
-      game.camera.updateBounds();
-    }
-    if (game.debugConsole) {
-      game.debugConsole.onResize();
-    }
+    game.renderer?.resize();
+    game.camera?.updateBounds();
+    game.debugConsole?.onResize();
+    game.responsiveLayout?.onResize();
+    game.nameplates?.onResize();
+    game.chatBubbles?.onResize();
   }, 150);
 });
 
-/**
- * Handle keyboard shortcuts globally (only when not typing in input).
- */
 document.addEventListener('keydown', (event) => {
-  // Skip if user is typing in an input/textarea
   const activeTag = document.activeElement?.tagName;
   if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') {
-    // Allow Escape to close panels even while typing
     if (event.key === 'Escape') {
       game.chat?.close();
       game.inventory?.close();
@@ -426,8 +364,6 @@ document.addEventListener('keydown', (event) => {
     }
     return;
   }
-
-  // Global shortcut: Escape closes all panels
   if (event.key === 'Escape') {
     game.chat?.close();
     game.inventory?.close();
@@ -435,59 +371,48 @@ document.addEventListener('keydown', (event) => {
     game.friends?.close();
     game.tradeWindow?.close();
     game.debugConsole?.hide();
+    game.tutorialOverlay?.dismiss();
     return;
   }
-
-  // Debug console toggle: backtick/tilde
   if (event.key === '`' || event.key === '~') {
     game.debugConsole?.toggle();
+    game.performanceHUD?.toggle();
     return;
   }
-
-  // Chat shortcuts
+  if (game.welcomeFlow?.isShowing() && event.key !== 'Enter') {
+    game.welcomeFlow.dismiss();
+    return;
+  }
   if (event.key === 'Enter' || event.key === 't' || event.key === 'T') {
     game.chat?.focus();
     return;
   }
-
-  // Panel shortcuts
   const shortcuts = {
-    'f': 'friends',
-    'F': 'friends',
-    'i': 'inventory',
-    'I': 'inventory',
-    'b': 'catalog',
-    'B': 'catalog',
-    'm': 'missions',
-    'M': 'missions',
-    'n': 'notifications',
-    'N': 'notifications',
-    'g': 'minigames',
-    'G': 'minigames',
-    'a': 'areaBrowser',
-    'A': 'areaBrowser',
-    ',': 'settings',
-    '<': 'settings'
+    'f': 'friends', 'F': 'friends',
+    'i': 'inventory', 'I': 'inventory',
+    'b': 'catalog', 'B': 'catalog',
+    'm': 'missions', 'M': 'missions',
+    'n': 'notifications', 'N': 'notifications',
+    'g': 'minigames', 'G': 'minigames',
+    'a': 'areaBrowser', 'A': 'areaBrowser',
+    ',': 'settings', '<': 'settings'
   };
-
   const panel = shortcuts[event.key];
   if (panel && game[panel]) {
     game[panel].toggle();
+    game.uiSounds?.playButtonClick();
   }
 });
 
-/**
- * Handle online/offline status changes.
- */
 window.addEventListener('online', () => {
   console.log('[Net] Connection restored');
-  if (game.socket && !game.socket.connected) {
-    game.socket.connect();
-  }
+  game.uiSounds?.playNotification('medium');
+  if (game.socket && !game.socket.connected) game.socket.connect();
 });
 
 window.addEventListener('offline', () => {
   console.log('[Net] Connection lost — entering offline mode');
+  game.uiSounds?.playError();
   game.socket?.disconnect();
 });
 
@@ -495,24 +420,14 @@ window.addEventListener('offline', () => {
 // Boot Sequence
 // ============================================================
 
-/**
- * Initialize the game when DOM is ready.
- * Uses requestIdleCallback for non-critical module loading if available.
- */
 function boot() {
   try {
     initializeGame();
-
-    // Post-init: set up service worker for offline support (if supported)
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        // Service worker registration would go here
-        // navigator.serviceWorker.register('/sw.js');
-      });
+      window.addEventListener('load', () => { /* navigator.serviceWorker.register('/sw.js'); */ });
     }
   } catch (error) {
     console.error('[Boot] Fatal initialization error:', error);
-    // Display user-friendly error
     const overlay = document.getElementById('loading-overlay');
     if (overlay) {
       const text = overlay.querySelector('.loading-text');
@@ -523,14 +438,89 @@ function boot() {
   }
 }
 
-// Start the game when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', boot);
+  document.addEventListener('DOMContentLoaded', () => { boot(); wireLandingHandlers(); wireCharSelectHandlers(); });
 } else {
   boot();
+  wireLandingHandlers();
+  wireCharSelectHandlers();
 }
 
-// Export for debugging and external integrations
-window.StarlightInn = game;
+// ============================================================
+// Landing Page & Character Select Handlers
+// ============================================================
 
-console.log('🌟 Starlight Inn v3.5 initialized — AAA cozy-core social virtual world');
+function wireLandingHandlers() {
+  const btnPlay = document.getElementById('btn-play');
+  if (btnPlay) {
+    btnPlay.addEventListener('click', () => {
+      console.log('[UI] Enter World clicked');
+      btnPlay.style.transform = 'scale(0.95)';
+      game.uiSounds?.playButtonClick();
+      setTimeout(() => {
+        btnPlay.style.transform = '';
+        game.setScreen('charselect');
+      }, 150);
+    });
+  }
+  const btnSettings = document.getElementById('btn-settings');
+  if (btnSettings) {
+    btnSettings.addEventListener('click', () => {
+      console.log('[UI] Settings clicked');
+      game.uiSounds?.playButtonClick();
+      const panel = document.getElementById('settings-panel');
+      if (panel) panel.classList.add('active');
+    });
+  }
+  const btnAbout = document.getElementById('btn-about');
+  if (btnAbout) {
+    btnAbout.addEventListener('click', () => {
+      game.uiSounds?.playButtonClick();
+      alert('Starlight Inn v4.0\nA premium cozy-core social virtual world.\nGather, explore, and play together under the stars. 🌟');
+    });
+  }
+  const settingsPanel = document.getElementById('settings-panel');
+  if (settingsPanel) {
+    const closeBtn = settingsPanel.querySelector('.panel-close');
+    if (closeBtn) closeBtn.addEventListener('click', () => settingsPanel.classList.remove('active'));
+  }
+  console.log('[UI] Landing handlers wired');
+}
+
+function wireCharSelectHandlers() {
+  const btnBack = document.getElementById('btn-back');
+  if (btnBack) {
+    btnBack.addEventListener('click', () => {
+      console.log('[UI] Back clicked');
+      game.uiSounds?.playButtonClick();
+      game.setScreen('landing');
+    });
+  }
+  const btnContinue = document.getElementById('btn-continue');
+  if (btnContinue) {
+    btnContinue.addEventListener('click', () => {
+      console.log('[UI] Continue clicked');
+      game.uiSounds?.playButtonClick();
+      const nameInput = document.getElementById('char-name-input');
+      if (nameInput && nameInput.value.trim()) game.state.player.name = nameInput.value.trim();
+      game.setScreen('game');
+      game.start();
+    });
+  }
+  const btnRandom = document.getElementById('btn-randomize');
+  if (btnRandom && game.customizer) {
+    btnRandom.addEventListener('click', () => {
+      console.log('[UI] Randomize clicked');
+      game.uiSounds?.playButtonClick();
+      game.customizer.randomize();
+    });
+  }
+  console.log('[UI] Character select handlers wired');
+}
+
+// ============================================================
+// Exports
+// ============================================================
+
+window.StarlightInn = game;
+console.log('🌟 Starlight Inn v4.0 initialized — Premium cozy-core social virtual world');

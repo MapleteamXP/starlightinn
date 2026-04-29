@@ -22,9 +22,9 @@ const io = new Server(server, {
 });
 
 // =====================================================================
-// Static files (for local development; GitHub Pages handles prod static)
+// Static files (serve game root for local dev + deployment)
 // =====================================================================
-app.use(express.static(path.join(__dirname, 'docs')));
+app.use(express.static(path.join(__dirname)));
 app.use(express.json());
 
 // =====================================================================

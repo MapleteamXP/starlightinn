@@ -1,0 +1,423 @@
+/* ============================================================
+   Starlight Inn v3.0 — Animations & Transitions
+   Keyframes, panel animations, button effects, particle loops
+   ============================================================ */
+
+/* ---------- Star Twinkle ---------- */
+@keyframes twinkle {
+  0% { opacity: 0.3; }
+  25% { opacity: 0.8; }
+  50% { opacity: 0.5; }
+  75% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+/* ---------- Gentle Float (bobbing) ---------- */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* ---------- Glow Pulse ---------- */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
+  50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.45), 0 0 60px rgba(255, 215, 0, 0.1); }
+}
+
+/* ---------- Panel Slide-In ---------- */
+@keyframes slide-in {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.005);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---------- Panel Slide-Out ---------- */
+@keyframes slide-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+
+/* ---------- Fade-In ---------- */
+@keyframes fade-in {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Fade-Out (for toast auto-dismiss) ---------- */
+@keyframes fade-out {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+/* ---------- Shake (error feedback) ---------- */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10% { transform: translateX(-6px); }
+  20% { transform: translateX(5px); }
+  30% { transform: translateX(-5px); }
+  40% { transform: translateX(4px); }
+  50% { transform: translateX(-3px); }
+  60% { transform: translateX(2px); }
+  70% { transform: translateX(-2px); }
+  80% { transform: translateX(1px); }
+  90% { transform: translateX(-1px); }
+}
+
+/* ---------- Bounce (notification badge) ---------- */
+@keyframes bounce {
+  0% { transform: scale(0); }
+  40% { transform: scale(1.3); }
+  60% { transform: scale(0.9); }
+  80% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- Spin (loading) ---------- */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ---------- Pop (button press) ---------- */
+@keyframes pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- Heartbeat (important notification) ---------- */
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.12); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.08); }
+  56% { transform: scale(1); }
+}
+
+/* ---------- Shimmer (premium/legendary items) ---------- */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ---------- Slide-Down (dropdown/menu) ---------- */
+@keyframes slide-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+    max-height: 0;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 400px;
+  }
+}
+
+/* ---------- Slide-Up (bottom sheet) ---------- */
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(60%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- Scale-In (modal/popup) ---------- */
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  70% {
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ---------- Wiggle (attention grab) ---------- */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(-4deg); }
+  30% { transform: rotate(3deg); }
+  45% { transform: rotate(-3deg); }
+  60% { transform: rotate(2deg); }
+  75% { transform: rotate(-1deg); }
+  90% { transform: rotate(0.5deg); }
+}
+
+/* ---------- Ripple (touch feedback) ---------- */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* ---------- Particle Drift (ambient) ---------- */
+@keyframes particle-drift {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0.6;
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px) rotate(90deg);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-40px) translateX(-5px) rotate(180deg);
+    opacity: 0.5;
+  }
+  75% {
+    transform: translateY(-60px) translateX(15px) rotate(270deg);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-80px) translateX(0) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* ---------- Screen Flash ---------- */
+@keyframes screen-flash {
+  0% { background: rgba(255, 215, 0, 0); }
+  20% { background: rgba(255, 215, 0, 0.15); }
+  100% { background: rgba(255, 215, 0, 0); }
+}
+
+/* ---------- Typing Dots ---------- */
+@keyframes typing-dot {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+
+/* ---------- Coin Spin (currency gain) ---------- */
+@keyframes coin-spin {
+  0% { transform: rotateY(0deg) scale(1); }
+  50% { transform: rotateY(180deg) scale(1.2); }
+  100% { transform: rotateY(360deg) scale(1); }
+}
+
+/* ---------- Level Up ---------- */
+@keyframes level-up {
+  0% { transform: scale(1); filter: brightness(1); }
+  25% { transform: scale(1.2); filter: brightness(1.5); }
+  50% { transform: scale(1.1); filter: brightness(1.2); }
+  75% { transform: scale(1.15); filter: brightness(1.4); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* ---------- Fade Scale (item pickup) ---------- */
+@keyframes fade-scale {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translateY(-20px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.8);
+  }
+}
+
+/* ============================================================
+   Transition Utility Classes
+   ============================================================ */
+
+/* Smooth panel transitions */
+.panel-transition {
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.panel-enter {
+  animation: slide-in 0.3s ease-out forwards;
+}
+
+.panel-exit {
+  animation: slide-out 0.25s ease-in forwards;
+}
+
+/* Button transitions (handled globally, repeated here for reference) */
+.btn-transition {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+/* Focus-visible for accessibility */
+.focus-glow:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+/* Hover lift effect for cards */
+.hover-lift {
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+}
+
+/* Active press effect */
+.press-active {
+  transition: transform 0.1s ease;
+}
+
+.press-active:active {
+  transform: scale(0.96);
+}
+
+/* Shimmer effect for legendary/premium */
+.shimmer-effect {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 215, 0, 0.1) 25%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 215, 0, 0.1) 75%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+}
+
+/* Screen flash effect class */
+.screen-flash {
+  animation: screen-flash 0.6s ease-out forwards;
+}
+
+/* Stagger children animation */
+.stagger-children > * {
+  animation: fade-in 0.3s ease-out both;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(9) { animation-delay: 0.45s; }
+.stagger-children > *:nth-child(10) { animation-delay: 0.5s; }
+.stagger-children > *:nth-child(11) { animation-delay: 0.55s; }
+.stagger-children > *:nth-child(12) { animation-delay: 0.6s; }
+
+/* Typing indicator */
+.typing-indicator {
+  display: inline-flex;
+  gap: 3px;
+  padding: 0.3rem 0.6rem;
+}
+
+.typing-indicator span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  animation: typing-dot 1.2s ease-in-out infinite;
+}
+
+.typing-indicator span:nth-child(1) { animation-delay: 0s; }
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+/* Coin gain animation class */
+.coin-gain {
+  animation: coin-spin 0.6s ease-out;
+}
+
+/* Level up animation class */
+.level-up-anim {
+  animation: level-up 0.8s ease-out;
+}
+
+/* Item pickup animation class */
+.item-pickup {
+  animation: fade-scale 0.6s ease-out forwards;
+}
+
+/* Shake error class */
+.shake-error {
+  animation: shake 0.5s ease-out;
+}
+
+/* Wiggle attention class */
+.wiggle-attention {
+  animation: wiggle 0.8s ease-in-out;
+}
+
+/* Heartbeat attention class */
+.heartbeat-attention {
+  animation: heartbeat 1.2s ease-in-out;
+}
+
+/* Floating particle class */
+.particle-float {
+  position: absolute;
+  pointer-events: none;
+  animation: particle-drift 4s ease-out forwards;
+}
+
+/* Hover glow transition */
+.hover-glow {
+  transition: box-shadow 0.2s ease-out;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.25);
+}
+
+/* Smooth scrollbar container */
+.smooth-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .stars, .twinkle {
+    animation: none !important;
+  }
+
+  .loading-spinner {
+    animation: none !important;
+  }
+}

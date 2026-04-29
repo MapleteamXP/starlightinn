@@ -417,6 +417,10 @@ export class Game {
     const old = this.state.screen;
     this.state.screen = screen;
     console.log(`[Game] Screen: ${old} -> ${screen}`);
+    const screens = document.querySelectorAll('.screen');
+    screens.forEach(s => s.classList.remove('active'));
+    const target = document.getElementById(`screen-${screen}`);
+    if (target) target.classList.add('active');
   }
 
   /**

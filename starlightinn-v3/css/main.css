@@ -99,6 +99,8 @@ body {
   justify-content: center;
   align-items: center;
   position: relative;
+  min-height: 100vh;
+  display: flex;
 }
 
 .landing-bg {
@@ -222,10 +224,29 @@ body {
 .landing-actions {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.875rem;
   width: 100%;
-  max-width: 280px;
-  margin-bottom: 2rem;
+  max-width: 320px;
+  margin-bottom: 2.5rem;
+}
+
+.landing-actions .btn {
+  width: 100%;
+  justify-content: center;
+  min-height: 52px;
+  border-radius: var(--radius-lg);
+}
+
+.landing-actions .btn-secondary {
+  background: rgba(184, 169, 217, 0.08);
+  border: 1px solid rgba(184, 169, 217, 0.15);
+  color: var(--text-bright);
+  font-size: 0.95rem;
+}
+
+.landing-actions .btn-secondary:hover {
+  background: rgba(184, 169, 217, 0.15);
+  border-color: rgba(184, 169, 217, 0.3);
 }
 
 .landing-features {
@@ -308,13 +329,21 @@ body {
   box-shadow: 0 4px 15px rgba(255,215,0,0.3);
 }
 
+.btn-primary {
+  min-height: 56px;
+  font-size: 1.15rem;
+  letter-spacing: 0.03em;
+  transition: all 0.2s ease;
+}
+
 .btn-primary:hover {
   box-shadow: var(--shadow-gold), 0 6px 20px rgba(255,215,0,0.4);
   transform: translateY(-2px);
+  filter: brightness(1.1);
 }
 
 .btn-primary:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.97);
   box-shadow: 0 2px 8px rgba(255,215,0,0.2);
 }
 
