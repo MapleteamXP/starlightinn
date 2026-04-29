@@ -637,7 +637,29 @@ export class Renderer {
       this.webgl.renderCharSelect(this.ctx, this.W, this.H, this.game.state.player);
       this.webgl.endFrame();
     } else {
-      this.canvasRenderer.renderCharSelect();
+      // ── FIX: draw on the visible preview canvas, not the hidden main canvas ──
+      const previewCanvas = document.getElementById('char-preview-canvas');
+      if (previewCanvas) {
+        const pctx = this.canvasRenderer.postCtx;
+        pctx.clearRect(0, 0, this.canvasRenderer.W, this.canvasRenderer.H);
+        this.canvasRenderer.renderArea('hub', pctx);
+        const px = this.canvasRenderer.W / 2;
+        const py = this.canvasRenderer.H * 0.45;
+        this.canvasRenderer.renderPlayer(this.game.state.player, px, py, pctx);
+        this.canvasRenderer.renderCharSelectUI(pctx);
+
+        // Scale the 960×540 render down to the 200×200 preview canvas
+        const previewCtx = previewCanvas.getContext('2d');
+        previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+        previewCtx.drawImage(
+          this.canvasRenderer.postCanvas,
+          0, 0, this.canvasRenderer.W, this.canvasRenderer.H,
+          0, 0, previewCanvas.width, previewCanvas.height
+        );
+      } else {
+        // Fallback if preview canvas is missing
+        this.canvasRenderer.renderCharSelect();
+      }
     }
   }
 

@@ -587,7 +587,7 @@
     <div id="sr-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
   </div>
 
-  <!-- ==================== FALLBACK: Pure HTML button handlers (works even if modules crash) ==================== -->
+  <!-- ==================== FALLBACK: Pure HTML button handlers + built-in renderer (works even if modules crash) ==================== -->
   <script>
   (function() {
     'use strict';
@@ -596,7 +596,150 @@
     var overlay = document.getElementById('loading-overlay');
     if (overlay) overlay.classList.add('hidden');
 
-    // Wire landing screen buttons as soon as DOM is ready
+    // ============================================================
+    // Fallback Mini-Renderer — draws preview + game with raw Canvas 2D
+    // ============================================================
+    var fb = {
+      running: false,
+      canvas: document.getElementById('game-canvas'),
+      previewCanvas: document.getElementById('char-preview-canvas'),
+      player: { name: '', skinColor: 0, hairColor: 0, outfitColor: 0, expression: 'happy', facing: 'down', moving: false },
+      screen: 'landing',
+      lastT: 0,
+
+      start: function() {
+        if (this.running) return;
+        this.running = true;
+        this.lastT = performance.now();
+        this.loop();
+      },
+      stop: function() { this.running = false; },
+      setScreen: function(s) { this.screen = s; },
+      loop: function(t) {
+        if (!this.running) return;
+        this.render();
+        requestAnimationFrame(this.loop.bind(this));
+      },
+      // Draw a player avatar at (x,y) with scale
+      drawPlayer: function(ctx, x, y, scale) {
+        var skinColors = ['#ffe0bd','#ffcd94','#eac086','#d2a56d','#8d5524'];
+        var hairColors = ['#2d2d2d','#5c3a21','#d4a574','#e8c547','#a33b3b','#6b4c9a'];
+        var outfitColors = ['#5b8c85','#c75b5b','#5b7fa8','#a85ba8','#8c5b5b','#d4a45b'];
+        var skin = skinColors[this.player.skinColor % skinColors.length] || skinColors[0];
+        var hair = hairColors[this.player.hairColor % hairColors.length] || hairColors[0];
+        var outfit = outfitColors[this.player.outfitColor % outfitColors.length] || outfitColors[0];
+        var bob = this.player.moving ? Math.sin(Date.now() * 0.008) * 3 : 0;
+        ctx.save();
+        ctx.translate(x, y + bob);
+        ctx.scale(scale, scale);
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        ctx.beginPath(); ctx.ellipse(0, 14, 14, 5, 0, 0, Math.PI*2); ctx.fill();
+        // Outfit
+        ctx.fillStyle = outfit;
+        ctx.beginPath();
+        ctx.moveTo(-10, 14); ctx.lineTo(10, 14); ctx.lineTo(8, -4); ctx.lineTo(-8, -4); ctx.closePath();
+        ctx.fill();
+        // Head
+        ctx.fillStyle = skin;
+        ctx.beginPath(); ctx.arc(0, -14, 13, 0, Math.PI*2); ctx.fill();
+        // Hair
+        ctx.fillStyle = hair;
+        ctx.beginPath(); ctx.arc(0, -16, 13, Math.PI, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(0, -14, 13, Math.PI*1.1, Math.PI*1.9); ctx.fill();
+        // Eyes
+        var eyeOffset = this.player.facing === 'left' ? -2 : this.player.facing === 'right' ? 2 : 0;
+        ctx.fillStyle = '#2d2d2d';
+        ctx.beginPath(); ctx.arc(-3+eyeOffset, -14, 2.2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(3+eyeOffset, -14, 2.2, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(-2+eyeOffset, -15, 0.8, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(4+eyeOffset, -15, 0.8, 0, Math.PI*2); ctx.fill();
+        // Mouth (happy)
+        ctx.strokeStyle = '#8b5e3c'; ctx.lineWidth = 1; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.arc(0+eyeOffset, -10, 3, 0.1, Math.PI-0.1); ctx.stroke();
+        ctx.restore();
+      },
+      render: function() {
+        // ── Character Select Preview ──
+        if (this.screen === 'charselect' && this.previewCanvas) {
+          var ctx = this.previewCanvas.getContext('2d');
+          var W = this.previewCanvas.width, H = this.previewCanvas.height;
+          ctx.clearRect(0, 0, W, H);
+          // Sky
+          var g = ctx.createLinearGradient(0,0,0,H*0.4);
+          g.addColorStop(0,'#2d1b4e'); g.addColorStop(1,'#1a1025');
+          ctx.fillStyle = g; ctx.fillRect(0,0,W,H*0.4);
+          // Stars
+          ctx.fillStyle = '#fff8e7';
+          for(var i=0;i<20;i++){
+            ctx.globalAlpha = 0.5 + Math.sin(Date.now()*0.002 + i)*0.3;
+            ctx.beginPath();
+            ctx.arc((i*47)%W, (i*31)%(H*0.35), 1.2, 0, Math.PI*2);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+          // Floor
+          var fg = ctx.createLinearGradient(0,H*0.4,0,H);
+          fg.addColorStop(0,'#1f1630'); fg.addColorStop(1,'#0a0a0a');
+          ctx.fillStyle = fg; ctx.fillRect(0,H*0.4,W,H*0.6);
+          // Grid lines
+          ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=0.5;
+          for(var i=-4;i<=4;i++){ ctx.beginPath(); ctx.moveTo(W/2,H*0.4); ctx.lineTo(W/2+i*30,H); ctx.stroke(); }
+          // Vignette
+          var vg = ctx.createRadialGradient(W/2,H/2,H*0.2,W/2,H/2,H*0.8);
+          vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.4)');
+          ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
+          // Player
+          this.drawPlayer(ctx, W/2, H*0.55, 1.5);
+        }
+
+        // ── Game World ──
+        if (this.screen === 'game' && this.canvas) {
+          var ctx = this.canvas.getContext('2d');
+          var W = 960, H = 540;
+          ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H);
+          // Sky gradient
+          var g = ctx.createLinearGradient(0,0,0,H*0.35);
+          g.addColorStop(0,'#2d1b4e'); g.addColorStop(1,'#1a1025');
+          ctx.fillStyle = g; ctx.fillRect(0,0,W,H*0.35);
+          // Stars
+          ctx.fillStyle = '#fff8e7';
+          for(var i=0;i<40;i++){
+            ctx.globalAlpha = 0.5 + Math.sin(Date.now()*0.001 + i)*0.3;
+            ctx.beginPath();
+            ctx.arc((i*137)%W, (i*89)%(H*0.3), 1.5, 0, Math.PI*2);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+          // Floor
+          var fg = ctx.createLinearGradient(0,H*0.35,0,H);
+          fg.addColorStop(0,'#1f1630'); fg.addColorStop(1,'#0a0a0a');
+          ctx.fillStyle = fg; ctx.fillRect(0,H*0.35,W,H*0.65);
+          // Perspective grid
+          ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=1;
+          var cx=W/2;
+          for(var i=-8;i<=8;i++){ ctx.beginPath(); ctx.moveTo(cx,H*0.35); ctx.lineTo(cx+i*120,H); ctx.stroke(); }
+          for(var i=0;i<6;i++){ var y=H*0.35+(H*0.65)*(i/6); ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+          // Player (center of screen for now)
+          this.drawPlayer(ctx, W/2, H*0.55, 1);
+          // Vignette
+          var vg = ctx.createRadialGradient(W/2,H/2,H*0.3,W/2,H/2,H*0.9);
+          vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.35)');
+          ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
+          // Debug text
+          ctx.fillStyle = '#0f0'; ctx.font = '10px monospace';
+          ctx.fillText('FALLBACK RENDERER — modules may have failed', 10, 20);
+        }
+      }
+    };
+
+    // Expose for debugging
+    window.FallbackGame = fb;
+
+    // ============================================================
+    // Button wiring
+    // ============================================================
     function wireButtons() {
       var btnPlay = document.getElementById('btn-play');
       var screenLanding = document.getElementById('screen-landing');
@@ -608,6 +751,8 @@
           console.log('[Fallback] Enter World clicked');
           screenLanding.classList.remove('active');
           screenChar.classList.add('active');
+          fb.setScreen('charselect');
+          fb.start();
         });
       }
 
@@ -617,6 +762,8 @@
           console.log('[Fallback] Play as Guest clicked');
           screenLanding.classList.remove('active');
           screenChar.classList.add('active');
+          fb.setScreen('charselect');
+          fb.start();
         });
       }
 
@@ -626,6 +773,7 @@
           console.log('[Fallback] Back clicked');
           screenChar.classList.remove('active');
           screenLanding.classList.add('active');
+          fb.setScreen('landing');
         });
       }
 
@@ -635,21 +783,23 @@
           console.log('[Fallback] Continue clicked');
           var nameInput = document.getElementById('char-name-input');
           if (nameInput && nameInput.value.trim()) {
+            fb.player.name = nameInput.value.trim();
             if (window.StarlightInn && window.StarlightInn.state) {
               window.StarlightInn.state.player.name = nameInput.value.trim();
             }
           }
           screenChar.classList.remove('active');
           screenGame.classList.add('active');
+          fb.setScreen('game');
 
-          // ── CRITICAL: try to start the game loop if the module loaded ──
+          // Try module game first, fallback keeps running either way
           if (window.StarlightInn) {
             try {
               window.StarlightInn.setScreen('game');
               window.StarlightInn.start();
-              console.log('[Fallback] Game loop started via StarlightInn');
+              console.log('[Fallback] Module game loop started');
             } catch (e) {
-              console.warn('[Fallback] Could not start game loop:', e);
+              console.warn('[Fallback] Module game failed, fallback rendering continues:', e);
             }
           }
         });
@@ -672,6 +822,20 @@
           });
         }
       }
+
+      // ── Color sliders update preview in real-time ──
+      var skinSlider = document.getElementById('color-skin');
+      var hairSlider = document.getElementById('color-hair');
+      var clothesSlider = document.getElementById('color-clothes');
+      function updatePreviewFromSliders() {
+        if (skinSlider) fb.player.skinColor = Math.floor((parseInt(skinSlider.value,10)||0)/72);
+        if (hairSlider) fb.player.hairColor = Math.floor((parseInt(hairSlider.value,10)||0)/60);
+        if (clothesSlider) fb.player.outfitColor = Math.floor((parseInt(clothesSlider.value,10)||0)/60);
+      }
+      if (skinSlider) skinSlider.addEventListener('input', updatePreviewFromSliders);
+      if (hairSlider) hairSlider.addEventListener('input', updatePreviewFromSliders);
+      if (clothesSlider) clothesSlider.addEventListener('input', updatePreviewFromSliders);
+      updatePreviewFromSliders();
 
       console.log('[Fallback] Landing & char-select buttons wired');
     }
