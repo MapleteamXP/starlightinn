@@ -14,9 +14,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=6.0.2">
-  <link rel="stylesheet" href="css/animations.css?v=6.0.2">
-  <link rel="stylesheet" href="css/mobile.css?v=6.0.2">
+  <link rel="stylesheet" href="css/main.css?v=6.0.3">
+  <link rel="stylesheet" href="css/animations.css?v=6.0.3">
+  <link rel="stylesheet" href="css/mobile.css?v=6.0.3">
   <style>
     #game-canvas {
       image-rendering: pixelated;
@@ -62,7 +62,7 @@
         <span class="feature-dot">🎵</span>
       </div>
       <div class="landing-footer">
-        <span class="version">v6.0.2 (2026-05-01)</span>
+        <span class="version">v6.0.3 (2026-05-01)</span>
         <span class="separator">|</span>
         <span class="online-count"><span id="online-count">0</span> stars online</span>
         <span class="separator">|</span>
@@ -622,8 +622,20 @@
     <div id="toast-container" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <!-- Debug panel for troubleshooting -->
-    <div id="debug-panel" style="position:fixed;bottom:4px;left:4px;z-index:9999;background:rgba(0,0,0,0.7);color:#0f0;padding:4px 8px;font-family:monospace;font-size:10px;border-radius:4px;max-width:200px;pointer-events:none;">
-      v6.0.2 | JS: <span id="dbg-js">...</span> | Game: <span id="dbg-game">...</span>
+    <div id="debug-panel" style="position:fixed;bottom:4px;left:4px;z-index:9999;background:rgba(0,0,0,0.85);color:#0f0;padding:6px 10px;font-family:monospace;font-size:11px;border-radius:6px;max-width:220px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;border:1px solid rgba(0,255,0,0.3);" onclick="toggleDebug()" ontouchstart="toggleDebug()" role="button" aria-label="Tap to expand debug info">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:14px;">🐛</span>
+        <span>v6.0.3 | JS:<span id="dbg-js">...</span> | Game:<span id="dbg-game">?</span></span>
+      </div>
+    </div>
+    <!-- Debug overlay (hidden by default) -->
+    <div id="debug-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9998;background:rgba(0,0,0,0.92);color:#0f0;font-family:monospace;font-size:12px;padding:50px 12px 80px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;">
+      <div style="position:fixed;top:8px;right:8px;z-index:9999;">
+        <button onclick="toggleDebug()" style="background:#333;color:#fff;border:1px solid #555;padding:8px 14px;font-size:14px;border-radius:4px;cursor:pointer;">✕ Close</button>
+        <button onclick="copyDebug()" style="background:#333;color:#0f0;border:1px solid #555;padding:8px 14px;font-size:14px;border-radius:4px;cursor:pointer;margin-left:4px;">📋 Copy</button>
+      </div>
+      <div style="position:fixed;top:8px;left:12px;z-index:9999;color:#0f0;font-size:14px;font-weight:bold;">🔧 Debug Console</div>
+      <div id="debug-content" style="margin-top:30px;"></div>
     </div>
     <div id="error-box" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#ff4444;color:#fff;padding:8px 12px;font-family:monospace;font-size:12px;text-align:center;"></div>
     <!-- ==================== LOADING OVERLAY ==================== -->
@@ -679,8 +691,11 @@
     if (overlay) overlay.classList.add('hidden');
 
     // Global error handler -- show visible error on page for debugging
+    window._jsErrors = [];
     window.addEventListener('error', function(e) {
       console.error('[Global Error]', e.message, 'at', e.filename, ':', e.lineno);
+      window._jsErrors.push(e.message + ' at ' + (e.filename || '?') + ':' + e.lineno);
+      if (window._jsErrors.length > 20) window._jsErrors.shift();
       var errBox = document.getElementById('error-box');
       if (errBox) {
         errBox.textContent = 'Module error: ' + e.message + ' (line ' + e.lineno + ')';
@@ -1992,6 +2007,87 @@
       console.warn('[Module] main.js failed to load -- fallback renderer active');
       window.MODULE_ERROR = true;
     });
+    // Debug panel logic
+    window.DEBUG_OPEN = false;
+    function toggleDebug() {
+      var overlay = document.getElementById('debug-overlay');
+      var panel = document.getElementById('debug-panel');
+      if (!overlay) return;
+      window.DEBUG_OPEN = !window.DEBUG_OPEN;
+      overlay.style.display = window.DEBUG_OPEN ? 'block' : 'none';
+      if (panel) panel.style.opacity = window.DEBUG_OPEN ? '0' : '1';
+      if (window.DEBUG_OPEN) updateDebugContent();
+    }
+    function copyDebug() {
+      var content = document.getElementById('debug-content');
+      if (content && navigator.clipboard) {
+        navigator.clipboard.writeText(content.innerText).then(function() {
+          alert('Debug info copied! Paste it anywhere.');
+        });
+      }
+    }
+    function getDebugInfo() {
+      var info = [];
+      info.push('=== STARLIGHT INN DEBUG REPORT ===');
+      info.push('Version: v6.0.3 (2026-05-01)');
+      info.push('User Agent: ' + navigator.userAgent);
+      info.push('Screen: ' + window.innerWidth + 'x' + window.innerHeight);
+      info.push('Device Pixel Ratio: ' + (window.devicePixelRatio || 1));
+      info.push('Touch: ' + ('ontouchstart' in window ? 'YES' : 'NO'));
+      info.push('Online: ' + (navigator.onLine ? 'YES' : 'NO'));
+      info.push('');
+      info.push('--- MODULE STATUS ---');
+      info.push('main.js Loaded: ' + (window.MODULE_LOADED ? 'YES' : 'NO'));
+      info.push('main.js Error: ' + (window.MODULE_ERROR ? 'YES' : 'NO'));
+      info.push('main.js Timeout: ' + (window.MODULE_TIMEOUT ? 'YES' : 'NO'));
+      info.push('');
+      info.push('--- GAME OBJECT ---');
+      var g = window.StarlightInn;
+      if (g) {
+        info.push('Game Exists: YES');
+        info.push('Game Running: ' + (g.running ? 'YES' : 'NO'));
+        info.push('Screen: ' + (g.state ? g.state.screen : 'null'));
+        info.push('Canvas Exists: ' + (g.canvas ? 'YES' : 'NO'));
+        info.push('Socket Exists: ' + (g.socket ? 'YES' : 'NO'));
+        info.push('Player Exists: ' + (g.player ? 'YES' : 'NO'));
+      } else {
+        info.push('Game Exists: NO (main.js not loaded or crashed)');
+      }
+      info.push('');
+      info.push('--- SOCKET STATUS ---');
+      if (window.SocketClient) {
+        info.push('SocketClient Class: YES');
+      } else {
+        info.push('SocketClient Class: NO');
+      }
+      if (window.socketClient) {
+        info.push('socketClient Instance: YES');
+        info.push('Connected: ' + (window.socketClient.connected ? 'YES' : 'NO'));
+        info.push('Connection State: ' + (window.socketClient.socket ? window.socketClient.socket.connected : 'no socket'));
+      } else {
+        info.push('socketClient Instance: NO');
+      }
+      info.push('');
+      info.push('--- DOM STATE ---');
+      var screens = ['screen-landing','screen-charselect','screen-world','screen-minigame'];
+      screens.forEach(function(id) {
+        var el = document.getElementById(id);
+        info.push(id + ': ' + (el ? (el.classList.contains('active') ? 'ACTIVE' : 'hidden') : 'MISSING'));
+      });
+      info.push('');
+      info.push('--- ERRORS ---');
+      info.push('window._jsErrors: ' + (window._jsErrors ? window._jsErrors.join('\\n') : 'none captured'));
+      info.push('');
+      info.push('--- STORAGE ---');
+      try {
+        info.push('localStorage keys: ' + Object.keys(localStorage).join(', '));
+      } catch(e) { info.push('localStorage: blocked/error'); }
+      return info.join('\\n');
+    }
+    function updateDebugContent() {
+      var content = document.getElementById('debug-content');
+      if (content) content.innerText = getDebugInfo();
+    }
     // Debug panel updater
     setInterval(function() {
       var dbgJs = document.getElementById('dbg-js');
@@ -2001,6 +2097,7 @@
         var g = window.StarlightInn;
         dbgGame.textContent = (g.state ? g.state.screen : '?') + ' | ' + (g.running ? 'RUN' : 'STOP');
       }
+      if (window.DEBUG_OPEN) updateDebugContent();
     }, 500);
     setTimeout(function() {
       if (!window.MODULE_LOADED && !window.MODULE_ERROR) {
