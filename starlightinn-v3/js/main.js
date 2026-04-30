@@ -1,17 +1,23 @@
 /**
- * Starlight Inn v5.0 -- Main Entry Point
+ * Starlight Inn v6.0 -- Main Entry Point
  * Premium polished cozy-core social virtual world web game
  *
  * Wires all engine, world, avatar, social, economy, minigame,
  * event, safety, audio, atmosphere, network, and isometric modules together.
  *
- * Features isometric rendering (v5.0), procedural area backgrounds, living avatars,
- * immersive audio, social atmosphere effects, scene transitions, and premium presentation.
+ * Features Habbo-grade isometric asset pipeline (v6.0):
+ *   - Procedural pixel-art sprites with palette enforcement
+ *   - Sprite-based Y-sort rendering with integer zoom
+ *   - Full render orchestration (bg -> floor -> wall -> prop -> entity -> effect)
+ *   - Grid-locked Habbo-style tile-by-tile movement
+ *   - Lazy chunk loading for large worlds
+ *   - 8 curated palettes for consistent visual identity
  *
- * Isometric engine replaces the rendering pipeline -- all gameplay systems remain intact.
+ * All legacy v5.0 isometric math, areas, furniture, and social/economy/audio
+ * systems remain intact and active.
  *
  * @module main
- * @version 5.0.0
+ * @version 6.0.0
  * @author Starlight Inn Team
  */
 
@@ -52,6 +58,24 @@ import { IsoAreaBackgrounds } from './iso/IsoAreaBackgrounds.js';
 import { IsoAvatarRenderer } from './iso/IsoAvatarRenderer.js';
 import { IsoWalkCycle } from './iso/IsoWalkCycle.js';
 import { IsoIdleAnimation } from './iso/IsoIdleAnimation.js';
+
+// ============================================================
+// v6.0 Habbo-grade Asset Pipeline
+// ============================================================
+
+import { SpriteGenerator } from './sprites/SpriteGenerator.js';
+import { SpriteSheet } from './sprites/SpriteSheet.js';
+import { SpriteCache } from './sprites/SpriteCache.js';
+import { PaletteManager } from './sprites/PaletteManager.js';
+import { ColorTable } from './sprites/ColorTable.js';
+import { PaletteValidator } from './sprites/PaletteValidator.js';
+import { IsoTilemap } from './iso/IsoTilemap.js';
+import { IsoChunk, ChunkManager } from './iso/IsoChunk.js';
+import { IsoGrid } from './iso/IsoGrid.js';
+import { IsoMovement } from './iso/IsoMovement.js';
+import { YSortRenderer } from './iso/YSortRenderer.js';
+import { PixelPerfectScaler } from './iso/PixelPerfectScaler.js';
+import { RenderPipeline } from './iso/RenderPipeline.js';
 
 // ============================================================
 // World Systems
@@ -185,8 +209,7 @@ const game = new Game('game-canvas');
 
 /**
  * Wire engine core modules.
- * In v5.0, the isometric renderer and camera are initialized alongside
- * the legacy renderer which continues to handle UI overlay rendering.
+ * In v6.0, the pixel-perfect scaler is initialized alongside legacy systems.
  * @param {Game} game
  */
 function wireEngineModules(game) {
@@ -212,8 +235,6 @@ function wireEngineModules(game) {
 
 /**
  * Wire v5.0 isometric asset modules.
- * Initializes the isometric tileset, furniture catalog, and asset loader
- * that the isometric renderer depends on.
  * @param {Game} game
  */
 function wireIsoAssets(game) {
@@ -226,15 +247,97 @@ function wireIsoAssets(game) {
 }
 
 /**
+ * Wire v6.0 Habbo-grade sprite and palette pipeline.
+ * Initializes SpriteGenerator, SpriteCache, PaletteManager, ColorTable, PaletteValidator.
+ * @param {Game} game
+ */
+function wireV6SpritePipeline(game) {
+  game.loadingScreen.setStage('Initializing v6.0 sprite pipeline...');
+  game.loadingScreen.setProgress(14);
+
+  game.paletteManager = new PaletteManager();
+  game.spriteCache = new SpriteCache(512);
+  game.spriteGenerator = new SpriteGenerator(game.paletteManager);
+  game.colorTable = ColorTable;
+  game.paletteValidator = PaletteValidator;
+}
+
+/**
+ * Wire v6.0 Habbo-grade isometric world systems.
+ * Initializes IsoTilemap, IsoChunk, IsoGrid, IsoMovement, YSortRenderer,
+ * PixelPerfectScaler, and RenderPipeline.
+ * @param {Game} game
+ */
+function wireV6IsoModules(game) {
+  game.loadingScreen.setStage('Initializing v6.0 isometric world...');
+  game.loadingScreen.setProgress(16);
+
+  // Pixel-perfect integer scaler
+  game.pixelPerfectScaler = new PixelPerfectScaler('game-canvas');
+
+  // Isometric tilemap (default 64x64 world)
+  game.isoTilemap = new IsoTilemap(64, 64, {
+    tileW: game.isoMath.tileW,
+    tileH: game.isoMath.tileH,
+  });
+
+  // Chunk manager for lazy loading
+  game.chunkManager = new ChunkManager(game.isoTilemap, 16);
+
+  // Grid overlay (highlighting, path visualization, interaction)
+  game.isoGrid = new IsoGrid(game.isoMath, game.isoTilemap, 'game-canvas');
+
+  // Grid-locked movement system for player
+  game.isoMovement = new IsoMovement(game.isoMath, game.isoTilemap, game.state.player || { x: 32, y: 32 });
+  game.isoMovement.onArrive((tile) => {
+    game.isoGrid.clearPath();
+    if (game.footstepSystem) game.footstepSystem.play();
+  });
+  game.isoMovement.onStep((tile) => {
+    game.isoGrid.highlight(tile.x, tile.y);
+  });
+
+  // Y-sort renderer replaces IsoRenderer for world rendering in v6.0
+  game.ySortRenderer = new YSortRenderer(
+    game.isoMath,
+    game.isoTilemap,
+    game.spriteGenerator,
+    game.spriteCache
+  );
+
+  // Register player entity in Y-sort renderer
+  if (game.state.player) {
+    game.ySortRenderer.addEntity(game.state.player);
+  }
+
+  // Full render pipeline orchestration
+  game.renderPipeline = new RenderPipeline('game-canvas');
+  game.renderPipeline.bindYSortRenderer(game.ySortRenderer, 'entity');
+  game.renderPipeline.bindTilemapRenderer(game.ySortRenderer, 'floor');
+
+  // Connect grid clicks to movement
+  game.isoGrid.onClick((tx, ty, tile) => {
+    if (tile && tile.walkable) {
+      game.isoMovement.moveTo(tx, ty);
+      game.isoGrid.setPath(game.isoTilemap.findPath(
+        game.isoMovement.getCurrentTile().x,
+        game.isoMovement.getCurrentTile().y,
+        tx, ty
+      ));
+      game.uiSounds?.playButtonClick();
+    }
+  });
+}
+
+/**
  * Wire v5.0 isometric engine modules.
  * Creates the isometric rendering pipeline: math, camera, depth sorter,
- * and renderer. These replace the legacy rendering pipeline for the
- * main game world view.
+ * and renderer. These remain alongside v6.0 systems for compatibility.
  * @param {Game} game
  */
 function wireIsoEngineModules(game) {
   game.loadingScreen.setStage('Initializing isometric engine...');
-  game.loadingScreen.setProgress(15);
+  game.loadingScreen.setProgress(18);
 
   // Isometric math foundation
   game.isoMath = new IsoMath({ tileW: 64, tileH: 32, tileD: 16 });
@@ -248,7 +351,7 @@ function wireIsoEngineModules(game) {
   // Area backgrounds with isometric layouts (14 areas)
   game.isoAreaBackgrounds = new IsoAreaBackgrounds(game);
 
-  // Isometric rendering engine (replaces legacy renderer for world)
+  // Isometric rendering engine (kept alongside v6.0 YSortRenderer for fallback)
   game.isoRenderer = new IsoRenderer(
     game,
     game.isoMath,
@@ -263,13 +366,11 @@ function wireIsoEngineModules(game) {
 
 /**
  * Wire world systems.
- * In v5.0, area background loading goes through IsoAreaBackgrounds
- * but AreaManager is still initialized for gameplay logic.
  * @param {Game} game
  */
 function wireWorldModules(game) {
   game.loadingScreen.setStage('Building world...');
-  game.loadingScreen.setProgress(20);
+  game.loadingScreen.setProgress(25);
 
   game.areaManager = new AreaManager(game);
   game.npcManager = new NPCManager(game);
@@ -289,6 +390,12 @@ function wireWorldModules(game) {
   // v5.0: Load initial area layout into isometric backgrounds
   const initialArea = game.state.area || 'lobby';
   game.isoAreaBackgrounds.loadArea(initialArea);
+
+  // v6.0: Initialize tilemap from area data if available
+  const areaData = game.areaManager?.getArea?.(initialArea);
+  if (areaData && areaData.tilemap) {
+    game.isoTilemap = IsoTilemap.deserialize(areaData.tilemap);
+  }
 }
 
 /**
@@ -312,8 +419,6 @@ function wireAvatarModules(game) {
 
 /**
  * Wire v5.0 isometric avatar modules.
- * Initializes the isometric avatar renderer, walk cycle, and idle animation.
- * These connect to the existing Avatar system for customization data.
  * @param {Game} game
  */
 function wireIsoAvatarModules(game) {
@@ -427,24 +532,35 @@ function wireNetworkModule(game) {
 }
 
 /**
- * v5.0 Isometric-aware game loop render override.
- * When in the game screen, uses IsoRenderer for the isometric world.
- * Legacy renderer handles UI overlays and non-game screens.
+ * v6.0 Isometric-aware game loop render override.
+ * Routes to the v6.0 RenderPipeline for game world, legacy renderer for UI/HUD.
  * @param {Game} game
  */
-function setupIsoGameLoop(game) {
+function setupV6GameLoop(game) {
   // Store reference to original render
   const originalRender = game.render.bind(game);
 
   /**
-   * v5.0 render function. Routes to isometric renderer for the game world,
-   * legacy renderer for menus, landing, character select, and overlays.
+   * v6.0 render function. Uses RenderPipeline (with YSortRenderer) for game world,
+   * legacy renderer for menus, landing, character select, and HUD overlays.
    */
   game.render = function() {
     if (this.state.screen === 'game') {
-      // Isometric world rendering
-      if (this.isoRenderer) {
+      // v6.0: Full render pipeline (bg -> floor -> wall -> prop -> entity -> effect)
+      if (this.renderPipeline) {
+        this.pixelPerfectScaler?.apply(this.ctx);
+        this.renderPipeline.render(this.ctx);
+      } else if (this.isoRenderer) {
+        // Fallback to v5.0 renderer
         this.isoRenderer.render();
+      }
+
+      // v6.0: Grid overlay (highlighting, path, selection)
+      if (this.isoGrid) {
+        this.isoGrid.draw(this.isoCamera ? {
+          x: this.isoCamera.x || 0,
+          y: this.isoCamera.y || 0,
+        } : { x: 0, y: 0 });
       }
 
       // UI overlay (HUD, chat, panels) rendered via legacy renderer
@@ -481,7 +597,7 @@ function setupIsoGameLoop(game) {
   };
 
   /**
-   * v5.0 update function. Extends base update with isometric systems.
+   * v6.0 update function. Extends base update with v6.0 isometric systems.
    */
   const originalUpdate = game.update.bind(game);
   game.update = function(dt) {
@@ -491,6 +607,16 @@ function setupIsoGameLoop(game) {
     // Update isometric camera (pan/zoom interpolation, shake)
     if (this.isoCamera) {
       this.isoCamera.update(dt);
+    }
+
+    // v6.0: Update grid-locked movement
+    if (this.isoMovement) {
+      this.isoMovement.update(dt);
+    }
+
+    // v6.0: Load chunks around player
+    if (this.chunkManager && this.state.player) {
+      this.chunkManager.loadAround(this.state.player.x || 32, this.state.player.y || 32);
     }
 
     // Update isometric walk cycle animation
@@ -515,13 +641,21 @@ function setupIsoGameLoop(game) {
   };
 
   /**
-   * Override setArea to also update isometric area backgrounds.
+   * Override setArea to also update v6.0 systems.
    */
   const originalSetArea = game.setArea.bind(game);
   game.setArea = function(areaId) {
     // Update isometric area backgrounds (14 areas available)
     if (this.isoAreaBackgrounds) {
       this.isoAreaBackgrounds.loadArea(areaId);
+    }
+
+    // v6.0: Reset tilemap and chunks for new area
+    if (this.chunkManager) {
+      this.chunkManager.invalidateAll();
+    }
+    if (this.ySortRenderer) {
+      this.ySortRenderer.invalidateCache();
     }
 
     // Invalidate isometric renderer cache on area change
@@ -536,7 +670,8 @@ function setupIsoGameLoop(game) {
 
 /**
  * Initialize all game modules in the correct order.
- * v5.0 adds isometric initialization between engine and world modules.
+ * v6.0 adds sprite pipeline and new isometric world systems between
+ * v5.0 engine and world modules.
  */
 function initializeGame() {
   // Phase 1: Core engine
@@ -548,16 +683,22 @@ function initializeGame() {
   // Phase 3: v5.0 Isometric engine (math, camera, depth sorter, renderer)
   wireIsoEngineModules(game);
 
-  // Phase 4: World systems (legacy + isometric area backgrounds)
+  // Phase 4: v6.0 Habbo-grade sprite pipeline
+  wireV6SpritePipeline(game);
+
+  // Phase 5: v6.0 Isometric world (tilemap, chunks, grid, movement, render)
+  wireV6IsoModules(game);
+
+  // Phase 6: World systems (legacy + isometric area backgrounds)
   wireWorldModules(game);
 
-  // Phase 5: Avatar systems (legacy)
+  // Phase 7: Avatar systems (legacy)
   wireAvatarModules(game);
 
-  // Phase 6: v5.0 Isometric avatar modules
+  // Phase 8: v5.0 Isometric avatar modules
   wireIsoAvatarModules(game);
 
-  // Phase 7: Social, economy, minigames, events, safety, game feel, audio
+  // Phase 9: Social, economy, minigames, events, safety, game feel, audio
   wireSocialModules(game);
   wireEconomyModules(game);
   wireMinigameModules(game);
@@ -567,10 +708,10 @@ function initializeGame() {
   wireAudioModules(game);
   wireNetworkModule(game);
 
-  // Phase 8: v5.0 game loop integration
-  setupIsoGameLoop(game);
+  // Phase 10: v6.0 game loop integration
+  setupV6GameLoop(game);
 
-  // Phase 9: Finalize
+  // Phase 11: Finalize
   game.loadingScreen.setStage('Entering Starlight Inn...');
   game.loadingScreen.setProgress(100);
   game.init();
@@ -583,7 +724,7 @@ function initializeGame() {
     }
   }, 600);
 
-  console.log('\u{1F31F} Starlight Inn v5.0 -- All modules wired and initialized (isometric engine active)');
+  console.log('\u{1F31F} Starlight Inn v6.0 -- All modules wired and initialized (Habbo-grade asset pipeline active)');
 }
 
 // ============================================================
@@ -614,6 +755,8 @@ window.addEventListener('resize', () => {
     game.renderer?.resize();
     // Isometric renderer resize
     game.isoRenderer?.resize();
+    // v6.0: Pixel-perfect scaler resize
+    game.pixelPerfectScaler?.resize();
     // Both cameras
     game.camera?.updateBounds();
     game.isoCamera?.updateBounds();
@@ -655,6 +798,15 @@ document.addEventListener('keydown', (event) => {
   }
   if (event.key === 'Enter' || event.key === 't' || event.key === 'T') {
     game.chat?.focus();
+    return;
+  }
+  // v6.0: Zoom shortcuts
+  if (event.key === '=' || event.key === '+') {
+    game.pixelPerfectScaler?.zoomIn();
+    return;
+  }
+  if (event.key === '-' || event.key === '_') {
+    game.pixelPerfectScaler?.zoomOut();
     return;
   }
   const shortcuts = {
@@ -756,7 +908,7 @@ function wireLandingHandlers() {
   if (btnAbout) {
     btnAbout.addEventListener('click', () => {
       game.uiSounds?.playButtonClick();
-      alert('Starlight Inn v5.0\nA premium cozy-core social virtual world.\nNow with isometric rendering!\nGather, explore, and play together under the stars. \u{1F31F}');
+      alert('Starlight Inn v6.0\nA premium cozy-core social virtual world.\nNow with Habbo-grade isometric asset pipeline!\nGather, explore, and play together under the stars. \u{1F31F}');
     });
   }
   const settingsPanel = document.getElementById('settings-panel');
@@ -803,4 +955,4 @@ function wireCharSelectHandlers() {
 // ============================================================
 
 window.StarlightInn = game;
-console.log('\u{1F31F} Starlight Inn v5.0 initialized -- Isometric cozy-core social virtual world');
+console.log('\u{1F31F} Starlight Inn v6.0 initialized -- Habbo-grade isometric cozy-core social virtual world');

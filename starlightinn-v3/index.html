@@ -14,6 +14,13 @@
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/animations.css">
   <link rel="stylesheet" href="css/mobile.css">
+  <style>
+    #game-canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      image-rendering: -moz-crisp-edges;
+    }
+  </style>
   <!-- Socket.IO client (loaded from CDN or server) -->
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" defer></script>
 </head>
@@ -49,7 +56,7 @@
         <span class="feature-dot">🎵</span>
       </div>
       <div class="landing-footer">
-        <span class="version">v3.5</span>
+        <span class="version">v6.0</span>
         <span class="separator">|</span>
         <span class="online-count"><span id="online-count">0</span> stars online</span>
         <span class="separator">|</span>
