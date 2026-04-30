@@ -1757,6 +1757,15 @@
     // Button wiring
     // ============================================================
     function wireButtons() {
+      // ── Server status: default to offline since no backend server is running ──
+      var serverStatus = document.getElementById('server-status');
+      var onlineCount = document.getElementById('online-count');
+      if (serverStatus) {
+        serverStatus.textContent = 'Offline Mode';
+        serverStatus.style.color = '#888';
+      }
+      if (onlineCount) onlineCount.textContent = '—';
+
       var btnPlay = document.getElementById('btn-play');
       var screenLanding = document.getElementById('screen-landing');
       var screenChar = document.getElementById('screen-charselect');
@@ -1951,6 +1960,27 @@
   </script>
 
   <!-- ==================== MODULE ENTRY ==================== -->
-  <script type="module" src="js/main.js"></script>
+  <script type="module" src="js/main.js" id="module-main"></script>
+  <script>
+    // Module load detection -- if main.js fails to load, ensure fallback is active
+    window.MODULE_LOADED = false;
+    window.MODULE_TIMEOUT = false;
+    var moduleScript = document.getElementById('module-main');
+    moduleScript.addEventListener('load', function() {
+      window.MODULE_LOADED = true;
+      console.log('[Module] main.js loaded successfully');
+    });
+    moduleScript.addEventListener('error', function() {
+      console.warn('[Module] main.js failed to load -- fallback renderer active');
+      window.MODULE_ERROR = true;
+    });
+    // If module hasn't loaded in 5 seconds, force fallback mode
+    setTimeout(function() {
+      if (!window.MODULE_LOADED && !window.MODULE_ERROR) {
+        console.warn('[Module] main.js load timeout -- forcing fallback');
+        window.MODULE_TIMEOUT = true;
+      }
+    }, 5000);
+  </script>
 </body>
 </html>
