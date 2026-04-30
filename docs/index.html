@@ -23,6 +23,9 @@
       image-rendering: crisp-edges;
       image-rendering: -moz-crisp-edges;
     }
+    /* Mobile touch fixes */
+    .btn, button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    #debug-panel { user-select: none; -webkit-user-select: none; }
   </style>
   <!-- Socket.IO client (loaded from CDN or server) -->
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" defer></script>
@@ -622,7 +625,7 @@
     <div id="toast-container" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <!-- Debug panel for troubleshooting -->
-    <div id="debug-panel" style="position:fixed;bottom:4px;left:4px;z-index:9999;background:rgba(0,0,0,0.85);color:#0f0;padding:6px 10px;font-family:monospace;font-size:11px;border-radius:6px;max-width:220px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;border:1px solid rgba(0,255,0,0.3);" onclick="toggleDebug()" ontouchstart="toggleDebug()" role="button" aria-label="Tap to expand debug info">
+    <div id="debug-panel" style="position:fixed;bottom:4px;left:4px;z-index:9999;background:rgba(0,0,0,0.85);color:#0f0;padding:6px 10px;font-family:monospace;font-size:11px;border-radius:6px;max-width:220px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;border:1px solid rgba(0,255,0,0.3);" role="button" aria-label="Tap to expand debug info">
       <div style="display:flex;align-items:center;gap:6px;">
         <span style="font-size:14px;">🐛</span>
         <span>v6.0.3 | JS:<span id="dbg-js">...</span> | Game:<span id="dbg-game">?</span></span>
@@ -1805,39 +1808,49 @@
       var screenGame = document.getElementById('screen-game');
 
       if (btnPlay && screenLanding && screenChar) {
-        btnPlay.addEventListener('click', function() {
+        function onEnterWorld(e) {
+          if (e && e.type === 'touchend') { e.preventDefault(); e.stopPropagation(); }
           console.log('[Fallback] Enter World clicked');
           screenLanding.classList.remove('active');
           screenChar.classList.add('active');
           fb.setScreen('charselect');
           fb.start();
-        });
+        }
+        btnPlay.addEventListener('click', onEnterWorld);
+        btnPlay.addEventListener('touchend', onEnterWorld);
       }
 
       var btnGuest = document.getElementById('btn-guest');
       if (btnGuest && screenLanding && screenChar) {
-        btnGuest.addEventListener('click', function() {
+        function onGuest(e) {
+          if (e && e.type === 'touchend') { e.preventDefault(); e.stopPropagation(); }
           console.log('[Fallback] Play as Guest clicked');
           screenLanding.classList.remove('active');
           screenChar.classList.add('active');
           fb.setScreen('charselect');
           fb.start();
-        });
+        }
+        btnGuest.addEventListener('click', onGuest);
+        btnGuest.addEventListener('touchend', onGuest);
       }
 
       var btnBack = document.getElementById('btn-back');
       if (btnBack && screenLanding && screenChar) {
-        btnBack.addEventListener('click', function() {
+        function onBack(e) {
+          if (e && e.type === 'touchend') { e.preventDefault(); e.stopPropagation(); }
           console.log('[Fallback] Back clicked');
           screenChar.classList.remove('active');
           screenLanding.classList.add('active');
           fb.setScreen('landing');
-        });
+        }
+        btnBack.addEventListener('click', onBack);
+        btnBack.addEventListener('touchend', onBack);
       }
 
       var btnContinue = document.getElementById('btn-continue');
       if (btnContinue && screenChar && screenGame) {
-        btnContinue.addEventListener('click', function() {
+        function onContinue(e) {
+          if (e && e.type === 'touchend') { e.preventDefault(); e.stopPropagation(); }
           console.log('[Fallback] Continue clicked');
           var nameInput = document.getElementById('char-name-input');
           if (nameInput && nameInput.value.trim()) {
@@ -1849,8 +1862,6 @@
           screenChar.classList.remove('active');
           screenGame.classList.add('active');
           fb.setScreen('game');
-
-          // Try module game first, fallback keeps running either way
           if (window.StarlightInn) {
             try {
               window.StarlightInn.setScreen('game');
@@ -1860,7 +1871,9 @@
               console.warn('[Fallback] Module game failed, fallback rendering continues:', e);
             }
           }
-        });
+        }
+        btnContinue.addEventListener('click', onContinue);
+        btnContinue.addEventListener('touchend', onContinue);
       }
 
       var btnSettings = document.getElementById('btn-settings');
@@ -1989,11 +2002,17 @@
     } else {
       wireButtons();
     }
+    // Diagnostic: if buttons weren't found, show alert
+    setTimeout(function() {
+      if (!document.getElementById('btn-play')) {
+        alert('DIAGNOSTIC: Enter World button not found in DOM. Page may be broken.');
+      }
+    }, 1000);
   })();
   </script>
 
   <!-- ==================== MODULE ENTRY ==================== -->
-  <script type="module" src="js/main.js?v=6.0.2" id="module-main"></script>
+  <script type="module" src="js/main.js?v=6.0.3" id="module-main"></script>
   <script>
     // Module load detection -- if main.js fails to load, ensure fallback is active
     window.MODULE_LOADED = false;
@@ -2008,6 +2027,19 @@
       window.MODULE_ERROR = true;
     });
     // Debug panel logic
+    var debugPanel = document.getElementById('debug-panel');
+    if (debugPanel) {
+      debugPanel.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleDebug();
+      });
+      debugPanel.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleDebug();
+      });
+    }
     window.DEBUG_OPEN = false;
     function toggleDebug() {
       var overlay = document.getElementById('debug-overlay');
