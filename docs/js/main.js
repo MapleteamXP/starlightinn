@@ -871,11 +871,26 @@ function boot() {
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => { boot(); wireLandingHandlers(); wireCharSelectHandlers(); });
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      boot();
+      wireLandingHandlers();
+      wireCharSelectHandlers();
+    } catch (err) {
+      console.error('[Main] Module boot failed:', err);
+      window.MODULE_ERROR = true;
+      // Fallback renderer is already active in index.html
+    }
+  });
 } else {
-  boot();
-  wireLandingHandlers();
-  wireCharSelectHandlers();
+  try {
+    boot();
+    wireLandingHandlers();
+    wireCharSelectHandlers();
+  } catch (err) {
+    console.error('[Main] Module boot failed:', err);
+    window.MODULE_ERROR = true;
+  }
 }
 
 // ============================================================

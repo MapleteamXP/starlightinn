@@ -37,9 +37,9 @@ export class SocketClient {
       this.socket.disconnect();
     }
 
-    // Show connecting state on landing page
-    var statusEl = document.getElementById('server-status');
-    if (statusEl) statusEl.textContent = 'Connecting...';
+    // Do not overwrite landing page status -- HTML already shows Offline Mode
+    // var statusEl = document.getElementById('server-status');
+    // if (statusEl) statusEl.textContent = 'Connecting...';
 
     this.socket = io(url, {
       transports: ['websocket', 'polling'],
@@ -88,13 +88,6 @@ export class SocketClient {
     this.socket.on('connect_error', (err) => {
       clearTimeout(this._connectTimeout);
       console.warn('[SocketClient] Connection error:', err.message);
-      var statusEl = document.getElementById('server-status');
-      if (statusEl) {
-        statusEl.textContent = 'Offline Mode';
-        statusEl.style.color = '#888';
-      }
-      var onlineEl = document.getElementById('online-count');
-      if (onlineEl) onlineEl.textContent = '—';
     });
 
     // Auth events -----------------------------------------------------

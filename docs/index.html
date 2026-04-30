@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#1a1a2e">
   <meta name="description" content="Starlight Inn — A cozy social world where friends gather, explore, and play together in a twilight pixel-art universe.">
@@ -11,9 +14,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css">
-  <link rel="stylesheet" href="css/animations.css">
-  <link rel="stylesheet" href="css/mobile.css">
+  <link rel="stylesheet" href="css/main.css?v=6.0.1">
+  <link rel="stylesheet" href="css/animations.css?v=6.0.1">
+  <link rel="stylesheet" href="css/mobile.css?v=6.0.1">
   <style>
     #game-canvas {
       image-rendering: pixelated;
@@ -59,11 +62,11 @@
         <span class="feature-dot">🎵</span>
       </div>
       <div class="landing-footer">
-        <span class="version">v6.0</span>
+        <span class="version">v6.0.1 (2026-04-30)</span>
         <span class="separator">|</span>
         <span class="online-count"><span id="online-count">0</span> stars online</span>
         <span class="separator">|</span>
-        <span class="server-status" id="server-status">Connecting...</span>
+        <span class="server-status" id="server-status">Offline Mode</span>
       </div>
     </div>
     <button id="btn-about" class="landing-about" aria-label="About Starlight Inn">ⓘ About</button>
@@ -618,6 +621,7 @@
     <!-- ==================== TOAST / NOTIFICATION CONTAINER ==================== -->
     <div id="toast-container" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
 
+    <div id="error-box" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#ff4444;color:#fff;padding:8px 12px;font-family:monospace;font-size:12px;text-align:center;"></div>
     <!-- ==================== LOADING OVERLAY ==================== -->
     <div id="loading-overlay" class="loading-overlay" role="alert" aria-live="assertive" aria-label="Loading overlay">
       <div class="loading-bg" aria-hidden="true"></div>
@@ -669,6 +673,16 @@
     // Immediately hide the loading overlay so the user can interact
     var overlay = document.getElementById('loading-overlay');
     if (overlay) overlay.classList.add('hidden');
+
+    // Global error handler -- show visible error on page for debugging
+    window.addEventListener('error', function(e) {
+      console.error('[Global Error]', e.message, 'at', e.filename, ':', e.lineno);
+      var errBox = document.getElementById('error-box');
+      if (errBox) {
+        errBox.textContent = 'Module error: ' + e.message + ' (line ' + e.lineno + ')';
+        errBox.style.display = 'block';
+      }
+    });
 
     // ============================================================
     // Fallback Mini-Renderer — PROFESSIONAL CARTOON STYLE
@@ -1960,7 +1974,7 @@
   </script>
 
   <!-- ==================== MODULE ENTRY ==================== -->
-  <script type="module" src="js/main.js" id="module-main"></script>
+  <script type="module" src="js/main.js?v=6.0.1" id="module-main"></script>
   <script>
     // Module load detection -- if main.js fails to load, ensure fallback is active
     window.MODULE_LOADED = false;
