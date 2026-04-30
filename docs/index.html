@@ -14,9 +14,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=6.0.1">
-  <link rel="stylesheet" href="css/animations.css?v=6.0.1">
-  <link rel="stylesheet" href="css/mobile.css?v=6.0.1">
+  <link rel="stylesheet" href="css/main.css?v=6.0.2">
+  <link rel="stylesheet" href="css/animations.css?v=6.0.2">
+  <link rel="stylesheet" href="css/mobile.css?v=6.0.2">
   <style>
     #game-canvas {
       image-rendering: pixelated;
@@ -62,7 +62,7 @@
         <span class="feature-dot">🎵</span>
       </div>
       <div class="landing-footer">
-        <span class="version">v6.0.1 (2026-04-30)</span>
+        <span class="version">v6.0.2 (2026-05-01)</span>
         <span class="separator">|</span>
         <span class="online-count"><span id="online-count">0</span> stars online</span>
         <span class="separator">|</span>
@@ -621,6 +621,10 @@
     <!-- ==================== TOAST / NOTIFICATION CONTAINER ==================== -->
     <div id="toast-container" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
 
+    <!-- Debug panel for troubleshooting -->
+    <div id="debug-panel" style="position:fixed;bottom:4px;left:4px;z-index:9999;background:rgba(0,0,0,0.7);color:#0f0;padding:4px 8px;font-family:monospace;font-size:10px;border-radius:4px;max-width:200px;pointer-events:none;">
+      v6.0.2 | JS: <span id="dbg-js">...</span> | Game: <span id="dbg-game">...</span>
+    </div>
     <div id="error-box" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#ff4444;color:#fff;padding:8px 12px;font-family:monospace;font-size:12px;text-align:center;"></div>
     <!-- ==================== LOADING OVERLAY ==================== -->
     <div id="loading-overlay" class="loading-overlay" role="alert" aria-live="assertive" aria-label="Loading overlay">
@@ -1974,7 +1978,7 @@
   </script>
 
   <!-- ==================== MODULE ENTRY ==================== -->
-  <script type="module" src="js/main.js?v=6.0.1" id="module-main"></script>
+  <script type="module" src="js/main.js?v=6.0.2" id="module-main"></script>
   <script>
     // Module load detection -- if main.js fails to load, ensure fallback is active
     window.MODULE_LOADED = false;
@@ -1988,7 +1992,16 @@
       console.warn('[Module] main.js failed to load -- fallback renderer active');
       window.MODULE_ERROR = true;
     });
-    // If module hasn't loaded in 5 seconds, force fallback mode
+    // Debug panel updater
+    setInterval(function() {
+      var dbgJs = document.getElementById('dbg-js');
+      var dbgGame = document.getElementById('dbg-game');
+      if (dbgJs) dbgJs.textContent = window.MODULE_LOADED ? 'OK' : (window.MODULE_ERROR ? 'ERR' : 'LOAD');
+      if (dbgGame && window.StarlightInn) {
+        var g = window.StarlightInn;
+        dbgGame.textContent = (g.state ? g.state.screen : '?') + ' | ' + (g.running ? 'RUN' : 'STOP');
+      }
+    }, 500);
     setTimeout(function() {
       if (!window.MODULE_LOADED && !window.MODULE_ERROR) {
         console.warn('[Module] main.js load timeout -- forcing fallback');

@@ -906,6 +906,11 @@ function wireLandingHandlers() {
       game.uiSounds?.playButtonClick();
       setTimeout(() => {
         btnPlay.style.transform = '';
+        // v6.0-hotfix5: defensive screen switch -- also toggle DOM classes directly
+        // in case Game.js is cached old version without setScreen DOM switching
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const target = document.getElementById('screen-charselect');
+        if (target) target.classList.add('active');
         game.setScreen('charselect');
       }, 150);
     });
@@ -931,6 +936,17 @@ function wireLandingHandlers() {
     const closeBtn = settingsPanel.querySelector('.panel-close');
     if (closeBtn) closeBtn.addEventListener('click', () => settingsPanel.classList.remove('active'));
   }
+  const btnGuest = document.getElementById('btn-guest');
+  if (btnGuest) {
+    btnGuest.addEventListener('click', () => {
+      console.log('[UI] Play as Guest clicked');
+      game.uiSounds?.playButtonClick();
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById('screen-charselect');
+      if (target) target.classList.add('active');
+      game.setScreen('charselect');
+    });
+  }
   console.log('[UI] Landing handlers wired');
 }
 
@@ -940,6 +956,9 @@ function wireCharSelectHandlers() {
     btnBack.addEventListener('click', () => {
       console.log('[UI] Back clicked');
       game.uiSounds?.playButtonClick();
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById('screen-landing');
+      if (target) target.classList.add('active');
       game.setScreen('landing');
     });
   }
@@ -950,6 +969,9 @@ function wireCharSelectHandlers() {
       game.uiSounds?.playButtonClick();
       const nameInput = document.getElementById('char-name-input');
       if (nameInput && nameInput.value.trim()) game.state.player.name = nameInput.value.trim();
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById('screen-game');
+      if (target) target.classList.add('active');
       game.setScreen('game');
       game.start();
     });
