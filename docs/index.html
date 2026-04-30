@@ -14,9 +14,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=6.0.3">
-  <link rel="stylesheet" href="css/animations.css?v=6.0.3">
-  <link rel="stylesheet" href="css/mobile.css?v=6.0.3">
+  <link rel="stylesheet" href="css/main.css?v=6.0.4">
+  <link rel="stylesheet" href="css/animations.css?v=6.0.4">
+  <link rel="stylesheet" href="css/mobile.css?v=6.0.4">
   <style>
     #game-canvas {
       image-rendering: pixelated;
@@ -46,11 +46,11 @@
       <p class="game-subtitle">A cozy social world where friends gather under the stars</p>
       <p class="game-tagline">Make friends, decorate your space, play games, and explore together</p>
       <div class="landing-actions">
-        <button id="btn-play" class="btn btn-primary btn-glow" aria-label="Enter the world">
+        <button id="btn-play" class="btn btn-primary btn-glow" aria-label="Enter the world" onclick="document.getElementById('screen-landing').classList.remove('active');document.getElementById('screen-charselect').classList.add('active');if(window.FallbackGame){window.FallbackGame.setScreen('charselect');window.FallbackGame.start();}">
           <span class="btn-icon">✨</span>
           <span class="btn-text">Enter World</span>
         </button>
-        <button id="btn-guest" class="btn btn-ghost" aria-label="Play as guest">
+        <button id="btn-guest" class="btn btn-ghost" aria-label="Play as guest" onclick="document.getElementById('screen-landing').classList.remove('active');document.getElementById('screen-charselect').classList.add('active');if(window.FallbackGame){window.FallbackGame.setScreen('charselect');window.FallbackGame.start();}">
           <span class="btn-text">Play as Guest</span>
         </button>
         <button id="btn-settings" class="btn btn-secondary" aria-label="Open settings">
@@ -65,7 +65,7 @@
         <span class="feature-dot">🎵</span>
       </div>
       <div class="landing-footer">
-        <span class="version">v6.0.3 (2026-05-01)</span>
+        <span class="version">v6.0.4 (2026-05-01)</span>
         <span class="separator">|</span>
         <span class="online-count"><span id="online-count">0</span> stars online</span>
         <span class="separator">|</span>
@@ -184,14 +184,14 @@
     </div>
 
     <div class="charselect-actions">
-      <button id="btn-back" class="btn btn-secondary" aria-label="Go back">
+      <button id="btn-back" class="btn btn-secondary" aria-label="Go back" onclick="document.getElementById('screen-charselect').classList.remove('active');document.getElementById('screen-landing').classList.add('active');if(window.FallbackGame){window.FallbackGame.setScreen('landing');}">
         <span class="btn-text">Back</span>
       </button>
       <button id="btn-randomize" class="btn btn-ghost" aria-label="Randomize character">
         <span class="btn-icon">🎲</span>
         <span class="btn-text">Randomize</span>
       </button>
-      <button id="btn-continue" class="btn btn-primary" aria-label="Continue to game">
+      <button id="btn-continue" class="btn btn-primary" aria-label="Continue to game" onclick="var n=document.getElementById('char-name-input');if(n&&n.value.trim()&&window.FallbackGame){window.FallbackGame.player.name=n.value.trim();}document.getElementById('screen-charselect').classList.remove('active');document.getElementById('screen-game').classList.add('active');if(window.FallbackGame){window.FallbackGame.setScreen('game');}">
         <span class="btn-text">Continue</span>
         <span class="btn-icon">➡️</span>
       </button>
@@ -837,7 +837,7 @@
   </script>
 
   <!-- ==================== MODULE ENTRY ==================== -->
-  <script type="module" src="js/main.js?v=6.0.3" id="module-main"></script>
+  <script type="module" src="js/main.js?v=6.0.4" id="module-main"></script>
   <script>
     // Module load detection -- if main.js fails to load, ensure fallback is active
     window.MODULE_LOADED = false;
