@@ -610,3 +610,18 @@ export default class IsoDepthSorter {
 
 // Re-export Z_LAYER and OBJECT_TYPE as static properties for convenience
 export { Z_LAYER, OBJECT_TYPE };
+
+// ── Adapter class for main.js compatibility ──
+export class IsoDepthSorter {
+  constructor(isoMath) {
+    this.iso = isoMath;
+  }
+  sort(objects) {
+    return objects.sort((a, b) => {
+      const ay = (a.y || a.tileY || 0) * 1000 + (a.x || a.tileX || 0);
+      const by = (b.y || b.tileY || 0) * 1000 + (b.x || b.tileX || 0);
+      return ay - by;
+    });
+  }
+  getLayer(type) { return Z_LAYER[type] || Z_LAYER.DEFAULT; }
+}

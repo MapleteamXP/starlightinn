@@ -1016,3 +1016,68 @@ export const MAX_A_STAR_ITERATIONS_CHUNK = 4000;
  * @property {boolean} modified - Whether the chunk has been modified since load.
  * @property {number} generation - Generation counter for cache invalidation.
  */
+
+// ── Adapter classes for main.js compatibility ──
+export class IsoChunk {
+  constructor(tilemap, cx, cy, size = DEFAULT_CHUNK_SIZE) {
+    this.tilemap = tilemap;
+    this.chunkX = cx;
+    this.chunkY = cy;
+    this.size = size;
+    this.tiles = [];
+    this.loaded = false;
+  }
+  load() { this.loaded = true; }
+  unload() { this.loaded = false; }
+  isLoaded() { return this.loaded; }
+  getBounds() {
+    return {
+      x: this.chunkX * this.size,
+      y: this.chunkY * this.size,
+      w: this.size,
+      h: this.size,
+    };
+  }
+}
+
+export class ChunkManager {
+  constructor(tilemap, chunkSize = DEFAULT_CHUNK_SIZE) {
+    this.tilemap = tilemap;
+    this.chunkSize = chunkSize;
+    this.chunks = new Map();
+    this.activeChunks = new Set();
+  }
+  getChunk(cx, cy) {
+    const key = `${cx},${cy}`;
+    if (!this.chunks.has(key)) {
+      this.chunks.set(key, new IsoChunk(this.tilemap, cx, cy, this.chunkSize));
+    }
+    return this.chunks.get(key);
+  }
+  loadAround(tx, ty, radius = 2) {
+    const cx = Math.floor(tx / this.chunkSize);
+    const cy = Math.floor(ty / this.chunkSize);
+    for (let dy = -radius; dy <= radius; dy++) {
+      for (let dx = -radius; dx <= radius; dx++) {
+        const chunk = this.getChunk(cx + dx, cy + dy);
+        if (!chunk.loaded) chunk.load();
+        this.activeChunks.add(`${cx + dx},${cy + dy}`);
+      }
+    }
+  }
+  unloadDistant(tx, ty, maxDist = 4) {
+    const ccx = Math.floor(tx / this.chunkSize);
+    const ccy = Math.floor(ty / this.chunkSize);
+    for (const [key, chunk] of this.chunks) {
+      const dist = Math.abs(chunk.chunkX - ccx) + Math.abs(chunk.chunkY - ccy);
+      if (dist > maxDist && chunk.loaded) {
+        chunk.unload();
+        this.activeChunks.delete(key);
+      }
+    }
+  }
+  update(playerX, playerY) {
+    this.loadAround(playerX, playerY);
+    this.unloadDistant(playerX, playerY);
+  }
+}

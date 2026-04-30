@@ -2787,3 +2787,22 @@ export class FurnitureCatalog {
 export { FURNITURE_CATALOG };
 
 export default FurnitureCatalog;
+
+// ── Adapter class for main.js compatibility ──
+export class IsoFurniture {
+  constructor(game) {
+    this.game = game;
+    this.catalog = FurnitureCatalog || getFurnitureCatalog();
+    this.placed = [];
+  }
+  getCatalog() { return this.catalog; }
+  place(item, tx, ty) {
+    const placed = { ...item, tileX: tx, tileY: ty, id: Date.now() + Math.random() };
+    this.placed.push(placed);
+    return placed;
+  }
+  remove(id) { this.placed = this.placed.filter(p => p.id !== id); }
+  getAt(tx, ty) { return this.placed.filter(p => p.tileX === tx && p.tileY === ty); }
+  getAll() { return this.placed; }
+  clear() { this.placed = []; }
+}

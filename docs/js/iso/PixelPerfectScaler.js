@@ -742,3 +742,40 @@ export default class PixelPerfectScaler {
 // =============================================================================
 
 export { MIN_ZOOM, MAX_ZOOM, DEFAULT_ZOOM, ZOOM_LEVELS };
+
+// ── Adapter class for main.js compatibility ──
+export class PixelPerfectScaler {
+  constructor(canvasId) {
+    this.canvas = typeof canvasId === 'string' ? document.getElementById(canvasId) : canvasId;
+    this.zoom = 1;
+    this.targetZoom = 1;
+    this.width = 0;
+    this.height = 0;
+  }
+  init() {
+    if (!this.canvas) return;
+    this.resize();
+    window.addEventListener('resize', () => this.resize());
+  }
+  resize() {
+    if (!this.canvas) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.width = Math.floor(this.canvas.clientWidth || 800);
+    this.height = Math.floor(this.canvas.clientHeight || 600);
+    this.canvas.width = this.width * dpr;
+    this.canvas.height = this.height * dpr;
+  }
+  setZoom(z) { this.targetZoom = Math.max(1, Math.min(4, Math.round(z))); }
+  getZoom() { return this.zoom; }
+  apply(ctx) {
+    if (!this.canvas || !ctx) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.zoom += (this.targetZoom - this.zoom) * 0.2;
+    const iz = Math.round(this.zoom);
+    ctx.setTransform(dpr * iz, 0, 0, dpr * iz, 0, 0);
+  }
+  reset(ctx) {
+    if (!ctx) return;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+}

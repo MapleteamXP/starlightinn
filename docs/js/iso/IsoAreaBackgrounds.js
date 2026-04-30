@@ -3795,3 +3795,16 @@ export default class IsoAreaBackgrounds {
  * @property {number} destX - Destination tile X.
  * @property {number} destY - Destination tile Y.
  */
+
+// ── Adapter class for main.js compatibility ──
+export class IsoAreaBackgrounds {
+  constructor(game) {
+    this.game = game;
+    this.areas = AREA_CONFIGS || {};
+    this.current = null;
+  }
+  getArea(name) { return this.areas[name]; }
+  setArea(name) { this.current = this.areas[name]; return this.current; }
+  getCurrent() { return this.current; }
+  getAll() { return Object.keys(this.areas); }
+}

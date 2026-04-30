@@ -1075,3 +1075,19 @@ export default {
   buildColorSet,
   buildFurnitureColors
 };
+
+// ── Aggregate export for main.js compatibility ──
+export const ColorTable = {
+  FLOOR_COLORS,
+  WALL_COLORS,
+  FURNITURE_COLORS,
+  AVATAR_COLORS,
+  getFloorColors,
+  getWallColors,
+  getFurnitureColors,
+  getAvatarColors,
+  getColorById,
+  validatePalette,
+  PALETTE_NAMES,
+  PALETTES,
+};
