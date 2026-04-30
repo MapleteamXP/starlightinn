@@ -597,7 +597,7 @@
     if (overlay) overlay.classList.add('hidden');
 
     // ============================================================
-    // Fallback Mini-Renderer — draws preview + game with raw Canvas 2D
+    // Fallback Mini-Renderer — PROFESSIONAL CARTOON STYLE
     // ============================================================
     var fb = {
       running: false,
@@ -606,11 +606,19 @@
       player: { name: '', skinColor: 0, hairColor: 0, outfitColor: 0, expression: 'happy', facing: 'down', moving: false },
       screen: 'landing',
       lastT: 0,
+      _cache: {},
+      _auroraPhase: 0,
+      _fireflies: null,
+      _particles: null,
+      _shootingStars: [],
+      _clouds: null,
+      _stars: null,
 
       start: function() {
         if (this.running) return;
         this.running = true;
         this.lastT = performance.now();
+        this._initAtmosphere();
         this.loop();
       },
       stop: function() { this.running = false; },
@@ -620,116 +628,724 @@
         this.render();
         requestAnimationFrame(this.loop.bind(this));
       },
-      // Draw a player avatar at (x,y) with scale
-      drawPlayer: function(ctx, x, y, scale) {
+
+      _initAtmosphere: function() {
+        var now = Date.now();
+        this._fireflies = [];
+        for (var i = 0; i < 24; i++) {
+          this._fireflies.push({
+            x: Math.random() * 960, y: 280 + Math.random() * 260,
+            vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.3,
+            phase: Math.random() * Math.PI * 2, speed: 0.5 + Math.random() * 1.5,
+            radius: 1.5 + Math.random() * 2.5
+          });
+        }
+        this._particles = [];
+        for (var i = 0; i < 40; i++) {
+          this._particles.push({
+            x: Math.random() * 960, y: Math.random() * 540,
+            vx: (Math.random() - 0.5) * 0.15, vy: -0.05 - Math.random() * 0.15,
+            size: 0.5 + Math.random() * 1.5, alpha: 0.1 + Math.random() * 0.3
+          });
+        }
+        this._clouds = [];
+        for (var i = 0; i < 5; i++) {
+          this._clouds.push({
+            x: Math.random() * 960, y: 20 + Math.random() * 80,
+            speed: 0.05 + Math.random() * 0.12,
+            scale: 0.6 + Math.random() * 0.8, opacity: 0.08 + Math.random() * 0.08
+          });
+        }
+        this._stars = [];
+        for (var i = 0; i < 70; i++) {
+          this._stars.push({
+            x: Math.random() * 960, y: Math.random() * 200,
+            size: 0.8 + Math.random() * 2, phase: Math.random() * Math.PI * 2,
+            speed: 0.5 + Math.random() * 2
+          });
+        }
+      },
+
+      _getColors: function() {
         var skinColors = ['#ffe0bd','#ffcd94','#eac086','#d2a56d','#8d5524'];
         var hairColors = ['#2d2d2d','#5c3a21','#d4a574','#e8c547','#a33b3b','#6b4c9a'];
         var outfitColors = ['#5b8c85','#c75b5b','#5b7fa8','#a85ba8','#8c5b5b','#d4a45b'];
-        var skin = skinColors[this.player.skinColor % skinColors.length] || skinColors[0];
-        var hair = hairColors[this.player.hairColor % hairColors.length] || hairColors[0];
-        var outfit = outfitColors[this.player.outfitColor % outfitColors.length] || outfitColors[0];
-        var bob = this.player.moving ? Math.sin(Date.now() * 0.008) * 3 : 0;
+        return {
+          skin: skinColors[this.player.skinColor % skinColors.length] || skinColors[0],
+          hair: hairColors[this.player.hairColor % hairColors.length] || hairColors[0],
+          outfit: outfitColors[this.player.outfitColor % outfitColors.length] || outfitColors[0]
+        };
+      },
+
+      // ==================== CHARACTER DRAWER ====================
+      drawPlayer: function(ctx, x, y, scale) {
+        var c = this._getColors();
+        var t = Date.now() * 0.001;
+        var walk = this.player.moving;
+        var bob = walk ? Math.sin(t * 6) * 4 : Math.sin(t * 2) * 1.5;
+        var breath = 1 + Math.sin(t * 2.5) * 0.015;
+        var legSwing = walk ? Math.sin(t * 6) * 12 : 0;
+        var armSwing = walk ? Math.sin(t * 6 + Math.PI) * 10 : Math.sin(t * 1.5) * 3;
+        var faceTilt = this.player.facing === 'left' ? -0.08 : this.player.facing === 'right' ? 0.08 : 0;
+
         ctx.save();
         ctx.translate(x, y + bob);
-        ctx.scale(scale, scale);
+        ctx.scale(scale, scale * breath);
+
         // Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.25)';
-        ctx.beginPath(); ctx.ellipse(0, 14, 14, 5, 0, 0, Math.PI*2); ctx.fill();
-        // Outfit
-        ctx.fillStyle = outfit;
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
         ctx.beginPath();
-        ctx.moveTo(-10, 14); ctx.lineTo(10, 14); ctx.lineTo(8, -4); ctx.lineTo(-8, -4); ctx.closePath();
+        ctx.ellipse(0, 32, 18, 6, 0, 0, Math.PI * 2);
         ctx.fill();
-        // Head
-        ctx.fillStyle = skin;
-        ctx.beginPath(); ctx.arc(0, -14, 13, 0, Math.PI*2); ctx.fill();
-        // Hair
-        ctx.fillStyle = hair;
-        ctx.beginPath(); ctx.arc(0, -16, 13, Math.PI, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(0, -14, 13, Math.PI*1.1, Math.PI*1.9); ctx.fill();
-        // Eyes
-        var eyeOffset = this.player.facing === 'left' ? -2 : this.player.facing === 'right' ? 2 : 0;
-        ctx.fillStyle = '#2d2d2d';
-        ctx.beginPath(); ctx.arc(-3+eyeOffset, -14, 2.2, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(3+eyeOffset, -14, 2.2, 0, Math.PI*2); ctx.fill();
+
+        // Legs (back)
+        ctx.strokeStyle = c.outfit;
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(-5, 12);
+        ctx.quadraticCurveTo(-8, 24, -6 + legSwing, 32);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(5, 12);
+        ctx.quadraticCurveTo(8, 24, 6 - legSwing, 32);
+        ctx.stroke();
+        // Shoes
+        ctx.fillStyle = '#3a2a1a';
+        ctx.beginPath();
+        ctx.ellipse(-6 + legSwing, 33, 5, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(6 - legSwing, 33, 5, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Body / Outfit
+        ctx.fillStyle = c.outfit;
+        ctx.beginPath();
+        ctx.moveTo(-10, 14);
+        ctx.lineTo(10, 14);
+        ctx.lineTo(9, -2);
+        ctx.quadraticCurveTo(0, -6, -9, -2);
+        ctx.closePath();
+        ctx.fill();
+        // Clothing folds
+        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-3, 0); ctx.quadraticCurveTo(-5, 6, -2, 12); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(3, -1); ctx.quadraticCurveTo(5, 5, 2, 11); ctx.stroke();
+        // Collar
+        ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-6, -2); ctx.quadraticCurveTo(0, 1, 6, -2); ctx.stroke();
+
+        // Arms
+        ctx.strokeStyle = c.skin;
+        ctx.lineWidth = 4.5;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(-9, -1);
+        ctx.quadraticCurveTo(-16, 4 + armSwing * 0.5, -14 + armSwing * 0.3, 10 + armSwing);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(9, -1);
+        ctx.quadraticCurveTo(16, 4 - armSwing * 0.5, 14 - armSwing * 0.3, 10 - armSwing);
+        ctx.stroke();
+        // Hands
+        ctx.fillStyle = c.skin;
+        ctx.beginPath();
+        ctx.arc(-14 + armSwing * 0.3, 10 + armSwing, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(14 - armSwing * 0.3, 10 - armSwing, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head group
+        ctx.save();
+        ctx.rotate(faceTilt);
+
+        // Neck
+        ctx.fillStyle = c.skin;
+        ctx.fillRect(-3, -6, 6, 5);
+
+        // Head shape (round with slight chin)
+        ctx.fillStyle = c.skin;
+        ctx.beginPath();
+        ctx.arc(0, -18, 15, 0, Math.PI * 2);
+        ctx.fill();
+        // Shading (subtle radial for 3D feel)
+        var headGrad = ctx.createRadialGradient(-4, -22, 2, 0, -18, 15);
+        headGrad.addColorStop(0, 'rgba(255,255,255,0.15)');
+        headGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = headGrad;
+        ctx.beginPath();
+        ctx.arc(0, -18, 15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hair (volume + highlights)
+        ctx.fillStyle = c.hair;
+        ctx.beginPath();
+        ctx.arc(0, -22, 15.5, Math.PI * 0.85, Math.PI * 2.15);
+        ctx.quadraticCurveTo(10, -10, 14, -8);
+        ctx.quadraticCurveTo(16, -18, 10, -28);
+        ctx.quadraticCurveTo(0, -36, -10, -28);
+        ctx.quadraticCurveTo(-16, -18, -14, -8);
+        ctx.quadraticCurveTo(-10, -10, 0, -22);
+        ctx.fill();
+        // Hair highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.beginPath();
+        ctx.ellipse(-5, -30, 6, 3, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        // Hair strands
+        ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(-8, -28); ctx.quadraticCurveTo(-4, -22, 0, -26); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(4, -30); ctx.quadraticCurveTo(8, -24, 12, -28); ctx.stroke();
+
+        // Eyes with pupils + blink
+        var blink = Math.sin(t * 3.7) > 0.92 || Math.sin(t * 5.1) > 0.96;
+        var eyeOff = this.player.facing === 'left' ? -2.5 : this.player.facing === 'right' ? 2.5 : 0;
+        var pupilOff = this.player.facing === 'left' ? -1 : this.player.facing === 'right' ? 1 : 0;
+        // Eye whites
         ctx.fillStyle = '#fff';
-        ctx.beginPath(); ctx.arc(-2+eyeOffset, -15, 0.8, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(4+eyeOffset, -15, 0.8, 0, Math.PI*2); ctx.fill();
-        // Mouth (happy)
-        ctx.strokeStyle = '#8b5e3c'; ctx.lineWidth = 1; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.arc(0+eyeOffset, -10, 3, 0.1, Math.PI-0.1); ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(-5 + eyeOff, -18, 3.5, blink ? 0.5 : 3.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(5 + eyeOff, -18, 3.5, blink ? 0.5 : 3.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        if (!blink) {
+          // Pupils
+          ctx.fillStyle = '#2d2d2d';
+          ctx.beginPath();
+          ctx.arc(-5 + eyeOff + pupilOff, -18, 2.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(5 + eyeOff + pupilOff, -18, 2.2, 0, Math.PI * 2);
+          ctx.fill();
+          // Catchlights
+          ctx.fillStyle = 'rgba(255,255,255,0.9)';
+          ctx.beginPath();
+          ctx.arc(-6 + eyeOff + pupilOff, -19.5, 1, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(4 + eyeOff + pupilOff, -19.5, 1, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = 'rgba(255,255,255,0.4)';
+          ctx.beginPath();
+          ctx.arc(-3.5 + eyeOff + pupilOff, -16.5, 0.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(6.5 + eyeOff + pupilOff, -16.5, 0.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Eyelash line
+        ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.arc(-5 + eyeOff, -18, 3.6, Math.PI * 0.8, Math.PI * 2.2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(5 + eyeOff, -18, 3.6, Math.PI * 0.8, Math.PI * 2.2);
+        ctx.stroke();
+
+        // Eyebrows
+        ctx.strokeStyle = c.hair;
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(-9 + eyeOff, -24);
+        ctx.quadraticCurveTo(-5 + eyeOff, -26, -1 + eyeOff, -23);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(1 + eyeOff, -23);
+        ctx.quadraticCurveTo(5 + eyeOff, -26, 9 + eyeOff, -24);
+        ctx.stroke();
+
+        // Mouth (expression-aware)
+        var expr = this.player.expression || 'happy';
+        ctx.strokeStyle = '#8b5e3c';
+        ctx.lineWidth = 1.5;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        if (expr === 'happy') {
+          ctx.arc(0 + eyeOff * 0.5, -11, 3.5, 0.15, Math.PI - 0.15);
+          ctx.stroke();
+          // Small cheek blush
+          ctx.fillStyle = 'rgba(255,120,120,0.15)';
+          ctx.beginPath();
+          ctx.arc(-10, -13, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(10, -13, 3, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (expr === 'surprised') {
+          ctx.arc(0 + eyeOff * 0.5, -11, 2.5, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.fillStyle = '#5a2a1a';
+          ctx.fill();
+        } else if (expr === 'sad') {
+          ctx.arc(0 + eyeOff * 0.5, -8, 3.5, Math.PI + 0.2, Math.PI * 2 - 0.2);
+          ctx.stroke();
+        } else {
+          ctx.moveTo(-3 + eyeOff * 0.5, -10);
+          ctx.lineTo(3 + eyeOff * 0.5, -10);
+          ctx.stroke();
+        }
+
+        // Nose (tiny dot)
+        ctx.fillStyle = 'rgba(139,94,60,0.4)';
+        ctx.beginPath();
+        ctx.arc(0 + eyeOff * 0.3, -14, 1, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore(); // head group
+        ctx.restore(); // full player
+      },
+
+      // ==================== ENVIRONMENT ====================
+      _drawMoon: function(ctx, x, y, r) {
+        var t = Date.now() * 0.001;
+        // Glow
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        var glow = ctx.createRadialGradient(x, y, r * 0.6, x, y, r * 4);
+        glow.addColorStop(0, 'rgba(200,220,255,0.35)');
+        glow.addColorStop(0.3, 'rgba(180,200,255,0.12)');
+        glow.addColorStop(1, 'rgba(180,200,255,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(x, y, r * 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        // Moon body
+        var moonGrad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r);
+        moonGrad.addColorStop(0, '#fffef0');
+        moonGrad.addColorStop(0.5, '#f0e8d0');
+        moonGrad.addColorStop(1, '#c8b898');
+        ctx.fillStyle = moonGrad;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+        // Craters
+        ctx.fillStyle = 'rgba(160,140,110,0.35)';
+        ctx.beginPath(); ctx.arc(x - r * 0.25, y + r * 0.1, r * 0.18, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x + r * 0.35, y - r * 0.2, r * 0.12, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x + r * 0.1, y + r * 0.45, r * 0.1, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x - r * 0.4, y - r * 0.35, r * 0.08, 0, Math.PI * 2); ctx.fill();
+        // Crater highlights
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        ctx.beginPath(); ctx.arc(x - r * 0.22, y + r * 0.05, r * 0.14, 0, Math.PI * 2); ctx.fill();
+      },
+
+      _drawAurora: function(ctx, W, H) {
+        var t = Date.now() * 0.0003;
+        this._auroraPhase += 0.008;
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        for (var band = 0; band < 3; band++) {
+          var alpha = 0.06 + Math.sin(t + band) * 0.03;
+          var hues = ['rgba(100,255,180,', 'rgba(120,200,255,', 'rgba(200,150,255,'];
+          ctx.fillStyle = hues[band] + alpha + ')';
+          ctx.beginPath();
+          var baseY = H * 0.12 + band * 35;
+          ctx.moveTo(0, baseY + 60);
+          for (var x = 0; x <= W; x += 30) {
+            var y = baseY + Math.sin(x * 0.004 + t * (1 + band * 0.3) + band * 2) * 25 +
+                    Math.sin(x * 0.012 + t * 2 + band) * 12;
+            ctx.lineTo(x, y);
+          }
+          ctx.lineTo(W, baseY + 80);
+          ctx.lineTo(0, baseY + 80);
+          ctx.closePath();
+          ctx.fill();
+        }
         ctx.restore();
       },
+
+      _drawShootingStars: function(ctx, W, H) {
+        var t = Date.now() * 0.001;
+        // Spawn occasionally
+        if (Math.random() < 0.015) {
+          this._shootingStars.push({
+            x: Math.random() * W, y: Math.random() * H * 0.25,
+            vx: 3 + Math.random() * 5, vy: 1.5 + Math.random() * 2,
+            life: 1, decay: 0.02 + Math.random() * 0.02
+          });
+        }
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        for (var i = this._shootingStars.length - 1; i >= 0; i--) {
+          var s = this._shootingStars[i];
+          s.x += s.vx; s.y += s.vy; s.life -= s.decay;
+          if (s.life <= 0) { this._shootingStars.splice(i, 1); continue; }
+          var grad = ctx.createLinearGradient(s.x, s.y, s.x - s.vx * 8, s.y - s.vy * 8);
+          grad.addColorStop(0, 'rgba(255,255,240,' + s.life + ')');
+          grad.addColorStop(1, 'rgba(255,255,240,0)');
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(s.x, s.y);
+          ctx.lineTo(s.x - s.vx * 10, s.y - s.vy * 10);
+          ctx.stroke();
+          ctx.fillStyle = 'rgba(255,255,255,' + s.life + ')';
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      },
+
+      _drawClouds: function(ctx, W) {
+        var t = Date.now() * 0.001;
+        ctx.save();
+        for (var i = 0; i < this._clouds.length; i++) {
+          var c = this._clouds[i];
+          c.x += c.speed;
+          if (c.x > W + 80) c.x = -80;
+          ctx.globalAlpha = c.opacity;
+          ctx.fillStyle = '#4a3a60';
+          var s = c.scale;
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, 20 * s, 0, Math.PI * 2);
+          ctx.arc(c.x + 18 * s, c.y - 5 * s, 24 * s, 0, Math.PI * 2);
+          ctx.arc(c.x + 38 * s, c.y, 18 * s, 0, Math.PI * 2);
+          ctx.arc(c.x + 12 * s, c.y + 6 * s, 16 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        ctx.restore();
+      },
+
+      _drawHills: function(ctx, W, H, horizonY) {
+        // Far mountains
+        ctx.fillStyle = '#1e1433';
+        ctx.beginPath();
+        ctx.moveTo(0, horizonY);
+        for (var x = 0; x <= W; x += 20) {
+          ctx.lineTo(x, horizonY - 30 - Math.sin(x * 0.008) * 25 - Math.sin(x * 0.02) * 12);
+        }
+        ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+
+        // Mid trees silhouette
+        ctx.fillStyle = '#161024';
+        ctx.beginPath();
+        ctx.moveTo(0, horizonY + 10);
+        for (var x = 0; x <= W; x += 15) {
+          var h = 15 + Math.sin(x * 0.15) * 12 + Math.sin(x * 0.07) * 8;
+          ctx.lineTo(x, horizonY + 10 - h);
+        }
+        ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+
+        // Rolling hills
+        var hillGrad = ctx.createLinearGradient(0, horizonY, 0, H);
+        hillGrad.addColorStop(0, '#1a1230');
+        hillGrad.addColorStop(0.5, '#140d24');
+        hillGrad.addColorStop(1, '#0c0818');
+        ctx.fillStyle = hillGrad;
+        ctx.beginPath();
+        ctx.moveTo(0, horizonY + 15);
+        for (var x = 0; x <= W; x += 10) {
+          ctx.lineTo(x, horizonY + 15 + Math.sin(x * 0.006) * 20 + Math.sin(x * 0.015) * 10);
+        }
+        ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+
+        // Cobblestone path (perspective)
+        ctx.fillStyle = '#241a35';
+        ctx.beginPath();
+        ctx.moveTo(W / 2 - 8, horizonY + 15);
+        ctx.lineTo(W / 2 + 8, horizonY + 15);
+        ctx.lineTo(W / 2 + 140, H);
+        ctx.lineTo(W / 2 - 140, H);
+        ctx.closePath();
+        ctx.fill();
+        // Stones
+        ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+        ctx.lineWidth = 1;
+        for (var row = 0; row < 8; row++) {
+          var y = horizonY + 15 + (H - horizonY - 15) * (row / 8);
+          var w = 16 + row * 18;
+          var stoneCount = 3 + row;
+          for (var s = 0; s < stoneCount; s++) {
+            var sx = W / 2 - w / 2 + (s + 0.5) * (w / stoneCount);
+            ctx.beginPath();
+            ctx.ellipse(sx, y, 3 + row * 1.2, 1.5 + row * 0.5, 0, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+
+        // Grass tufts & flowers
+        for (var i = 0; i < 30; i++) {
+          var gx = (i * 97 + 13) % W;
+          var gy = horizonY + 20 + (i * 53) % (H - horizonY - 30);
+          // Don't draw on path
+          if (Math.abs(gx - W / 2) < 20 + (gy - horizonY) * 0.4) continue;
+          ctx.strokeStyle = 'rgba(80,140,80,0.35)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(gx, gy);
+          ctx.quadraticCurveTo(gx - 3, gy - 6, gx - 2, gy - 10);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(gx, gy);
+          ctx.quadraticCurveTo(gx + 4, gy - 5, gx + 3, gy - 8);
+          ctx.stroke();
+          // Tiny flower
+          if (i % 4 === 0) {
+            ctx.fillStyle = i % 8 === 0 ? 'rgba(255,180,200,0.5)' : 'rgba(255,220,150,0.5)';
+            ctx.beginPath();
+            ctx.arc(gx - 2, gy - 10, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Glowing mushrooms
+        for (var i = 0; i < 6; i++) {
+          var mx = (i * 163 + 47) % W;
+          var my = horizonY + 35 + (i * 71) % (H - horizonY - 50);
+          if (Math.abs(mx - W / 2) < 25 + (my - horizonY) * 0.35) continue;
+          // Glow
+          ctx.save();
+          ctx.globalCompositeOperation = 'screen';
+          var mg = ctx.createRadialGradient(mx, my - 6, 1, mx, my - 6, 12);
+          mg.addColorStop(0, 'rgba(150,255,200,0.25)');
+          mg.addColorStop(1, 'rgba(150,255,200,0)');
+          ctx.fillStyle = mg;
+          ctx.beginPath();
+          ctx.arc(mx, my - 6, 12, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          // Stem
+          ctx.fillStyle = '#c8d0c0';
+          ctx.fillRect(mx - 1.5, my - 6, 3, 7);
+          // Cap
+          ctx.fillStyle = '#80c0a0';
+          ctx.beginPath();
+          ctx.arc(mx, my - 7, 4, Math.PI, 0);
+          ctx.fill();
+          ctx.fillStyle = '#a0e0c0';
+          ctx.beginPath();
+          ctx.arc(mx, my - 8, 2.5, Math.PI, 0);
+          ctx.fill();
+        }
+      },
+
+      _drawAtmosphere: function(ctx, W, H, horizonY) {
+        var t = Date.now() * 0.001;
+
+        // Fog at ground
+        ctx.save();
+        var fog = ctx.createLinearGradient(0, horizonY + 20, 0, H);
+        fog.addColorStop(0, 'rgba(140,180,220,0)');
+        fog.addColorStop(0.4, 'rgba(120,160,200,0.06)');
+        fog.addColorStop(1, 'rgba(100,140,180,0.12)');
+        ctx.fillStyle = fog;
+        ctx.fillRect(0, horizonY + 20, W, H - horizonY - 20);
+        ctx.restore();
+
+        // Dust particles
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        for (var i = 0; i < this._particles.length; i++) {
+          var p = this._particles[i];
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+          if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+          ctx.fillStyle = 'rgba(220,230,255,' + p.alpha + ')';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Fireflies
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        for (var i = 0; i < this._fireflies.length; i++) {
+          var f = this._fireflies[i];
+          f.x += Math.sin(t * f.speed + f.phase) * 0.6 + f.vx;
+          f.y += Math.cos(t * f.speed * 0.7 + f.phase) * 0.4 + f.vy;
+          if (f.x < -10) f.x = W + 10; if (f.x > W + 10) f.x = -10;
+          if (f.y < horizonY) f.y = H; if (f.y > H) f.y = horizonY;
+          var glow = 0.3 + Math.sin(t * 3 + f.phase) * 0.25;
+          var fg = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.radius * 3);
+          fg.addColorStop(0, 'rgba(200,255,150,' + glow + ')');
+          fg.addColorStop(0.5, 'rgba(180,255,120,' + glow * 0.4 + ')');
+          fg.addColorStop(1, 'rgba(180,255,120,0)');
+          ctx.fillStyle = fg;
+          ctx.beginPath();
+          ctx.arc(f.x, f.y, f.radius * 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      },
+
+      _drawVignetteAndBloom: function(ctx, W, H) {
+        // Bloom on bright elements (moon, fireflies) handled inline via screen/lighter
+        // Vignette
+        var vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.25, W / 2, H / 2, H * 0.85);
+        vg.addColorStop(0, 'rgba(0,0,0,0)');
+        vg.addColorStop(0.7, 'rgba(0,0,0,0.15)');
+        vg.addColorStop(1, 'rgba(0,0,0,0.5)');
+        ctx.fillStyle = vg;
+        ctx.fillRect(0, 0, W, H);
+        // Soft edge darken
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+        ctx.lineWidth = 20;
+        ctx.strokeRect(10, 10, W - 20, H - 20);
+      },
+
+      _drawStars: function(ctx, W, horizonY) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        for (var i = 0; i < this._stars.length; i++) {
+          var s = this._stars[i];
+          var twinkle = 0.3 + Math.sin(Date.now() * 0.001 * s.speed + s.phase) * 0.7;
+          ctx.fillStyle = 'rgba(255,250,230,' + twinkle + ')';
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+          ctx.fill();
+          // Star cross flare for bigger ones
+          if (s.size > 1.5 && twinkle > 0.7) {
+            ctx.strokeStyle = 'rgba(255,250,230,' + (twinkle - 0.7) * 0.5 + ')';
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(s.x - s.size * 2, s.y); ctx.lineTo(s.x + s.size * 2, s.y);
+            ctx.moveTo(s.x, s.y - s.size * 2); ctx.lineTo(s.x, s.y + s.size * 2);
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
+      },
+
+      _drawUI: function(ctx, W, H) {
+        // Title-safe frame
+        ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(32, 24, W - 64, H - 48);
+        // HUD text
+        ctx.fillStyle = 'rgba(180,200,255,0.5)';
+        ctx.font = '11px "Segoe UI", system-ui, sans-serif';
+        ctx.fillText('STARLIGHT INN  //  FALLBACK RENDERER', 44, 42);
+        // Subtle status line
+        ctx.fillStyle = 'rgba(180,200,255,0.25)';
+        ctx.font = '10px "Segoe UI", system-ui, sans-serif';
+        ctx.fillText('Modules may have failed — running in safe mode', 44, 56);
+        // Corner brackets
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.lineWidth = 1.5;
+        var b = 8, l = 12;
+        // TL
+        ctx.beginPath(); ctx.moveTo(b, b + l); ctx.lineTo(b, b); ctx.lineTo(b + l, b); ctx.stroke();
+        // TR
+        ctx.beginPath(); ctx.moveTo(W - b - l, b); ctx.lineTo(W - b, b); ctx.lineTo(W - b, b + l); ctx.stroke();
+        // BL
+        ctx.beginPath(); ctx.moveTo(b, H - b - l); ctx.lineTo(b, H - b); ctx.lineTo(b + l, H - b); ctx.stroke();
+        // BR
+        ctx.beginPath(); ctx.moveTo(W - b - l, H - b); ctx.lineTo(W - b, H - b); ctx.lineTo(W - b, H - b - l); ctx.stroke();
+      },
+
       render: function() {
+        var t = Date.now() * 0.001;
+
         // ── Character Select Preview ──
         if (this.screen === 'charselect' && this.previewCanvas) {
           var ctx = this.previewCanvas.getContext('2d');
           var W = this.previewCanvas.width, H = this.previewCanvas.height;
           ctx.clearRect(0, 0, W, H);
-          // Sky
-          var g = ctx.createLinearGradient(0,0,0,H*0.4);
-          g.addColorStop(0,'#2d1b4e'); g.addColorStop(1,'#1a1025');
-          ctx.fillStyle = g; ctx.fillRect(0,0,W,H*0.4);
+
+          // Deep twilight sky
+          var sg = ctx.createLinearGradient(0, 0, 0, H * 0.5);
+          sg.addColorStop(0, '#1e0f3a');
+          sg.addColorStop(0.3, '#2a1a4e');
+          sg.addColorStop(0.7, '#1a1230');
+          sg.addColorStop(1, '#0f0a1a');
+          ctx.fillStyle = sg;
+          ctx.fillRect(0, 0, W, H * 0.5);
+
+          // Moon
+          this._drawMoon(ctx, W * 0.75, H * 0.15, 18);
           // Stars
-          ctx.fillStyle = '#fff8e7';
-          for(var i=0;i<20;i++){
-            ctx.globalAlpha = 0.5 + Math.sin(Date.now()*0.002 + i)*0.3;
+          this._drawStars(ctx, W, H * 0.4);
+          // Aurora
+          this._drawAurora(ctx, W, H * 0.4);
+          // Clouds
+          this._drawClouds(ctx, W);
+          // Shooting stars
+          this._drawShootingStars(ctx, W, H * 0.4);
+
+          // Ground
+          var gg = ctx.createLinearGradient(0, H * 0.45, 0, H);
+          gg.addColorStop(0, '#1a1230');
+          gg.addColorStop(0.5, '#120c22');
+          gg.addColorStop(1, '#080510');
+          ctx.fillStyle = gg;
+          ctx.fillRect(0, H * 0.45, W, H * 0.55);
+
+          // Grid floor (subtle)
+          ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+          ctx.lineWidth = 0.5;
+          for (var i = -4; i <= 4; i++) {
             ctx.beginPath();
-            ctx.arc((i*47)%W, (i*31)%(H*0.35), 1.2, 0, Math.PI*2);
-            ctx.fill();
+            ctx.moveTo(W / 2, H * 0.45);
+            ctx.lineTo(W / 2 + i * 35, H);
+            ctx.stroke();
           }
-          ctx.globalAlpha = 1;
-          // Floor
-          var fg = ctx.createLinearGradient(0,H*0.4,0,H);
-          fg.addColorStop(0,'#1f1630'); fg.addColorStop(1,'#0a0a0a');
-          ctx.fillStyle = fg; ctx.fillRect(0,H*0.4,W,H*0.6);
-          // Grid lines
-          ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=0.5;
-          for(var i=-4;i<=4;i++){ ctx.beginPath(); ctx.moveTo(W/2,H*0.4); ctx.lineTo(W/2+i*30,H); ctx.stroke(); }
-          // Vignette
-          var vg = ctx.createRadialGradient(W/2,H/2,H*0.2,W/2,H/2,H*0.8);
-          vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.4)');
-          ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
+
+          // Atmosphere
+          this._drawAtmosphere(ctx, W, H, H * 0.45);
+          this._drawVignetteAndBloom(ctx, W, H);
+
           // Player
-          this.drawPlayer(ctx, W/2, H*0.55, 1.5);
+          this.drawPlayer(ctx, W / 2, H * 0.58, 1.8);
         }
 
         // ── Game World ──
         if (this.screen === 'game' && this.canvas) {
           var ctx = this.canvas.getContext('2d');
           var W = 960, H = 540;
-          ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H);
-          // Sky gradient
-          var g = ctx.createLinearGradient(0,0,0,H*0.35);
-          g.addColorStop(0,'#2d1b4e'); g.addColorStop(1,'#1a1025');
-          ctx.fillStyle = g; ctx.fillRect(0,0,W,H*0.35);
+
+          // Black base
+          ctx.fillStyle = '#06030e';
+          ctx.fillRect(0, 0, W, H);
+
+          // Sky
+          var sg = ctx.createLinearGradient(0, 0, 0, H * 0.38);
+          sg.addColorStop(0, '#1e0f3a');
+          sg.addColorStop(0.25, '#2a1a4e');
+          sg.addColorStop(0.6, '#1a1230');
+          sg.addColorStop(1, '#0f0a1a');
+          ctx.fillStyle = sg;
+          ctx.fillRect(0, 0, W, H * 0.38);
+
+          // Moon
+          this._drawMoon(ctx, W * 0.78, H * 0.14, 22);
           // Stars
-          ctx.fillStyle = '#fff8e7';
-          for(var i=0;i<40;i++){
-            ctx.globalAlpha = 0.5 + Math.sin(Date.now()*0.001 + i)*0.3;
-            ctx.beginPath();
-            ctx.arc((i*137)%W, (i*89)%(H*0.3), 1.5, 0, Math.PI*2);
-            ctx.fill();
-          }
-          ctx.globalAlpha = 1;
-          // Floor
-          var fg = ctx.createLinearGradient(0,H*0.35,0,H);
-          fg.addColorStop(0,'#1f1630'); fg.addColorStop(1,'#0a0a0a');
-          ctx.fillStyle = fg; ctx.fillRect(0,H*0.35,W,H*0.65);
-          // Perspective grid
-          ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=1;
-          var cx=W/2;
-          for(var i=-8;i<=8;i++){ ctx.beginPath(); ctx.moveTo(cx,H*0.35); ctx.lineTo(cx+i*120,H); ctx.stroke(); }
-          for(var i=0;i<6;i++){ var y=H*0.35+(H*0.65)*(i/6); ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
-          // Player (center of screen for now)
-          this.drawPlayer(ctx, W/2, H*0.55, 1);
-          // Vignette
-          var vg = ctx.createRadialGradient(W/2,H/2,H*0.3,W/2,H/2,H*0.9);
-          vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.35)');
-          ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
-          // Debug text
-          ctx.fillStyle = '#0f0'; ctx.font = '10px monospace';
-          ctx.fillText('FALLBACK RENDERER — modules may have failed', 10, 20);
+          this._drawStars(ctx, W, H * 0.35);
+          // Aurora
+          this._drawAurora(ctx, W, H * 0.35);
+          // Clouds
+          this._drawClouds(ctx, W);
+          // Shooting stars
+          this._drawShootingStars(ctx, W, H * 0.35);
+
+          // Hills & ground
+          this._drawHills(ctx, W, H, H * 0.36);
+
+          // Atmosphere overlay
+          this._drawAtmosphere(ctx, W, H, H * 0.36);
+
+          // Player
+          this.drawPlayer(ctx, W / 2, H * 0.58, 1);
+
+          // Vignette + bloom composite
+          this._drawVignetteAndBloom(ctx, W, H);
+
+          // UI
+          this._drawUI(ctx, W, H);
         }
       }
     };
