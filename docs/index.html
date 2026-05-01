@@ -412,13 +412,13 @@ function assetUrl(path) {
 function loadImg(key, url) {
   return new Promise(resolve => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    // No crossOrigin needed - same domain assets
     img.onload = () => {
       S.assets[key] = img;
       resolve(true);
     };
     img.onerror = () => {
-      console.warn('Failed to load:', key);
+      console.warn('Failed to load:', key, 'from', url);
       S.assets[key] = makePlaceholder(key);
       resolve(false);
     };
@@ -815,7 +815,7 @@ function renderRoom() {
 
 function renderAvatarSprite(ctx, player, x, y, isSelf) {
   const img = S.assets[player.avatar || S.player.avatar];
-  if (!img) return;
+  if (!img || !img.width || !img.height) return;
 
   // Avatar dimensions
   const avaW = 56;
@@ -836,7 +836,7 @@ function renderAvatarSprite(ctx, player, x, y, isSelf) {
   // Draw avatar centered
   const drawW = avaW;
   const drawH = avaH;
-  ctx.drawImage(img, -drawW / 2, -drawH + 10, drawW, drawH);
+  ctx.drawImage(img, 0, 0, img.width, img.height, -avaW / 2, -avaH + 8, avaW, avaH);
 
   // Name tag
   ctx.font = isSelf ? 'bold 11px sans-serif' : '10px sans-serif';
