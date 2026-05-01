@@ -1080,47 +1080,20 @@ function renderAvatar(ctx, avatar, x, y, scale = 1, dir = 's') {
     const img = state.assets[key];
     if (!img) return;
 
-    // Ensure image is ready
-    const iw = img.naturalWidth || img.width || 48;
-    const ih = img.naturalHeight || img.height || 72;
+    // Try to get image dimensions
+    let iw = img.naturalWidth || img.width || 0;
+    let ih = img.naturalHeight || img.height || 0;
+
+    // If dimensions are not available, try a small test draw
     if (!iw || !ih) {
-      // Image not decoded yet - draw fallback
-      ctx.fillStyle = tint || '#666';
-      ctx.fillRect(-20, -AV_H + 10, 40, AV_H - 20);
+      // Draw procedural fallback
+      drawProceduralLayer(key, tint);
       return;
     }
 
     // Reject sprite sheets / oversized images
     if (iw > 200 || ih > 200) {
-      // Draw a simple procedural shape instead
-      ctx.fillStyle = tint || '#888';
-      if (key.includes('hair')) {
-        // Simple hair shape
-        ctx.fillRect(-18, -AV_H + 5, 36, 20);
-        ctx.fillRect(-22, -AV_H + 15, 44, 10);
-      } else if (key.includes('body')) {
-        // Body shape
-        ctx.fillRect(-14, -AV_H + 30, 28, 35);
-      } else if (key.includes('face')) {
-        // Face
-        ctx.fillStyle = '#ffdbac';
-        ctx.fillRect(-12, -AV_H + 8, 24, 22);
-        ctx.fillStyle = '#222';
-        ctx.fillRect(-8, -AV_H + 16, 4, 4);
-        ctx.fillRect(4, -AV_H + 16, 4, 4);
-      } else if (key.includes('shirt') || key.includes('dress')) {
-        // Shirt
-        ctx.fillRect(-16, -AV_H + 28, 32, 30);
-      } else if (key.includes('legs') || key.includes('pants')) {
-        // Legs
-        ctx.fillRect(-14, -AV_H + 55, 12, 20);
-        ctx.fillRect(2, -AV_H + 55, 12, 20);
-      } else if (key.includes('acc')) {
-        // Accessory
-        ctx.fillRect(-16, -AV_H + 2, 32, 8);
-      } else {
-        ctx.fillRect(-20, -AV_H + 10, 40, AV_H - 20);
-      }
+      drawProceduralLayer(key, tint);
       return;
     }
 
@@ -1144,8 +1117,59 @@ function renderAvatar(ctx, avatar, x, y, scale = 1, dir = 's') {
         ctx.drawImage(img, 0, 0, srcW, srcH, -AV_W/2, -AV_H, AV_W, AV_H);
       }
     } catch(e) {
-      // Fallback: draw colored rectangle
-      ctx.fillStyle = tint || '#888';
+      drawProceduralLayer(key, tint);
+    }
+  }
+
+  function drawProceduralLayer(key, tint) {
+    ctx.fillStyle = tint || '#888';
+    if (key.includes('hair')) {
+      ctx.fillRect(-18, -AV_H + 2, 36, 18);
+      ctx.fillRect(-22, -AV_H + 12, 44, 10);
+    } else if (key.includes('body')) {
+      ctx.fillRect(-14, -AV_H + 26, 28, 38);
+    } else if (key.includes('face')) {
+      ctx.fillStyle = tint || '#ffdbac';
+      ctx.fillRect(-12, -AV_H + 6, 24, 22);
+      ctx.fillStyle = '#222';
+      ctx.fillRect(-8, -AV_H + 14, 4, 4);
+      ctx.fillRect(4, -AV_H + 14, 4, 4);
+      ctx.beginPath();
+      ctx.arc(0, -AV_H + 22, 4, 0, Math.PI);
+      ctx.stroke();
+    } else if (key.includes('shirt') || key.includes('dress')) {
+      ctx.fillRect(-16, -AV_H + 26, 32, 30);
+      ctx.fillRect(-20, -AV_H + 28, 6, 22);
+      ctx.fillRect(14, -AV_H + 28, 6, 22);
+    } else if (key.includes('legs') || key.includes('pants') || key.includes('skirt')) {
+      ctx.fillRect(-14, -AV_H + 54, 12, 22);
+      ctx.fillRect(2, -AV_H + 54, 12, 22);
+    } else if (key.includes('acc')) {
+      if (key.includes('hat')) {
+        ctx.fillRect(-16, -AV_H - 4, 32, 10);
+        ctx.fillRect(-10, -AV_H - 12, 20, 10);
+      } else if (key.includes('glasses')) {
+        ctx.fillStyle = 'rgba(100,100,100,0.5)';
+        ctx.fillRect(-12, -AV_H + 12, 10, 6);
+        ctx.fillRect(2, -AV_H + 12, 10, 6);
+        ctx.strokeStyle = '#444';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-2, -AV_H + 15);
+        ctx.lineTo(2, -AV_H + 15);
+        ctx.stroke();
+      } else if (key.includes('wings')) {
+        ctx.fillStyle = 'rgba(255,255,200,0.6)';
+        ctx.beginPath();
+        ctx.ellipse(-22, -AV_H + 30, 14, 24, -0.3, 0, Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(22, -AV_H + 30, 14, 24, 0.3, 0, Math.PI*2);
+        ctx.fill();
+      } else {
+        ctx.fillRect(-16, -AV_H + 2, 32, 8);
+      }
+    } else {
       ctx.fillRect(-20, -AV_H + 10, 40, AV_H - 20);
     }
   }
@@ -1675,11 +1699,6 @@ function renderGame() {
         ih *= scale;
       }
       ctx.drawImage(r.img, r.x - iw/2, r.y - ih + TILE_H/2, iw, ih);
-
-      // DEBUG: label furniture
-      ctx.fillStyle = 'rgba(255,0,0,0.8)';
-      ctx.font = '9px sans-serif';
-      ctx.fillText(r.id || '???', r.x - iw/2, r.y - ih + TILE_H/2 - 2);
 
       // Draw placement highlight if editor active
       if (state.editor.active && state.editor.selectedItem) {
