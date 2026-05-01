@@ -1,576 +1,1226 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#1a1a2e">
-  <title>Starlight Inn</title>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Nunito', sans-serif;
-      background: #0d0d1a;
-      color: #fff;
-      overflow: hidden;
-      width: 100vw;
-      height: 100vh;
-    }
-
-    /* Full-screen title background */
-    .title-bg {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: url('assets/title-bg.png') center center / cover no-repeat;
-      z-index: 1;
-    }
-
-    /* Button panel at bottom */
-    .landing-panel {
-      position: fixed;
-      bottom: 50px;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
-      z-index: 10;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .btn-play {
-      font-size: 1.4rem;
-      font-weight: 800;
-      padding: 16px 56px;
-      border: none;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-      color: #1a1a2e;
-      cursor: pointer;
-      box-shadow: 0 4px 24px rgba(255,215,0,0.5);
-      transition: all 0.2s ease;
-      min-width: 240px;
-      font-family: 'Nunito', sans-serif;
-    }
-    .btn-play:hover { transform: scale(1.06); box-shadow: 0 6px 36px rgba(255,215,0,0.7); }
-    .btn-play:active { transform: scale(0.97); }
-
-    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-
-    .btn-secondary {
-      padding: 10px 22px;
-      border: 1px solid rgba(255,255,255,0.25);
-      border-radius: 10px;
-      background: rgba(0,0,0,0.5);
-      color: #fff;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-family: 'Nunito', sans-serif;
-    }
-    .btn-secondary:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.5); transform: translateY(-1px); }
-
-    .btn-settings {
-      padding: 8px 16px;
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 8px;
-      background: transparent;
-      color: rgba(255,255,255,0.5);
-      font-size: 0.8rem;
-      cursor: pointer;
-      font-family: 'Nunito', sans-serif;
-    }
-    .btn-settings:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
-
-    .version-row {
-      color: rgba(255,255,255,0.4);
-      font-size: 0.75rem;
-      margin-top: 8px;
-    }
-    .version-row span { margin: 0 6px; }
-
-    /* Mute button */
-    .mute-btn {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 8px 16px;
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 8px;
-      background: rgba(0,0,0,0.4);
-      color: rgba(255,255,255,0.7);
-      font-size: 0.85rem;
-      cursor: pointer;
-      z-index: 10;
-      font-family: 'Nunito', sans-serif;
-    }
-    .mute-btn:hover { background: rgba(0,0,0,0.6); color: #fff; }
-
-    /* About link */
-    .about-link {
-      position: fixed;
-      bottom: 16px;
-      right: 20px;
-      color: rgba(255,255,255,0.35);
-      font-size: 0.8rem;
-      background: none;
-      border: none;
-      cursor: pointer;
-      z-index: 10;
-      font-family: 'Nunito', sans-serif;
-    }
-    .about-link:hover { color: rgba(255,255,255,0.65); }
-
-    /* ===== AUTH MODALS ===== */
-    .auth-modal {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-    .auth-modal.hidden { display: none !important; }
-
-    .auth-box {
-      background: #1a1a2e;
-      border: 1px solid rgba(255,215,0,0.3);
-      border-radius: 18px;
-      padding: 36px;
-      width: 340px;
-      max-width: 90vw;
-      position: relative;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    }
-    .auth-box h2 {
-      color: #FFD700;
-      text-align: center;
-      margin-bottom: 24px;
-      font-size: 1.4rem;
-    }
-    .auth-box input {
-      width: 100%;
-      padding: 12px 16px;
-      margin-bottom: 14px;
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 10px;
-      background: rgba(0,0,0,0.3);
-      color: #fff;
-      font-size: 1rem;
-      box-sizing: border-box;
-      font-family: 'Nunito', sans-serif;
-    }
-    .auth-box input:focus {
-      outline: none;
-      border-color: #FFD700;
-    }
-    .auth-box input::placeholder { color: rgba(255,255,255,0.3); }
-    .auth-box button[type="submit"] {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #FFD700, #FFA500);
-      color: #1a1a2e;
-      font-weight: 700;
-      font-size: 1.05rem;
-      cursor: pointer;
-      margin-top: 10px;
-      font-family: 'Nunito', sans-serif;
-    }
-    .auth-box button[type="submit"]:hover { transform: translateY(-1px); }
-    .auth-link {
-      display: block;
-      text-align: center;
-      color: rgba(255,255,255,0.4);
-      font-size: 0.9rem;
-      margin-top: 16px;
-      cursor: pointer;
-    }
-    .auth-link:hover { color: #FFD700; }
-    .auth-error {
-      color: #ff6b6b;
-      font-size: 0.85rem;
-      text-align: center;
-      margin-bottom: 10px;
-      min-height: 20px;
-    }
-    .auth-box .close-btn {
-      position: absolute;
-      top: 14px; right: 18px;
-      color: rgba(255,255,255,0.4);
-      font-size: 1.3rem;
-      cursor: pointer;
-      background: none;
-      border: none;
-      width: 28px;
-      height: 28px;
-      line-height: 28px;
-      text-align: center;
-      border-radius: 50%;
-      font-family: 'Nunito', sans-serif;
-    }
-    .auth-box .close-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
-
-    /* ===== GAME SCREENS ===== */
-    .screen {
-      display: none;
-      width: 100vw;
-      height: 100vh;
-      position: fixed;
-      top: 0; left: 0;
-    }
-    .screen.active { display: block; }
-
-    /* Character select screen */
-    #screen-charselect {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0d0d1a 100%);
-    }
-    .charselect-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      gap: 24px;
-    }
-    .charselect-title {
-      font-size: 2rem;
-      color: #FFD700;
-      text-shadow: 0 2px 10px rgba(255,215,0,0.3);
-    }
-    .charselect-preview {
-      width: 200px;
-      height: 300px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 4rem;
-    }
-    .charselect-controls {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: center;
-      max-width: 600px;
-    }
-    .charselect-controls button {
-      padding: 10px 20px;
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 8px;
-      background: rgba(0,0,0,0.3);
-      color: #fff;
-      cursor: pointer;
-      font-family: 'Nunito', sans-serif;
-    }
-    .charselect-controls button:hover { border-color: #FFD700; color: #FFD700; }
-
-    /* Game screen */
-    #screen-game {
-      background: #1a1a2e;
-    }
-    #game-canvas {
-      display: block;
-      width: 100vw;
-      height: 100vh;
-      image-rendering: pixelated;
-    }
-
-    /* Settings panel */
-    .settings-panel {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: #1a1a2e;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 16px;
-      padding: 32px;
-      width: 400px;
-      max-width: 90vw;
-      z-index: 100;
-      display: none;
-    }
-    .settings-panel.active { display: block; }
-    .settings-panel h2 { color: #FFD700; margin-bottom: 20px; }
-    .settings-panel label {
-      display: block;
-      color: rgba(255,255,255,0.7);
-      margin-bottom: 8px;
-      font-size: 0.9rem;
-    }
-    .settings-panel input[type="range"] {
-      width: 100%;
-      margin-bottom: 16px;
-    }
-    .settings-panel .panel-close {
-      position: absolute;
-      top: 12px; right: 16px;
-      background: none;
-      border: none;
-      color: rgba(255,255,255,0.5);
-      font-size: 1.2rem;
-      cursor: pointer;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Starlight Inn - Isometric Virtual World</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a1a;
+    color: #FFD700;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+    width: 100vw; height: 100vh;
+  }
+  /* ===== TITLE SCREEN ===== */
+  #titleScreen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #0d0d1a;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    z-index: 1000;
+  }
+  #titleScreen img {
+    max-width: 90vw; max-height: 55vh; margin-top: 5vh;
+    border: 4px solid #FFD700; border-radius: 16px;
+    image-rendering: pixelated;
+    box-shadow: 0 0 40px rgba(255,215,0,0.3);
+  }
+  .title-buttons {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    margin-top: 3vh;
+  }
+  .title-buttons button {
+    font-size: 20px; padding: 14px 40px; border: none; border-radius: 12px;
+    cursor: pointer; font-weight: bold; transition: transform 0.15s, box-shadow 0.15s;
+    min-width: 280px;
+  }
+  .title-buttons button:hover { transform: scale(1.05); }
+  .btn-gold {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #1a1a2e; box-shadow: 0 4px 20px rgba(255,215,0,0.4);
+  }
+  .btn-gold:hover { box-shadow: 0 6px 30px rgba(255,215,0,0.6); }
+  .btn-blue {
+    background: linear-gradient(135deg, #4169E1, #1E90FF);
+    color: #fff; box-shadow: 0 4px 20px rgba(65,105,225,0.4);
+  }
+  .btn-green {
+    background: linear-gradient(135deg, #32CD32, #228B22);
+    color: #fff; box-shadow: 0 4px 20px rgba(50,205,50,0.4);
+  }
+  .btn-red {
+    background: linear-gradient(135deg, #DC143C, #B22222);
+    color: #fff; box-shadow: 0 4px 20px rgba(220,20,60,0.4);
+  }
+  .btn-guest {
+    background: linear-gradient(135deg, #9370DB, #8A2BE2);
+    color: #fff; box-shadow: 0 4px 20px rgba(147,112,219,0.4);
+  }
+  .version-label {
+    position: fixed; bottom: 10px; right: 15px;
+    color: #666; font-size: 12px;
+  }
+  /* ===== MODALS ===== */
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: none; align-items: center; justify-content: center;
+    z-index: 2000;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-box {
+    background: linear-gradient(180deg, #1a1a2e, #0f0f1a);
+    border: 2px solid #FFD700; border-radius: 16px;
+    padding: 30px; min-width: 340px; max-width: 90vw;
+    box-shadow: 0 0 50px rgba(255,215,0,0.2);
+  }
+  .modal-box h2 { text-align: center; margin-bottom: 20px; color: #FFD700; }
+  .modal-box input {
+    width: 100%; padding: 12px; margin: 8px 0;
+    border: 2px solid #333; border-radius: 8px;
+    background: #0a0a1a; color: #fff; font-size: 16px;
+  }
+  .modal-box input:focus { border-color: #FFD700; outline: none; }
+  .modal-box .error { color: #ff4444; font-size: 14px; margin: 5px 0; text-align: center; }
+  .modal-box .success { color: #32CD32; font-size: 14px; margin: 5px 0; text-align: center; }
+  .modal-row { display: flex; gap: 10px; margin-top: 15px; }
+  .modal-row button { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+  /* ===== CHARACTER CREATOR ===== */
+  #charCreator {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #0d0d1a; display: none; flex-direction: column;
+    z-index: 1500; overflow-y: auto;
+  }
+  #charCreator.active { display: flex; }
+  .cc-header { text-align: center; padding: 20px; }
+  .cc-header h1 { color: #FFD700; font-size: 28px; }
+  .cc-body { display: flex; flex: 1; gap: 20px; padding: 0 30px 30px; }
+  .cc-left { flex: 1; max-width: 400px; }
+  .cc-right { flex: 1; display: flex; flex-direction: column; align-items: center; }
+  .cc-section {
+    background: rgba(255,255,255,0.05); border: 1px solid #333;
+    border-radius: 12px; padding: 15px; margin-bottom: 15px;
+  }
+  .cc-section h3 { color: #FFA500; margin-bottom: 10px; font-size: 16px; }
+  .color-preview {
+    width: 60px; height: 60px; border-radius: 8px; border: 3px solid #FFD700;
+    margin: 10px auto; background: #ff6b6b;
+  }
+  .hair-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  }
+  .hair-option {
+    aspect-ratio: 1; background: rgba(255,255,255,0.08);
+    border: 2px solid #444; border-radius: 8px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; transition: all 0.15s;
+  }
+  .hair-option:hover { border-color: #FFD700; transform: scale(1.1); }
+  .hair-option.selected { border-color: #FFD700; background: rgba(255,215,0,0.2); }
+  #avatarPreview {
+    width: 200px; height: 280px; background: rgba(255,255,255,0.05);
+    border: 2px solid #FFD700; border-radius: 12px;
+    image-rendering: pixelated;
+  }
+  .cc-actions { display: flex; gap: 15px; margin-top: 20px; }
+  /* ===== GAME SCREEN ===== */
+  #gameScreen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #0a0a1a; display: none; z-index: 500;
+  }
+  #gameScreen.active { display: block; }
+  #gameCanvas {
+    position: absolute; top: 0; left: 0;
+    image-rendering: pixelated;
+  }
+  /* ===== UI OVERLAYS ===== */
+  .ui-panel {
+    position: fixed; background: rgba(10,10,26,0.92);
+    border: 2px solid #FFD700; border-radius: 12px;
+    padding: 15px; z-index: 600; display: none;
+    backdrop-filter: blur(10px);
+  }
+  .ui-panel.active { display: block; }
+  #chatPanel {
+    bottom: 10px; left: 10px; width: 380px; height: 220px;
+    display: flex; flex-direction: column;
+  }
+  #chatHistory {
+    flex: 1; overflow-y: auto; font-size: 13px; color: #ddd;
+    padding: 5px; border-bottom: 1px solid #333; margin-bottom: 8px;
+  }
+  .chat-msg { margin: 3px 0; }
+  .chat-msg .user { color: #FFD700; font-weight: bold; }
+  .chat-msg .guest { color: #87CEEB; font-weight: bold; }
+  #chatInput {
+    display: flex; gap: 8px;
+  }
+  #chatInput input {
+    flex: 1; padding: 10px; border: 1px solid #444; border-radius: 6px;
+    background: #0a0a1a; color: #fff; font-size: 14px;
+  }
+  #chatInput button {
+    padding: 10px 18px; border: none; border-radius: 6px;
+    background: #FFD700; color: #1a1a2e; font-weight: bold; cursor: pointer;
+  }
+  #topBar {
+    top: 10px; left: 10px; right: 10px; height: 50px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px;
+  }
+  .top-group { display: flex; align-items: center; gap: 15px; }
+  .top-btn {
+    padding: 8px 16px; border: 2px solid #FFD700; border-radius: 8px;
+    background: rgba(255,215,0,0.15); color: #FFD700;
+    cursor: pointer; font-weight: bold; font-size: 13px;
+    transition: background 0.15s;
+  }
+  .top-btn:hover { background: rgba(255,215,0,0.3); }
+  #roomLabel {
+    color: #FFA500; font-size: 18px; font-weight: bold;
+  }
+  #friendsPanel {
+    top: 70px; right: 10px; width: 220px; max-height: 300px;
+    overflow-y: auto;
+  }
+  #friendsPanel h3 { color: #FFD700; margin-bottom: 10px; font-size: 15px; }
+  .friend-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px; border-radius: 6px; cursor: pointer;
+  }
+  .friend-item:hover { background: rgba(255,255,255,0.08); }
+  .friend-dot { width: 8px; height: 8px; border-radius: 50%; background: #32CD32; }
+  .friend-dot.offline { background: #666; }
+  .friend-name { color: #ddd; font-size: 13px; flex: 1; }
+  #inventoryPanel {
+    top: 70px; left: 50%; transform: translateX(-50%);
+    width: 500px; max-height: 350px; overflow-y: auto;
+  }
+  #inventoryPanel h3 { color: #FFD700; margin-bottom: 10px; }
+  .inv-grid {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+  }
+  .inv-item {
+    aspect-ratio: 1; background: rgba(255,255,255,0.06);
+    border: 2px solid #444; border-radius: 8px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 11px; color: #aaa;
+    transition: all 0.15s;
+  }
+  .inv-item:hover { border-color: #FFD700; }
+  .inv-item .icon { font-size: 28px; margin-bottom: 2px; }
+  #settingsPanel {
+    top: 70px; right: 10px; width: 260px;
+  }
+  .setting-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid #333;
+  }
+  .setting-row label { color: #ccc; font-size: 14px; }
+  .toggle {
+    width: 44px; height: 24px; border-radius: 12px; background: #444;
+    cursor: pointer; position: relative; transition: background 0.2s;
+  }
+  .toggle.on { background: #32CD32; }
+  .toggle::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 20px; height: 20px; border-radius: 50%; background: #fff;
+    transition: left 0.2s;
+  }
+  .toggle.on::after { left: 22px; }
+  /* ===== CANVAS CHAT BUBBLES ===== */
+  .bubble {
+    position: absolute; background: rgba(0,0,0,0.8);
+    border: 2px solid #FFD700; border-radius: 12px;
+    padding: 8px 14px; color: #fff; font-size: 13px;
+    pointer-events: none; z-index: 550;
+    max-width: 200px; text-align: center;
+    animation: bubblePop 0.3s ease-out;
+  }
+  @keyframes bubblePop {
+    0% { transform: scale(0.5); opacity: 0; }
+    80% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  /* ===== TOOLTIP ===== */
+  #tooltip {
+    position: fixed; background: rgba(0,0,0,0.9);
+    border: 1px solid #FFD700; border-radius: 6px;
+    padding: 6px 10px; color: #fff; font-size: 12px;
+    pointer-events: none; z-index: 700; display: none;
+  }
+  /* ===== LOADING ===== */
+  #loadingScreen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #0a0a1a; display: none; flex-direction: column;
+    align-items: center; justify-content: center; z-index: 3000;
+  }
+  #loadingScreen.active { display: flex; }
+  .spinner {
+    width: 60px; height: 60px; border: 4px solid #333;
+    border-top-color: #FFD700; border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+  .loading-text { margin-top: 20px; color: #FFD700; font-size: 18px; }
+  /* ===== COLOR WHEEL ===== */
+  #colorWheelCanvas { cursor: crosshair; border-radius: 50%; display: block; margin: 0 auto; }
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+</style>
 </head>
 <body>
-  <!-- ==================== LANDING SCREEN ==================== -->
-  <div id="screen-landing" class="screen active">
-    <div class="title-bg"></div>
-    <div class="landing-panel">
-      <button id="btn-play" class="btn-play">Enter World</button>
-      <div class="btn-row">
-        <button id="btn-guest" class="btn-secondary">Play as Guest</button>
-        <button id="btn-register" class="btn-secondary">Register</button>
-        <button id="btn-login" class="btn-secondary">Login</button>
-        <button id="btn-settings" class="btn-settings">Settings</button>
+
+<!-- ===== TITLE SCREEN ===== -->
+<div id="titleScreen">
+  <img id="titleImage" src="assets/title-bg.png" alt="Starlight Inn" onerror="this.style.display='none'; document.getElementById('titleFallback').style.display='block';">
+  <div id="titleFallback" style="display:none; margin-top:10vh; text-align:center;">
+    <h1 style="font-size:56px; color:#FFD700; text-shadow:0 0 30px rgba(255,215,0,0.5);">STARLIGHT INN</h1>
+    <p style="color:#aaa; font-size:18px; margin-top:10px;">An Isometric Virtual World</p>
+  </div>
+  <div class="title-buttons">
+    <button class="btn-gold" onclick="app.playJingle(); app.showScreen('charCreator')">ENTER WORLD</button>
+    <button class="btn-guest" onclick="app.playJingle(); app.guestLogin()">PLAY AS GUEST</button>
+    <div style="display:flex; gap:12px; margin-top:8px;">
+      <button class="btn-blue" onclick="app.showModal('register')">REGISTER</button>
+      <button class="btn-green" onclick="app.showModal('login')">LOGIN</button>
+    </div>
+  </div>
+  <div class="version-label">v10.0.0 - Habbo Edition</div>
+</div>
+
+<!-- ===== AUTH MODALS ===== -->
+<div class="modal-overlay" id="modal-register">
+  <div class="modal-box">
+    <h2>CREATE ACCOUNT</h2>
+    <input type="text" id="regUser" placeholder="Username (3-15 chars)" maxlength="15">
+    <input type="password" id="regPass" placeholder="Password (min 6 chars)">
+    <input type="password" id="regPass2" placeholder="Confirm Password">
+    <div class="error" id="regError"></div>
+    <div class="modal-row">
+      <button class="btn-blue" onclick="app.register()">CREATE</button>
+      <button style="background:#444;color:#fff;" onclick="app.hideModal('register')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-login">
+  <div class="modal-box">
+    <h2>LOG IN</h2>
+    <input type="text" id="loginUser" placeholder="Username">
+    <input type="password" id="loginPass" placeholder="Password">
+    <div class="error" id="loginError"></div>
+    <div class="modal-row">
+      <button class="btn-green" onclick="app.login()">LOG IN</button>
+      <button style="background:#444;color:#fff;" onclick="app.hideModal('login')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LOADING ===== -->
+<div id="loadingScreen">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Entering Starlight Inn...</div>
+</div>
+
+<!-- ===== CHARACTER CREATOR ===== -->
+<div id="charCreator">
+  <div class="cc-header">
+    <h1>CREATE YOUR CHARACTER</h1>
+    <p style="color:#aaa;">Customize your avatar for the world of Starlight Inn</p>
+  </div>
+  <div class="cc-body">
+    <div class="cc-left">
+      <div class="cc-section">
+        <h3>SKIN COLOR</h3>
+        <canvas id="colorWheelCanvas" width="200" height="200"></canvas>
+        <div class="color-preview" id="skinPreview"></div>
+        <p style="text-align:center; color:#888; font-size:12px;">Click the wheel to pick a color</p>
       </div>
-      <div class="version-row">
-        <span>v8.2.0</span>
-        <span>|</span>
-        <span id="online-count">0 stars online</span>
-        <span>|</span>
-        <span>Ready</span>
+      <div class="cc-section">
+        <h3>HAIRSTYLE</h3>
+        <div class="hair-grid" id="hairGrid"></div>
+      </div>
+      <div class="cc-section">
+        <h3>OUTFIT COLOR</h3>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;" id="outfitPalette"></div>
       </div>
     </div>
-    <button id="btn-mute" class="mute-btn">Sound On</button>
-    <button id="btn-about" class="about-link">About</button>
-  </div>
-
-  <!-- ==================== CHARACTER SELECT ==================== -->
-  <div id="screen-charselect" class="screen">
-    <div class="charselect-container">
-      <h2 class="charselect-title">Create Your Character</h2>
-      <div class="charselect-preview">🧑</div>
-      <div class="charselect-controls">
-        <button onclick="randomizeChar()">Randomize</button>
-        <button onclick="prevHair()">Prev Hair</button>
-        <button onclick="nextHair()">Next Hair</button>
-        <button onclick="changeColor()">Change Color</button>
-        <button onclick="enterGame()" style="background: linear-gradient(135deg, #FFD700, #FFA500); color: #1a1a2e; border: none; font-weight: 700;">Enter World!</button>
-        <button onclick="goBack()">Back</button>
+    <div class="cc-right">
+      <canvas id="avatarPreview" width="200" height="280"></canvas>
+      <div class="cc-actions">
+        <button class="btn-gold" onclick="app.finishCharCreator()">ENTER WORLD</button>
+        <button style="background:#444; color:#fff; padding:14px 30px; border:none; border-radius:12px; cursor:pointer; font-weight:bold;" onclick="app.showScreen('title')">BACK</button>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- ==================== GAME SCREEN ==================== -->
-  <div id="screen-game" class="screen">
-    <canvas id="game-canvas"></canvas>
-  </div>
-
-  <!-- ==================== SETTINGS PANEL ==================== -->
-  <div id="settings-panel" class="settings-panel">
-    <button class="panel-close" onclick="closeSettings()">x</button>
-    <h2>Settings</h2>
-    <label>Music Volume</label>
-    <input type="range" id="music-volume" min="0" max="100" value="50">
-    <label>SFX Volume</label>
-    <input type="range" id="sfx-volume" min="0" max="100" value="70">
-    <label>Master Volume</label>
-    <input type="range" id="master-volume" min="0" max="100" value="80">
-  </div>
-
-  <!-- ==================== AUTH MODALS ==================== -->
-  <div id="register-modal" class="auth-modal hidden">
-    <div class="auth-box">
-      <button class="close-btn" onclick="closeAuthModal()">x</button>
-      <h2>Create Account</h2>
-      <div class="auth-error" id="register-error"></div>
-      <input type="text" id="reg-username" placeholder="Username (3-20 chars)" maxlength="20" autocomplete="off">
-      <input type="password" id="reg-password" placeholder="Password (6+ chars)">
-      <input type="password" id="reg-confirm" placeholder="Confirm Password">
-      <button type="submit" id="btn-submit-register">Create Account</button>
-      <span class="auth-link" onclick="showLogin()">Already have an account? Login</span>
+<!-- ===== GAME SCREEN ===== -->
+<div id="gameScreen">
+  <canvas id="gameCanvas"></canvas>
+  <!-- Top Bar -->
+  <div class="ui-panel active" id="topBar">
+    <div class="top-group">
+      <div id="roomLabel">Main Hall</div>
+      <button class="top-btn" onclick="app.togglePanel('friends')">FRIENDS</button>
+      <button class="top-btn" onclick="app.togglePanel('inventory')">INVENTORY</button>
+    </div>
+    <div class="top-group">
+      <button class="top-btn" onclick="app.togglePanel('settings')">SETTINGS</button>
+      <button class="top-btn" onclick="app.logout()">LOGOUT</button>
     </div>
   </div>
-
-  <div id="login-modal" class="auth-modal hidden">
-    <div class="auth-box">
-      <button class="close-btn" onclick="closeAuthModal()">x</button>
-      <h2>Welcome Back</h2>
-      <div class="auth-error" id="login-error"></div>
-      <input type="text" id="login-username" placeholder="Username" autocomplete="off">
-      <input type="password" id="login-password" placeholder="Password">
-      <button type="submit" id="btn-submit-login">Login</button>
-      <span class="auth-link" onclick="showRegister()">No account? Register</span>
+  <!-- Chat -->
+  <div class="ui-panel active" id="chatPanel">
+    <div id="chatHistory"></div>
+    <div id="chatInput">
+      <input type="text" id="chatField" placeholder="Press Enter to chat..." maxlength="100">
+      <button onclick="app.sendChat()">SEND</button>
     </div>
   </div>
+  <!-- Friends -->
+  <div class="ui-panel" id="friendsPanel">
+    <h3>FRIENDS</h3>
+    <div id="friendsList"></div>
+  </div>
+  <!-- Inventory -->
+  <div class="ui-panel" id="inventoryPanel">
+    <h3>INVENTORY</h3>
+    <div class="inv-grid" id="inventoryGrid"></div>
+  </div>
+  <!-- Settings -->
+  <div class="ui-panel" id="settingsPanel">
+    <h3 style="color:#FFD700; margin-bottom:10px;">SETTINGS</h3>
+    <div class="setting-row">
+      <label>Music</label>
+      <div class="toggle on" id="musicToggle" onclick="app.toggleSetting('music')"></div>
+    </div>
+    <div class="setting-row">
+      <label>Sound Effects</label>
+      <div class="toggle on" id="sfxToggle" onclick="app.toggleSetting('sfx')"></div>
+    </div>
+    <div class="setting-row">
+      <label>Show Names</label>
+      <div class="toggle on" id="namesToggle" onclick="app.toggleSetting('names')"></div>
+    </div>
+    <div style="margin-top:15px; text-align:center;">
+      <button class="btn-blue" style="padding:10px 20px; border:none; border-radius:8px; cursor:pointer; font-weight:bold;" onclick="app.togglePanel('settings')">CLOSE</button>
+    </div>
+  </div>
+</div>
 
-  <!-- ==================== JAVASCRIPT ==================== -->
-  <script>
-    // ===== SCREEN MANAGEMENT =====
-    function setScreen(screenId) {
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      const target = document.getElementById('screen-' + screenId);
-      if (target) target.classList.add('active');
+<div id="tooltip"></div>
+
+<script>
+// ============================================================
+// STARLIGHT INN v10.0.0 - SINGLE-FILE HABBO-STYLE MMO
+// All systems inline. No ES6 modules. No external JS files.
+// ============================================================
+
+const TILE_W = 64, TILE_H = 32;
+const COLORS = {
+  gold: '#FFD700', orange: '#FFA500', red: '#DC143C',
+  green: '#32CD32', blue: '#4169E1', purple: '#9370DB',
+  white: '#FFFFFF', black: '#0a0a1a', gray: '#888888'
+};
+
+class StarlightInn {
+  constructor() {
+    this.user = null; // { name, isGuest, skinColor, hairIdx, outfitColor }
+    this.accounts = this._load('accounts') || {};
+    this.settings = this._load('settings') || { music: true, sfx: true, showNames: true };
+    this.friends = this._load('friends') || [
+      { name: 'LunaStar', online: true },
+      { name: 'MoonWalker', online: true },
+      { name: 'PixelQueen', online: false },
+      { name: 'RetroKing', online: true },
+      { name: 'NightOwl', online: false }
+    ];
+    this.inventory = this._load('inventory') || this._defaultInventory();
+    this.room = 'mainhall';
+    this.rooms = this._buildRooms();
+    this.players = {}; // Other players (simulated)
+    this.chatMessages = [];
+    this.bubbles = [];
+    this.camera = { x: 0, y: 0 };
+    this.playerPos = { x: 4, y: 4, tx: 4, ty: 4, moving: false, anim: 0, dir: 's' };
+    this.keys = {};
+    this.lastTime = 0;
+    this.audioCtx = null;
+    this.musicGain = null; this.sfxGain = null;
+    this.currentMusic = null;
+    this.hairStyles = this._buildHairStyles();
+    this.outfitColors = ['#DC143C','#4169E1','#32CD32','#FFD700','#FF8C00','#8A2BE2','#FF69B4','#00CED1','#FF6347','#20B2AA','#F0E68C','#DDA0DD','#98FB98','#F4A460','#C0C0C0','#FF4500','#2E8B57','#4682B4','#D2691E','#9ACD32','#FF1493','#00FA9A','#1E90FF','#B22222'];
+    this.skinColor = '#ffdbac';
+    this.hairIdx = 1;
+    this.outfitColor = '#4169E1';
+    this._initInputs();
+    this._initColorWheel();
+    this._initHairGrid();
+    this._initOutfitPalette();
+    this._resizeCanvas();
+    window.addEventListener('resize', () => this._resizeCanvas());
+    this._spawnSimulatedPlayers();
+    setInterval(() => this._simulatePlayers(), 2000);
+  }
+
+  // ===== STORAGE =====
+  _load(k) { try { return JSON.parse(localStorage.getItem('si_' + k)); } catch(e) { return null; } }
+  _save(k, v) { localStorage.setItem('si_' + k, JSON.stringify(v)); }
+  _hash(s) { let h = 0; for(let i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i); return h.toString(36); }
+
+  _defaultInventory() {
+    const items = [];
+    const furn = ['SOFA','CHAIR','TABLE','LAMP','PLANT','RUG','BOOKS','VASE','CANDLE','MIRROR','TV','BED','DESK','WARDROBE','PAINTING','CLOCK','TROPHY','DRUM','GUITAR','PIANO'];
+    furn.forEach((f,i) => items.push({ id: i, name: f, type: 'furniture', icon: this._furnitureIcon(f) }));
+    const clothes = ['HAT','CAPE','GLASSES','BOWTIE','SCARF','BOOTS','RING','NECKLACE','WINGS','CROWN'];
+    clothes.forEach((c,i) => items.push({ id: 100+i, name: c, type: 'wearable', icon: this._clothingIcon(c) }));
+    items.push({ id: 999, name: 'DRAGON EGG', type: 'rare', icon: '🥚' });
+    return items;
+  }
+  _furnitureIcon(n) {
+    const map = {SOFA:'🛋️',CHAIR:'🪑',TABLE:'🪵',LAMP:'🪔',PLANT:'🪴',RUG:'🧶',BOOKS:'📚',VASE:'🏺',CANDLE:'🕯️',MIRROR:'🪞',TV:'📺',BED:'🛏️',DESK:'🪑',WARDROBE:'🚪',PAINTING:'🖼️',CLOCK:'⏰',TROPHY:'🏆',DRUM:'🥁',GUITAR:'🎸',PIANO:'🎹'};
+    return map[n] || '📦';
+  }
+  _clothingIcon(n) {
+    const map = {HAT:'🎩',CAPE:'🦸',GLASSES:'👓',BOWTIE:'🎀',SCARF:'🧣',BOOTS:'👢',RING:'💍',NECKLACE:'📿',WINGS:'🦋',CROWN:'👑'};
+    return map[n] || '👕';
+  }
+
+  // ===== SCREENS =====
+  showScreen(name) {
+    document.querySelectorAll('#titleScreen, #charCreator, #gameScreen').forEach(el => el.classList.remove('active'));
+    if(name === 'title') document.getElementById('titleScreen').style.display = 'flex';
+    if(name === 'charCreator') {
+      const el = document.getElementById('charCreator'); el.style.display = 'flex'; el.classList.add('active');
+      this._drawAvatarPreview();
     }
-
-    // ===== LANDING BUTTONS =====
-    document.getElementById('btn-play').addEventListener('click', () => {
-      setScreen('charselect');
-    });
-    document.getElementById('btn-guest').addEventListener('click', () => {
-      setScreen('charselect');
-    });
-    document.getElementById('btn-register').addEventListener('click', () => {
-      document.getElementById('register-modal').classList.remove('hidden');
-      document.getElementById('login-modal').classList.add('hidden');
-    });
-    document.getElementById('btn-login').addEventListener('click', () => {
-      document.getElementById('login-modal').classList.remove('hidden');
-      document.getElementById('register-modal').classList.add('hidden');
-    });
-    document.getElementById('btn-settings').addEventListener('click', () => {
-      document.getElementById('settings-panel').classList.add('active');
-    });
-    document.getElementById('btn-about').addEventListener('click', () => {
-      alert('Starlight Inn v8.2.0\nA cozy isometric social world.\nGather, explore, and play together under the stars!');
-    });
-
-    // ===== AUTH =====
-    window.closeAuthModal = () => {
-      document.getElementById('register-modal').classList.add('hidden');
-      document.getElementById('login-modal').classList.add('hidden');
-    };
-    window.showRegister = () => {
-      document.getElementById('register-modal').classList.remove('hidden');
-      document.getElementById('login-modal').classList.add('hidden');
-    };
-    window.showLogin = () => {
-      document.getElementById('login-modal').classList.remove('hidden');
-      document.getElementById('register-modal').classList.add('hidden');
-    };
-
-    // Simple account storage
-    const accounts = JSON.parse(localStorage.getItem('starlight_accounts_v2') || '{}');
-    function saveAccounts() {
-      localStorage.setItem('starlight_accounts_v2', JSON.stringify(accounts));
+    if(name === 'game') {
+      document.getElementById('gameScreen').style.display = 'block';
+      document.getElementById('gameScreen').classList.add('active');
+      this._resizeCanvas();
+      this._startGameLoop();
+      this._playAreaMusic(this.room);
     }
+  }
+  showModal(type) { document.getElementById('modal-' + type).classList.add('active'); }
+  hideModal(type) {
+    document.getElementById('modal-' + type).classList.remove('active');
+    document.getElementById(type === 'register' ? 'regError' : 'loginError').textContent = '';
+  }
 
-    document.getElementById('btn-submit-register').addEventListener('click', (e) => {
-      e.preventDefault();
-      const user = document.getElementById('reg-username').value.trim();
-      const pass = document.getElementById('reg-password').value;
-      const confirm = document.getElementById('reg-confirm').value;
-      const err = document.getElementById('register-error');
-      if (!user || user.length < 3) { err.textContent = 'Username must be 3+ chars'; return; }
-      if (!/^[a-zA-Z0-9_]+$/.test(user)) { err.textContent = 'Letters, numbers, _ only'; return; }
-      if (!pass || pass.length < 6) { err.textContent = 'Password must be 6+ chars'; return; }
-      if (pass !== confirm) { err.textContent = 'Passwords do not match'; return; }
-      if (accounts[user.toLowerCase()]) { err.textContent = 'Username taken'; return; }
-      accounts[user.toLowerCase()] = { username: user, password: pass, created: Date.now() };
-      saveAccounts();
-      localStorage.setItem('starlight_current_user', user);
-      closeAuthModal();
-      setScreen('charselect');
-    });
-
-    document.getElementById('btn-submit-login').addEventListener('click', (e) => {
-      e.preventDefault();
-      const user = document.getElementById('login-username').value.trim();
-      const pass = document.getElementById('login-password').value;
-      const err = document.getElementById('login-error');
-      const acc = accounts[user.toLowerCase()];
-      if (!acc) { err.textContent = 'Username not found'; return; }
-      if (acc.password !== pass) { err.textContent = 'Wrong password'; return; }
-      localStorage.setItem('starlight_current_user', user);
-      closeAuthModal();
-      setScreen('charselect');
-    });
-
-    // Auto-login
-    const currentUser = localStorage.getItem('starlight_current_user');
-    if (currentUser && accounts[currentUser.toLowerCase()]) {
-      console.log('[Auth] Welcome back, ' + currentUser);
+  // ===== AUTH =====
+  register() {
+    const u = document.getElementById('regUser').value.trim();
+    const p = document.getElementById('regPass').value;
+    const p2 = document.getElementById('regPass2').value;
+    const err = document.getElementById('regError');
+    if(!u || u.length < 3) { err.textContent = 'Username must be 3+ characters'; return; }
+    if(!/^[a-zA-Z0-9_]+$/.test(u)) { err.textContent = 'Username: letters, numbers, underscores only'; return; }
+    if(this.accounts[u]) { err.textContent = 'Username already taken'; return; }
+    if(p.length < 6) { err.textContent = 'Password must be 6+ characters'; return; }
+    if(p !== p2) { err.textContent = 'Passwords do not match'; return; }
+    this.accounts[u] = { password: this._hash(p), created: Date.now() };
+    this._save('accounts', this.accounts);
+    err.className = 'success'; err.textContent = 'Account created! Please log in.';
+    setTimeout(() => { this.hideModal('register'); this.showModal('login'); document.getElementById('loginUser').value = u; }, 1200);
+  }
+  login() {
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value;
+    const err = document.getElementById('loginError');
+    if(!this.accounts[u] || this.accounts[u].password !== this._hash(p)) {
+      err.textContent = 'Invalid username or password'; return;
     }
-
-    // ===== CHARACTER SELECT =====
-    window.randomizeChar = () => {
-      const hairs = ['spiky', 'long', 'short', 'curly', 'buzz', 'mohawk', 'afro'];
-      const colors = ['#FFCC80', '#8D5524', '#C68642', '#E0AC69', '#F1C27D'];
-      const preview = document.querySelector('.charselect-preview');
-      preview.textContent = ['🧑','👨','👩','🧒'][Math.floor(Math.random()*4)];
-    };
-    window.prevHair = () => { randomizeChar(); };
-    window.nextHair = () => { randomizeChar(); };
-    window.changeColor = () => { randomizeChar(); };
-    window.enterGame = () => { setScreen('game'); };
-    window.goBack = () => { setScreen('landing'); };
-    window.closeSettings = () => { document.getElementById('settings-panel').classList.remove('active'); };
-
-    // ===== HARRY POTTER JINGLE =====
-    const jingleCtx = new (window.AudioContext || window.webkitAudioContext)();
-    let jingleMuted = false;
-    let jingleGain = jingleCtx.createGain();
-    jingleGain.connect(jingleCtx.destination);
-    jingleGain.gain.value = 0.25;
-
-    const noteFreq = {
-      'D4': 293.66, 'F#4': 369.99, 'A4': 440.00, 'B4': 493.88,
-      'D5': 587.33, 'E5': 659.25, 'F#5': 739.99, 'A5': 880.00,
-      'B5': 987.77, 'D6': 1174.66
-    };
-
-    function playNote(note, start, duration, vol) {
-      const osc = jingleCtx.createOscillator();
-      const g = jingleCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = noteFreq[note] || 440;
-      g.gain.setValueAtTime(0, start);
-      g.gain.linearRampToValueAtTime(vol, start + 0.05);
-      g.gain.exponentialRampToValueAtTime(0.001, start + duration);
-      osc.connect(g);
-      g.connect(jingleGain);
-      osc.start(start);
-      osc.stop(start + duration + 0.1);
+    this.user = { name: u, isGuest: false, skinColor: this.skinColor, hairIdx: this.hairIdx, outfitColor: this.outfitColor };
+    this._save('session', this.user);
+    this.hideModal('login');
+    this.showLoading('Entering Starlight Inn...');
+    setTimeout(() => { this.hideLoading(); this.showScreen('game'); this._addSystemMsg('Welcome back, ' + u + '!'); }, 1500);
+  }
+  guestLogin() {
+    const guests = ['StarGazer','Nebula','Comet','Astro','Nova','Quasar','Pulsar','Zenith','Orbit','Solstice'];
+    const name = guests[Math.floor(Math.random() * guests.length)] + Math.floor(Math.random() * 999);
+    this.user = { name: name, isGuest: true, skinColor: this.skinColor, hairIdx: this.hairIdx, outfitColor: this.outfitColor };
+    this.showLoading('Entering as guest...');
+    setTimeout(() => { this.hideLoading(); this.showScreen('game'); this._addSystemMsg('Welcome, ' + name + ' (Guest)!'); }, 1200);
+  }
+  logout() {
+    this.user = null; this._save('session', null);
+    this.stopMusic();
+    document.getElementById('titleScreen').style.display = 'flex';
+    document.getElementById('gameScreen').style.display = 'none';
+    document.getElementById('gameScreen').classList.remove('active');
+  }
+  finishCharCreator() {
+    if(!this.user) {
+      const guests = ['StarGazer','Nebula','Comet','Astro','Nova'];
+      const name = guests[Math.floor(Math.random()*guests.length)] + Math.floor(Math.random()*999);
+      this.user = { name, isGuest: true, skinColor: this.skinColor, hairIdx: this.hairIdx, outfitColor: this.outfitColor };
+    } else {
+      this.user.skinColor = this.skinColor;
+      this.user.hairIdx = this.hairIdx;
+      this.user.outfitColor = this.outfitColor;
+      this._save('session', this.user);
     }
+    this.showLoading('Creating your avatar...');
+    setTimeout(() => { this.hideLoading(); this.showScreen('game'); }, 1000);
+  }
+  showLoading(t) { document.getElementById('loadingText').textContent = t; document.getElementById('loadingScreen').classList.add('active'); }
+  hideLoading() { document.getElementById('loadingScreen').classList.remove('active'); }
 
-    function playJingle() {
-      if (jingleMuted) return;
-      const now = jingleCtx.currentTime;
-      // Opening magical phrase (Hedwig's theme inspired)
-      playNote('D5', now, 1.5, 0.3);
-      playNote('F#5', now + 0.4, 0.6, 0.25);
-      playNote('E5', now + 0.8, 0.5, 0.2);
-      playNote('D5', now + 1.2, 1.0, 0.25);
-      // Sparkle cascade
-      for (let i = 0; i < 8; i++) {
-        const notes = ['D6', 'B5', 'A5', 'F#5'];
-        playNote(notes[i % 4], now + 1.5 + i * 0.12, 0.3, 0.15);
+  // ===== COLOR WHEEL =====
+  _initColorWheel() {
+    const canvas = document.getElementById('colorWheelCanvas');
+    const ctx = canvas.getContext('2d');
+    const cx = 100, cy = 100, r = 90;
+    // Draw hue ring
+    for(let a = 0; a < 360; a++) {
+      ctx.beginPath(); ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, (a-1)*Math.PI/180, a*Math.PI/180);
+      ctx.fillStyle = 'hsl(' + a + ',100%,50%)'; ctx.fill();
+    }
+    // Inner white center
+    ctx.beginPath(); ctx.arc(cx, cy, r*0.5, 0, Math.PI*2);
+    ctx.fillStyle = '#fff'; ctx.fill();
+    // Click handler
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const dx = e.clientX - rect.left - cx;
+      const dy = e.clientY - rect.top - cy;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      const hue = (angle < 0 ? angle + 360 : angle);
+      const sat = dist > r ? 100 : Math.min(100, (dist / r) * 100);
+      this.skinColor = 'hsl(' + Math.round(hue) + ',' + Math.round(sat) + '%,70%)';
+      document.getElementById('skinPreview').style.background = this.skinColor;
+      this._drawAvatarPreview();
+    });
+  }
+
+  // ===== HAIR =====
+  _buildHairStyles() {
+    return [
+      { name: 'Bald', emoji: '🦲' },
+      { name: 'Short', emoji: '💇' },
+      { name: 'Spiky', emoji: '🦔' },
+      { name: 'Long', emoji: '👩' },
+      { name: 'Ponytail', emoji: '🏇' },
+      { name: 'Bun', emoji: '🍞' },
+      { name: 'Curly', emoji: '🐑' },
+      { name: 'Mohawk', emoji: '🐔' },
+      { name: 'Braids', emoji: '🔗' },
+      { name: 'Bob', emoji: '👧' },
+      { name: 'Afro', emoji: '🌳' },
+      { name: 'Wavy', emoji: '🌊' },
+      { name: 'Topknot', emoji: '🎀' },
+      { name: 'Dreads', emoji: '🪢' },
+      { name: 'Emo', emoji: '🖤' },
+      { name: 'Buzz', emoji: '✂️' }
+    ];
+  }
+  _initHairGrid() {
+    const grid = document.getElementById('hairGrid');
+    this.hairStyles.forEach((h, i) => {
+      const div = document.createElement('div');
+      div.className = 'hair-option' + (i === this.hairIdx ? ' selected' : '');
+      div.textContent = h.emoji;
+      div.title = h.name;
+      div.onclick = () => {
+        this.hairIdx = i;
+        grid.querySelectorAll('.hair-option').forEach(el => el.classList.remove('selected'));
+        div.classList.add('selected');
+        this._drawAvatarPreview();
+      };
+      grid.appendChild(div);
+    });
+  }
+
+  // ===== OUTFIT PALETTE =====
+  _initOutfitPalette() {
+    const container = document.getElementById('outfitPalette');
+    this.outfitColors.forEach(c => {
+      const div = document.createElement('div');
+      div.style.cssText = 'width:32px;height:32px;border-radius:6px;cursor:pointer;border:2px solid ' + (c === this.outfitColor ? '#FFD700' : '#444') + ';background:' + c;
+      div.onclick = () => {
+        this.outfitColor = c;
+        container.querySelectorAll('div').forEach(el => el.style.borderColor = '#444');
+        div.style.borderColor = '#FFD700';
+        this._drawAvatarPreview();
+      };
+      container.appendChild(div);
+    });
+  }
+
+  // ===== AVATAR PREVIEW =====
+  _drawAvatarPreview() {
+    const canvas = document.getElementById('avatarPreview');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, 200, 280);
+    // Body (isometric-style simple)
+    ctx.fillStyle = this.outfitColor;
+    ctx.fillRect(70, 140, 60, 90);
+    // Head
+    ctx.fillStyle = this.skinColor;
+    ctx.beginPath(); ctx.arc(100, 100, 35, 0, Math.PI*2); ctx.fill();
+    // Hair
+    ctx.fillStyle = '#4a3018';
+    const hair = this.hairStyles[this.hairIdx];
+    if(this.hairIdx === 0) { /* bald - no hair */ }
+    else if(this.hairIdx === 1) { ctx.fillRect(68, 68, 64, 20); }
+    else if(this.hairIdx === 2) { ctx.beginPath(); for(let i=0;i<5;i++) { ctx.moveTo(80+i*10,75); ctx.lineTo(85+i*10,55); ctx.lineTo(90+i*10,75); } ctx.fill(); }
+    else if(this.hairIdx === 3) { ctx.fillRect(68, 60, 64, 80); ctx.fillStyle = this.skinColor; ctx.beginPath(); ctx.arc(100,100,30,0,Math.PI*2); ctx.fill(); }
+    else { ctx.fillRect(65, 65, 70, 35); ctx.beginPath(); ctx.arc(100,75,35,Math.PI,0); ctx.fill(); }
+    // Eyes
+    ctx.fillStyle = '#fff'; ctx.fillRect(82, 92, 14, 14); ctx.fillRect(104, 92, 14, 14);
+    ctx.fillStyle = '#3366ff'; ctx.beginPath(); ctx.arc(89, 99, 5, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(111, 99, 5, 0, Math.PI*2); ctx.fill();
+    // Mouth
+    ctx.strokeStyle = '#aa6644'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(100, 118, 8, 0.1*Math.PI, 0.9*Math.PI); ctx.stroke();
+  }
+
+  // ===== AUDIO =====
+  _ensureAudio() {
+    if(this.audioCtx) return;
+    this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    this.musicGain = this.audioCtx.createGain(); this.musicGain.gain.value = this.settings.music ? 0.3 : 0;
+    this.musicGain.connect(this.audioCtx.destination);
+    this.sfxGain = this.audioCtx.createGain(); this.sfxGain.gain.value = this.settings.sfx ? 0.4 : 0;
+    this.sfxGain.connect(this.audioCtx.destination);
+  }
+  playJingle() {
+    this._ensureAudio();
+    const ctx = this.audioCtx, g = this.sfxGain;
+    const notes = [
+      {f:293.66,t:0,d:0.4},{f:369.99,t:0.4,d:0.3},{f:329.63,t:0.7,d:0.3},{f:293.66,t:1.0,d:0.4},
+      {f:392.00,t:1.5,d:0.2},{f:440.00,t:1.7,d:0.2},{f:493.88,t:1.9,d:0.3},
+      {f:523.25,t:2.3,d:0.4},{f:587.33,t:2.7,d:0.5}
+    ];
+    notes.forEach(n => {
+      const o = ctx.createOscillator(), og = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = n.f;
+      og.gain.setValueAtTime(0, ctx.currentTime + n.t);
+      og.gain.linearRampToValueAtTime(0.3, ctx.currentTime + n.t + 0.05);
+      og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + n.t + n.d);
+      o.connect(og); og.connect(g);
+      o.start(ctx.currentTime + n.t); o.stop(ctx.currentTime + n.t + n.d + 0.1);
+    });
+    // Sparkle sound
+    for(let i = 0; i < 12; i++) {
+      const o = ctx.createOscillator(), og = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = 800 + Math.random() * 1200;
+      const st = ctx.currentTime + 3.2 + i * 0.08;
+      og.gain.setValueAtTime(0, st);
+      og.gain.linearRampToValueAtTime(0.15, st + 0.02);
+      og.gain.exponentialRampToValueAtTime(0.001, st + 0.15);
+      o.connect(og); og.connect(g);
+      o.start(st); o.stop(st + 0.2);
+    }
+  }
+  _playAreaMusic(room) {
+    if(!this.settings.music) return;
+    this._ensureAudio();
+    this.stopMusic();
+    const scales = {
+      mainhall: [261.63,293.66,329.63,349.23,392.00,349.23,329.63,293.66],
+      garden: [329.63,369.99,392.00,440.00,493.88,440.00,392.00,369.99],
+      library: [196.00,220.00,246.94,261.63,293.66,261.63,246.94,220.00],
+      tavern: [174.61,196.00,220.00,233.08,261.63,233.08,220.00,196.00],
+      rooftop: [392.00,440.00,493.88,523.25,587.33,523.25,493.88,440.00]
+    };
+    const scale = scales[room] || scales.mainhall;
+    this.currentMusic = { nodes: [] };
+    const playScale = () => {
+      if(!this.currentMusic) return;
+      scale.forEach((f, i) => {
+        const o = this.audioCtx.createOscillator(), g = this.audioCtx.createGain();
+        o.type = i % 2 === 0 ? 'sine' : 'triangle';
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0, this.audioCtx.currentTime + i * 0.5);
+        g.gain.linearRampToValueAtTime(0.08, this.audioCtx.currentTime + i * 0.5 + 0.3);
+        g.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + i * 0.5 + 0.8);
+        o.connect(g); g.connect(this.musicGain);
+        o.start(this.audioCtx.currentTime + i * 0.5);
+        o.stop(this.audioCtx.currentTime + i * 0.5 + 0.9);
+        this.currentMusic.nodes.push(o);
+      });
+      this.currentMusic.timeout = setTimeout(playScale, scale.length * 500 + 200);
+    };
+    playScale();
+  }
+  stopMusic() {
+    if(this.currentMusic) { clearTimeout(this.currentMusic.timeout); this.currentMusic = null; }
+  }
+  _playSfx(type) {
+    if(!this.settings.sfx) return;
+    this._ensureAudio();
+    const ctx = this.audioCtx, g = this.sfxGain;
+    if(type === 'step') {
+      const o = ctx.createOscillator(), og = ctx.createGain();
+      o.type = 'triangle'; o.frequency.value = 120;
+      og.gain.setValueAtTime(0.05, ctx.currentTime);
+      og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+      o.connect(og); og.connect(g); o.start(); o.stop(ctx.currentTime + 0.1);
+    }
+    if(type === 'chat') {
+      const o = ctx.createOscillator(), og = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = 600;
+      og.gain.setValueAtTime(0.1, ctx.currentTime);
+      og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+      o.connect(og); og.connect(g); o.start(); o.stop(ctx.currentTime + 0.15);
+    }
+    if(type === 'door') {
+      const o = ctx.createOscillator(), og = ctx.createGain();
+      o.type = 'square'; o.frequency.value = 200;
+      o.frequency.linearRampToValueAtTime(80, ctx.currentTime + 0.3);
+      og.gain.setValueAtTime(0.1, ctx.currentTime);
+      og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      o.connect(og); og.connect(g); o.start(); o.stop(ctx.currentTime + 0.5);
+    }
+  }
+
+  // ===== ROOMS / TILEMAP =====
+  _buildRooms() {
+    const makeGrid = (w, h, floor, walls) => {
+      const tiles = [];
+      for(let y = 0; y < h; y++) {
+        const row = [];
+        for(let x = 0; x < w; x++) {
+          let t = floor;
+          if(walls.includes(x + ',' + y)) t = 'wall';
+          if(x === 0 || x === w-1 || y === 0 || y === h-1) t = 'wall';
+          row.push(t);
+        }
+        tiles.push(row);
       }
-      // Resolution chord
-      playNote('D4', now + 2.5, 2.0, 0.2);
-      playNote('F#4', now + 2.5, 2.0, 0.15);
-      playNote('A4', now + 2.5, 2.0, 0.15);
-    }
+      return { width: w, height: h, tiles, furniture: [] };
+    };
+    const rooms = {
+      mainhall: makeGrid(12, 12, 'wood', ['5,5','6,5']),
+      garden: makeGrid(14, 10, 'grass', []),
+      library: makeGrid(10, 10, 'carpet', ['3,3','3,4']),
+      tavern: makeGrid(10, 8, 'wood', ['4,4']),
+      rooftop: makeGrid(12, 6, 'stone', [])
+    };
+    // Add furniture
+    rooms.mainhall.furniture = [
+      {x:3,y:3,type:'sofa',color:'#8B4513'},{x:7,y:3,type:'sofa',color:'#8B4513'},
+      {x:5,y:2,type:'table',color:'#A0522D'},{x:2,y:7,type:'plant',color:'#228B22'},
+      {x:9,y:7,type:'lamp',color:'#FFD700'}
+    ];
+    rooms.garden.furniture = [
+      {x:4,y:3,type:'plant',color:'#32CD32'},{x:9,y:3,type:'plant',color:'#32CD32'},
+      {x:6,y:6,type:'fountain',color:'#87CEEB'}
+    ];
+    rooms.library.furniture = [
+      {x:2,y:2,type:'bookshelf',color:'#8B4513'},{x:7,y:2,type:'bookshelf',color:'#8B4513'},
+      {x:5,y:5,type:'desk',color:'#A0522D'}
+    ];
+    rooms.tavern.furniture = [
+      {x:3,y:3,type:'bar',color:'#8B4513'},{x:6,y:3,type:'stool',color:'#A0522D'},
+      {x:3,y:5,type:'stool',color:'#A0522D'}
+    ];
+    rooms.rooftop.furniture = [
+      {x:5,y:2,type:'telescope',color:'#C0C0C0'},{x:8,y:4,type:'plant',color:'#228B22'}
+    ];
+    return rooms;
+  }
 
-    // Play on first interaction (browsers block audio before user interaction)
-    let jingleStarted = false;
-    function startJingle() {
-      if (jingleStarted) return;
-      jingleStarted = true;
-      if (jingleCtx.state === 'suspended') jingleCtx.resume();
-      playJingle();
-      setInterval(() => { if (!jingleMuted) playJingle(); }, 35000);
+  // ===== INPUT =====
+  _initInputs() {
+    window.addEventListener('keydown', (e) => {
+      this.keys[e.key] = true;
+      if(e.key === 'Enter') {
+        const chatField = document.getElementById('chatField');
+        if(document.activeElement !== chatField) chatField.focus();
+        else this.sendChat();
+      }
+      if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d'].includes(e.key)) {
+        e.preventDefault();
+        this._tryMove(e.key);
+      }
+    });
+    window.addEventListener('keyup', (e) => this.keys[e.key] = false);
+    document.getElementById('chatField').addEventListener('keydown', (e) => {
+      if(e.key === 'Enter') { e.preventDefault(); this.sendChat(); }
+    });
+  }
+  _tryMove(k) {
+    const p = this.playerPos;
+    let dx = 0, dy = 0;
+    if(k === 'ArrowUp' || k === 'w') { dx = 0; dy = -1; p.dir = 'n'; }
+    if(k === 'ArrowDown' || k === 's') { dx = 0; dy = 1; p.dir = 's'; }
+    if(k === 'ArrowLeft' || k === 'a') { dx = -1; dy = 0; p.dir = 'w'; }
+    if(k === 'ArrowRight' || k === 'd') { dx = 1; dy = 0; p.dir = 'e'; }
+    const nx = p.x + dx, ny = p.y + dy;
+    const room = this.rooms[this.room];
+    if(nx >= 0 && nx < room.width && ny >= 0 && ny < room.height && room.tiles[ny][nx] !== 'wall') {
+      p.tx = nx; p.ty = ny; p.moving = true;
+      this._playSfx('step');
+      // Check room transitions
+      if(this.room === 'mainhall' && nx === 11 && ny === 5) this._changeRoom('garden', 1, 5);
+      else if(this.room === 'garden' && nx === 0 && ny === 5) this._changeRoom('mainhall', 10, 5);
+      else if(this.room === 'mainhall' && nx === 5 && ny === 0) this._changeRoom('library', 5, 8);
+      else if(this.room === 'library' && nx === 5 && ny === 9) this._changeRoom('mainhall', 5, 1);
+      else if(this.room === 'mainhall' && nx === 0 && ny === 8) this._changeRoom('tavern', 8, 8);
+      else if(this.room === 'tavern' && nx === 9 && ny === 8) this._changeRoom('mainhall', 1, 8);
+      else if(this.room === 'mainhall' && nx === 5 && ny === 11) this._changeRoom('rooftop', 5, 1);
+      else if(this.room === 'rooftop' && nx === 5 && ny === 0) this._changeRoom('mainhall', 5, 10);
     }
-    document.addEventListener('click', startJingle, { once: true });
+  }
+  _changeRoom(name, x, y) {
+    this._playSfx('door');
+    this.room = name;
+    this.playerPos.x = x; this.playerPos.y = y;
+    this.playerPos.tx = x; this.playerPos.ty = y; this.playerPos.moving = false;
+    document.getElementById('roomLabel').textContent = {
+      mainhall: 'Main Hall', garden: 'Moon Garden', library: 'Arcane Library',
+      tavern: 'Dragon Tavern', rooftop: 'Starlight Rooftop'
+    }[name];
+    this._playAreaMusic(name);
+    this._addSystemMsg('Entered ' + document.getElementById('roomLabel').textContent);
+  }
 
-    // Mute button
-    document.getElementById('btn-mute').addEventListener('click', () => {
-      jingleMuted = !jingleMuted;
-      jingleGain.gain.value = jingleMuted ? 0 : 0.25;
-      document.getElementById('btn-mute').textContent = jingleMuted ? 'Sound Off' : 'Sound On';
+  // ===== RENDERING =====
+  _resizeCanvas() {
+    const c = document.getElementById('gameCanvas');
+    c.width = window.innerWidth; c.height = window.innerHeight;
+  }
+  _toIso(x, y) {
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 3;
+    return {
+      x: cx + (x - y) * (TILE_W / 2),
+      y: cy + (x + y) * (TILE_H / 2)
+    };
+  }
+  _startGameLoop() {
+    const loop = (t) => {
+      if(!document.getElementById('gameScreen').classList.contains('active')) return;
+      this._update(t);
+      this._render();
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  }
+  _update(t) {
+    const p = this.playerPos;
+    if(p.moving) {
+      const speed = 0.08;
+      p.x += (p.tx - p.x) * speed;
+      p.y += (p.ty - p.y) * speed;
+      if(Math.abs(p.x - p.tx) < 0.05 && Math.abs(p.y - p.ty) < 0.05) {
+        p.x = p.tx; p.y = p.ty; p.moving = false;
+      }
+      p.anim = t * 0.01;
+    } else { p.anim = 0; }
+    // Update bubbles
+    this.bubbles = this.bubbles.filter(b => Date.now() - b.time < 4000);
+  }
+  _render() {
+    const c = document.getElementById('gameCanvas');
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, c.width, c.height);
+    const room = this.rooms[this.room];
+    // Background color per room
+    const bgColors = { mainhall: '#1a1a2e', garden: '#0f2a1f', library: '#1a0f2e', tavern: '#2e1a0f', rooftop: '#0d0d2e' };
+    ctx.fillStyle = bgColors[this.room] || '#0a0a1a';
+    ctx.fillRect(0, 0, c.width, c.height);
+
+    // Collect render items for Y-sort
+    const items = [];
+    // Tiles
+    for(let y = 0; y < room.height; y++) {
+      for(let x = 0; x < room.width; x++) {
+        items.push({ type: 'tile', x, y, tile: room.tiles[y][x], sortY: y + x * 0.01 });
+      }
+    }
+    // Furniture
+    room.furniture.forEach(f => {
+      items.push({ type: 'furniture', x: f.x + 0.5, y: f.y + 0.5, data: f, sortY: f.y + f.x * 0.01 + 0.5 });
+    });
+    // Other players
+    Object.values(this.players).forEach(pl => {
+      items.push({ type: 'player', x: pl.x, y: pl.y, data: pl, sortY: pl.y + pl.x * 0.01 + 0.6 });
+    });
+    // Local player
+    items.push({ type: 'localPlayer', x: this.playerPos.x, y: this.playerPos.y, sortY: this.playerPos.y + this.playerPos.x * 0.01 + 0.6 });
+
+    // Sort by Y (depth)
+    items.sort((a, b) => a.sortY - b.sortY);
+
+    // Render
+    items.forEach(it => {
+      if(it.type === 'tile') this._drawTile(ctx, it.x, it.y, it.tile);
+      if(it.type === 'furniture') this._drawFurniture(ctx, it.x, it.y, it.data);
+      if(it.type === 'player') this._drawAvatar(ctx, it.x, it.y, it.data, false);
+      if(it.type === 'localPlayer') this._drawAvatar(ctx, it.x, it.y, this.user, true);
     });
 
-    console.log('🌟 Starlight Inn v8.2.0 loaded — click anywhere to hear the magic!');
-  </script>
+    // Draw bubbles
+    this.bubbles.forEach(b => {
+      const pos = this._toIso(b.x, b.y);
+      this._drawBubble(ctx, pos.x, pos.y - 60, b.text);
+    });
+
+    // Room label hint
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(10, c.height - 35, 180, 28);
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.fillText('Arrow keys / WASD to move', 18, c.height - 14);
+  }
+  _drawTile(ctx, x, y, type) {
+    const p = this._toIso(x, y);
+    const colors = { wood: '#8B4513', grass: '#228B22', carpet: '#4B0082', stone: '#696969', wall: '#2F4F4F' };
+    const c = colors[type] || '#555';
+    // Diamond
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y - TILE_H/2);
+    ctx.lineTo(p.x + TILE_W/2, p.y);
+    ctx.lineTo(p.x, p.y + TILE_H/2);
+    ctx.lineTo(p.x - TILE_W/2, p.y);
+    ctx.closePath();
+    ctx.fillStyle = c; ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1; ctx.stroke();
+    // Highlight top edge
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y - TILE_H/2);
+    ctx.lineTo(p.x + TILE_W/2, p.y);
+    ctx.lineTo(p.x, p.y + TILE_H/2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.stroke();
+    if(type === 'wall') {
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y - TILE_H/2);
+      ctx.lineTo(p.x, p.y - TILE_H*1.5);
+      ctx.lineTo(p.x + TILE_W/2, p.y - TILE_H);
+      ctx.lineTo(p.x + TILE_W/2, p.y);
+      ctx.fillStyle = '#3a3a5c'; ctx.fill();
+      ctx.strokeStyle = '#555'; ctx.stroke();
+      // Wall face left
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y - TILE_H/2);
+      ctx.lineTo(p.x, p.y - TILE_H*1.5);
+      ctx.lineTo(p.x - TILE_W/2, p.y - TILE_H);
+      ctx.lineTo(p.x - TILE_W/2, p.y);
+      ctx.fillStyle = '#2a2a4c'; ctx.fill();
+    }
+  }
+  _drawFurniture(ctx, x, y, f) {
+    const p = this._toIso(x, y);
+    ctx.fillStyle = f.color;
+    if(f.type === 'sofa') {
+      ctx.fillRect(p.x - 20, p.y - 35, 40, 25);
+      ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(p.x - 20, p.y - 10, 40, 10);
+    } else if(f.type === 'table') {
+      ctx.beginPath(); ctx.ellipse(p.x, p.y - 20, 22, 12, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(p.x - 4, p.y - 15, 8, 18);
+    } else if(f.type === 'plant') {
+      ctx.beginPath(); ctx.arc(p.x, p.y - 25, 15, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#8B4513'; ctx.fillRect(p.x - 6, p.y - 15, 12, 15);
+    } else if(f.type === 'lamp') {
+      ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.moveTo(p.x, p.y - 40); ctx.lineTo(p.x - 10, p.y - 20); ctx.lineTo(p.x + 10, p.y - 20); ctx.fill();
+      ctx.fillStyle = '#666'; ctx.fillRect(p.x - 2, p.y - 20, 4, 20);
+      // Glow
+      ctx.beginPath(); ctx.arc(p.x, p.y - 30, 30, 0, Math.PI*2);
+      const g = ctx.createRadialGradient(p.x, p.y - 30, 5, p.x, p.y - 30, 30);
+      g.addColorStop(0, 'rgba(255,215,0,0.3)'); g.addColorStop(1, 'rgba(255,215,0,0)');
+      ctx.fillStyle = g; ctx.fill();
+    } else if(f.type === 'fountain') {
+      ctx.fillStyle = '#87CEEB'; ctx.beginPath(); ctx.ellipse(p.x, p.y - 10, 30, 15, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(135,206,235,0.5)'; ctx.beginPath(); ctx.arc(p.x, p.y - 25, 8, 0, Math.PI*2); ctx.fill();
+    } else if(f.type === 'bookshelf') {
+      ctx.fillStyle = f.color; ctx.fillRect(p.x - 18, p.y - 50, 36, 40);
+      ctx.fillStyle = '#FFD700'; for(let i=0;i<3;i++) ctx.fillRect(p.x - 14, p.y - 42 + i*12, 28, 8);
+    } else if(f.type === 'desk') {
+      ctx.fillStyle = f.color; ctx.fillRect(p.x - 22, p.y - 25, 44, 18);
+      ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(p.x - 4, p.y - 10, 8, 12);
+    } else if(f.type === 'bar') {
+      ctx.fillStyle = f.color; ctx.fillRect(p.x - 30, p.y - 30, 60, 25);
+    } else if(f.type === 'stool') {
+      ctx.fillStyle = f.color; ctx.fillRect(p.x - 10, p.y - 15, 20, 12);
+    } else if(f.type === 'telescope') {
+      ctx.fillStyle = '#C0C0C0'; ctx.fillRect(p.x - 3, p.y - 45, 6, 45);
+      ctx.beginPath(); ctx.moveTo(p.x - 15, p.y - 50); ctx.lineTo(p.x + 15, p.y - 40); ctx.lineTo(p.x + 10, p.y - 35); ctx.lineTo(p.x - 10, p.y - 45); ctx.fill();
+    }
+  }
+  _drawAvatar(ctx, x, y, user, isLocal) {
+    const p = this._toIso(x, y);
+    const bx = p.x, by = p.y - 20;
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath(); ctx.ellipse(bx, by + 8, 14, 6, 0, 0, Math.PI*2); ctx.fill();
+    // Body
+    ctx.fillStyle = user ? user.outfitColor || '#4169E1' : '#4169E1';
+    ctx.fillRect(bx - 10, by - 25, 20, 22);
+    // Head
+    ctx.fillStyle = user ? user.skinColor || '#ffdbac' : '#ffdbac';
+    ctx.beginPath(); ctx.arc(bx, by - 32, 12, 0, Math.PI*2); ctx.fill();
+    // Hair (simple)
+    ctx.fillStyle = '#4a3018';
+    const hi = user ? user.hairIdx || 0 : 0;
+    if(hi === 0) { /* bald */ }
+    else if(hi === 1) { ctx.fillRect(bx - 13, by - 45, 26, 10); }
+    else { ctx.fillRect(bx - 13, by - 46, 26, 14); ctx.beginPath(); ctx.arc(bx, by - 42, 13, Math.PI, 0); ctx.fill(); }
+    // Eyes
+    ctx.fillStyle = '#fff'; ctx.fillRect(bx - 6, by - 35, 5, 5); ctx.fillRect(bx + 1, by - 35, 5, 5);
+    ctx.fillStyle = '#3366ff'; ctx.beginPath(); ctx.arc(bx - 3.5, by - 32.5, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(bx + 3.5, by - 32.5, 2, 0, Math.PI*2); ctx.fill();
+    // Name
+    if(this.settings.showNames && user) {
+      ctx.fillStyle = isLocal ? '#FFD700' : '#aaa';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(user.name || 'Guest', bx, by - 52);
+    }
+    // Selection ring for local
+    if(isLocal) {
+      ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(bx, by - 15, 16, 10, 0, 0, Math.PI*2); ctx.stroke();
+    }
+  }
+  _drawBubble(ctx, x, y, text) {
+    ctx.font = '13px sans-serif';
+    const w = Math.min(ctx.measureText(text).width + 20, 200);
+    const h = 28, r = 10;
+    const bx = x - w/2, by = y - h;
+    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.beginPath(); ctx.moveTo(bx + r, by); ctx.lineTo(bx + w - r, by); ctx.quadraticCurveTo(bx + w, by, bx + w, by + r);
+    ctx.lineTo(bx + w, by + h - r); ctx.quadraticCurveTo(bx + w, by + h, bx + w - r, by + h);
+    ctx.lineTo(bx + r, by + h); ctx.quadraticCurveTo(bx, by + h, bx, by + h - r);
+    ctx.lineTo(bx, by + r); ctx.quadraticCurveTo(bx, by, bx + r, by); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.fillText(text, x, y - 7);
+  }
+
+  // ===== CHAT =====
+  sendChat() {
+    const field = document.getElementById('chatField');
+    const text = field.value.trim();
+    if(!text) return;
+    field.value = '';
+    this._addChat(this.user ? this.user.name : 'Guest', text, this.user && this.user.isGuest);
+    this.bubbles.push({ x: this.playerPos.x, y: this.playerPos.y, text, time: Date.now() });
+    this._playSfx('chat');
+    // Simulate reply
+    if(Math.random() > 0.6) {
+      const replies = ['Hello!','Nice place!','Anyone here?','lol','Beautiful room','Hey!','Welcome!'];
+      const others = Object.values(this.players);
+      if(others.length > 0) {
+        const pl = others[Math.floor(Math.random() * others.length)];
+        setTimeout(() => {
+          this._addChat(pl.name, replies[Math.floor(Math.random() * replies.length)], false);
+          this.bubbles.push({ x: pl.x, y: pl.y, text: replies[Math.floor(Math.random() * replies.length)], time: Date.now() });
+        }, 1000 + Math.random() * 2000);
+      }
+    }
+  }
+  _addChat(user, text, isGuest) {
+    const hist = document.getElementById('chatHistory');
+    const div = document.createElement('div');
+    div.className = 'chat-msg';
+    div.innerHTML = '<span class="' + (isGuest ? 'guest' : 'user') + '">' + user + ':</span> ' + this._escapeHtml(text);
+    hist.appendChild(div);
+    hist.scrollTop = hist.scrollHeight;
+    // Limit history
+    while(hist.children.length > 50) hist.removeChild(hist.firstChild);
+  }
+  _addSystemMsg(text) {
+    const hist = document.getElementById('chatHistory');
+    const div = document.createElement('div');
+    div.className = 'chat-msg';
+    div.innerHTML = '<span style="color:#FFA500;">★ ' + text + '</span>';
+    hist.appendChild(div);
+    hist.scrollTop = hist.scrollHeight;
+  }
+  _escapeHtml(t) { return t.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;","':'&#39;'}[m])); }
+
+  // ===== SIMULATED PLAYERS =====
+  _spawnSimulatedPlayers() {
+    const names = ['LunaStar','MoonWalker','PixelQueen','RetroKing','AstroNinja','CometRider','NebulaDust'];
+    names.forEach((n, i) => {
+      this.players[n] = {
+        name: n, x: 2 + (i % 4), y: 2 + Math.floor(i / 4),
+        skinColor: ['#ffdbac','#e0ac69','#8d5524','#c68642'][i % 4],
+        outfitColor: ['#DC143C','#4169E1','#32CD32','#FFD700','#FF8C00','#8A2BE2','#FF69B4'][i % 7],
+        hairIdx: i % 5,
+        tx: 2 + (i % 4), ty: 2 + Math.floor(i / 4), moving: false
+      };
+    });
+  }
+  _simulatePlayers() {
+    Object.values(this.players).forEach(pl => {
+      if(pl.moving) {
+        pl.x += (pl.tx - pl.x) * 0.05;
+        pl.y += (pl.ty - pl.y) * 0.05;
+        if(Math.abs(pl.x - pl.tx) < 0.05 && Math.abs(pl.y - pl.ty) < 0.05) { pl.x = pl.tx; pl.y = pl.ty; pl.moving = false; }
+      } else if(Math.random() > 0.6) {
+        const dx = Math.floor(Math.random() * 3) - 1;
+        const dy = Math.floor(Math.random() * 3) - 1;
+        const nx = Math.max(1, Math.min(10, Math.round(pl.x + dx)));
+        const ny = Math.max(1, Math.min(10, Math.round(pl.y + dy)));
+        pl.tx = nx; pl.ty = ny; pl.moving = true;
+      }
+    });
+  }
+
+  // ===== UI PANELS =====
+  togglePanel(name) {
+    const panel = document.getElementById(name + 'Panel');
+    panel.classList.toggle('active');
+    if(name === 'friends') this._renderFriends();
+    if(name === 'inventory') this._renderInventory();
+  }
+  _renderFriends() {
+    const list = document.getElementById('friendsList');
+    list.innerHTML = '';
+    this.friends.forEach(f => {
+      const div = document.createElement('div');
+      div.className = 'friend-item';
+      div.innerHTML = '<div class="friend-dot ' + (f.online ? '' : 'offline') + '"></div><span class="friend-name">' + f.name + '</span><span style="color:#888;font-size:11px;">' + (f.online ? 'online' : 'offline') + '</span>';
+      div.onclick = () => this._whisperFriend(f.name);
+      list.appendChild(div);
+    });
+  }
+  _whisperFriend(name) {
+    const field = document.getElementById('chatField');
+    field.value = '/w ' + name + ' ';
+    field.focus();
+  }
+  _renderInventory() {
+    const grid = document.getElementById('inventoryGrid');
+    grid.innerHTML = '';
+    this.inventory.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'inv-item';
+      div.innerHTML = '<span class="icon">' + item.icon + '</span><span>' + item.name + '</span>';
+      div.onclick = () => this._addSystemMsg('Selected: ' + item.name);
+      grid.appendChild(div);
+    });
+  }
+  toggleSetting(name) {
+    if(name === 'music') { this.settings.music = !this.settings.music; document.getElementById('musicToggle').classList.toggle('on'); if(this.musicGain) this.musicGain.gain.value = this.settings.music ? 0.3 : 0; if(this.settings.music) this._playAreaMusic(this.room); else this.stopMusic(); }
+    if(name === 'sfx') { this.settings.sfx = !this.settings.sfx; document.getElementById('sfxToggle').classList.toggle('on'); if(this.sfxGain) this.sfxGain.gain.value = this.settings.sfx ? 0.4 : 0; }
+    if(name === 'names') { this.settings.showNames = !this.settings.showNames; document.getElementById('namesToggle').classList.toggle('on'); }
+    this._save('settings', this.settings);
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+const app = new StarlightInn();
+// Auto-login if session exists
+const session = app._load('session');
+if(session && session.name) {
+  app.user = session;
+  app.skinColor = session.skinColor || app.skinColor;
+  app.hairIdx = session.hairIdx || 0;
+  app.outfitColor = session.outfitColor || '#4169E1';
+}
+</script>
 </body>
 </html>
