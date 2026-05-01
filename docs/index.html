@@ -1090,6 +1090,40 @@ function renderAvatar(ctx, avatar, x, y, scale = 1, dir = 's') {
       return;
     }
 
+    // Reject sprite sheets / oversized images
+    if (iw > 200 || ih > 200) {
+      // Draw a simple procedural shape instead
+      ctx.fillStyle = tint || '#888';
+      if (key.includes('hair')) {
+        // Simple hair shape
+        ctx.fillRect(-18, -AV_H + 5, 36, 20);
+        ctx.fillRect(-22, -AV_H + 15, 44, 10);
+      } else if (key.includes('body')) {
+        // Body shape
+        ctx.fillRect(-14, -AV_H + 30, 28, 35);
+      } else if (key.includes('face')) {
+        // Face
+        ctx.fillStyle = '#ffdbac';
+        ctx.fillRect(-12, -AV_H + 8, 24, 22);
+        ctx.fillStyle = '#222';
+        ctx.fillRect(-8, -AV_H + 16, 4, 4);
+        ctx.fillRect(4, -AV_H + 16, 4, 4);
+      } else if (key.includes('shirt') || key.includes('dress')) {
+        // Shirt
+        ctx.fillRect(-16, -AV_H + 28, 32, 30);
+      } else if (key.includes('legs') || key.includes('pants')) {
+        // Legs
+        ctx.fillRect(-14, -AV_H + 55, 12, 20);
+        ctx.fillRect(2, -AV_H + 55, 12, 20);
+      } else if (key.includes('acc')) {
+        // Accessory
+        ctx.fillRect(-16, -AV_H + 2, 32, 8);
+      } else {
+        ctx.fillRect(-20, -AV_H + 10, 40, AV_H - 20);
+      }
+      return;
+    }
+
     try {
       const srcW = Math.min(iw, AV_W * 3);
       const srcH = Math.min(ih, AV_H * 3);
