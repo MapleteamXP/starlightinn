@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Starlight Inn v15.0.1</title>
+<title>Starlight Inn v14.0.1</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
@@ -45,34 +45,15 @@
   #titleScreen .bg-img {
     position: absolute; inset: 0; width: 100%; height: 100%;
     object-fit: cover; image-rendering: pixelated;
-    pointer-events: none;
-    user-select: none;
-    -webkit-user-select: none;
   }
   #titleScreen .overlay {
     position: absolute; inset: 0;
     background: linear-gradient(180deg, rgba(10,10,26,0.3) 0%, rgba(10,10,26,0.7) 100%);
-    pointer-events: none;
   }
   #titleScreen .content {
     position: relative; z-index: 10; text-align: center;
   }
   /* Title comes from background image only */
-  .title-glow {
-    animation: titlePulse 3s ease-in-out infinite;
-  }
-  @keyframes titlePulse {
-    0%, 100% { filter: drop-shadow(0 0 20px rgba(255,215,0,0.3)); }
-    50% { filter: drop-shadow(0 0 40px rgba(255,215,0,0.6)); }
-  }
-  .star-twinkle {
-    position: absolute; width: 3px; height: 3px; background: #fff; border-radius: 50%;
-    animation: twinkle 2s ease-in-out infinite;
-  }
-  @keyframes twinkle {
-    0%, 100% { opacity: 0.3; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.5); }
-  }
   .title-buttons {
     display: flex; flex-direction: column; gap: 12px; margin-top: 30px;
     align-items: center;
@@ -88,10 +69,6 @@
     letter-spacing: 1px; box-shadow: 0 4px 8px rgba(0,0,0,0.4);
     transition: transform 0.1s, box-shadow 0.1s;
     min-width: 160px;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-    -webkit-user-select: none;
   }
   .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.5); }
   .btn-gold:active { transform: translateY(1px); }
@@ -100,10 +77,6 @@
     color: #FFD700; font-weight: bold; font-size: 14px;
     padding: 8px 20px; cursor: pointer; min-width: 120px;
     transition: background 0.2s;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-    -webkit-user-select: none;
   }
   .btn-dark:hover { background: rgba(40,40,60,0.9); }
   .btn-close {
@@ -177,7 +150,7 @@
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: 720px; max-width: 95vw; height: 520px; max-height: 90vh;
     background: rgba(10,10,20,0.97); border: 2px solid #FFD700;
-    border-radius: 14px; z-index: 1500; display: none; flex-direction: column;
+    border-radius: 14px; z-index: 500; display: none; flex-direction: column;
     overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,0.8);
   }
   .panel-header {
@@ -509,23 +482,21 @@
 
 <!-- TITLE SCREEN -->
 <div id="titleScreen">
-  <img class="bg-img" src="assets/title-bg.png" alt="">
+  <img class="bg-img" src="assets/title-bg-v16.png" alt="">
   <div class="overlay"></div>
   <div class="content">
     <!-- Title comes from background image only - no overlay text/logo -->
     <div style="height:120px;"></div>
     <div class="title-buttons">
       <button class="btn-gold" onclick="showScreen('character')">ENTER WORLD</button>
+      <button class="btn-gold" onclick="startGuest()">PLAY AS GUEST</button>
       <div class="row">
         <button class="btn-dark" onclick="showModal('login')">LOGIN</button>
         <button class="btn-dark" onclick="showModal('register')">REGISTER</button>
       </div>
-      <div class="row" style="margin-top:8px;">
-        <button class="btn-dark" onclick="toggleSettings()" style="min-width:auto; padding:6px 16px; font-size:12px;">⚙️ SETTINGS</button>
-      </div>
     </div>
   </div>
-  <div style="position:fixed; bottom:10px; right:15px; color:#888; font-size:12px;">v15.0.1</div>
+  <div style="position:fixed; bottom:10px; right:15px; color:#888; font-size:12px;">v14.0.0</div>
 </div>
 
 <!-- CHARACTER CREATOR -->
@@ -778,9 +749,18 @@
       <input type="range" id="zoomSlider" min="50" max="200" value="100" oninput="setZoom(this.value/100)">
     </div>
     <div style="margin-bottom:12px;">
+      <label>Chat Bubble Color</label>
+      <div id="chatColorPicker" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+        <!-- Chat colors injected by JS -->
+      </div>
+    </div>
+    <div style="margin-bottom:12px;">
       <label><input type="checkbox" id="showMinimap" onchange="toggleMinimap()"> Show Minimap</label>
     </div>
-    <button class="btn-dark" onclick="logout()">LOGOUT</button>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-dark" onclick="showAchievements()">TROPHIES</button>
+      <button class="btn-dark" onclick="logout()">LOGOUT</button>
+    </div>
   </div>
 </div>
 
@@ -917,7 +897,14 @@ const ASSETS = {
   'ui/room_editor_cursor': 'assets/sprites/ui/room_editor_cursor.png',
   'ui/starlight_logo': 'assets/sprites/ui/starlight_logo.png',
   'ui/free_hat': 'assets/sprites/ui/free_hat.png',
-  'title-bg': 'assets/title-bg.png',
+  'title-bg': 'assets/title-bg-v16.png',
+  'rooms/bg_lido': 'assets/sprites/rooms/bg_lido.png',
+  'parts/hair_long_pink': 'assets/sprites/parts/hair_long_pink.png',
+  'parts/hair_spiky_blue': 'assets/sprites/parts/hair_spiky_blue.png',
+  'parts/hair_curly_red': 'assets/sprites/parts/hair_curly_red.png',
+  'parts/hair_slick_black': 'assets/sprites/parts/hair_slick_black.png',
+  'parts/hair_pigtails_teal': 'assets/sprites/parts/hair_pigtails_teal.png',
+  'parts/hair_bedhead_blonde': 'assets/sprites/parts/hair_bedhead_blonde.png',
 };
 
 const IMAGES = {};
@@ -937,31 +924,46 @@ function createPlaceholder(key) {
   return c;
 }
 
+// TIER 1: Critical assets — load first for instant title screen (~15 images)
+const TIER1 = ['title-bg','parts/body_base','parts/legs_pants','parts/shirt_tshirt',
+  'parts/hair_bald','parts/hair_short_brown','parts/face_happy','parts/face_cool',
+  'tiles/floor_wood','tiles/floor_grass','tiles/floor_stone',
+  'furniture/sofa','furniture/plant','furniture/lamp'];
+
 function loadAllAssets(callback) {
-  for (const [key, path] of Object.entries(ASSETS)) {
+  // Phase 1: Load TIER 1 critical assets FAST
+  let t1loaded = 0;
+  const t1total = TIER1.length;
+  TIER1.forEach(key => {
     const img = new Image();
-    img.onload = () => {
-      loadedCount++;
-      IMAGES[key] = img;
-      const pct = Math.round((loadedCount / totalAssets) * 100);
+    const finish = () => {
+      t1loaded++;
+      const pct = Math.round((t1loaded / t1total) * 100);
       const fill = document.getElementById('loadFill');
       const txt = document.getElementById('loadText');
       if (fill) fill.style.width = pct + '%';
-      if (txt) txt.textContent = `Loading assets... ${pct}%`;
-      if (loadedCount >= totalAssets && callback) callback();
+      if (txt) txt.textContent = `Loading... ${pct}%`;
+      if (t1loaded >= t1total) {
+        loadedCount = t1loaded;
+        if (callback) callback();
+        setTimeout(loadRemainingAssets, 100);
+      }
     };
-    img.onerror = () => {
-      loadedCount++;
-      IMAGES[key] = createPlaceholder(key);
-      const pct = Math.round((loadedCount / totalAssets) * 100);
-      const fill = document.getElementById('loadFill');
-      const txt = document.getElementById('loadText');
-      if (fill) fill.style.width = pct + '%';
-      if (txt) txt.textContent = `Loading assets... ${pct}%`;
-      if (loadedCount >= totalAssets && callback) callback();
-    };
-    img.src = path;
-  }
+    img.onload = () => { IMAGES[key] = img; finish(); };
+    img.onerror = () => { IMAGES[key] = createPlaceholder(key); finish(); };
+    img.src = ASSETS[key];
+  });
+}
+
+// Phase 2: Background load everything else (while player is on title screen)
+function loadRemainingAssets() {
+  const remaining = Object.keys(ASSETS).filter(k => !TIER1.includes(k));
+  remaining.forEach(key => {
+    const img = new Image();
+    img.onload = () => { IMAGES[key] = img; loadedCount++; };
+    img.onerror = () => { IMAGES[key] = createPlaceholder(key); loadedCount++; };
+    img.src = ASSETS[key];
+  });
 }
 
 // ======================= AUDIO SYSTEM =======================
@@ -1242,6 +1244,25 @@ const PUBLIC_ROOMS = {
       {type:'rug',x:4,y:5},{type:'rug',x:12,y:5},{type:'rug',x:4,y:9},{type:'rug',x:12,y:9},
       {type:'jukebox',x:14,y:10},{type:'trophy',x:8,y:1}
     ]
+  },
+  lido: {
+    name: 'Starlight Pool', w: 20, h: 14,
+    floor: 'floor_tile', wall: 'wall_brick', bg: 'bg_lido',
+    exits: { west: 'garden', north: 'mainhall' },
+    furniture: [
+      {type:'bench',x:4,y:4},{type:'bench',x:16,y:4},{type:'bench',x:4,y:10},{type:'bench',x:16,y:10},
+      {type:'sofa',x:2,y:3},{type:'sofa',x:3,y:3},{type:'sofa',x:17,y:3},{type:'sofa',x:18,y:3},
+      {type:'sofa',x:2,y:11},{type:'sofa',x:3,y:11},{type:'sofa',x:17,y:11},{type:'sofa',x:18,y:11},
+      {type:'stove',x:10,y:2},{type:'barrel',x:9,y:2},{type:'barrel',x:11,y:2},
+      {type:'chair',x:8,y:2},{type:'chair',x:12,y:2},
+      {type:'plant',x:1,y:1},{type:'plant',x:19,y:1},{type:'plant',x:1,y:12},{type:'plant',x:19,y:12},
+      {type:'flower',x:5,y:2},{type:'flower',x:15,y:2},{type:'flower',x:5,y:11},{type:'flower',x:15,y:11},
+      {type:'lamp',x:5,y:5},{type:'lamp',x:15,y:5},{type:'lamp',x:5,y:9},{type:'lamp',x:15,y:9},
+      {type:'wall_lamp',x:1,y:7},{type:'wall_lamp',x:19,y:7},
+      {type:'trophy',x:10,y:12},{type:'table',x:7,y:3},{type:'table',x:13,y:3},
+      {type:'chair',x:6,y:3},{type:'chair',x:8,y:3},{type:'chair',x:12,y:3},{type:'chair',x:14,y:3},
+      {type:'jukebox',x:2,y:7}
+    ]
   }
 };
 
@@ -1407,6 +1428,7 @@ let charOpts = {
   hairColor: '#8B4513', shirtColor: '#4169E1', skinColor: '#ffdbac'
 };
 
+// 14 hair styles: 8 original + 6 new v16 styles
 const HAIR_OPTIONS = [
   {key:'parts/hair_bald', label:'Bald'},
   {key:'parts/hair_short_brown', label:'Short'},
@@ -1415,7 +1437,13 @@ const HAIR_OPTIONS = [
   {key:'parts/hair_afro', label:'Afro'},
   {key:'parts/hair_ponytail', label:'Ponytail'},
   {key:'parts/hair_emo', label:'Emo'},
-  {key:'parts/hair_mohawk', label:'Mohawk'}
+  {key:'parts/hair_mohawk', label:'Mohawk'},
+  {key:'parts/hair_long_pink', label:'Pink'},
+  {key:'parts/hair_spiky_blue', label:'Blue'},
+  {key:'parts/hair_curly_red', label:'Curly'},
+  {key:'parts/hair_slick_black', label:'Slick'},
+  {key:'parts/hair_pigtails_teal', label:'Pigtails'},
+  {key:'parts/hair_bedhead_blonde', label:'Messy'}
 ];
 const SHIRT_OPTIONS = [
   {key:'parts/shirt_tshirt', label:'T-Shirt'},
@@ -1603,7 +1631,9 @@ function loadRoom(roomId) {
     player.tx = player.x; player.ty = player.y;
     player.moving = false;
     camX = 0; camY = 0; zoom = 1.0;
-    // Exit arrows removed
+    // Stat tracking: room visit
+    if (!playerStats.rooms.includes(roomId)) { playerStats.rooms.push(roomId); savePlayerStats(); checkAchievements(); }
+    addXP(5);
     showRoomLabel(def.name);
     playDoor();
     return;
@@ -1753,7 +1783,8 @@ function drawBackground(ctx, rd, zm) {
     'garden': {color:'#0a1a0a', alpha:0.2},
     'library': {color:'#0a0a1a', alpha:0.25},
     'tavern': {color:'#1a0a00', alpha:0.2},
-    'myroom': {color:'#0f0a1a', alpha:0.1}
+    'myroom': {color:'#0f0a1a', alpha:0.1},
+  'bg_lido': {color:'#0a1a2a', alpha:0.2}
   };
   const atm = atmosphere[rd.bg] || {color:'#0a0a1a', alpha:0.15};
   ctx.fillStyle = atm.color;
@@ -1829,7 +1860,14 @@ function drawAvatar(ctx, px, py, dir, opts, zm, isWalking, walkFrame) {
   }
 }
 
-function drawChatBubble(ctx, msg, px, py, zm) {
+// Chat bubble colors available
+const CHAT_COLORS = [
+  {name:'Gold',hex:'#FFD700'},{name:'Pink',hex:'#FF69B4'},{name:'Cyan',hex:'#00CED1'},
+  {name:'Green',hex:'#32CD32'},{name:'Orange',hex:'#FF8C00'},{name:'Purple',hex:'#9370DB'},
+  {name:'Red',hex:'#FF5555'},{name:'Blue',hex:'#5599FF'},{name:'White',hex:'#FFFFFF'},
+];
+
+function drawChatBubble(ctx, msg, px, py, zm, color) {
   if (!msg) return;
   const pos = tileToScreen(px, py, camX, camY, zm);
   const bubbleImg = IMAGES['ui/chat_bubble'];
@@ -1839,12 +1877,13 @@ function drawChatBubble(ctx, msg, px, py, zm) {
   const th = 20 * zm;
   const bx = pos.x - tw / 2;
   const by = pos.y - 55 * zm - th;
+  const borderColor = color || '#FFD700';
 
   if (bubbleImg) {
     ctx.drawImage(bubbleImg, bx - 4 * zm, by - 2 * zm, tw + 8 * zm, th + 8 * zm);
   } else {
     ctx.fillStyle = 'rgba(15,15,30,0.9)';
-    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1;
+    ctx.strokeStyle = borderColor; ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.roundRect(bx, by, tw, th, 8 * zm);
     ctx.fill(); ctx.stroke();
@@ -1926,7 +1965,8 @@ function renderFrame() {
         const popts = figureToOptions(pp.figure || 'hr-1-8B4513.hd-1-1.ch-1-4169E1.lg-1-1');
         drawAvatar(ctx, pp.x, pp.y, pp.dir || 's', popts, zoom, pp.moving, pp.walkFrame || 0);
         if (peerChats[id] && peerChats[id].timer > 0) {
-          drawChatBubble(ctx, peerChats[id].msg, pp.x, pp.y, zoom);
+          const peerColor = pp.chatColor || '#FFD700';
+          drawChatBubble(ctx, peerChats[id].msg, pp.x, pp.y, zoom, peerColor);
         }
       }
     });
@@ -1939,7 +1979,8 @@ function renderFrame() {
       const popts = figureToOptions(session ? session.figure : charOpts);
       drawAvatar(ctx, player.x, player.y, player.dir, popts, zoom, player.moving, player.walkFrame);
       if (player.chatTimer > 0) {
-        drawChatBubble(ctx, player.chat, player.x, player.y, zoom);
+        const myColor = (session && session.chatColor) ? session.chatColor : '#FFD700';
+        drawChatBubble(ctx, player.chat, player.x, player.y, zoom, myColor);
       }
     }
   });
@@ -2013,6 +2054,8 @@ function gameLoop(time) {
           player.x = nx;
           player.y = ny;
           player.dir = dx > 0 ? 'e' : dx < 0 ? 'w' : dy > 0 ? 's' : 'n';
+          // Stat tracking
+          playerStats.walk++; savePlayerStats(); checkAchievements();
         } else {
           // Blocked — stop moving
           player.moving = false;
@@ -2407,6 +2450,10 @@ function purchaseItem(item) {
   updateHUD();
   purchaseChime();
   toast('Purchased: ' + item.name);
+  // Stat tracking
+  playerStats.buy++; playerStats.credits = Math.max(playerStats.credits, session.credits);
+  playerStats.spend = (playerStats.spend || 0) + item.credits;
+  savePlayerStats(); checkAchievements(); addXP(10);
 }
 
 // ======================= INVENTORY =======================
@@ -2945,6 +2992,88 @@ function toggleMinimap() {
   if (mm) mm.style.display = cb && cb.checked ? 'block' : 'none';
 }
 
+// Chat color picker
+function initChatColorPicker() {
+  const container = document.getElementById('chatColorPicker');
+  if (!container) return;
+  container.innerHTML = '';
+  CHAT_COLORS.forEach(c => {
+    const div = document.createElement('div');
+    div.style.cssText = `width:24px;height:24px;border-radius:50%;background:${c.hex};border:2px solid ${(session&&session.chatColor===c.hex)?'#fff':'transparent'};cursor:pointer;`;
+    div.title = c.name;
+    div.onclick = () => {
+      if (session) { session.chatColor = c.hex; saveSession(session); }
+      initChatColorPicker();
+    };
+    container.appendChild(div);
+  });
+}
+
+// Achievements
+function showAchievements() {
+  closeAllPanels();
+  let panel = document.getElementById('achievementsPanel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'achievementsPanel';
+    panel.className = 'panel';
+    panel.style.cssText = 'width:420px;height:400px;display:none;z-index:1200;';
+    panel.innerHTML = `
+      <div class="panel-header"><h2>Achievements</h2><button class="btn-close" onclick="this.parentElement.parentElement.style.display='none'">&times;</button></div>
+      <div class="panel-body" id="achievementsBody" style="overflow-y:auto;max-height:340px;"></div>`;
+    document.body.appendChild(panel);
+  }
+  panel.style.display = 'flex';
+  const body = document.getElementById('achievementsBody');
+  if (!body) return;
+  body.innerHTML = '';
+  const earned = (session && session.achievements) ? session.achievements : [];
+  ACHIEVEMENTS.forEach(a => {
+    const isEarned = earned.includes(a.id);
+    const div = document.createElement('div');
+    div.style.cssText = `padding:10px;margin-bottom:6px;border-radius:8px;background:${isEarned?'rgba(255,215,0,0.15)':'rgba(255,255,255,0.05)'};border:1px solid ${isEarned?'#FFD700':'#333'};display:flex;align-items:center;gap:10px;`;
+    div.innerHTML = `<span style="font-size:28px;">${a.icon}</span><div style="flex:1;"><div style="font-weight:bold;color:${isEarned?'#FFD700':'#888'};">${a.name} ${isEarned?'\u2705':''}</div><div style="font-size:12px;color:#aaa;">${a.desc}</div></div>`;
+    body.appendChild(div);
+  });
+  if (ACHIEVEMENTS.length === 0) {
+    body.innerHTML = '<div style="color:#888;text-align:center;padding:20px;">No achievements yet. Start playing to earn them!</div>';
+  }
+}
+
+// ======================= ACHIEVEMENT + XP TRACKING =======================
+const ACHIEVEMENT_DEFS = [
+  {id:'first_steps',name:'First Steps',desc:'Walk 50 tiles',icon:'\u2728',req:50,type:'walk'},
+  {id:'socializer',name:'Socializer',desc:'Send 50 chat messages',icon:'\uD83D\uDCAC',req:50,type:'chat'},
+  {id:'explorer',name:'Explorer',desc:'Visit all 5 public rooms',icon:'\uD83C\uDF0D',req:5,type:'rooms'},
+  {id:'collector',name:'Collector',desc:'Buy 20 catalog items',icon:'\uD83D\uDCBC',req:20,type:'buy'},
+  {id:'designer',name:'Designer',desc:'Place 30 furniture',icon:'\uD83C\uDFA8',req:30,type:'place'},
+  {id:'wealthy',name:'Wealthy',desc:'Earn 2000 credits',icon:'\uD83D\uDCB0',req:2000,type:'credits'},
+  {id:'lido',name:'Pool Party',desc:'Visit the Starlight Pool',icon:'\uD83C\uDFCA',req:1,type:'lido'},
+];
+
+let playerStats = JSON.parse(localStorage.getItem('si_stats')||'{"walk":0,"chat":0,"rooms":[],"buy":0,"place":0,"credits":0}');
+function savePlayerStats() { localStorage.setItem('si_stats', JSON.stringify(playerStats)); }
+
+function checkAchievements() {
+  if (!session) return;
+  const earned = session.achievements || [];
+  let newUnlock = false;
+  ACHIEVEMENT_DEFS.forEach(a => {
+    if (earned.includes(a.id)) return;
+    let ok = false;
+    if (a.type==='walk' && playerStats.walk>=a.req) ok=true;
+    if (a.type==='chat' && playerStats.chat>=a.req) ok=true;
+    if (a.type==='rooms' && playerStats.rooms.length>=a.req) ok=true;
+    if (a.type==='buy' && playerStats.buy>=a.req) ok=true;
+    if (a.type==='place' && playerStats.place>=a.req) ok=true;
+    if (a.type==='credits' && playerStats.credits>=a.req) ok=true;
+    if (a.type==='lido' && playerStats.rooms.includes('lido')) ok=true;
+    if (ok) { earned.push(a.id); newUnlock=true; addChatMsg('System','Achievement: '+a.name+'! '+a.icon,true); }
+  });
+  if (newUnlock) { session.achievements=earned; saveSession(session); }
+}
+function addXP(n) { if(!session)return; session.xp=(session.xp||0)+n; const nl=Math.floor((session.xp||0)/100)+1; if(nl>session.level){session.level=nl;addChatMsg('System','Level Up! Level '+nl+'! +'+nl*50+' credits',true);session.credits+=nl*50;saveSession(session);updateTopBar();} }
+
 // ======================= MODALS =======================
 function showModal(type) {
   const bd = document.getElementById('modalBackdrop');
@@ -3034,6 +3163,8 @@ function sendChat() {
   input.value = '';
   input.blur();
   playChat();
+  // Stat tracking
+  playerStats.chat++; savePlayerStats(); checkAchievements(); addXP(2);
   if (rtcChannel && rtcChannel.readyState === 'open') {
     rtcChannel.send(JSON.stringify({ type: 'chat', msg: msg }));
   }
