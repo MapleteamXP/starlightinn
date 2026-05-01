@@ -1332,17 +1332,18 @@ function updateCharPreview() {
     const el = document.createElement('img');
     el.src = img.src;
     el.style.position = 'absolute';
-    el.style.width = '120px';
-    el.style.height = '180px';
+    el.style.width = '140px';
+    el.style.height = '200px';
     el.style.objectFit = 'contain';
+    el.style.objectPosition = 'center top';
     el.style.imageRendering = 'pixelated';
     el.style.pointerEvents = 'none';
+    el.style.zIndex = '1';
+    // Simple tint using mix-blend-mode and background color
     if (layer.tint) {
-      // Use CSS filter for tinting
-      const rgb = hexToRgb(layer.tint);
-      if (rgb) {
-        el.style.filter = `sepia(1) hue-rotate(${rgb.h}deg) saturate(${rgb.s}%) brightness(${rgb.l}%)`;
-      }
+      el.style.backgroundColor = layer.tint;
+      el.style.mixBlendMode = 'multiply';
+      el.style.opacity = '0.85';
     }
     container.appendChild(el);
   });
