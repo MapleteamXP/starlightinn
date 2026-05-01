@@ -17,7 +17,7 @@
  * systems remain intact and active.
  *
  * @module main
- * @version 6.0.0
+ * @version 6.0.2
  * @author Starlight Inn Team
  */
 
@@ -67,9 +67,9 @@ import { SpriteGenerator } from './sprites/SpriteGenerator.js';
 import { SpriteSheet } from './sprites/SpriteSheet.js';
 import { SpriteCache } from './sprites/SpriteCache.js';
 import { PaletteManager } from './sprites/PaletteManager.js';
-import { ColorTable } from './sprites/ColorTable.js';
+// ColorTable exports functions, not a class -- imported functions used directly
 import { PaletteValidator } from './sprites/PaletteValidator.js';
-import { IsoTilemap } from './iso/IsoTilemap.js';
+import IsoTilemap from './iso/IsoTilemap.js';
 import { IsoChunk, ChunkManager } from './iso/IsoChunk.js';
 import { IsoGrid } from './iso/IsoGrid.js';
 import { IsoMovement } from './iso/IsoMovement.js';
