@@ -1676,6 +1676,11 @@ function renderGame() {
       }
       ctx.drawImage(r.img, r.x - iw/2, r.y - ih + TILE_H/2, iw, ih);
 
+      // DEBUG: label furniture
+      ctx.fillStyle = 'rgba(255,0,0,0.8)';
+      ctx.font = '9px sans-serif';
+      ctx.fillText(r.id || '???', r.x - iw/2, r.y - ih + TILE_H/2 - 2);
+
       // Draw placement highlight if editor active
       if (state.editor.active && state.editor.selectedItem) {
         ctx.strokeStyle = 'rgba(255,215,0,0.6)';
