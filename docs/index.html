@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Starlight Inn v14.0.1</title>
+<title>Starlight Inn v15.0.1</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
@@ -45,15 +45,34 @@
   #titleScreen .bg-img {
     position: absolute; inset: 0; width: 100%; height: 100%;
     object-fit: cover; image-rendering: pixelated;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
   }
   #titleScreen .overlay {
     position: absolute; inset: 0;
     background: linear-gradient(180deg, rgba(10,10,26,0.3) 0%, rgba(10,10,26,0.7) 100%);
+    pointer-events: none;
   }
   #titleScreen .content {
     position: relative; z-index: 10; text-align: center;
   }
   /* Title comes from background image only */
+  .title-glow {
+    animation: titlePulse 3s ease-in-out infinite;
+  }
+  @keyframes titlePulse {
+    0%, 100% { filter: drop-shadow(0 0 20px rgba(255,215,0,0.3)); }
+    50% { filter: drop-shadow(0 0 40px rgba(255,215,0,0.6)); }
+  }
+  .star-twinkle {
+    position: absolute; width: 3px; height: 3px; background: #fff; border-radius: 50%;
+    animation: twinkle 2s ease-in-out infinite;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.5); }
+  }
   .title-buttons {
     display: flex; flex-direction: column; gap: 12px; margin-top: 30px;
     align-items: center;
@@ -69,6 +88,10 @@
     letter-spacing: 1px; box-shadow: 0 4px 8px rgba(0,0,0,0.4);
     transition: transform 0.1s, box-shadow 0.1s;
     min-width: 160px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
   }
   .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.5); }
   .btn-gold:active { transform: translateY(1px); }
@@ -77,6 +100,10 @@
     color: #FFD700; font-weight: bold; font-size: 14px;
     padding: 8px 20px; cursor: pointer; min-width: 120px;
     transition: background 0.2s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
   }
   .btn-dark:hover { background: rgba(40,40,60,0.9); }
   .btn-close {
@@ -150,7 +177,7 @@
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: 720px; max-width: 95vw; height: 520px; max-height: 90vh;
     background: rgba(10,10,20,0.97); border: 2px solid #FFD700;
-    border-radius: 14px; z-index: 500; display: none; flex-direction: column;
+    border-radius: 14px; z-index: 1500; display: none; flex-direction: column;
     overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,0.8);
   }
   .panel-header {
@@ -489,14 +516,16 @@
     <div style="height:120px;"></div>
     <div class="title-buttons">
       <button class="btn-gold" onclick="showScreen('character')">ENTER WORLD</button>
-      <button class="btn-gold" onclick="startGuest()">PLAY AS GUEST</button>
       <div class="row">
         <button class="btn-dark" onclick="showModal('login')">LOGIN</button>
         <button class="btn-dark" onclick="showModal('register')">REGISTER</button>
       </div>
+      <div class="row" style="margin-top:8px;">
+        <button class="btn-dark" onclick="toggleSettings()" style="min-width:auto; padding:6px 16px; font-size:12px;">⚙️ SETTINGS</button>
+      </div>
     </div>
   </div>
-  <div style="position:fixed; bottom:10px; right:15px; color:#888; font-size:12px;">v14.0.0</div>
+  <div style="position:fixed; bottom:10px; right:15px; color:#888; font-size:12px;">v15.0.1</div>
 </div>
 
 <!-- CHARACTER CREATOR -->
