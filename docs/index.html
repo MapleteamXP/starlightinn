@@ -447,34 +447,37 @@
 
 <script>
 
-// ===== STARLIGHT INN v17 ENGINE =====
-// Complete rebuild with fixed asset loading, avatar compositing, room editor, trading
+// ===== STARLIGHT INN v17.20 - HABBO-STYLE HOTEL CLIENT =====
+// Fixed: asset loading, staged loading, avatar rendering, retry logic, caching
 
 const TILE_W = 64;
 const TILE_H = 32;
 const AVATAR_W = 48;
 const AVATAR_H = 72;
+const ASSET_VERSION = 'v17.20';
 
 // ===== ASSET DEFINITIONS =====
 const ASSETS = {
-  // Title
   title_bg: 'assets/title-bg-v16.png',
 
-  // Avatar parts (base layers with tinting support)
+  // Avatar parts
   body_base: 'assets/sprites/parts/body_base.png',
   legs_pants: 'assets/sprites/parts/legs_pants.png',
   legs_shorts: 'assets/sprites/parts/legs_shorts.png',
+  legs_skirt: 'assets/sprites/parts/legs_skirt.png',
   shirt_tshirt: 'assets/sprites/parts/shirt_tshirt.png',
   shirt_hoodie: 'assets/sprites/parts/shirt_hoodie.png',
   shirt_jacket: 'assets/sprites/parts/shirt_jacket.png',
+  shirt_polo: 'assets/sprites/parts/shirt_polo.png',
+  shirt_tank: 'assets/sprites/parts/shirt_tank.png',
+  shirt_overalls: 'assets/sprites/parts/shirt_overalls.png',
   dress_pink: 'assets/sprites/parts/dress_pink.png',
+  dress_blue: 'assets/sprites/parts/dress_blue.png',
 
-  // Faces
   face_happy: 'assets/sprites/parts/face_happy.png',
   face_cool: 'assets/sprites/parts/face_cool.png',
   face_surprised: 'assets/sprites/parts/face_surprised.png',
 
-  // Hair (22 styles)
   hair_afro: 'assets/sprites/parts/hair_afro.png',
   hair_bald: 'assets/sprites/parts/hair_bald.png',
   hair_bedhead_blonde: 'assets/sprites/parts/hair_bedhead_blonde.png',
@@ -498,7 +501,6 @@ const ASSETS = {
   hair_undercut: 'assets/sprites/parts/hair_undercut.png',
   hair_waves_blonde: 'assets/sprites/parts/hair_waves_blonde.png',
 
-  // Accessories
   acc_glasses_round: 'assets/sprites/parts/acc_glasses_round.png',
   acc_hat_beanie: 'assets/sprites/parts/acc_hat_beanie.png',
   acc_hat_wizard: 'assets/sprites/parts/acc_hat_wizard.png',
@@ -556,44 +558,28 @@ const ASSETS = {
 
 // ===== STATE =====
 let state = {
-  screen: 'loading', // loading, title, char, game
+  screen: 'loading',
   assets: {},
+  assetMeta: {}, // Stores {width, height, hasAlpha, actualBounds} for each asset
   assetsLoaded: 0,
   assetsTotal: 0,
+  loadStage: 0, // 0=init, 1=critical, 2=room, 3=complete
   player: {
-    name: '',
-    x: 3, y: 3,
-    targetX: 3, targetY: 3,
-    path: [],
-    dir: 's',
-    walkFrame: 0,
-    gender: 'M',
-    skin: '#ffdbac',
-    hairStyle: 'hair_short_brown',
-    hairHue: 25,
-    faceStyle: 'face_happy',
-    shirtStyle: 'shirt_tshirt',
-    shirtHue: 200,
-    pantsStyle: 'legs_pants',
-    pantsHue: 220,
-    accStyle: '',
-    gold: 500,
-    gems: 50,
-    xp: 0,
-    level: 1,
-    inventory: [],
-    equipped: {},
+    name: '', x: 3, y: 3, targetX: 3, targetY: 3, path: [], dir: 's', walkFrame: 0,
+    gender: 'M', skin: '#ffdbac', hairStyle: 'hair_short_brown', hairHue: 25,
+    faceStyle: 'face_happy', shirtStyle: 'shirt_tshirt', shirtHue: 200,
+    pantsStyle: 'legs_pants', pantsHue: 220, accStyle: '',
+    gold: 500, gems: 50, xp: 0, level: 1,
+    inventory: [], equipped: {},
   },
   room: null,
   rooms: {},
-  editor: { active: false, selectedItem: null, placing: false },
+  editor: { active: false, selectedItem: null },
   chat: { messages: [], input: '' },
   trade: { myOffer: [], theirOffer: [], confirmed: false, accepted: false, target: '' },
   catalog: { tab: 'furniture' },
   achievements: [],
-  online: [],
-  lastTime: 0,
-  animTime: 0,
+  lastTime: 0, animTime: 0,
 };
 
 // ===== CATALOG DATA =====
@@ -630,7 +616,6 @@ const CATALOG = [
   { id:'furni_bench', name:'Park Bench', cat:'furniture', price:65, rarity:'common', icon:'bench' },
   { id:'furni_door', name:'Wooden Door', cat:'furniture', price:100, rarity:'uncommon', icon:'door' },
 
-  // Hair styles
   { id:'hair_afro', name:'Afro', cat:'hair', price:30, rarity:'common', icon:'afro' },
   { id:'hair_mohawk', name:'Mohawk', cat:'hair', price:40, rarity:'uncommon', icon:'mohawk' },
   { id:'hair_long_pink', name:'Long Pink', cat:'hair', price:50, rarity:'rare', icon:'long' },
@@ -648,7 +633,6 @@ const CATALOG = [
   { id:'hair_undercut', name:'Undercut', cat:'hair', price:50, rarity:'rare', icon:'undercut' },
   { id:'hair_waves_blonde', name:'Wavy', cat:'hair', price:30, rarity:'common', icon:'waves' },
 
-  // Clothes
   { id:'shirt_hoodie', name:'Hoodie', cat:'clothes', price:60, rarity:'common', icon:'hoodie' },
   { id:'shirt_jacket', name:'Leather Jacket', cat:'clothes', price:80, rarity:'uncommon', icon:'jacket' },
   { id:'dress_pink', name:'Pink Dress', cat:'clothes', price:70, rarity:'uncommon', icon:'dress' },
@@ -658,7 +642,6 @@ const CATALOG = [
   { id:'dress_blue', name:'Blue Dress', cat:'clothes', price:75, rarity:'uncommon', icon:'dress2' },
   { id:'legs_skirt', name:'Skirt', cat:'clothes', price:45, rarity:'common', icon:'skirt' },
 
-  // Items / Accessories
   { id:'acc_hat_wizard', name:'Wizard Hat', cat:'items', price:100, rarity:'epic', icon:'wizard' },
   { id:'acc_wings', name:'Angel Wings', cat:'items', price:500, rarity:'legendary', icon:'wings' },
   { id:'acc_glasses_round', name:'Round Glasses', cat:'items', price:25, rarity:'common', icon:'glasses' },
@@ -668,7 +651,6 @@ const CATALOG = [
   { id:'furni_throne', name:'Emperor Throne', cat:'rare', price:5000, rarity:'legendary', icon:'throne' },
 ];
 
-// ===== ACHIEVEMENTS =====
 const ACHIEVEMENTS = [
   { id:'first_login', name:'First Steps', desc:'Enter the Starlight Inn', icon:'👣', reward:10, unlocked:false },
   { id:'customize', name:'Fashionista', desc:'Customize your avatar', icon:'👗', reward:20, unlocked:false },
@@ -687,291 +669,305 @@ const ACHIEVEMENTS = [
 // ===== ROOM DEFINITIONS =====
 const ROOMS = {
   lobby: {
-    name: 'Grand Lobby',
-    desc: 'The main entrance',
-    bg: 'bg_mainhall',
-    width: 8, height: 8,
-    color: '#1a1a2e',
+    name: 'Grand Lobby', desc: 'The main entrance', bg: 'bg_mainhall',
+    width: 8, height: 8, color: '#1a1a2e',
     exits: [{to:'tavern',x:0,y:3},{to:'garden',x:7,y:3},{to:'library',x:3,y:0},{to:'bedroom',x:4,y:7}],
     furniture: [
-      {id:'furni_throne',x:3,y:0,z:0},
-      {id:'furni_table',x:3,y:2,z:0},{id:'furni_chair',x:2,y:2,z:0},{id:'furni_chair',x:4,y:2,z:0},
-      {id:'furni_lamp',x:1,y:1,z:0},{id:'furni_lamp',x:6,y:1,z:0},
-      {id:'furni_rug',x:3,y:3,z:0},{id:'furni_fountain',x:3,y:5,z:0},
+      {id:'furni_throne',x:3,y:0,z:0}, {id:'furni_table',x:3,y:2,z:0}, {id:'furni_chair',x:2,y:2,z:0}, {id:'furni_chair',x:4,y:2,z:0},
+      {id:'furni_lamp',x:1,y:1,z:0}, {id:'furni_lamp',x:6,y:1,z:0}, {id:'furni_rug',x:3,y:3,z:0}, {id:'furni_fountain',x:3,y:5,z:0},
     ]
   },
   tavern: {
-    name: 'Cozy Tavern',
-    desc: 'Warm drinks and stories',
-    bg: 'bg_tavern',
-    width: 8, height: 7,
-    color: '#2e1a0a',
+    name: 'Cozy Tavern', desc: 'Warm drinks and stories', bg: 'bg_tavern',
+    width: 8, height: 7, color: '#2e1a0a',
     exits: [{to:'lobby',x:7,y:3}],
     furniture: [
-      {id:'furni_barrel',x:0,y:0,z:0},{id:'furni_barrel',x:1,y:0,z:0},
-      {id:'furni_table',x:3,y:2,z:0},{id:'furni_chair',x:2,y:2,z:0},{id:'furni_chair',x:4,y:2,z:0},
-      {id:'furni_table',x:3,y:4,z:0},{id:'furni_chair',x:2,y:4,z:0},{id:'furni_chair',x:4,y:4,z:0},
-      {id:'furni_fireplace',x:0,y:5,z:0},{id:'furni_sofa',x:6,y:3,z:0},
-      {id:'furni_jukebox',x:7,y:0,z:0},
+      {id:'furni_barrel',x:0,y:0,z:0}, {id:'furni_barrel',x:1,y:0,z:0}, {id:'furni_table',x:3,y:2,z:0},
+      {id:'furni_chair',x:2,y:2,z:0}, {id:'furni_chair',x:4,y:2,z:0}, {id:'furni_table',x:3,y:4,z:0},
+      {id:'furni_chair',x:2,y:4,z:0}, {id:'furni_chair',x:4,y:4,z:0}, {id:'furni_fireplace',x:0,y:5,z:0},
+      {id:'furni_sofa',x:6,y:3,z:0}, {id:'furni_jukebox',x:7,y:0,z:0},
     ]
   },
   garden: {
-    name: 'Garden Path',
-    desc: 'Flowers and fresh air',
-    bg: 'bg_garden',
-    width: 9, height: 8,
-    color: '#0a2e1a',
+    name: 'Garden Path', desc: 'Flowers and fresh air', bg: 'bg_garden',
+    width: 9, height: 8, color: '#0a2e1a',
     exits: [{to:'lobby',x:0,y:3},{to:'beach',x:8,y:6}],
     furniture: [
-      {id:'furni_tree',x:0,y:0,z:0},{id:'furni_tree',x:8,y:0,z:0},{id:'furni_tree',x:0,y:7,z:0},
-      {id:'furni_flower',x:2,y:2,z:0},{id:'furni_flower',x:5,y:3,z:0},{id:'furni_flower',x:6,y:5,z:0},
-      {id:'furni_bench',x:3,y:4,z:0},{id:'furni_bench',x:6,y:6,z:0},
-      {id:'furni_fountain',x:4,y:3,z:0},{id:'furni_gate',x:4,y:7,z:0},
+      {id:'furni_tree',x:0,y:0,z:0}, {id:'furni_tree',x:8,y:0,z:0}, {id:'furni_tree',x:0,y:7,z:0},
+      {id:'furni_flower',x:2,y:2,z:0}, {id:'furni_flower',x:5,y:3,z:0}, {id:'furni_flower',x:6,y:5,z:0},
+      {id:'furni_bench',x:3,y:4,z:0}, {id:'furni_bench',x:6,y:6,z:0}, {id:'furni_fountain',x:4,y:3,z:0}, {id:'furni_gate',x:4,y:7,z:0},
     ]
   },
   library: {
-    name: 'Library Lounge',
-    desc: 'Books and silence',
-    bg: 'bg_library',
-    width: 8, height: 8,
-    color: '#1a0a2e',
+    name: 'Library Lounge', desc: 'Books and silence', bg: 'bg_library',
+    width: 8, height: 8, color: '#1a0a2e',
     exits: [{to:'lobby',x:4,y:7}],
     furniture: [
-      {id:'furni_bookshelf',x:0,y:0,z:0},{id:'furni_bookshelf',x:1,y:0,z:0},{id:'furni_bookshelf',x:2,y:0,z:0},
-      {id:'furni_bookshelf',x:0,y:7,z:0},{id:'furni_bookshelf',x:1,y:7,z:0},
-      {id:'furni_chair',x:3,y:3,z:0},{id:'furni_table',x:3,y:4,z:0},
-      {id:'furni_lamp',x:5,y:2,z:0},{id:'furni_rug',x:3,y:5,z:0},
-      {id:'furni_chest',x:7,y:0,z:0},
+      {id:'furni_bookshelf',x:0,y:0,z:0}, {id:'furni_bookshelf',x:1,y:0,z:0}, {id:'furni_bookshelf',x:2,y:0,z:0},
+      {id:'furni_bookshelf',x:0,y:7,z:0}, {id:'furni_bookshelf',x:1,y:7,z:0}, {id:'furni_chair',x:3,y:3,z:0},
+      {id:'furni_table',x:3,y:4,z:0}, {id:'furni_lamp',x:5,y:2,z:0}, {id:'furni_rug',x:3,y:5,z:0}, {id:'furni_chest',x:7,y:0,z:0},
     ]
   },
   bedroom: {
-    name: 'Sleepy Bedroom',
-    desc: 'Rest and recharge',
-    bg: 'bg_bedroom',
-    width: 7, height: 7,
-    color: '#2e1a1a',
+    name: 'Sleepy Bedroom', desc: 'Rest and recharge', bg: 'bg_bedroom',
+    width: 7, height: 7, color: '#2e1a1a',
     exits: [{to:'lobby',x:3,y:0}],
     furniture: [
-      {id:'furni_bed',x:2,y:2,z:0},{id:'furni_dresser',x:5,y:2,z:0},
-      {id:'furni_mirror',x:0,y:0,z:0},{id:'furni_lamp',x:3,y:5,z:0},
-      {id:'furni_rug',x:3,y:3,z:0},{id:'furni_plant',x:6,y:6,z:0},
-      {id:'furni_window',x:3,y:0,z:0},
+      {id:'furni_bed',x:2,y:2,z:0}, {id:'furni_dresser',x:5,y:2,z:0}, {id:'furni_mirror',x:0,y:0,z:0},
+      {id:'furni_lamp',x:3,y:5,z:0}, {id:'furni_rug',x:3,y:3,z:0}, {id:'furni_plant',x:6,y:6,z:0}, {id:'furni_window',x:3,y:0,z:0},
     ]
   },
   beach: {
-    name: 'Sunny Beach',
-    desc: 'Sand and waves',
-    bg: 'bg_beach',
-    width: 9, height: 7,
-    color: '#1a2e3a',
+    name: 'Sunny Beach', desc: 'Sand and waves', bg: 'bg_beach',
+    width: 9, height: 7, color: '#1a2e3a',
     exits: [{to:'garden',x:0,y:3}],
     furniture: [
-      {id:'furni_palm',x:0,y:0,z:0},{id:'furni_palm',x:8,y:0,z:0},
-      {id:'furni_bench',x:3,y:3,z:0},{id:'furni_bench',x:6,y:4,z:0},
-      {id:'furni_towel',x:4,y:5,z:0},{id:'furni_umbrella',x:5,y:5,z:0},
+      {id:'furni_tree',x:0,y:0,z:0}, {id:'furni_tree',x:8,y:0,z:0}, {id:'furni_bench',x:3,y:3,z:0},
+      {id:'furni_bench',x:6,y:4,z:0}, {id:'furni_rug',x:4,y:5,z:0}, {id:'furni_gate',x:5,y:5,z:0},
     ]
   },
   rooftop: {
-    name: 'Rooftop Cafe',
-    desc: 'Coffee with a view',
-    bg: 'bg_rooftop',
-    width: 8, height: 7,
-    color: '#2e2e1a',
+    name: 'Rooftop Cafe', desc: 'Coffee with a view', bg: 'bg_rooftop',
+    width: 8, height: 7, color: '#2e2e1a',
     exits: [{to:'lobby',x:3,y:6}],
     furniture: [
-      {id:'furni_table',x:2,y:2,z:0},{id:'furni_chair',x:1,y:2,z:0},{id:'furni_chair',x:3,y:2,z:0},
-      {id:'furni_table',x:5,y:3,z:0},{id:'furni_chair',x:4,y:3,z:0},{id:'furni_chair',x:6,y:3,z:0},
-      {id:'furni_lamp',x:0,y:0,z:0},{id:'furni_lamp',x:7,y:0,z:0},
-      {id:'furni_piano',x:3,y:5,z:0},
+      {id:'furni_table',x:2,y:2,z:0}, {id:'furni_chair',x:1,y:2,z:0}, {id:'furni_chair',x:3,y:2,z:0},
+      {id:'furni_table',x:5,y:3,z:0}, {id:'furni_chair',x:4,y:3,z:0}, {id:'furni_chair',x:6,y:3,z:0},
+      {id:'furni_lamp',x:0,y:0,z:0}, {id:'furni_lamp',x:7,y:0,z:0}, {id:'furni_piano',x:3,y:5,z:0},
     ]
   },
   arcade: {
-    name: 'Neon Arcade',
-    desc: 'Games and prizes',
-    bg: 'bg_arcade',
-    width: 8, height: 7,
-    color: '#1a0a2e',
+    name: 'Neon Arcade', desc: 'Games and prizes', bg: 'bg_arcade',
+    width: 8, height: 7, color: '#1a0a2e',
     exits: [{to:'lobby',x:0,y:3}],
     furniture: [
-      {id:'furni_arcade',x:1,y:1,z:0},{id:'furni_arcade',x:3,y:1,z:0},{id:'furni_arcade',x:5,y:1,z:0},
-      {id:'furni_pool_table',x:2,y:4,z:0},{id:'furni_jukebox',x:7,y:0,z:0},
-      {id:'furni_sofa',x:6,y:5,z:0},{id:'furni_tv',x:0,y:5,z:0},
+      {id:'furni_arcade',x:1,y:1,z:0}, {id:'furni_arcade',x:3,y:1,z:0}, {id:'furni_arcade',x:5,y:1,z:0},
+      {id:'furni_pool_table',x:2,y:4,z:0}, {id:'furni_jukebox',x:7,y:0,z:0}, {id:'furni_sofa',x:6,y:5,z:0}, {id:'furni_tv',x:0,y:5,z:0},
     ]
   },
   spa: {
-    name: 'Spa Bay',
-    desc: 'Relaxation zone',
-    bg: 'bg_spa',
-    width: 7, height: 7,
-    color: '#0a2e2e',
+    name: 'Spa Bay', desc: 'Relaxation zone', bg: 'bg_spa',
+    width: 7, height: 7, color: '#0a2e2e',
     exits: [{to:'lobby',x:3,y:0}],
     furniture: [
-      {id:'furni_bed',x:1,y:1,z:0},{id:'furni_bed',x:5,y:1,z:0},
-      {id:'furni_plant',x:0,y:0,z:0},{id:'furni_plant',x:6,y:0,z:0},{id:'furni_plant',x:0,y:6,z:0},
-      {id:'furni_fountain',x:3,y:3,z:0},{id:'furni_rug',x:3,y:4,z:0},
+      {id:'furni_bed',x:1,y:1,z:0}, {id:'furni_bed',x:5,y:1,z:0}, {id:'furni_plant',x:0,y:0,z:0},
+      {id:'furni_plant',x:6,y:0,z:0}, {id:'furni_plant',x:0,y:6,z:0}, {id:'furni_fountain',x:3,y:3,z:0}, {id:'furni_rug',x:3,y:4,z:0},
     ]
   },
   market: {
-    name: 'Market Hall',
-    desc: 'Trade and barter',
-    bg: 'bg_market',
-    width: 9, height: 7,
-    color: '#2e2a1a',
+    name: 'Market Hall', desc: 'Trade and barter', bg: 'bg_market',
+    width: 9, height: 7, color: '#2e2a1a',
     exits: [{to:'lobby',x:0,y:3}],
     furniture: [
-      {id:'furni_table',x:2,y:2,z:0},{id:'furni_table',x:5,y:2,z:0},{id:'furni_table',x:2,y:5,z:0},
-      {id:'furni_chest',x:0,y:0,z:0},{id:'furni_chest',x:8,y:0,z:0},
-      {id:'furni_barrel',x:1,y:6,z:0},{id:'furni_barrel',x:7,y:6,z:0},
-      {id:'furni_trophy',x:4,y:3,z:0},
+      {id:'furni_table',x:2,y:2,z:0}, {id:'furni_table',x:5,y:2,z:0}, {id:'furni_table',x:2,y:5,z:0},
+      {id:'furni_chest',x:0,y:0,z:0}, {id:'furni_chest',x:8,y:0,z:0}, {id:'furni_barrel',x:1,y:6,z:0},
+      {id:'furni_barrel',x:7,y:6,z:0}, {id:'furni_trophy',x:4,y:3,z:0},
     ]
   },
   event: {
-    name: 'Event Pavilion',
-    desc: 'Special gatherings',
-    bg: 'bg_event',
-    width: 10, height: 8,
-    color: '#2e1a2e',
+    name: 'Event Pavilion', desc: 'Special gatherings', bg: 'bg_event',
+    width: 10, height: 8, color: '#2e1a2e',
     exits: [{to:'lobby',x:0,y:3}],
     furniture: [
-      {id:'furni_throne',x:4,y:2,z:0},{id:'furni_throne',x:5,y:2,z:0},
-      {id:'furni_table',x:2,y:4,z:0},{id:'furni_table',x:7,y:4,z:0},
-      {id:'furni_sofa',x:3,y:6,z:0},{id:'furni_sofa',x:6,y:6,z:0},
-      {id:'furni_fountain',x:5,y:5,z:0},{id:'furni_tree',x:0,y:0,z:0},{id:'furni_tree',x:9,y:0,z:0},
+      {id:'furni_throne',x:4,y:2,z:0}, {id:'furni_throne',x:5,y:2,z:0}, {id:'furni_table',x:2,y:4,z:0},
+      {id:'furni_table',x:7,y:4,z:0}, {id:'furni_sofa',x:3,y:6,z:0}, {id:'furni_sofa',x:6,y:6,z:0},
+      {id:'furni_fountain',x:5,y:5,z:0}, {id:'furni_tree',x:0,y:0,z:0}, {id:'furni_tree',x:9,y:0,z:0},
     ]
   },
   winter: {
-    name: 'Winter Plaza',
-    desc: 'Snow and lights',
-    bg: 'bg_winter',
-    width: 9, height: 8,
-    color: '#1a1a3e',
+    name: 'Winter Plaza', desc: 'Snow and lights', bg: 'bg_winter',
+    width: 9, height: 8, color: '#1a1a3e',
     exits: [{to:'lobby',x:4,y:7}],
     furniture: [
-      {id:'furni_tree',x:0,y:0,z:0},{id:'furni_tree',x:8,y:0,z:0},{id:'furni_tree',x:0,y:7,z:0},{id:'furni_tree',x:8,y:7,z:0},
-      {id:'furni_bench',x:3,y:3,z:0},{id:'furni_bench',x:5,y:5,z:0},
-      {id:'furni_lamp',x:2,y:2,z:0},{id:'furni_lamp',x:6,y:2,z:0},{id:'furni_lamp',x:2,y:6,z:0},{id:'furni_lamp',x:6,y:6,z:0},
-      {id:'furni_rug',x:4,y:4,z:0},
+      {id:'furni_tree',x:0,y:0,z:0}, {id:'furni_tree',x:8,y:0,z:0}, {id:'furni_tree',x:0,y:7,z:0}, {id:'furni_tree',x:8,y:7,z:0},
+      {id:'furni_bench',x:3,y:3,z:0}, {id:'furni_bench',x:5,y:5,z:0}, {id:'furni_lamp',x:2,y:2,z:0},
+      {id:'furni_lamp',x:6,y:2,z:0}, {id:'furni_lamp',x:2,y:6,z:0}, {id:'furni_lamp',x:6,y:6,z:0}, {id:'furni_rug',x:4,y:4,z:0},
     ]
   },
 };
 
-// Add some procedural furniture icons for beach
-ASSETS.furni_palm = ASSETS.furni_tree;
-ASSETS.furni_towel = ASSETS.furni_rug;
-ASSETS.furni_umbrella = ASSETS.furni_gate;
+// ===== STAGED ASSET LOADER WITH RETRY =====
+function getAssetUrl(path) {
+  // Versioned URLs for cache busting and proper HTTP caching
+  return path + '?' + ASSET_VERSION;
+}
 
-// ===== ASSET LOADER =====
-function loadAssets() {
-  const keys = Object.keys(ASSETS);
-  state.assetsTotal = keys.length;
-  state.assetsLoaded = 0;
-
-  keys.forEach(key => {
+function loadAsset(key, url, retries = 1) {
+  return new Promise((resolve) => {
     const img = new Image();
-    img.onload = () => {
+    img.crossOrigin = 'anonymous';
+
+    img.onload = function() {
+      // Analyze image - find actual sprite bounds within the image
+      const bounds = analyzeSpriteBounds(img);
       state.assets[key] = img;
-      state.assetsLoaded++;
-      updateLoadingProgress();
+      state.assetMeta[key] = {
+        width: img.naturalWidth || img.width,
+        height: img.naturalHeight || img.height,
+        bounds: bounds,
+        loaded: true,
+        failed: false
+      };
+      resolve({ key, success: true });
     };
-    img.onerror = () => {
-      // Create procedural fallback
-      state.assets[key] = createProceduralAsset(key);
-      state.assetsLoaded++;
-      updateLoadingProgress();
+
+    img.onerror = function() {
+      console.warn('[ASSET FAIL] ' + key + ' -> ' + url);
+      if (retries > 0) {
+        console.log('[ASSET RETRY] ' + key + ' in 2s...');
+        setTimeout(() => {
+          loadAsset(key, url, retries - 1).then(resolve);
+        }, 2000);
+      } else {
+        // Create procedural placeholder
+        state.assets[key] = createPlaceholder(key);
+        state.assetMeta[key] = { width: 64, height: 64, bounds: null, loaded: true, failed: true };
+        resolve({ key, success: false });
+      }
     };
-    img.src = ASSETS[key] + '?v=17';
+
+    img.src = getAssetUrl(url);
   });
 }
 
-function createProceduralAsset(key) {
+function analyzeSpriteBounds(img) {
+  // For AI-generated sprites that are on large transparent canvases,
+  // find the actual non-transparent pixel bounds
+  try {
+    const w = img.naturalWidth || img.width || 64;
+    const h = img.naturalHeight || img.height || 64;
+    if (w <= 128 && h <= 128) {
+      // Already small, use full image
+      return { x: 0, y: 0, w: w, h: h };
+    }
+    // For large images, sample to find non-transparent bounds
+    const c = document.createElement('canvas');
+    c.width = Math.min(w, 256);
+    c.height = Math.min(h, 256);
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    const data = ctx.getImageData(0, 0, c.width, c.height).data;
+    let minX = c.width, minY = c.height, maxX = 0, maxY = 0;
+    for (let y = 0; y < c.height; y++) {
+      for (let x = 0; x < c.width; x++) {
+        const idx = (y * c.width + x) * 4 + 3;
+        if (data[idx] > 10) {
+          minX = Math.min(minX, x);
+          minY = Math.min(minY, y);
+          maxX = Math.max(maxX, x);
+          maxY = Math.max(maxY, y);
+        }
+      }
+    }
+    if (maxX > minX && maxY > minY) {
+      // Scale back to original dimensions
+      const scaleX = w / c.width;
+      const scaleY = h / c.height;
+      return {
+        x: Math.floor(minX * scaleX),
+        y: Math.floor(minY * scaleY),
+        w: Math.ceil((maxX - minX + 1) * scaleX),
+        h: Math.ceil((maxY - minY + 1) * scaleY)
+      };
+    }
+  } catch(e) {
+    console.warn('Bounds analysis failed:', e);
+  }
+  return { x: 0, y: 0, w: 64, h: 64 };
+}
+
+function createPlaceholder(key) {
   const c = document.createElement('canvas');
   c.width = 64; c.height = 64;
   const x = c.getContext('2d');
 
   if (key.includes('bg_')) {
     c.width = 800; c.height = 600;
-    const grad = x.createLinearGradient(0,0,0,600);
-    grad.addColorStop(0, '#1a1a3e');
-    grad.addColorStop(1, '#0a0a1a');
-    x.fillStyle = grad;
-    x.fillRect(0,0,800,600);
-    // Add stars
+    const g = x.createLinearGradient(0,0,0,600);
+    g.addColorStop(0, '#1a1a3e'); g.addColorStop(1, '#0a0a1a');
+    x.fillStyle = g; x.fillRect(0,0,800,600);
     for (let i=0;i<50;i++) {
-      x.fillStyle = '#fff';
-      x.globalAlpha = Math.random()*0.8;
+      x.fillStyle = '#fff'; x.globalAlpha = Math.random()*0.6;
       x.fillRect(Math.random()*800, Math.random()*300, 2, 2);
     }
     x.globalAlpha = 1;
   } else if (key.includes('hair_')) {
-    c.width = 48; c.height = 72;
-    x.fillStyle = '#444';
-    x.fillRect(8, 0, 32, 24); // hair shape
-    x.fillRect(4, 8, 40, 16);
-  } else if (key.includes('body_')) {
-    c.width = 48; c.height = 72;
-    x.fillStyle = '#ffdbac';
-    x.fillRect(12, 16, 24, 30); // body
-    x.fillRect(10, 46, 8, 20); // left leg
-    x.fillRect(30, 46, 8, 20); // right leg
+    x.fillStyle = '#8B4513';
+    x.beginPath(); x.arc(32, 20, 18, Math.PI, 0); x.fill();
+    x.fillRect(14, 18, 36, 12);
   } else if (key.includes('face_')) {
-    c.width = 48; c.height = 72;
-    x.fillStyle = '#ffdbac';
-    x.fillRect(14, 4, 20, 20); // head
-    x.fillStyle = '#222';
-    x.fillRect(18, 12, 4, 4); // eye L
-    x.fillRect(26, 12, 4, 4); // eye R
-    x.fillRect(20, 18, 8, 2); // mouth
+    x.fillStyle = '#ffdbac'; x.fillRect(20, 10, 24, 24);
+    x.fillStyle = '#222'; x.fillRect(26, 18, 4, 4); x.fillRect(34, 18, 4, 4);
+    x.fillStyle = '#c44'; x.beginPath(); x.arc(32, 28, 4, 0, Math.PI); x.fill();
+  } else if (key.includes('body_')) {
+    x.fillStyle = '#ffdbac'; x.fillRect(20, 24, 24, 28);
+    x.fillRect(16, 52, 10, 12); x.fillRect(38, 52, 10, 12);
   } else if (key.includes('shirt_') || key.includes('dress_')) {
-    c.width = 48; c.height = 72;
-    x.fillStyle = '#4169E1';
-    x.fillRect(10, 20, 28, 28); // shirt
-    x.fillRect(4, 22, 6, 20); // arm L
-    x.fillRect(38, 22, 6, 20); // arm R
-  } else if (key.includes('legs_')) {
-    c.width = 48; c.height = 72;
-    x.fillStyle = '#228B22';
-    x.fillRect(10, 48, 10, 20); // leg L
-    x.fillRect(28, 48, 10, 20); // leg R
+    x.fillStyle = '#4169E1'; x.fillRect(16, 28, 32, 28);
+    x.fillRect(8, 32, 8, 20); x.fillRect(48, 32, 8, 20);
+  } else if (key.includes('legs_') || key.includes('pants')) {
+    x.fillStyle = '#228B22'; x.fillRect(18, 56, 12, 8); x.fillRect(34, 56, 12, 8);
   } else if (key.includes('acc_')) {
-    c.width = 48; c.height = 72;
-    x.fillStyle = '#FFD700';
-    x.fillRect(8, 0, 32, 8); // hat brim
+    x.fillStyle = '#FFD700'; x.fillRect(8, 4, 48, 8);
   } else {
     // Generic furniture
-    c.width = 64; c.height = 64;
-    x.fillStyle = '#8B4513';
-    x.fillRect(8, 16, 48, 40);
-    x.fillStyle = '#A0522D';
-    x.fillRect(12, 20, 40, 20);
-    // Label
-    x.fillStyle = '#FFD700';
-    x.font = '8px sans-serif';
-    x.textAlign = 'center';
+    x.fillStyle = '#8B4513'; x.fillRect(8, 24, 48, 36);
+    x.fillStyle = '#A0522D'; x.fillRect(12, 28, 40, 20);
+    x.fillStyle = '#FFD700'; x.font = '9px sans-serif'; x.textAlign = 'center';
     x.fillText(key.replace('furni_','').slice(0,6), 32, 50);
   }
-
-  const img = new Image();
-  img.src = c.toDataURL();
-  return img;
+  const img = new Image(); img.src = c.toDataURL(); return img;
 }
 
-function updateLoadingProgress() {
-  const pct = Math.round((state.assetsLoaded / state.assetsTotal) * 100);
-  document.getElementById('loadFill').style.width = pct + '%';
-  document.getElementById('loadText').textContent = `Loading assets... ${pct}% (${state.assetsLoaded}/${state.assetsTotal})`;
+async function loadAssets() {
+  const keys = Object.keys(ASSETS);
+  state.assetsTotal = keys.length;
+  state.assetsLoaded = 0;
+  state.loadStage = 1;
 
-  if (state.assetsLoaded >= state.assetsTotal) {
-    setTimeout(() => {
-      document.getElementById('loadingScreen').classList.add('hidden');
-      showScreen('title');
-    }, 500);
+  updateLoadingText('Loading core assets...');
+
+  // Load all assets in parallel with batching
+  const BATCH = 8;
+  for (let i = 0; i < keys.length; i += BATCH) {
+    const batch = keys.slice(i, i + BATCH);
+    const promises = batch.map(key => loadAsset(key, ASSETS[key]));
+    const results = await Promise.all(promises);
+
+    results.forEach(r => {
+      state.assetsLoaded++;
+    });
+
+    const pct = Math.round((state.assetsLoaded / state.assetsTotal) * 100);
+    document.getElementById('loadFill').style.width = pct + '%';
+    document.getElementById('loadText').textContent = `Loading hotel assets... ${pct}% (${state.assetsLoaded}/${state.assetsTotal})`;
   }
+
+  state.loadStage = 2;
+  updateLoadingText('Preparing rooms...');
+
+  // Small delay for visual completion
+  await new Promise(r => setTimeout(r, 300));
+
+  state.loadStage = 3;
+  document.getElementById('loadText').textContent = 'Welcome to Starlight Inn!';
+
+  setTimeout(() => {
+    document.getElementById('loadingScreen').classList.add('hidden');
+    showScreen('title');
+  }, 400);
+}
+
+function updateLoadingText(text) {
+  const el = document.getElementById('loadText');
+  if (el) el.textContent = text;
 }
 
 function showScreen(name) {
   state.screen = name;
   ['loadingScreen','titleScreen','charScreen','gameScreen'].forEach(id => {
-    document.getElementById(id).classList.remove('active');
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
   });
   if (name === 'title') document.getElementById('titleScreen').classList.add('active');
   if (name === 'char') {
@@ -987,10 +983,7 @@ function showScreen(name) {
 }
 
 function startGame() {
-  if (!state.player.name) {
-    openModal('loginModal');
-    return;
-  }
+  if (!state.player.name) { openModal('loginModal'); return; }
   showScreen('game');
 }
 
@@ -998,7 +991,6 @@ function backToTitle() {
   showScreen('title');
 }
 
-// ===== LOGIN =====
 function doLogin() {
   const name = document.getElementById('loginName').value.trim();
   if (name.length < 2 || name.length > 16) {
@@ -1015,34 +1007,22 @@ function doLogin() {
 // ===== SAVE / LOAD =====
 function savePlayerData() {
   const data = {
-    name: state.player.name,
-    gender: state.player.gender,
-    skin: state.player.skin,
-    hairStyle: state.player.hairStyle,
-    hairHue: state.player.hairHue,
-    faceStyle: state.player.faceStyle,
-    shirtStyle: state.player.shirtStyle,
-    shirtHue: state.player.shirtHue,
-    pantsStyle: state.player.pantsStyle,
-    pantsHue: state.player.pantsHue,
-    accStyle: state.player.accStyle,
-    gold: state.player.gold,
-    gems: state.player.gems,
-    xp: state.player.xp,
-    level: state.player.level,
-    inventory: state.player.inventory,
+    name: state.player.name, gender: state.player.gender, skin: state.player.skin,
+    hairStyle: state.player.hairStyle, hairHue: state.player.hairHue,
+    faceStyle: state.player.faceStyle, shirtStyle: state.player.shirtStyle,
+    shirtHue: state.player.shirtHue, pantsStyle: state.player.pantsStyle,
+    pantsHue: state.player.pantsHue, accStyle: state.player.accStyle,
+    gold: state.player.gold, gems: state.player.gems, xp: state.player.xp,
+    level: state.player.level, inventory: state.player.inventory,
     achievements: state.achievements.map(a => ({id:a.id, unlocked:a.unlocked})),
   };
-  try {
-    localStorage.setItem('starlight_v17', JSON.stringify(data));
-  } catch(e) {}
+  try { localStorage.setItem('starlight_v17', JSON.stringify(data)); } catch(e) {}
 }
 
 function loadPlayerData() {
   try {
     const raw = localStorage.getItem('starlight_v17');
     if (!raw) {
-      // Give starter items
       state.player.inventory = [
         {id:'furni_chair', cat:'furniture', rarity:'common'},
         {id:'furni_lamp', cat:'furniture', rarity:'common'},
@@ -1066,136 +1046,309 @@ function loadPlayerData() {
   }
 }
 
-// ===== AVATAR RENDERING =====
-function renderAvatar(ctx, avatar, x, y, scale = 1, dir = 's') {
+// ===== PROCEDURAL AVATAR RENDERER =====
+// Draws a proper chibi-style avatar using canvas primitives
+// This ensures avatars ALWAYS render regardless of sprite sheet loading
+
+function renderAvatar(ctx, avatar, x, y, scale, dir) {
+  scale = scale || 1;
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
 
-  const AV_W = 48;
-  const AV_H = 72;
+  const skin = avatar.skin || '#ffdbac';
+  const hairColor = hslToHex(avatar.hairHue || 25, 80, 55);
+  const shirtColor = hslToHex(avatar.shirtHue || 200, 70, 50);
+  const pantsColor = hslToHex(avatar.pantsHue || 220, 70, 40);
 
-  // Helper to safely draw an image
-  function drawLayer(key, tint) {
-    const img = state.assets[key];
-    if (!img) return;
+  // Determine if female (for body shape)
+  const isFemale = avatar.gender === 'F';
+  const isDress = avatar.shirtStyle && avatar.shirtStyle.includes('dress');
 
-    // Try to get image dimensions
-    let iw = img.naturalWidth || img.width || 0;
-    let ih = img.naturalHeight || img.height || 0;
-
-    // If dimensions are not available, try a small test draw
-    if (!iw || !ih) {
-      // Draw procedural fallback
-      drawProceduralLayer(key, tint);
-      return;
-    }
-
-    // Reject sprite sheets / oversized images
-    if (iw > 200 || ih > 200) {
-      drawProceduralLayer(key, tint);
-      return;
-    }
-
-    try {
-      const srcW = Math.min(iw, AV_W * 3);
-      const srcH = Math.min(ih, AV_H * 3);
-
-      if (tint) {
-        // Use offscreen canvas for tinting
-        const c = document.createElement('canvas');
-        c.width = AV_W;
-        c.height = AV_H;
-        const cx = c.getContext('2d');
-        cx.drawImage(img, 0, 0, srcW, srcH, 0, 0, AV_W, AV_H);
-        cx.globalCompositeOperation = 'source-atop';
-        cx.fillStyle = tint;
-        cx.fillRect(0, 0, AV_W, AV_H);
-        cx.globalCompositeOperation = 'source-over';
-        ctx.drawImage(c, -AV_W/2, -AV_H);
-      } else {
-        ctx.drawImage(img, 0, 0, srcW, srcH, -AV_W/2, -AV_H, AV_W, AV_H);
-      }
-    } catch(e) {
-      drawProceduralLayer(key, tint);
-    }
+  // ===== LEGS / BOTTOM =====
+  ctx.fillStyle = pantsColor;
+  if (isDress) {
+    // Dress bottom - wider triangle shape
+    ctx.beginPath();
+    ctx.moveTo(-14, 20);
+    ctx.lineTo(14, 20);
+    ctx.lineTo(18, 50);
+    ctx.lineTo(-18, 50);
+    ctx.closePath();
+    ctx.fill();
+  } else if (avatar.pantsStyle && avatar.pantsStyle.includes('skirt')) {
+    ctx.beginPath();
+    ctx.moveTo(-12, 20);
+    ctx.lineTo(12, 20);
+    ctx.lineTo(16, 45);
+    ctx.lineTo(-16, 45);
+    ctx.closePath();
+    ctx.fill();
+    // Legs showing under skirt
+    ctx.fillStyle = skin;
+    ctx.fillRect(-8, 45, 6, 12);
+    ctx.fillRect(2, 45, 6, 12);
+  } else {
+    // Pants/shorts
+    const shortLegs = avatar.pantsStyle && avatar.pantsStyle.includes('short');
+    const legLength = shortLegs ? 18 : 30;
+    // Left leg
+    ctx.fillRect(-12, 22, 9, legLength);
+    // Right leg
+    ctx.fillRect(3, 22, 9, legLength);
+    // Shoes
+    ctx.fillStyle = '#444';
+    ctx.fillRect(-13, 22 + legLength - 2, 11, 5);
+    ctx.fillRect(2, 22 + legLength - 2, 11, 5);
   }
 
-  function drawProceduralLayer(key, tint) {
-    ctx.fillStyle = tint || '#888';
-    if (key.includes('hair')) {
-      ctx.fillRect(-18, -AV_H + 2, 36, 18);
-      ctx.fillRect(-22, -AV_H + 12, 44, 10);
-    } else if (key.includes('body')) {
-      ctx.fillRect(-14, -AV_H + 26, 28, 38);
-    } else if (key.includes('face')) {
-      ctx.fillStyle = tint || '#ffdbac';
-      ctx.fillRect(-12, -AV_H + 6, 24, 22);
-      ctx.fillStyle = '#222';
-      ctx.fillRect(-8, -AV_H + 14, 4, 4);
-      ctx.fillRect(4, -AV_H + 14, 4, 4);
+  // ===== BODY / TORSO =====
+  if (isDress) {
+    ctx.fillStyle = shirtColor;
+    // Dress bodice
+    ctx.fillRect(-13, -5, 26, 28);
+    // Dress sleeves
+    ctx.fillRect(-20, -2, 7, 18);
+    ctx.fillRect(13, -2, 7, 18);
+  } else {
+    ctx.fillStyle = shirtColor;
+    // Torso
+    if (isFemale) {
       ctx.beginPath();
-      ctx.arc(0, -AV_H + 22, 4, 0, Math.PI);
-      ctx.stroke();
-    } else if (key.includes('shirt') || key.includes('dress')) {
-      ctx.fillRect(-16, -AV_H + 26, 32, 30);
-      ctx.fillRect(-20, -AV_H + 28, 6, 22);
-      ctx.fillRect(14, -AV_H + 28, 6, 22);
-    } else if (key.includes('legs') || key.includes('pants') || key.includes('skirt')) {
-      ctx.fillRect(-14, -AV_H + 54, 12, 22);
-      ctx.fillRect(2, -AV_H + 54, 12, 22);
-    } else if (key.includes('acc')) {
-      if (key.includes('hat')) {
-        ctx.fillRect(-16, -AV_H - 4, 32, 10);
-        ctx.fillRect(-10, -AV_H - 12, 20, 10);
-      } else if (key.includes('glasses')) {
-        ctx.fillStyle = 'rgba(100,100,100,0.5)';
-        ctx.fillRect(-12, -AV_H + 12, 10, 6);
-        ctx.fillRect(2, -AV_H + 12, 10, 6);
-        ctx.strokeStyle = '#444';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(-2, -AV_H + 15);
-        ctx.lineTo(2, -AV_H + 15);
-        ctx.stroke();
-      } else if (key.includes('wings')) {
-        ctx.fillStyle = 'rgba(255,255,200,0.6)';
-        ctx.beginPath();
-        ctx.ellipse(-22, -AV_H + 30, 14, 24, -0.3, 0, Math.PI*2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(22, -AV_H + 30, 14, 24, 0.3, 0, Math.PI*2);
-        ctx.fill();
-      } else {
-        ctx.fillRect(-16, -AV_H + 2, 32, 8);
-      }
+      ctx.moveTo(-12, -5);
+      ctx.lineTo(12, -5);
+      ctx.lineTo(14, 22);
+      ctx.lineTo(-14, 22);
+      ctx.closePath();
+      ctx.fill();
     } else {
-      ctx.fillRect(-20, -AV_H + 10, 40, AV_H - 20);
+      ctx.fillRect(-12, -5, 24, 28);
+    }
+    // Arms
+    ctx.fillStyle = shirtColor;
+    ctx.fillRect(-20, -2, 8, 20);
+    ctx.fillRect(12, -2, 8, 20);
+    // Hands
+    ctx.fillStyle = skin;
+    ctx.beginPath(); ctx.arc(-16, 20, 4, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(16, 20, 4, 0, Math.PI*2); ctx.fill();
+  }
+
+  // ===== HEAD =====
+  ctx.fillStyle = skin;
+  // Face shape - rounded
+  ctx.beginPath();
+  ctx.arc(0, -22, 16, 0, Math.PI*2);
+  ctx.fill();
+  // Chin
+  ctx.beginPath();
+  ctx.ellipse(0, -14, 12, 8, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // ===== FACE =====
+  const faceStyle = avatar.faceStyle || 'face_happy';
+  // Eyes
+  ctx.fillStyle = '#222';
+  ctx.beginPath(); ctx.arc(-5, -24, 3, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(5, -24, 3, 0, Math.PI*2); ctx.fill();
+  // Eye shine
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(-4, -25, 1, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(6, -25, 1, 0, Math.PI*2); ctx.fill();
+
+  // Mouth based on face style
+  ctx.strokeStyle = '#a0522d';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  if (faceStyle.includes('happy')) {
+    ctx.arc(0, -18, 4, 0.1, Math.PI - 0.1);
+  } else if (faceStyle.includes('cool')) {
+    ctx.moveTo(-4, -17); ctx.lineTo(4, -17);
+  } else if (faceStyle.includes('surprised')) {
+    ctx.arc(0, -17, 3, 0, Math.PI*2);
+  } else {
+    ctx.arc(0, -17, 3, 0.1, Math.PI - 0.1);
+  }
+  ctx.stroke();
+
+  // ===== HAIR =====
+  ctx.fillStyle = hairColor;
+  const hairStyle = avatar.hairStyle || 'hair_short_brown';
+
+  if (hairStyle.includes('bald')) {
+    // No hair
+  } else if (hairStyle.includes('buzz') || hairStyle.includes('short')) {
+    // Short / buzz cut
+    ctx.fillRect(-14, -40, 28, 14);
+    ctx.fillRect(-16, -36, 32, 8);
+  } else if (hairStyle.includes('mohawk')) {
+    // Mohawk - center strip
+    ctx.fillRect(-4, -45, 8, 25);
+    ctx.fillRect(-3, -42, 6, 8);
+    // Shaved sides (skin showing)
+  } else if (hairStyle.includes('afro')) {
+    // Afro - big round
+    ctx.beginPath();
+    ctx.arc(0, -28, 20, Math.PI, 0);
+    ctx.fill();
+    ctx.fillRect(-20, -28, 40, 12);
+  } else if (hairStyle.includes('long') || hairStyle.includes('waves') || hairStyle.includes('braids')) {
+    // Long hair - falls down
+    ctx.fillRect(-16, -40, 32, 16);
+    ctx.fillRect(-18, -34, 36, 10);
+    // Hair falling down sides
+    ctx.fillRect(-18, -30, 8, 35);
+    ctx.fillRect(10, -30, 8, 35);
+  } else if (hairStyle.includes('pony') || hairStyle.includes('pigtail')) {
+    // Ponytail / pigtails
+    ctx.fillRect(-14, -40, 28, 14);
+    if (hairStyle.includes('pigtail')) {
+      // Two tails
+      ctx.beginPath(); ctx.ellipse(-20, -20, 6, 14, -0.2, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(20, -20, 6, 14, 0.2, 0, Math.PI*2); ctx.fill();
+    } else {
+      // Single ponytail
+      ctx.beginPath(); ctx.ellipse(0, -36, 8, 16, 0, 0, Math.PI*2); ctx.fill();
+    }
+  } else if (hairStyle.includes('spiky')) {
+    // Spiky hair
+    ctx.fillRect(-14, -40, 28, 12);
+    for (let i = -12; i <= 12; i += 6) {
+      ctx.beginPath();
+      ctx.moveTo(i, -36);
+      ctx.lineTo(i + 3, -48);
+      ctx.lineTo(i + 6, -36);
+      ctx.closePath();
+      ctx.fill();
+    }
+  } else if (hairStyle.includes('emo')) {
+    // Emo - covers one eye
+    ctx.fillRect(-16, -40, 32, 16);
+    ctx.fillRect(-16, -34, 18, 22); // covers left eye
+  } else if (hairStyle.includes('pixie') || hairStyle.includes('bob')) {
+    // Short bob / pixie
+    ctx.fillRect(-15, -40, 30, 14);
+    ctx.fillRect(-17, -34, 10, 18);
+    ctx.fillRect(7, -34, 10, 18);
+  } else if (hairStyle.includes('slick')) {
+    // Slick back
+    ctx.fillRect(-14, -40, 28, 12);
+    ctx.fillRect(-12, -38, 24, 4);
+  } else if (hairStyle.includes('undercut')) {
+    // Undercut - long top, shaved sides
+    ctx.fillRect(-10, -42, 20, 16);
+    ctx.fillRect(-8, -44, 16, 6);
+  } else if (hairStyle.includes('bedhead')) {
+    // Messy bed head
+    ctx.fillRect(-14, -40, 28, 14);
+    for (let i = 0; i < 5; i++) {
+      const hx = -12 + Math.random() * 24;
+      const hy = -42 + Math.random() * 8;
+      ctx.beginPath(); ctx.arc(hx, hy, 4 + Math.random()*4, 0, Math.PI*2); ctx.fill();
+    }
+  } else if (hairStyle.includes('dreads')) {
+    // Dreadlocks - rope-like
+    ctx.fillRect(-14, -40, 28, 12);
+    for (let i = -12; i <= 12; i += 4) {
+      ctx.fillRect(i, -34, 3, 28);
+    }
+  } else if (hairStyle.includes('french') || hairStyle.includes('braid')) {
+    // Braid down back
+    ctx.fillRect(-14, -40, 28, 14);
+    ctx.beginPath(); ctx.ellipse(0, -15, 6, 18, 0, 0, Math.PI*2); ctx.fill();
+  } else if (hairStyle.includes('curly')) {
+    // Curly - rounded puffs
+    ctx.beginPath(); ctx.arc(0, -30, 18, Math.PI, 0); ctx.fill();
+    for (let i = -15; i <= 15; i += 10) {
+      ctx.beginPath(); ctx.arc(i, -28, 8, 0, Math.PI*2); ctx.fill();
+    }
+  } else {
+    // Default short hair
+    ctx.fillRect(-14, -40, 28, 14);
+    ctx.fillRect(-16, -36, 32, 8);
+  }
+
+  // ===== ACCESSORY =====
+  const accStyle = avatar.accStyle;
+  if (accStyle) {
+    if (accStyle.includes('glasses')) {
+      // Round glasses
+      ctx.strokeStyle = '#444';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(-6, -24, 5, 0, Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(6, -24, 5, 0, Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-1, -24); ctx.lineTo(1, -24); ctx.stroke();
+      // Lenses
+      ctx.fillStyle = 'rgba(200,220,255,0.3)';
+      ctx.beginPath(); ctx.arc(-6, -24, 4, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(6, -24, 4, 0, Math.PI*2); ctx.fill();
+    } else if (accStyle.includes('beanie')) {
+      ctx.fillStyle = '#8B4513';
+      ctx.fillRect(-14, -44, 28, 10);
+      ctx.fillRect(-12, -48, 24, 6);
+    } else if (accStyle.includes('wizard')) {
+      ctx.fillStyle = '#4B0082';
+      ctx.beginPath();
+      ctx.moveTo(-12, -40);
+      ctx.lineTo(0, -62);
+      ctx.lineTo(12, -40);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath(); ctx.arc(0, -62, 3, 0, Math.PI*2); ctx.fill();
+    } else if (accStyle.includes('wings')) {
+      ctx.fillStyle = 'rgba(255,255,200,0.7)';
+      ctx.beginPath(); ctx.ellipse(-22, -10, 12, 22, -0.4, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(22, -10, 12, 22, 0.4, 0, Math.PI*2); ctx.fill();
+      // Wing detail lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+      ctx.lineWidth = 1;
+      for (let i = -30; i < -14; i += 5) {
+        ctx.beginPath(); ctx.moveTo(i, -5); ctx.lineTo(i+4, -20); ctx.stroke();
+      }
+      for (let i = 14; i < 30; i += 5) {
+        ctx.beginPath(); ctx.moveTo(i, -5); ctx.lineTo(i+4, -20); ctx.stroke();
+      }
+    } else if (accStyle.includes('bow_tie')) {
+      ctx.fillStyle = '#DC143C';
+      ctx.beginPath();
+      ctx.moveTo(0, -8);
+      ctx.lineTo(-8, -12); ctx.lineTo(-8, -4); ctx.lineTo(0, -8);
+      ctx.lineTo(8, -4); ctx.lineTo(8, -12); ctx.lineTo(0, -8);
+      ctx.fill();
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath(); ctx.arc(0, -8, 2, 0, Math.PI*2); ctx.fill();
     }
   }
 
-  // Draw layers in order
-  drawLayer('body_base', avatar.skin || '#ffdbac');
-  if (avatar.pantsStyle) drawLayer(avatar.pantsStyle, hslToHex(avatar.pantsHue || 220, 70, 40));
-  if (avatar.shirtStyle) drawLayer(avatar.shirtStyle, hslToHex(avatar.shirtHue || 200, 70, 50));
-  if (avatar.faceStyle) drawLayer(avatar.faceStyle, null);
-  if (avatar.hairStyle) drawLayer(avatar.hairStyle, hslToHex(avatar.hairHue || 25, 80, 50));
-  if (avatar.accStyle) drawLayer(avatar.accStyle, null);
-
-  // Name tag
+  // ===== NAME TAG =====
   if (avatar.name) {
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
     ctx.font = 'bold 10px sans-serif';
     const tw = ctx.measureText(avatar.name).width;
-    ctx.fillRect(-tw/2 - 4, 2, tw + 8, 14);
+    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+    ctx.beginPath();
+    ctx.roundRect(-tw/2 - 5, 24, tw + 10, 16, 4);
+    ctx.fill();
     ctx.fillStyle = '#FFD700';
     ctx.textAlign = 'center';
-    ctx.fillText(avatar.name, 0, 12);
+    ctx.fillText(avatar.name, 0, 36);
   }
 
   ctx.restore();
 }
 
+function _roundRect(ctx, x, y, w, h, r) {
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
 function hslToHex(h, s, l) {
   s /= 100; l /= 100;
   const a = s * Math.min(l, 1-l);
@@ -1205,24 +1358,6 @@ function hslToHex(h, s, l) {
     return Math.round(255 * color).toString(16).padStart(2,'0');
   };
   return '#' + f(0) + f(8) + f(4);
-}
-
-function hexToRgb(hex) {
-  const r = parseInt(hex.slice(1,3), 16) / 255;
-  const g = parseInt(hex.slice(3,5), 16) / 255;
-  const b = parseInt(hex.slice(5,7), 16) / 255;
-  const max = Math.max(r,g,b), min = Math.min(r,g,b);
-  let h = 0, s = 0, l = (max+min)/2;
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d/(2-max-min) : d/(max+min);
-    switch(max) {
-      case r: h = ((g-b)/d + (g<b?6:0))/6; break;
-      case g: h = ((b-r)/d + 2)/6; break;
-      case b: h = ((r-g)/d + 4)/6; break;
-    }
-  }
-  return { h: Math.round(h*360), s: Math.round(s*100), l: Math.round(l*100) };
 }
 
 function hexToHsl(hex) {
@@ -1244,218 +1379,57 @@ function hexToHsl(hex) {
   return { h: Math.round(h*360), s: Math.round(s*100), l: Math.round(l*100) };
 }
 
-// ===== CHARACTER CREATOR =====
-const HAIR_STYLES = [
-  'hair_short_brown','hair_afro','hair_bald','hair_emo','hair_long_brown',
-  'hair_mohawk','hair_ponytail','hair_spiky_blonde','hair_long_pink','hair_spiky_blue',
-  'hair_curly_red','hair_bedhead_blonde','hair_pigtails_teal','hair_slick_black',
-  'hair_bob_black','hair_braids_brown','hair_buzz_cut','hair_dreads','hair_french_braid',
-  'hair_pixie_cut','hair_undercut','hair_waves_blonde'
-];
-const FACE_STYLES = ['face_happy','face_cool','face_surprised'];
-const SHIRT_STYLES = ['shirt_tshirt','shirt_hoodie','shirt_jacket','shirt_polo','shirt_tank','shirt_overalls','dress_pink','dress_blue'];
-const PANTS_STYLES = ['legs_pants','legs_shorts','legs_skirt'];
-const ACC_STYLES = ['','acc_glasses_round','acc_hat_beanie','acc_hat_wizard','acc_wings','acc_bow_tie'];
-const SKIN_TONES = ['#ffdbac','#f1c27d','#e0ac69','#8d5524','#c68642','#59331b','#ffcea3','#f5d0b5'];
+// ===== FURNITURE RENDERING WITH BOUND DETECTION =====
+function drawFurniture(ctx, img, meta, x, y) {
+  if (!img) return;
 
-function initCharCreator() {
-  const hg = document.getElementById('hairGrid');
-  hg.innerHTML = '';
-  HAIR_STYLES.forEach((h,i) => {
-    const div = document.createElement('div');
-    div.className = 'hair-slot' + (state.player.hairStyle === h ? ' active' : '');
-    const img = state.assets[h];
-    if (img) {
-      const imgEl = document.createElement('img');
-      imgEl.src = img.src;
-      div.appendChild(imgEl);
-    } else {
-      div.textContent = 'H';
-      div.classList.add('empty');
-    }
-    div.onclick = () => { state.player.hairStyle = h; updateCharUI(); updateCharPreview(); };
-    hg.appendChild(div);
-  });
+  let iw = img.naturalWidth || img.width || 64;
+  let ih = img.naturalHeight || img.height || 64;
 
-  const fg = document.getElementById('faceGrid');
-  fg.innerHTML = '';
-  FACE_STYLES.forEach(f => {
-    const div = document.createElement('div');
-    div.className = 'hair-slot' + (state.player.faceStyle === f ? ' active' : '');
-    const img = state.assets[f];
-    if (img) {
-      const imgEl = document.createElement('img');
-      imgEl.src = img.src;
-      div.appendChild(imgEl);
-    }
-    div.onclick = () => { state.player.faceStyle = f; updateCharUI(); updateCharPreview(); };
-    fg.appendChild(div);
-  });
-
-  const sg = document.getElementById('shirtGrid');
-  sg.innerHTML = '';
-  SHIRT_STYLES.forEach(s => {
-    const div = document.createElement('div');
-    div.className = 'clothes-slot' + (state.player.shirtStyle === s ? ' active' : '');
-    const img = state.assets[s];
-    if (img) {
-      const imgEl = document.createElement('img');
-      imgEl.src = img.src;
-      div.appendChild(imgEl);
-    }
-    div.onclick = () => { state.player.shirtStyle = s; updateCharUI(); updateCharPreview(); };
-    sg.appendChild(div);
-  });
-
-  const pg = document.getElementById('pantsGrid');
-  pg.innerHTML = '';
-  PANTS_STYLES.forEach(p => {
-    const div = document.createElement('div');
-    div.className = 'clothes-slot' + (state.player.pantsStyle === p ? ' active' : '');
-    const img = state.assets[p];
-    if (img) {
-      const imgEl = document.createElement('img');
-      imgEl.src = img.src;
-      div.appendChild(imgEl);
-    }
-    div.onclick = () => { state.player.pantsStyle = p; updateCharUI(); updateCharPreview(); };
-    pg.appendChild(div);
-  });
-
-  const ag = document.getElementById('accGrid');
-  ag.innerHTML = '';
-  ACC_STYLES.forEach(a => {
-    const div = document.createElement('div');
-    div.className = 'clothes-slot' + (state.player.accStyle === a ? ' active' : '');
-    if (a) {
-      const img = state.assets[a];
-      if (img) {
-        const imgEl = document.createElement('img');
-        imgEl.src = img.src;
-        div.appendChild(imgEl);
-      }
-    } else {
-      div.textContent = '✕';
-      div.style.fontSize = '14px';
-    }
-    div.onclick = () => { state.player.accStyle = a; updateCharUI(); updateCharPreview(); };
-    ag.appendChild(div);
-  });
-
-  const sk = document.getElementById('skinPresets');
-  sk.innerHTML = '';
-  SKIN_TONES.forEach(c => {
-    const div = document.createElement('div');
-    div.className = 'color-swatch' + (state.player.skin === c ? ' active' : '');
-    div.style.background = c;
-    div.onclick = () => { state.player.skin = c; updateCharUI(); updateCharPreview(); };
-    sk.appendChild(div);
-  });
-
-  // Set slider values
-  document.getElementById('hairHue').value = state.player.hairHue;
-  document.getElementById('shirtHue').value = state.player.shirtHue;
-  document.getElementById('pantsHue').value = state.player.pantsHue;
-
-  updateCharPreview();
-  updateCharUI();
-}
-
-function updateCharUI() {
-  document.querySelectorAll('.gender-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.g === state.player.gender);
-  });
-  document.getElementById('hairColorPreview').style.background = hslToHex(state.player.hairHue, 80, 50);
-  document.getElementById('shirtColorPreview').style.background = hslToHex(state.player.shirtHue, 70, 50);
-  document.getElementById('pantsColorPreview').style.background = hslToHex(state.player.pantsHue, 70, 40);
-}
-
-function updateCharPreview() {
-  const container = document.getElementById('charPreviewLayers');
-  const nameLabel = document.getElementById('charPreviewName');
-  container.innerHTML = '';
-  nameLabel.textContent = state.player.name || '';
-
-  const layers = [];
-  layers.push({ key: 'body_base', tint: state.player.skin || '#ffdbac' });
-  if (state.player.pantsStyle) layers.push({ key: state.player.pantsStyle, tint: hslToHex(state.player.pantsHue || 220, 70, 40) });
-  if (state.player.shirtStyle) layers.push({ key: state.player.shirtStyle, tint: hslToHex(state.player.shirtHue || 200, 70, 50) });
-  if (state.player.faceStyle) layers.push({ key: state.player.faceStyle, tint: null });
-  if (state.player.hairStyle) layers.push({ key: state.player.hairStyle, tint: hslToHex(state.player.hairHue || 25, 80, 50) });
-  if (state.player.accStyle) layers.push({ key: state.player.accStyle, tint: null });
-
-  layers.forEach(layer => {
-    const img = state.assets[layer.key];
-    if (!img) return;
-    const el = document.createElement('img');
-    el.src = img.src;
-    el.style.position = 'absolute';
-    el.style.width = '140px';
-    el.style.height = '200px';
-    el.style.objectFit = 'contain';
-    el.style.objectPosition = 'center top';
-    el.style.imageRendering = 'pixelated';
-    el.style.pointerEvents = 'none';
-    el.style.zIndex = '1';
-    // Simple tint using mix-blend-mode and background color
-    if (layer.tint) {
-      el.style.backgroundColor = layer.tint;
-      el.style.mixBlendMode = 'multiply';
-      el.style.opacity = '0.85';
-    }
-    container.appendChild(el);
-  });
-}
-
-function setGender(g) {
-  state.player.gender = g;
-  updateCharUI();
-  updateCharPreview();
-}
-
-function saveCharacter() {
-  savePlayerData();
-  unlockAchievement('customize');
-  showAlert('Character Saved!', 'Your avatar has been saved successfully.');
-}
-
-function randomizeCharacter() {
-  state.player.hairStyle = HAIR_STYLES[Math.floor(Math.random()*HAIR_STYLES.length)];
-  state.player.hairHue = Math.floor(Math.random()*360);
-  state.player.faceStyle = FACE_STYLES[Math.floor(Math.random()*FACE_STYLES.length)];
-  state.player.shirtStyle = SHIRT_STYLES[Math.floor(Math.random()*SHIRT_STYLES.length)];
-  state.player.shirtHue = Math.floor(Math.random()*360);
-  state.player.pantsStyle = PANTS_STYLES[Math.floor(Math.random()*PANTS_STYLES.length)];
-  state.player.pantsHue = Math.floor(Math.random()*360);
-  state.player.accStyle = ACC_STYLES[Math.floor(Math.random()*ACC_STYLES.length)];
-  state.player.skin = SKIN_TONES[Math.floor(Math.random()*SKIN_TONES.length)];
-  initCharCreator();
-}
-
-function resetCharacter() {
-  state.player.hairStyle = 'hair_short_brown';
-  state.player.hairHue = 25;
-  state.player.faceStyle = 'face_happy';
-  state.player.shirtStyle = 'shirt_tshirt';
-  state.player.shirtHue = 200;
-  state.player.pantsStyle = 'legs_pants';
-  state.player.pantsHue = 220;
-  state.player.accStyle = '';
-  state.player.skin = '#ffdbac';
-  initCharCreator();
-}
-
-function openCharCreator() {
-  if (!state.player.name) {
-    openModal('loginModal');
-    return;
+  // If we have analyzed bounds, use them for tighter drawing
+  let sx = 0, sy = 0, sw = iw, sh = ih;
+  if (meta && meta.bounds && meta.bounds.w > 0 && meta.bounds.h > 0) {
+    sx = meta.bounds.x;
+    sy = meta.bounds.y;
+    sw = meta.bounds.w;
+    sh = meta.bounds.h;
   }
-  showScreen('char');
+
+  // Cap display size to reasonable furniture dimensions
+  const MAX_FURN_W = 100;
+  const MAX_FURN_H = 100;
+  let dw = sw;
+  let dh = sh;
+  if (dw > MAX_FURN_W || dh > MAX_FURN_H) {
+    const scale = Math.min(MAX_FURN_W / dw, MAX_FURN_H / dh);
+    dw *= scale;
+    dh *= scale;
+  }
+
+  // Minimum size for visibility
+  dw = Math.max(dw, 24);
+  dh = Math.max(dh, 24);
+
+  try {
+    ctx.drawImage(img, sx, sy, sw, sh, x - dw/2, y - dh + TILE_H/2, dw, dh);
+  } catch(e) {
+    // Fallback placeholder
+    ctx.fillStyle = '#8B4513';
+    ctx.fillRect(x - 16, y - 24, 32, 32);
+    ctx.fillStyle = '#FFD700';
+    ctx.font = '8px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('?', x, y - 8);
+  }
 }
 
 // ===== ROOM SYSTEM =====
 function enterRoom(roomId) {
   if (!ROOMS[roomId]) return;
+
+  // Show room loading overlay
+  showRoomLoading(true);
+
   state.room = JSON.parse(JSON.stringify(ROOMS[roomId]));
   state.room.id = roomId;
   state.player.x = Math.floor(state.room.width/2);
@@ -1471,14 +1445,36 @@ function enterRoom(roomId) {
   visited.add(roomId);
   localStorage.setItem('starlight_rooms', JSON.stringify([...visited]));
   if (visited.size >= 12) unlockAchievement('visit_all');
+
+  // Preload room-specific assets then hide loading
+  setTimeout(() => {
+    showRoomLoading(false);
+  }, 300);
+}
+
+function showRoomLoading(show) {
+  let overlay = document.getElementById('roomLoadingOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'roomLoadingOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,10,26,0.85);display:flex;align-items:center;justify-content:center;z-index:550;transition:opacity 0.3s;';
+    overlay.innerHTML = '<div style="text-align:center;"><div style="font-size:14px;color:#FFD700;margin-bottom:10px;">Loading room...</div><div style="width:120px;height:4px;background:#222;border-radius:2px;overflow:hidden;"><div style="width:60%;height:100%;background:linear-gradient(90deg,#FFD700,#FFA500);animation:loadPulse 1s infinite;"></div></div></div>';
+    document.body.appendChild(overlay);
+    const style = document.createElement('style');
+    style.textContent = '@keyframes loadPulse {0%{opacity:0.5}50%{opacity:1}100%{opacity:0.5}}';
+    document.head.appendChild(style);
+  }
+  overlay.style.opacity = show ? '1' : '0';
+  overlay.style.pointerEvents = show ? 'all' : 'none';
 }
 
 function isoToScreen(tx, ty) {
   const cx = window.innerWidth / 2;
   const cy = window.innerHeight / 2;
-  const x = cx + (tx - ty) * (TILE_W / 2);
-  const y = cy + (tx + ty) * (TILE_H / 2);
-  return { x, y };
+  return {
+    x: cx + (tx - ty) * (TILE_W / 2),
+    y: cy + (tx + ty) * (TILE_H / 2)
+  };
 }
 
 function screenToIso(sx, sy) {
@@ -1486,9 +1482,10 @@ function screenToIso(sx, sy) {
   const cy = window.innerHeight / 2;
   const x = (sx - cx) / (TILE_W / 2);
   const y = (sy - cy) / (TILE_H / 2);
-  const tx = Math.round((x + y) / 2);
-  const ty = Math.round((y - x) / 2);
-  return { x: tx, y: ty };
+  return {
+    x: Math.round((x + y) / 2),
+    y: Math.round((y - x) / 2)
+  };
 }
 
 // ===== PATHFINDING (A*) =====
@@ -1496,16 +1493,10 @@ function findPath(startX, startY, endX, endY) {
   if (startX === endX && startY === endY) return [];
   const w = state.room.width;
   const h = state.room.height;
-
-  // Check bounds
   if (endX < 0 || endY < 0 || endX >= w || endY >= h) return [];
 
-  // Check if target tile is blocked by furniture
   const blocked = new Set();
-  state.room.furniture.forEach(f => {
-    blocked.add(`${f.x},${f.y}`);
-  });
-
+  state.room.furniture.forEach(f => blocked.add(`${f.x},${f.y}`));
   if (blocked.has(`${endX},${endY}`)) return [];
 
   const open = [{x:startX,y:startY,g:0,h:Math.abs(endX-startX)+Math.abs(endY-startY),f:0,parent:null}];
@@ -1528,8 +1519,7 @@ function findPath(startX, startY, endX, endY) {
       return path;
     }
 
-    const dirs = [[0,1],[1,0],[0,-1],[-1,0]];
-    for (const [dx,dy] of dirs) {
+    for (const [dx,dy] of [[0,1],[1,0],[0,-1],[-1,0]]) {
       const nx = cur.x + dx, ny = cur.y + dy;
       if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
       if (blocked.has(`${nx},${ny}`)) continue;
@@ -1539,11 +1529,8 @@ function findPath(startX, startY, endX, endY) {
       const f = g + hh;
       const existing = open.find(n => n.x === nx && n.y === ny);
       if (!existing || g < existing.g) {
-        if (existing) {
-          existing.g = g; existing.f = f; existing.parent = cur;
-        } else {
-          open.push({x:nx,y:ny,g,h:hh,f,parent:cur});
-        }
+        if (existing) { existing.g = g; existing.f = f; existing.parent = cur; }
+        else open.push({x:nx,y:ny,g,h:hh,f,parent:cur});
       }
     }
   }
@@ -1553,6 +1540,7 @@ function findPath(startX, startY, endX, endY) {
 // ===== GAME LOOP & RENDERING =====
 function resizeCanvas() {
   const c = document.getElementById('gameCanvas');
+  if (!c) return;
   c.width = window.innerWidth;
   c.height = window.innerHeight;
 }
@@ -1560,7 +1548,6 @@ window.addEventListener('resize', () => { if (state.screen === 'game') resizeCan
 
 function gameLoop(timestamp) {
   if (state.screen !== 'game') return;
-
   const dt = timestamp - state.lastTime;
   state.lastTime = timestamp;
   state.animTime += dt;
@@ -1573,7 +1560,6 @@ function gameLoop(timestamp) {
 }
 
 function updatePlayer(dt) {
-  // Follow path
   if (state.player.path.length > 0) {
     state.player.walkFrame += dt * 0.008;
     const next = state.player.path[0];
@@ -1593,7 +1579,6 @@ function updatePlayer(dt) {
     } else {
       state.player.x += (dx / dist) * speed;
       state.player.y += (dy / dist) * speed;
-      // Set direction
       if (Math.abs(dx) > Math.abs(dy)) state.player.dir = dx > 0 ? 'e' : 'w';
       else state.player.dir = dy > 0 ? 's' : 'n';
     }
@@ -1616,10 +1601,12 @@ function checkExit() {
 
 function renderGame() {
   const c = document.getElementById('gameCanvas');
+  if (!c) return;
   const ctx = c.getContext('2d');
   ctx.clearRect(0, 0, c.width, c.height);
-
   if (!state.room) return;
+
+  const dpr = window.devicePixelRatio || 1;
 
   // Draw background
   const bgImg = state.assets[state.room.bg];
@@ -1640,8 +1627,7 @@ function renderGame() {
     for (let x = 0; x < w; x++) {
       const sx = cx + (x - y) * (TILE_W / 2);
       const sy = cy + (x + y) * (TILE_H / 2);
-
-      ctx.fillStyle = ((x + y) % 2 === 0) ? 'rgba(60,50,40,0.4)' : 'rgba(50,40,30,0.4)';
+      ctx.fillStyle = ((x + y) % 2 === 0) ? 'rgba(60,50,40,0.35)' : 'rgba(50,40,30,0.35)';
       ctx.beginPath();
       ctx.moveTo(sx, sy - TILE_H/2);
       ctx.lineTo(sx + TILE_W/2, sy);
@@ -1649,7 +1635,8 @@ function renderGame() {
       ctx.lineTo(sx - TILE_W/2, sy);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255,215,0,0.08)';
+      ctx.strokeStyle = 'rgba(255,215,0,0.06)';
+      ctx.lineWidth = 1;
       ctx.stroke();
     }
   }
@@ -1660,11 +1647,12 @@ function renderGame() {
   // Furniture
   state.room.furniture.forEach((f, i) => {
     const img = state.assets[f.id];
+    const meta = state.assetMeta[f.id];
     if (img) {
       const pos = isoToScreen(f.x, f.y);
       renderables.push({
-        type: 'furniture',
-        img, x: pos.x, y: pos.y - TILE_H,
+        type: 'furniture', img, meta,
+        x: pos.x, y: pos.y - TILE_H,
         z: f.y * w + f.x + 0.5,
         id: f.id, idx: i, fx: f.x, fy: f.y
       });
@@ -1677,7 +1665,7 @@ function renderGame() {
     type: 'player',
     z: state.player.y * w + state.player.x + 1,
     render: () => {
-      renderAvatar(ctx, state.player, ppos.x, ppos.y - TILE_H/2, 1.2, state.player.dir);
+      renderAvatar(ctx, state.player, ppos.x, ppos.y - TILE_H/2, 1.3, state.player.dir);
     }
   });
 
@@ -1689,31 +1677,22 @@ function renderGame() {
     if (r.type === 'player') {
       r.render();
     } else {
-      let iw = (r.img.naturalWidth || r.img.width || 64);
-      let ih = (r.img.naturalHeight || r.img.height || 64);
-      // Cap furniture size
-      const MAX_FURN = 128;
-      if (iw > MAX_FURN || ih > MAX_FURN) {
-        const scale = MAX_FURN / Math.max(iw, ih);
-        iw *= scale;
-        ih *= scale;
-      }
-      ctx.drawImage(r.img, r.x - iw/2, r.y - ih + TILE_H/2, iw, ih);
+      drawFurniture(ctx, r.img, r.meta, r.x, r.y);
 
-      // Draw placement highlight if editor active
+      // Editor highlight
       if (state.editor.active && state.editor.selectedItem) {
         ctx.strokeStyle = 'rgba(255,215,0,0.6)';
         ctx.lineWidth = 2;
-        ctx.strokeRect(r.x - iw/2, r.y - ih + TILE_H/2, iw, ih);
+        ctx.strokeRect(r.x - 20, r.y - 40, 40, 40);
       }
     }
   });
 
-  // Draw exit indicators
+  // Exit indicators
   if (state.room.exits) {
     state.room.exits.forEach(ex => {
       const pos = isoToScreen(ex.x, ex.y);
-      ctx.fillStyle = 'rgba(255,215,0,0.3)';
+      ctx.fillStyle = 'rgba(255,215,0,0.25)';
       ctx.beginPath();
       ctx.moveTo(pos.x, pos.y - TILE_H/2);
       ctx.lineTo(pos.x + TILE_W/2, pos.y);
@@ -1722,9 +1701,9 @@ function renderGame() {
       ctx.closePath();
       ctx.fill();
       ctx.fillStyle = '#FFD700';
-      ctx.font = '10px sans-serif';
+      ctx.font = '9px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('EXIT', pos.x, pos.y);
+      ctx.fillText('EXIT', pos.x, pos.y + 2);
     });
   }
 
@@ -1732,28 +1711,37 @@ function renderGame() {
   state.chat.messages.forEach(m => {
     if (m.life > 0) {
       const pos = isoToScreen(m.x, m.y);
-      ctx.fillStyle = 'rgba(0,0,0,0.7)';
-      ctx.strokeStyle = '#FFD700';
-      ctx.lineWidth = 1;
-      const tw = ctx.measureText(m.text).width;
-      ctx.fillRect(pos.x - tw/2 - 6, pos.y - TILE_H - 30, tw + 12, 20);
-      ctx.strokeRect(pos.x - tw/2 - 6, pos.y - TILE_H - 30, tw + 12, 20);
-      ctx.fillStyle = '#fff';
       ctx.font = '11px sans-serif';
+      const tw = ctx.measureText(m.text).width;
+      const bx = pos.x - tw/2 - 8;
+      const by = pos.y - TILE_H - 38;
+      ctx.fillStyle = 'rgba(0,0,0,0.75)';
+      ctx.beginPath();
+      _roundRect(ctx, bx, by, tw + 16, 20, 6);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,215,0,0.4)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.fillStyle = '#fff';
       ctx.textAlign = 'center';
-      ctx.fillText(m.text, pos.x, pos.y - TILE_H - 16);
+      ctx.fillText(m.text, pos.x, by + 14);
     }
   });
 
-  // Editor cursor
-  if (state.editor.active && state.editor.selectedItem) {
-    ctx.fillStyle = 'rgba(255,215,0,0.15)';
-    ctx.fillRect(10, 80, 200, 40);
+  // Editor UI hint
+  if (state.editor.active) {
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(10, 60, 220, 50);
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(10, 60, 220, 50);
     ctx.fillStyle = '#FFD700';
-    ctx.font = '12px sans-serif';
+    ctx.font = 'bold 12px sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('EDITOR: Click tile to place', 16, 95);
-    ctx.fillText('Selected: ' + state.editor.selectedItem, 16, 110);
+    ctx.fillText('EDITOR MODE', 18, 78);
+    ctx.fillStyle = '#aaa';
+    ctx.font = '11px sans-serif';
+    ctx.fillText('Click tile: place  |  Click item: remove', 18, 96);
   }
 }
 
@@ -1767,20 +1755,16 @@ function handleCanvasClick(e) {
   const sy = e.clientY - rect.top;
   const iso = screenToIso(sx, sy);
 
-  // Editor mode - click to place or remove
   if (state.editor.active) {
     if (iso.x >= 0 && iso.y >= 0 && iso.x < state.room.width && iso.y < state.room.height) {
       if (state.editor.selectedItem) {
-        // Place item
         state.room.furniture.push({id: state.editor.selectedItem, x: iso.x, y: iso.y, z: 0});
         state.editor.selectedItem = null;
         unlockAchievement('editor_pro');
-        renderInventory(); // Refresh to show item removed from selection
+        renderInventory();
       } else {
-        // Check if clicking existing furniture to remove
         const idx = state.room.furniture.findIndex(f => f.x === iso.x && f.y === iso.y);
         if (idx >= 0) {
-          // Return to inventory
           const removed = state.room.furniture[idx];
           state.player.inventory.push({id: removed.id, cat: 'furniture', rarity: 'common'});
           state.room.furniture.splice(idx, 1);
@@ -1791,12 +1775,9 @@ function handleCanvasClick(e) {
     return;
   }
 
-  // Normal mode - walk to tile
   if (iso.x >= 0 && iso.y >= 0 && iso.x < state.room.width && iso.y < state.room.height) {
     const path = findPath(Math.round(state.player.x), Math.round(state.player.y), iso.x, iso.y);
-    if (path.length > 0) {
-      state.player.path = path;
-    }
+    if (path.length > 0) state.player.path = path;
   }
 }
 
@@ -1805,10 +1786,7 @@ function handleChatKey(e) {
   if (e.key === 'Enter') {
     const input = document.getElementById('chatInput');
     const text = input.value.trim();
-    if (text) {
-      sendChat(text);
-      input.value = '';
-    }
+    if (text) { sendChat(text); input.value = ''; }
   }
 }
 
@@ -1818,8 +1796,6 @@ function sendChat(text) {
     life: 4000, maxLife: 4000
   });
   if (state.chat.messages.length > 10) state.chat.messages.shift();
-
-  // Count chat messages for achievement
   const count = parseInt(localStorage.getItem('starlight_chat_count')||'0') + 1;
   localStorage.setItem('starlight_chat_count', count.toString());
   if (count >= 10) unlockAchievement('chat_10');
@@ -1837,8 +1813,8 @@ function updateChatBubbles(dt) {
 // ===== UI PANELS =====
 function togglePanel(id) {
   const p = document.getElementById(id);
+  if (!p) return;
   const isActive = p.classList.contains('active');
-  // Close all panels
   document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
   if (!isActive) {
     p.classList.add('active');
@@ -1851,7 +1827,8 @@ function togglePanel(id) {
 }
 
 function closePanel(id) {
-  document.getElementById(id).classList.remove('active');
+  const p = document.getElementById(id);
+  if (p) p.classList.remove('active');
 }
 
 // ===== CATALOG =====
@@ -1869,6 +1846,7 @@ function setCatTab(tab, btn) {
 
 function renderCatalog() {
   const grid = document.getElementById('catGrid');
+  if (!grid) return;
   grid.innerHTML = '';
   const items = CATALOG.filter(i => i.cat === state.catalog.tab || (state.catalog.tab === 'rare' && (i.rarity === 'epic' || i.rarity === 'legendary')));
 
@@ -1881,45 +1859,27 @@ function renderCatalog() {
     if (img) {
       const imgEl = document.createElement('img');
       imgEl.src = img.src;
-      imgEl.style.width = '40px';
-      imgEl.style.height = '40px';
+      imgEl.style.width = '40px'; imgEl.style.height = '40px';
       imgEl.style.objectFit = 'contain';
       imgEl.style.imageRendering = 'pixelated';
       icon.appendChild(imgEl);
-    } else {
-      icon.textContent = item.icon || '📦';
-    }
-    const name = document.createElement('div');
-    name.className = 'name';
-    name.textContent = item.name;
-    const price = document.createElement('div');
-    price.className = 'price';
-    price.textContent = item.price + 'g';
-    const rarity = document.createElement('div');
-    rarity.className = 'rarity-tag r-tag-' + item.rarity;
-    rarity.textContent = item.rarity[0].toUpperCase();
-
-    div.appendChild(rarity);
-    div.appendChild(icon);
-    div.appendChild(name);
-    div.appendChild(price);
+    } else { icon.textContent = item.icon || '📦'; }
+    const name = document.createElement('div'); name.className = 'name'; name.textContent = item.name;
+    const price = document.createElement('div'); price.className = 'price'; price.textContent = item.price + 'g';
+    const rarity = document.createElement('div'); rarity.className = 'rarity-tag r-tag-' + item.rarity; rarity.textContent = item.rarity[0].toUpperCase();
+    div.appendChild(rarity); div.appendChild(icon); div.appendChild(name); div.appendChild(price);
     div.onclick = () => buyItem(item);
     grid.appendChild(div);
   });
 }
 
 function buyItem(item) {
-  if (state.player.gold < item.price) {
-    showAlert('Not enough gold!', 'You need ' + item.price + ' gold.');
-    return;
-  }
+  if (state.player.gold < item.price) { showAlert('Not enough gold!', 'You need ' + item.price + ' gold.'); return; }
   openConfirm('Buy ' + item.name + '?', 'Price: ' + item.price + ' gold', () => {
     state.player.gold -= item.price;
     state.player.inventory.push({id: item.id, cat: item.cat, rarity: item.rarity});
     addXP(Math.floor(item.price / 10));
-    updateCurrency();
-    renderInventory();
-    savePlayerData();
+    updateCurrency(); renderInventory(); savePlayerData();
     unlockAchievement('buy_item');
     if (item.rarity === 'legendary') unlockAchievement('legendary');
     showAlert('Purchased!', item.name + ' added to inventory.');
@@ -1931,48 +1891,30 @@ let selectedInvItem = null;
 
 function renderInventory() {
   const grid = document.getElementById('invGrid');
+  if (!grid) return;
   grid.innerHTML = '';
-
   state.player.inventory.forEach((item, idx) => {
     const div = document.createElement('div');
-    const cat = item.cat || 'furniture';
     const rarity = item.rarity || 'common';
     div.className = 'inv-slot rarity-' + rarity;
     if (selectedInvItem === idx) div.classList.add('equipped');
-
     const img = state.assets[item.id];
     if (img) {
       const imgEl = document.createElement('img');
       imgEl.src = img.src;
-      imgEl.style.width = '36px';
-      imgEl.style.height = '36px';
-      imgEl.style.objectFit = 'contain';
-      imgEl.style.imageRendering = 'pixelated';
+      imgEl.style.width = '36px'; imgEl.style.height = '36px';
+      imgEl.style.objectFit = 'contain'; imgEl.style.imageRendering = 'pixelated';
       div.appendChild(imgEl);
-    } else {
-      div.textContent = '📦';
-    }
-
-    // Rarity dot
-    const dot = document.createElement('div');
-    dot.className = 'rarity-dot';
+    } else { div.textContent = '📦'; }
+    const dot = document.createElement('div'); dot.className = 'rarity-dot';
     dot.style.background = getRarityColor(rarity);
     div.appendChild(dot);
-
-    div.onclick = () => {
-      selectedInvItem = idx;
-      renderInventory();
-    };
-
+    div.onclick = () => { selectedInvItem = idx; renderInventory(); };
     grid.appendChild(div);
   });
-
-  // Empty slots
   const total = Math.max(36, Math.ceil(state.player.inventory.length / 6) * 6);
   for (let i = state.player.inventory.length; i < total; i++) {
-    const div = document.createElement('div');
-    div.className = 'inv-slot empty';
-    div.style.opacity = '0.2';
+    const div = document.createElement('div'); div.className = 'inv-slot empty'; div.style.opacity = '0.2';
     grid.appendChild(div);
   }
 }
@@ -1986,82 +1928,57 @@ function equipSelected() {
   if (selectedInvItem === null || !state.player.inventory[selectedInvItem]) return;
   const item = state.player.inventory[selectedInvItem];
   const cat = item.cat || 'furniture';
-
-  if (cat === 'hair') {
-    state.player.hairStyle = item.id;
-    showAlert('Equipped!', 'New hairstyle applied.');
-  } else if (cat === 'clothes' || cat === 'items') {
-    // Check if it's a shirt-like or accessory
-    if (item.id.includes('shirt') || item.id.includes('dress')) {
-      state.player.shirtStyle = item.id;
-    } else if (item.id.includes('acc_')) {
-      state.player.accStyle = item.id;
-    }
+  if (cat === 'hair') { state.player.hairStyle = item.id; showAlert('Equipped!', 'New hairstyle applied.'); }
+  else if (cat === 'clothes' || cat === 'items') {
+    if (item.id.includes('shirt') || item.id.includes('dress')) state.player.shirtStyle = item.id;
+    else if (item.id.includes('acc_')) state.player.accStyle = item.id;
+    else if (item.id.includes('legs') || item.id.includes('skirt')) state.player.pantsStyle = item.id;
     showAlert('Equipped!', 'New outfit applied.');
   } else {
-    // Furniture - enter editor mode and select this item
-    toggleEditor(true);
-    state.editor.selectedItem = item.id;
+    toggleEditor(true); state.editor.selectedItem = item.id;
     showAlert('Editor Mode', 'Click a tile to place ' + item.name);
   }
   savePlayerData();
 }
 
-function useSelected() {
-  equipSelected();
-}
+function useSelected() { equipSelected(); }
 
 function tradeSelected() {
   if (selectedInvItem === null) return;
   const item = state.player.inventory[selectedInvItem];
   if (!item) return;
-  // Add to trade offer
-  state.trade.myOffer.push({...item, idx: selectedInvItem});
-  renderTrade();
-  togglePanel('tradePanel');
+  state.trade.myOffer.push({...item});
+  renderTrade(); togglePanel('tradePanel');
 }
 
 // ===== TRADING =====
-function showTradeModal() {
-  openModal('tradeModal');
-}
+function showTradeModal() { openModal('tradeModal'); }
 
 function startTrade() {
   const target = document.getElementById('tradeTarget').value.trim();
-  if (!target) {
-    document.getElementById('tradeError').textContent = 'Enter a player name';
-    return;
-  }
-  state.trade.target = target;
-  state.trade.confirmed = false;
-  state.trade.accepted = false;
-  closeModal('tradeModal');
-  togglePanel('tradePanel');
-  renderTrade();
+  if (!target) { document.getElementById('tradeError').textContent = 'Enter a player name'; return; }
+  state.trade.target = target; state.trade.confirmed = false; state.trade.accepted = false;
+  closeModal('tradeModal'); togglePanel('tradePanel'); renderTrade();
 }
 
 function renderTrade() {
   const myDiv = document.getElementById('myOffer');
   const theirDiv = document.getElementById('theirOffer');
   const status = document.getElementById('tradeStatus');
+  if (!myDiv || !theirDiv || !status) return;
 
   myDiv.innerHTML = '';
   state.trade.myOffer.forEach((item, i) => {
-    const div = document.createElement('div');
-    div.className = 'trade-item-slot';
-    div.innerHTML = `<span class="t-icon">📦</span><span class="t-name">${item.id.replace('furni_','').replace('hair_','').replace('acc_','').replace(/_/g,' ')}</span><span class="t-rarity r-tag-${item.rarity}">${item.rarity}</span>`;
-    div.onclick = () => {
-      state.trade.myOffer.splice(i, 1);
-      renderTrade();
-    };
+    const div = document.createElement('div'); div.className = 'trade-item-slot';
+    div.innerHTML = '<span class="t-icon">📦</span><span class="t-name">' + item.id.replace(/furni_|hair_|acc_/g,'').replace(/_/g,' ') + '</span><span class="t-rarity r-tag-' + item.rarity + '">' + item.rarity + '</span>';
+    div.onclick = () => { state.trade.myOffer.splice(i, 1); renderTrade(); };
     myDiv.appendChild(div);
   });
 
   theirDiv.innerHTML = '';
   state.trade.theirOffer.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'trade-item-slot';
-    div.innerHTML = `<span class="t-icon">📦</span><span class="t-name">${item.id.replace('furni_','').replace('hair_','').replace('acc_','').replace(/_/g,' ')}</span><span class="t-rarity r-tag-${item.rarity}">${item.rarity}</span>`;
+    const div = document.createElement('div'); div.className = 'trade-item-slot';
+    div.innerHTML = '<span class="t-icon">📦</span><span class="t-name">' + item.id.replace(/furni_|hair_|acc_/g,'').replace(/_/g,' ') + '</span><span class="t-rarity r-tag-' + item.rarity + '">' + item.rarity + '</span>';
     theirDiv.appendChild(div);
   });
 
@@ -2071,119 +1988,69 @@ function renderTrade() {
 }
 
 function addToMyOffer() {
-  if (selectedInvItem === null) {
-    showAlert('Select an item', 'Click an inventory item first');
-    return;
-  }
+  if (selectedInvItem === null) { showAlert('Select an item', 'Click an inventory item first'); return; }
   const item = state.player.inventory[selectedInvItem];
   if (!item) return;
-  state.trade.myOffer.push({...item});
-  renderTrade();
+  state.trade.myOffer.push({...item}); renderTrade();
 }
 
-function clearMyOffer() {
-  state.trade.myOffer = [];
-  state.trade.confirmed = false;
-  renderTrade();
-}
+function clearMyOffer() { state.trade.myOffer = []; state.trade.confirmed = false; renderTrade(); }
 
 function confirmTrade() {
-  if (state.trade.myOffer.length === 0) {
-    showAlert('Empty Offer', 'Add items to your offer first');
-    return;
-  }
+  if (state.trade.myOffer.length === 0) { showAlert('Empty Offer', 'Add items to your offer first'); return; }
   state.trade.confirmed = true;
-
-  // Simulate partner acceptance after delay
   setTimeout(() => {
-    // Generate partner offer (simulated)
-    state.trade.theirOffer = [
-      {id:'furni_lamp', cat:'furniture', rarity:'common'},
-      {id:'furni_flower', cat:'furniture', rarity:'common'},
-    ];
+    state.trade.theirOffer = [{id:'furni_lamp',cat:'furniture',rarity:'common'},{id:'furni_flower',cat:'furniture',rarity:'common'}];
     renderTrade();
     showAlert('Trade Ready!', state.trade.target + ' has made an offer. Click ACCEPT to finalize.');
   }, 1500);
-
   renderTrade();
 }
 
 function acceptTrade() {
-  if (!state.trade.confirmed) {
-    showAlert('Not Ready', 'Confirm your offer first');
-    return;
-  }
-  if (state.trade.theirOffer.length === 0) {
-    showAlert('No Offer', 'Wait for trade partner');
-    return;
-  }
-
-  // Execute trade
-  // Remove my offered items from inventory
+  if (!state.trade.confirmed) { showAlert('Not Ready', 'Confirm your offer first'); return; }
+  if (state.trade.theirOffer.length === 0) { showAlert('No Offer', 'Wait for trade partner'); return; }
   state.trade.myOffer.forEach(offered => {
     const idx = state.player.inventory.findIndex(i => i.id === offered.id);
     if (idx >= 0) state.player.inventory.splice(idx, 1);
   });
-
-  // Add their items to inventory
-  state.trade.theirOffer.forEach(item => {
-    state.player.inventory.push(item);
-  });
-
-  state.trade.accepted = true;
-  renderTrade();
-  renderInventory();
-  savePlayerData();
+  state.trade.theirOffer.forEach(item => state.player.inventory.push(item));
+  state.trade.accepted = true; renderTrade(); renderInventory(); savePlayerData();
   unlockAchievement('trade_done');
   showAlert('Trade Complete!', 'Items exchanged successfully.');
-
-  // Reset trade after delay
-  setTimeout(() => {
-    state.trade = { myOffer: [], theirOffer: [], confirmed: false, accepted: false, target: '' };
-    closePanel('tradePanel');
-  }, 2000);
+  setTimeout(() => { state.trade = {myOffer:[],theirOffer:[],confirmed:false,accepted:false,target:''}; closePanel('tradePanel'); }, 2000);
 }
 
 // ===== ROOM LIST =====
 function showRoomList() {
-  if (!state.player.name) {
-    openModal('loginModal');
-    return;
-  }
-  showScreen('game');
-  togglePanel('roomListPanel');
+  if (!state.player.name) { openModal('loginModal'); return; }
+  showScreen('game'); togglePanel('roomListPanel');
 }
 
 function renderRoomList() {
   const grid = document.getElementById('roomGrid');
+  if (!grid) return;
   grid.innerHTML = '';
-
+  const icons = {lobby:'🏛️',tavern:'🍺',garden:'🌿',library:'📚',bedroom:'🛏️',beach:'🏖️',rooftop:'☕',arcade:'🎮',spa:'🧘',market:'🏪',event:'🎪',winter:'❄️'};
   Object.entries(ROOMS).forEach(([id, room]) => {
-    const div = document.createElement('div');
-    div.className = 'room-card';
-    const icons = {lobby:'🏛️',tavern:'🍺',garden:'🌿',library:'📚',bedroom:'🛏️',beach:'🏖️',rooftop:'☕',arcade:'🎮',spa:'🧘',market:'🏪',event:'🎪',winter:'❄️'};
-    div.innerHTML = `<div class="r-icon">${icons[id]||'🏠'}</div><div class="r-name">${room.name}</div><div class="r-desc">${room.desc}</div>`;
-    div.onclick = () => {
-      enterRoom(id);
-      closePanel('roomListPanel');
-    };
+    const div = document.createElement('div'); div.className = 'room-card';
+    div.innerHTML = '<div class="r-icon">' + (icons[id]||'🏠') + '</div><div class="r-name">' + room.name + '</div><div class="r-desc">' + room.desc + '</div>';
+    div.onclick = () => { enterRoom(id); closePanel('roomListPanel'); };
     grid.appendChild(div);
   });
 }
 
 // ===== ACHIEVEMENTS =====
-function showAchievements() {
-  togglePanel('achPanel');
-}
+function showAchievements() { togglePanel('achPanel'); }
 
 function renderAchievements() {
   const list = document.getElementById('achList');
+  if (!list) return;
   list.innerHTML = '';
-
   ACHIEVEMENTS.forEach(ach => {
     const div = document.createElement('div');
     div.className = 'ach-item' + (ach.unlocked ? ' unlocked' : '');
-    div.innerHTML = `<div class="ach-icon">${ach.icon}</div><div class="ach-info"><div class="ach-name">${ach.name}</div><div class="ach-desc">${ach.desc}</div><div class="ach-reward">+${ach.reward} XP</div></div>`;
+    div.innerHTML = '<div class="ach-icon">' + ach.icon + '</div><div class="ach-info"><div class="ach-name">' + ach.name + '</div><div class="ach-desc">' + ach.desc + '</div><div class="ach-reward">+' + ach.reward + ' XP</div></div>';
     list.appendChild(div);
   });
 }
@@ -2191,23 +2058,21 @@ function renderAchievements() {
 function unlockAchievement(id) {
   const ach = ACHIEVEMENTS.find(a => a.id === id);
   if (ach && !ach.unlocked) {
-    ach.unlocked = true;
-    addXP(ach.reward);
-    showAlert('Achievement Unlocked!', ach.icon + ' ' + ach.name + ' (+ ' + ach.reward + ' XP)');
+    ach.unlocked = true; addXP(ach.reward);
+    showAlert('Achievement Unlocked!', ach.icon + ' ' + ach.name + ' (+' + ach.reward + ' XP)');
     savePlayerData();
   }
 }
 
 // ===== EDITOR =====
-function toggleEditor(force = null) {
-  state.editor.active = force !== null ? force : !state.editor.active;
+function toggleEditor(force) {
+  state.editor.active = force !== undefined ? force : !state.editor.active;
   state.editor.selectedItem = null;
-  document.getElementById('editBtn').classList.toggle('active', state.editor.active);
-  document.getElementById('placeBtn').style.display = state.editor.active ? 'inline-block' : 'none';
-
-  if (state.editor.active) {
-    showAlert('Editor Mode', 'Click inventory item, then click tile to place. Click placed item to remove.');
-  }
+  const editBtn = document.getElementById('editBtn');
+  const placeBtn = document.getElementById('placeBtn');
+  if (editBtn) editBtn.classList.toggle('active', state.editor.active);
+  if (placeBtn) placeBtn.style.display = state.editor.active ? 'inline-block' : 'none';
+  if (state.editor.active) showAlert('Editor Mode', 'Click inventory item, then click tile to place. Click placed item to remove.');
 }
 
 function togglePlaceMode() {
@@ -2217,24 +2082,13 @@ function togglePlaceMode() {
 }
 
 // ===== MODALS =====
-function openModal(id) {
-  document.getElementById(id).classList.add('active');
-}
-
-function closeModal(id) {
-  document.getElementById(id).classList.remove('active');
-  // Clear errors
-  const err = document.getElementById(id).querySelector('.modal-error');
-  if (err) err.textContent = '';
-}
+function openModal(id) { const m = document.getElementById(id); if (m) m.classList.add('active'); }
+function closeModal(id) { const m = document.getElementById(id); if (m) m.classList.remove('active'); }
 
 function openConfirm(title, text, onYes) {
   document.getElementById('confirmTitle').textContent = title;
   document.getElementById('confirmText').textContent = text;
-  document.getElementById('confirmYes').onclick = () => {
-    closeModal('confirmModal');
-    onYes();
-  };
+  document.getElementById('confirmYes').onclick = () => { closeModal('confirmModal'); onYes(); };
   openModal('confirmModal');
 }
 
@@ -2246,10 +2100,12 @@ function showAlert(title, text) {
 
 // ===== CURRENCY & XP =====
 function updateCurrency() {
-  document.getElementById('goldAmt').textContent = state.player.gold;
-  document.getElementById('gemAmt').textContent = state.player.gems;
-  document.getElementById('lvlAmt').textContent = state.player.level;
-
+  const goldAmt = document.getElementById('goldAmt');
+  const gemAmt = document.getElementById('gemAmt');
+  const lvlAmt = document.getElementById('lvlAmt');
+  if (goldAmt) goldAmt.textContent = state.player.gold;
+  if (gemAmt) gemAmt.textContent = state.player.gems;
+  if (lvlAmt) lvlAmt.textContent = state.player.level;
   if (state.player.gold >= 1000) unlockAchievement('rich');
   if (state.player.inventory.length >= 20) unlockAchievement('collector');
 }
@@ -2258,26 +2114,137 @@ function addXP(amount) {
   state.player.xp += amount;
   const needed = state.player.level * 100;
   if (state.player.xp >= needed) {
-    state.player.xp -= needed;
-    state.player.level++;
+    state.player.xp -= needed; state.player.level++;
     showAlert('Level Up!', 'You reached level ' + state.player.level + '!');
     if (state.player.level >= 5) unlockAchievement('level_5');
   }
   updateCurrency();
 }
 
-// ===== TOOLTIP =====
-document.addEventListener('mousemove', e => {
-  const tt = document.getElementById('tooltip');
-  if (tt.style.display === 'block') {
-    tt.style.left = (e.clientX + 12) + 'px';
-    tt.style.top = (e.clientY + 12) + 'px';
+// ===== CHARACTER CREATOR =====
+const HAIR_STYLES = [
+  'hair_short_brown','hair_afro','hair_bald','hair_emo','hair_long_brown',
+  'hair_mohawk','hair_ponytail','hair_spiky_blonde','hair_long_pink','hair_spiky_blue',
+  'hair_curly_red','hair_bedhead_blonde','hair_pigtails_teal','hair_slick_black',
+  'hair_bob_black','hair_braids_brown','hair_buzz_cut','hair_dreads','hair_french_braid',
+  'hair_pixie_cut','hair_undercut','hair_waves_blonde'
+];
+const FACE_STYLES = ['face_happy','face_cool','face_surprised'];
+const SHIRT_STYLES = ['shirt_tshirt','shirt_hoodie','shirt_jacket','shirt_polo','shirt_tank','shirt_overalls','dress_pink','dress_blue'];
+const PANTS_STYLES = ['legs_pants','legs_shorts','legs_skirt'];
+const ACC_STYLES = ['','acc_glasses_round','acc_hat_beanie','acc_hat_wizard','acc_wings','acc_bow_tie'];
+const SKIN_TONES = ['#ffdbac','#f1c27d','#e0ac69','#8d5524','#c68642','#59331b','#ffcea3','#f5d0b5'];
+
+function initCharCreator() {
+  buildGrid('hairGrid', HAIR_STYLES, state.player.hairStyle, (v) => { state.player.hairStyle = v; updatePreview(); });
+  buildGrid('faceGrid', FACE_STYLES, state.player.faceStyle, (v) => { state.player.faceStyle = v; updatePreview(); });
+  buildGrid('shirtGrid', SHIRT_STYLES, state.player.shirtStyle, (v) => { state.player.shirtStyle = v; updatePreview(); });
+  buildGrid('pantsGrid', PANTS_STYLES, state.player.pantsStyle, (v) => { state.player.pantsStyle = v; updatePreview(); });
+  buildGrid('accGrid', ACC_STYLES, state.player.accStyle, (v) => { state.player.accStyle = v; updatePreview(); }, true);
+
+  const sk = document.getElementById('skinPresets');
+  if (sk) {
+    sk.innerHTML = '';
+    SKIN_TONES.forEach(c => {
+      const div = document.createElement('div'); div.className = 'color-swatch' + (state.player.skin === c ? ' active' : '');
+      div.style.background = c; div.onclick = () => { state.player.skin = c; updateCharUI(); updatePreview(); };
+      sk.appendChild(div);
+    });
   }
-});
+
+  document.getElementById('hairHue').value = state.player.hairHue;
+  document.getElementById('shirtHue').value = state.player.shirtHue;
+  document.getElementById('pantsHue').value = state.player.pantsHue;
+  updateCharUI(); updatePreview();
+}
+
+function buildGrid(id, items, current, onClick, allowEmpty) {
+  const grid = document.getElementById(id);
+  if (!grid) return;
+  grid.innerHTML = '';
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'hair-slot' + (current === item ? ' active' : '');
+    if (!item && allowEmpty) { div.textContent = '✕'; div.style.fontSize = '14px'; }
+    else {
+      const img = state.assets[item];
+      if (img) { const imgEl = document.createElement('img'); imgEl.src = img.src; div.appendChild(imgEl); }
+      else { div.textContent = item.replace(/hair_|face_|shirt_|legs_|acc_/g,'').slice(0,2).toUpperCase(); }
+    }
+    div.onclick = () => { onClick(item); updateCharUI(); updatePreview(); };
+    grid.appendChild(div);
+  });
+}
+
+function updateCharUI() {
+  document.querySelectorAll('.gender-btn').forEach(b => b.classList.toggle('active', b.dataset.g === state.player.gender));
+  const hp = document.getElementById('hairColorPreview');
+  const sp = document.getElementById('shirtColorPreview');
+  const pp = document.getElementById('pantsColorPreview');
+  if (hp) hp.style.background = hslToHex(state.player.hairHue, 80, 50);
+  if (sp) sp.style.background = hslToHex(state.player.shirtHue, 70, 50);
+  if (pp) pp.style.background = hslToHex(state.player.pantsHue, 70, 40);
+}
+
+function updatePreview() {
+  const container = document.getElementById('charPreviewLayers');
+  const nameLabel = document.getElementById('charPreviewName');
+  if (!container) return;
+  container.innerHTML = '';
+  if (nameLabel) nameLabel.textContent = state.player.name || '';
+
+  // Use the same procedural renderer as in-game
+  const c = document.createElement('canvas');
+  c.width = 140; c.height = 200;
+  const ctx = c.getContext('2d');
+  ctx.translate(70, 180);
+  ctx.scale(1.6, 1.6);
+  renderAvatar(ctx, state.player, 0, 0, 1);
+
+  const img = document.createElement('img');
+  img.src = c.toDataURL();
+  img.style.width = '100%';
+  img.style.height = '100%';
+  img.style.objectFit = 'contain';
+  img.style.imageRendering = 'pixelated';
+  container.appendChild(img);
+}
+
+function setGender(g) { state.player.gender = g; updateCharUI(); updatePreview(); }
+
+function saveCharacter() {
+  savePlayerData(); unlockAchievement('customize');
+  showAlert('Character Saved!', 'Your avatar has been saved successfully.');
+}
+
+function randomizeCharacter() {
+  state.player.hairStyle = HAIR_STYLES[Math.floor(Math.random()*HAIR_STYLES.length)];
+  state.player.hairHue = Math.floor(Math.random()*360);
+  state.player.faceStyle = FACE_STYLES[Math.floor(Math.random()*FACE_STYLES.length)];
+  state.player.shirtStyle = SHIRT_STYLES[Math.floor(Math.random()*SHIRT_STYLES.length)];
+  state.player.shirtHue = Math.floor(Math.random()*360);
+  state.player.pantsStyle = PANTS_STYLES[Math.floor(Math.random()*PANTS_STYLES.length)];
+  state.player.pantsHue = Math.floor(Math.random()*360);
+  state.player.accStyle = ACC_STYLES[Math.floor(Math.random()*ACC_STYLES.length)];
+  state.player.skin = SKIN_TONES[Math.floor(Math.random()*SKIN_TONES.length)];
+  initCharCreator();
+}
+
+function resetCharacter() {
+  state.player.hairStyle = 'hair_short_brown'; state.player.hairHue = 25;
+  state.player.faceStyle = 'face_happy'; state.player.shirtStyle = 'shirt_tshirt';
+  state.player.shirtHue = 200; state.player.pantsStyle = 'legs_pants';
+  state.player.pantsHue = 220; state.player.accStyle = ''; state.player.skin = '#ffdbac';
+  initCharCreator();
+}
+
+function openCharCreator() {
+  if (!state.player.name) { openModal('loginModal'); return; }
+  showScreen('char');
+}
 
 // ===== INIT =====
 window.addEventListener('DOMContentLoaded', () => {
-  // Check if returning player
   try {
     const raw = localStorage.getItem('starlight_v17');
     if (raw) {
@@ -2285,12 +2252,9 @@ window.addEventListener('DOMContentLoaded', () => {
       if (data.name) state.player.name = data.name;
     }
   } catch(e) {}
-
   loadAssets();
   state.achievements = ACHIEVEMENTS;
   updateCurrency();
-
-  // Keyboard shortcuts
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -2298,6 +2262,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
 </script>
 </body>
 </html>
