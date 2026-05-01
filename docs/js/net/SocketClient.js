@@ -37,42 +37,17 @@ export class SocketClient {
       this.socket.disconnect();
     }
 
-    // Do not overwrite landing page status -- HTML already shows Offline Mode
-    // var statusEl = document.getElementById('server-status');
-    // if (statusEl) statusEl.textContent = 'Connecting...';
-
     this.socket = io(url, {
       transports: ['websocket', 'polling'],
-      reconnection: false,
-      timeout: 5000,
-      connect_timeout: 3000
+      reconnection: false, // we handle reconnect manually for finer UX
+      timeout: 20000
     });
-
-    // Connection timeout fallback -- if no server, go offline immediately
-    this._connectTimeout = setTimeout(() => {
-      if (!this.connected) {
-        console.log('[SocketClient] No server found -- switching to offline mode');
-        if (statusEl) {
-          statusEl.textContent = 'Offline Mode';
-          statusEl.style.color = '#888';
-        }
-        var onlineEl = document.getElementById('online-count');
-        if (onlineEl) onlineEl.textContent = '—';
-        this.cleanup();
-      }
-    }, 3500);
 
     // Core lifecycle --------------------------------------------------
     this.socket.on('connect', () => {
       this.connected = true;
       this.reconnectAttempts = 0;
-      clearTimeout(this._connectTimeout);
       console.log('[SocketClient] Connected to Starlight Inn server');
-      var statusEl = document.getElementById('server-status');
-      if (statusEl) {
-        statusEl.textContent = 'Online';
-        statusEl.style.color = '#6ee7b7';
-      }
       this.authenticate();
       this.startHeartbeat();
     });
@@ -86,7 +61,6 @@ export class SocketClient {
     });
 
     this.socket.on('connect_error', (err) => {
-      clearTimeout(this._connectTimeout);
       console.warn('[SocketClient] Connection error:', err.message);
     });
 
@@ -557,21 +531,6 @@ export class SocketClient {
     const delay = this.reconnectDelay * this.reconnectAttempts;
     console.log(`[SocketClient] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnect})`);
     setTimeout(() => this.connect(), delay);
-  }
-
-  /**
-   * Clean up connection state without full disconnect (for offline fallback).
-   */
-  cleanup() {
-    clearTimeout(this._connectTimeout);
-    this.stopHeartbeat();
-    if (this.socket) {
-      this.socket.removeAllListeners();
-      this.socket.disconnect();
-      this.socket = null;
-    }
-    this.connected = false;
-    this.authenticated = false;
   }
 
   /**

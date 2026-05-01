@@ -732,19 +732,3 @@ export default class IsoMath {
     return darkenColor(hex, percent);
   }
 }
-
-// ── Adapter class for main.js compatibility ──
-export class IsoMath {
-  constructor(opts = {}) {
-    this.tileW = opts.tileW || TILE_WIDTH;
-    this.tileH = opts.tileH || TILE_HEIGHT;
-    this.tileD = opts.tileD || 16;
-    this.halfW = this.tileW / 2;
-    this.halfH = this.tileH / 2;
-  }
-  tileToScreen(tx, ty) { return tileToScreen(tx, ty, this.tileW, this.tileH); }
-  screenToTile(sx, sy) { return screenToTile(sx, sy, this.tileW, this.tileH); }
-  isoSort(a, b) { return isoSort(a, b); }
-  getNeighborOffsets() { return getNeighborOffsets(); }
-  manhattanDistance(a, b) { return manhattanDistance(a, b); }
-}

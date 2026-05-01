@@ -827,33 +827,3 @@ export default class IsoCamera {
 }
 
 export { TILE_WIDTH, TILE_HEIGHT };
-
-// ── Adapter class for main.js compatibility ──
-export class IsoCamera {
-  constructor(game, isoMath) {
-    this.game = game;
-    this.iso = isoMath;
-    this.x = 0; this.y = 0;
-    this.zoom = 1;
-    this.minZoom = MIN_ZOOM;
-    this.maxZoom = MAX_ZOOM;
-  }
-  setZoom(z) { this.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, z)); }
-  panToTile(tx, ty) {
-    const p = this.iso.tileToScreen(tx, ty);
-    const canvas = document.getElementById('game-canvas');
-    this.x = p.x - (canvas?.width || 800) / 2;
-    this.y = p.y - (canvas?.height || 600) / 2;
-  }
-  follow(entity) { this.target = entity; }
-  update(dt) {
-    if (this.target) {
-      const p = this.iso.tileToScreen(this.target.x, this.target.y);
-      const canvas = document.getElementById('game-canvas');
-      this.x += (p.x - (canvas?.width || 800) / 2 - this.x) * 0.1;
-      this.y += (p.y - (canvas?.height || 600) / 2 - this.y) * 0.1;
-    }
-  }
-  worldToScreen(wx, wy) { return { x: wx - this.x, y: wy - this.y }; }
-  screenToWorld(sx, sy) { return { x: sx + this.x, y: sy + this.y }; }
-}

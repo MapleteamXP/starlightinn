@@ -1,252 +1,864 @@
 /**
- * SpriteGenerator.js -- v6.0
- * Generates procedural pixel-art sprites for tiles, furniture, and avatars.
- * Uses deterministic algorithms + palette constraints for Habbo-grade assets.
+ * SpriteGenerator.js -- Starlight Inn v6.0
+ * Procedural pixel-art sprite asset generator for isometric social world.
+ * Generates Canvas-based sprites for tiles, walls, furniture, and avatars
+ * using integer-coordinate Canvas 2D drawing commands.
+ *
+ * All output uses crisp pixel-art style: flat fills, 1px black outlines,
+ * bold shapes, top-left highlight / bottom-right shadow shading.
+ *
+ * @module sprites/SpriteGenerator
+ * @version 6.0.0
+ * @author Starlight Inn Team
  */
 
-import { ColorTable } from './ColorTable.js';
-import { PaletteValidator } from './PaletteValidator.js';
+// =============================================================================
+// CONSTANTS
+// =============================================================================
 
-export class SpriteGenerator {
-  constructor(paletteManager) {
-    this.paletteManager = paletteManager;
-    this._seedCounter = 0;
-  }
+/** Width of a single tile in screen pixels (2:1 iso ratio) */
+const TILE_WIDTH = 64;
+/** Height of a single tile in screen pixels */
+const TILE_HEIGHT = 32;
+/** Half tile width */
+const TILE_HW = 32;
+/** Half tile height */
+const TILE_HH = 16;
+/** Wall face height in pixels */
+const WALL_H = 24;
+/** Default outline color */
+const OUTLINE_COLOR = '#000000';
 
-  // ---- TILES ----
+// =============================================================================
+// CANVAS UTILITIES
+// =============================================================================
 
-  generateFloorTile(floorType = 'woodOak', size = 64) {
-    const color = ColorTable.floors[floorType] || ColorTable.floors.woodOak;
-    const palette = ['#000000', color, this._shade(color, -20), this._shade(color, 20)];
-    const c = document.createElement('canvas');
-    c.width = size;
-    c.height = size / 2;
-    const ctx = c.getContext('2d');
+/**
+ * Create a new off-screen canvas with pixel-art settings.
+ *
+ * @param {number} width - Canvas width in pixels
+ * @param {number} height - Canvas height in pixels
+ * @returns {HTMLCanvasElement}
+ */
+function _createCanvas(width, height) {
+  const c = document.createElement('canvas');
+  c.width = width;
+  c.height = height;
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.mozImageSmoothingEnabled = false;
+  ctx.webkitImageSmoothingEnabled = false;
+  ctx.msImageSmoothingEnabled = false;
+  return c;
+}
 
-    // Isometric diamond
-    ctx.fillStyle = palette[1];
-    this._drawIsoDiamond(ctx, size / 2, size / 4, size, size / 2);
-    // Highlight top edge
-    ctx.strokeStyle = palette[3];
-    ctx.lineWidth = 1;
+/**
+ * Get a 2D context from a canvas, ensuring pixel-art settings.
+ *
+ * @param {HTMLCanvasElement} canvas
+ * @returns {CanvasRenderingContext2D}
+ */
+function _getCtx(canvas) {
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.mozImageSmoothingEnabled = false;
+  ctx.webkitImageSmoothingEnabled = false;
+  ctx.msImageSmoothingEnabled = false;
+  return ctx;
+}
+
+/**
+ * Clear a canvas to transparent.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} w
+ * @param {number} h
+ */
+function _clear(ctx, w, h) {
+  ctx.clearRect(0, 0, w, h);
+}
+
+// =============================================================================
+// DIAMOND / ISO PATH HELPERS
+// =============================================================================
+
+/**
+ * Begin a diamond-shaped path. The diamond spans TILE_WIDTH x TILE_HEIGHT
+ * with its top corner at (x, y).
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x - top corner X
+ * @param {number} y - top corner Y
+ */
+function _diamondPath(ctx, x, y) {
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + TILE_HW, y + TILE_HH);
+  ctx.lineTo(x, y + TILE_HH * 2);
+  ctx.lineTo(x - TILE_HW, y + TILE_HH);
+  ctx.closePath();
+}
+
+/**
+ * Clip drawing to the diamond shape.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ */
+function _clipDiamond(ctx, x, y) {
+  ctx.save();
+  _diamondPath(ctx, x, y);
+  ctx.clip();
+}
+
+/**
+ * Fill the diamond with a solid colour.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {string} color
+ */
+function _fillDiamond(ctx, x, y, color) {
+  ctx.fillStyle = color;
+  _diamondPath(ctx, x, y);
+  ctx.fill();
+}
+
+/**
+ * Stroke a 1px outline around the diamond.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {string} color
+ */
+function _strokeDiamond(ctx, x, y, color) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  _diamondPath(ctx, x, y);
+  ctx.stroke();
+}
+
+/**
+ * Draw standard edge highlight (top-left) and shadow (bottom-right).
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {string} highlight
+ * @param {string} shadow
+ */
+function _drawEdges(ctx, x, y, highlight, shadow) {
+  ctx.lineWidth = 1;
+
+  // Top-left edge highlight
+  ctx.strokeStyle = highlight;
+  ctx.beginPath();
+  ctx.moveTo(x - TILE_HW + 1, y + TILE_HH);
+  ctx.lineTo(x, y + 1);
+  ctx.lineTo(x + TILE_HW - 1, y + TILE_HH);
+  ctx.stroke();
+
+  // Bottom-right edge shadow
+  ctx.strokeStyle = shadow;
+  ctx.beginPath();
+  ctx.moveTo(x + TILE_HW - 1, y + TILE_HH);
+  ctx.lineTo(x, y + TILE_HH * 2 - 1);
+  ctx.lineTo(x - TILE_HW + 1, y + TILE_HH);
+  ctx.stroke();
+}
+
+// =============================================================================
+// COLOR HELPERS
+// =============================================================================
+
+/**
+ * Lighten a hex colour by a percentage.
+ *
+ * @param {string} hex
+ * @param {number} pct 0-100
+ * @returns {string}
+ */
+function _lighten(hex, pct) {
+  const num = parseInt(hex.slice(1), 16);
+  let r = (num >> 16) & 0xff;
+  let g = (num >> 8) & 0xff;
+  let b = num & 0xff;
+  r = Math.min(255, Math.floor(r + (255 - r) * (pct / 100)));
+  g = Math.min(255, Math.floor(g + (255 - g) * (pct / 100)));
+  b = Math.min(255, Math.floor(b + (255 - b) * (pct / 100)));
+  return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
+}
+
+/**
+ * Darken a hex colour by a percentage.
+ *
+ * @param {string} hex
+ * @param {number} pct 0-100
+ * @returns {string}
+ */
+function _darken(hex, pct) {
+  const num = parseInt(hex.slice(1), 16);
+  let r = (num >> 16) & 0xff;
+  let g = (num >> 8) & 0xff;
+  let b = num & 0xff;
+  r = Math.max(0, Math.floor(r * (1 - pct / 100)));
+  g = Math.max(0, Math.floor(g * (1 - pct / 100)));
+  b = Math.max(0, Math.floor(b * (1 - pct / 100)));
+  return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
+}
+
+/**
+ * Blend two hex colours.
+ *
+ * @param {string} a
+ * @param {string} b
+ * @param {number} t 0.0-1.0
+ * @returns {string}
+ */
+function _blend(a, b, t) {
+  const na = parseInt(a.slice(1), 16);
+  const nb = parseInt(b.slice(1), 16);
+  const ra = (na >> 16) & 0xff, ga = (na >> 8) & 0xff, ba = na & 0xff;
+  const rb = (nb >> 16) & 0xff, gb = (nb >> 8) & 0xff, bb = nb & 0xff;
+  const r = Math.floor(ra + (rb - ra) * t);
+  const g = Math.floor(ga + (gb - ga) * t);
+  const bl = Math.floor(ba + (bb - ba) * t);
+  return `#${((1 << 24) | (r << 16) | (g << 8) | bl).toString(16).slice(1)}`;
+}
+
+// =============================================================================
+// FLOOR TILE PALETTES
+// =============================================================================
+
+/** @type {Object<string, {base:string,light:string,dark:string,accent:string,outline:string}>} */
+export const FLOOR_PALETTES = {
+  wood_light:     { base: '#D4A76A', light: '#E8C99A', dark: '#A07840', accent: '#C49A5A', outline: OUTLINE_COLOR },
+  wood_dark:      { base: '#5C2E16', light: '#8A5533', dark: '#361A0A', accent: '#6B3A22', outline: OUTLINE_COLOR },
+  wood_checker:   { base: '#C49A5A', light: '#E0C090', dark: '#7A5020', accent: '#A07840', outline: OUTLINE_COLOR },
+  stone_gray:     { base: '#8A8A8A', light: '#B0B0B0', dark: '#5A5A5A', accent: '#707070', outline: OUTLINE_COLOR },
+  stone_mosaic:   { base: '#7A7068', light: '#9A9088', dark: '#4A4038', accent: '#D4B878', outline: OUTLINE_COLOR },
+  carpet_red:     { base: '#8B2020', light: '#B84040', dark: '#501010', accent: '#D4A830', outline: OUTLINE_COLOR },
+  carpet_blue:    { base: '#204080', light: '#4068B0', dark: '#102050', accent: '#A0B8D0', outline: OUTLINE_COLOR },
+  carpet_green:   { base: '#206028', light: '#388848', dark: '#103018', accent: '#E0D8A0', outline: OUTLINE_COLOR },
+  grass:          { base: '#38A830', light: '#58D048', dark: '#207020', accent: '#F8D850', outline: OUTLINE_COLOR },
+  sand:           { base: '#D8B868', light: '#F0D890', dark: '#A08840', accent: '#C8A858', outline: OUTLINE_COLOR },
+  water:          { base: '#2088C8', light: '#58B8F0', dark: '#105878', accent: '#90D8F8', outline: OUTLINE_COLOR },
+  snow:           { base: '#E8F0F8', light: '#FFFFFF', dark: '#B0C0D0', accent: '#D0E0F0', outline: OUTLINE_COLOR },
+  marble_white:   { base: '#E8E8E8', light: '#FFFFFF', dark: '#B0B0B0', accent: '#989898', outline: OUTLINE_COLOR },
+  tile_terracotta:{ base: '#B86038', light: '#D88860', dark: '#783818', accent: '#D0A070', outline: OUTLINE_COLOR },
+  dirt:           { base: '#886840', light: '#A88860', dark: '#584028', accent: '#706050', outline: OUTLINE_COLOR },
+  neon_grid:      { base: '#181028', light: '#2A1848', dark: '#0C0818', accent: '#00F8C8', outline: OUTLINE_COLOR }
+};
+
+/** All registered floor type names. */
+export const FLOOR_TYPES = Object.keys(FLOOR_PALETTES);
+
+/**
+ * Get the palette for a floor type.
+ *
+ * @param {string} type
+ * @returns {{base:string,light:string,dark:string,accent:string,outline:string}}
+ */
+export function getFloorPalette(type) {
+  return FLOOR_PALETTES[type] || FLOOR_PALETTES.stone_gray;
+}
+
+// =============================================================================
+// WALL PALETTES
+// =============================================================================
+
+/** @type {Object<string, {top:string,left:string,right:string,light:string,dark:string,outline:string}>} */
+export const WALL_PALETTES = {
+  wall_brick:   { top: '#C87860', left: '#A85840', right: '#884030', light: '#D89080', dark: '#683020', outline: OUTLINE_COLOR },
+  wall_stone:   { top: '#989898', left: '#787878', right: '#585858', light: '#B0B0B0', dark: '#404040', outline: OUTLINE_COLOR },
+  wall_wood:    { top: '#A07848', left: '#805830', right: '#604020', light: '#C09868', dark: '#483018', outline: OUTLINE_COLOR },
+  wall_plaster: { top: '#E0D8C8', left: '#C0B8A8', right: '#A09888', light: '#F0ECE0', dark: '#887E70', outline: OUTLINE_COLOR },
+  wall_bamboo:  { top: '#C8B068', left: '#A89048', right: '#887028', light: '#E0CC88', dark: '#685420', outline: OUTLINE_COLOR },
+  wall_ice:     { top: '#A8D8E8', left: '#80B8D0', right: '#5898B0', light: '#C8E8F5', dark: '#407888', outline: OUTLINE_COLOR },
+  wall_mossy:   { top: '#889878', left: '#687858', right: '#505E40', light: '#A0B090', dark: '#3A4830', outline: OUTLINE_COLOR },
+  wall_neon:    { top: '#282038', left: '#1C1830', right: '#141020', light: '#403858', dark: '#0C0810', outline: OUTLINE_COLOR }
+};
+
+/** All registered wall type names. */
+export const WALL_TYPES = Object.keys(WALL_PALETTES);
+
+/**
+ * Get the palette for a wall type.
+ *
+ * @param {string} type
+ * @returns {{top:string,left:string,right:string,light:string,dark:string,outline:string}}
+ */
+export function getWallPalette(type) {
+  return WALL_PALETTES[type] || WALL_PALETTES.wall_stone;
+}
+
+// =============================================================================
+// FLOOR TILE DRAW ROUTINES (type-specific patterns)
+// =============================================================================
+
+/**
+ * Draw wood grain lines inside a clipped diamond.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {{base:string,light:string,dark:string,accent:string,outline:string}} p
+ */
+function _patternWood(ctx, x, y, p) {
+  ctx.strokeStyle = p.dark;
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 2]);
+  for (let i = -2; i <= 2; i++) {
     ctx.beginPath();
-    ctx.moveTo(size / 2, 0);
-    ctx.lineTo(size, size / 4);
+    ctx.moveTo(x - TILE_HW, y + TILE_HH + i * 6);
+    ctx.lineTo(x + TILE_HW, y + TILE_HH + i * 6);
     ctx.stroke();
-    // Shadow bottom edge
-    ctx.strokeStyle = palette[2];
+  }
+  ctx.setLineDash([]);
+  ctx.strokeStyle = p.accent;
+  ctx.globalAlpha = 0.3;
+  for (let i = 0; i < 4; i++) {
+    const gy = y + 8 + i * 7;
     ctx.beginPath();
-    ctx.moveTo(size / 2, size / 2);
-    ctx.lineTo(0, size / 4);
+    ctx.moveTo(x - 12 + i * 4, gy);
+    ctx.lineTo(x + 8 + i * 5, gy + 3);
     ctx.stroke();
-    // Outline
-    ctx.strokeStyle = palette[0];
-    ctx.lineWidth = 1;
+  }
+  ctx.globalAlpha = 1;
+}
+
+/**
+ * Draw stone cracks.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {{base:string,light:string,dark:string,accent:string,outline:string}} p
+ */
+function _patternStone(ctx, x, y, p) {
+  ctx.strokeStyle = p.dark;
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.5;
+  for (let i = 0; i < 5; i++) {
+    const sx = x - 16 + i * 14;
+    const sy = y + 6 + i * 5;
     ctx.beginPath();
-    ctx.moveTo(0, size / 4);
-    ctx.lineTo(size / 2, 0);
-    ctx.lineTo(size, size / 4);
-    ctx.lineTo(size / 2, size / 2);
-    ctx.closePath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx + 8, sy + 4);
+    ctx.lineTo(sx + 4, sy + 10);
     ctx.stroke();
-
-    return c;
   }
+  ctx.globalAlpha = 1;
+}
 
-  generateWallTile(wallType = 'plasterWhite', width = 64, height = 48) {
-    const color = ColorTable.walls[wallType] || ColorTable.walls.plasterWhite;
-    const palette = ['#000000', color, this._shade(color, -30)];
-    const c = document.createElement('canvas');
-    c.width = width;
-    c.height = height;
-    const ctx = c.getContext('2d');
-
-    // Wall face
-    ctx.fillStyle = palette[1];
-    ctx.fillRect(0, 0, width, height);
-    // Side shadow
-    ctx.fillStyle = palette[2];
-    ctx.fillRect(width - 4, 0, 4, height);
-    // Outline
-    ctx.strokeStyle = palette[0];
-    ctx.lineWidth = 1;
-    ctx.strokeRect(0, 0, width, height);
-
-    return c;
-  }
-
-  // ---- FURNITURE ----
-
-  generateFurnitureSprite(furnitureId, paletteOverride = null) {
-    const color = ColorTable.furniture[furnitureId] || ColorTable.furniture.sofaDefault;
-    const palette = paletteOverride || ['#000000', color, this._shade(color, -20), this._shade(color, 20)];
-    const c = document.createElement('canvas');
-    c.width = 64;
-    c.height = 64;
-    const ctx = c.getContext('2d');
-
-    // Generic furniture silhouette (box with accent)
-    ctx.fillStyle = palette[1];
-    this._drawIsoBox(ctx, 32, 40, 48, 32, 24);
-    // Highlight
-    ctx.fillStyle = palette[3];
-    ctx.fillRect(12, 24, 40, 4);
-    // Outline
-    ctx.strokeStyle = palette[0];
-    ctx.lineWidth = 1;
-    this._strokeIsoBox(ctx, 32, 40, 48, 32, 24);
-
-    return c;
-  }
-
-  // ---- AVATAR ----
-
-  generateAvatarSprite(avatarData, direction = 's', frame = 0) {
-    const skin = avatarData.skin || ColorTable.avatar.skinLight;
-    const hair = avatarData.hair || ColorTable.avatar.hairBrown;
-    const shirt = avatarData.shirt || ColorTable.avatar.shirtBlue;
-    const pants = avatarData.pants || ColorTable.avatar.pantsBlue;
-    const palette = ['#000000', skin, hair, shirt, pants, '#FFFFFF'];
-
-    const c = document.createElement('canvas');
-    c.width = 32;
-    c.height = 48;
-    const ctx = c.getContext('2d');
-
-    // Body
-    ctx.fillStyle = palette[4];
-    ctx.fillRect(10, 24, 12, 16);
-    // Shirt
-    ctx.fillStyle = palette[3];
-    ctx.fillRect(10, 24, 12, 10);
-    // Head
-    ctx.fillStyle = palette[1];
-    ctx.fillRect(8, 8, 16, 14);
-    // Hair
-    ctx.fillStyle = palette[2];
-    ctx.fillRect(8, 4, 16, 8);
-    // Eyes
-    ctx.fillStyle = palette[5];
-    if (direction === 'e' || direction === 'se') {
-      ctx.fillRect(18, 14, 3, 3);
-    } else if (direction === 'w' || direction === 'sw') {
-      ctx.fillRect(11, 14, 3, 3);
-    } else {
-      ctx.fillRect(12, 14, 2, 2);
-      ctx.fillRect(18, 14, 2, 2);
-    }
-    // Outline
-    ctx.strokeStyle = palette[0];
-    ctx.lineWidth = 1;
-    ctx.strokeRect(8, 4, 16, 18);
-    ctx.strokeRect(10, 24, 12, 16);
-
-    // Walk bob
-    if (frame === 1) {
-      ctx.clearRect(0, 0, 32, 48);
-      // Same but shifted 1px down
-      ctx.fillStyle = palette[4]; ctx.fillRect(10, 25, 12, 15);
-      ctx.fillStyle = palette[3]; ctx.fillRect(10, 25, 12, 9);
-      ctx.fillStyle = palette[1]; ctx.fillRect(8, 9, 16, 14);
-      ctx.fillStyle = palette[2]; ctx.fillRect(8, 5, 16, 8);
-      ctx.fillStyle = palette[5];
-      if (direction === 'e' || direction === 'se') ctx.fillRect(18, 15, 3, 3);
-      else if (direction === 'w' || direction === 'sw') ctx.fillRect(11, 15, 3, 3);
-      else { ctx.fillRect(12, 15, 2, 2); ctx.fillRect(18, 15, 2, 2); }
-      ctx.strokeStyle = palette[0]; ctx.lineWidth = 1;
-      ctx.strokeRect(8, 5, 16, 18); ctx.strokeRect(10, 25, 12, 15);
-    }
-
-    return c;
-  }
-
-  // ---- GENERIC ----
-
-  generateFromPixels(pixelGrid, palette) {
-    const validated = PaletteValidator.validate(palette);
-    const pal = validated.valid ? validated.normalized : palette;
-    const rows = pixelGrid.length;
-    const cols = pixelGrid[0]?.length || 0;
-    const c = document.createElement('canvas');
-    c.width = cols;
-    c.height = rows;
-    const ctx = c.getContext('2d');
-    const imgData = ctx.createImageData(cols, rows);
-    for (let y = 0; y < rows; y++) {
-      for (let x = 0; x < cols; x++) {
-        const colorIdx = pixelGrid[y][x];
-        if (colorIdx >= 0 && colorIdx < pal.length) {
-          const rgb = this._hexToRgb(pal[colorIdx]);
-          const idx = (y * cols + x) * 4;
-          imgData.data[idx] = rgb.r;
-          imgData.data[idx + 1] = rgb.g;
-          imgData.data[idx + 2] = rgb.b;
-          imgData.data[idx + 3] = 255;
-        }
+/**
+ * Draw carpet texture dots.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {{base:string,light:string,dark:string,accent:string,outline:string}} p
+ */
+function _patternCarpet(ctx, x, y, p) {
+  ctx.fillStyle = p.accent;
+  for (let row = 0; row < 5; row++) {
+    for (let col = 0; col < 7; col++) {
+      const px = x - 20 + col * 7;
+      const py = y + 6 + row * 5;
+      if ((row + col) % 2 === 0) {
+        ctx.fillRect(px, py, 2, 2);
       }
     }
-    ctx.putImageData(imgData, 0, 0);
-    return c;
-  }
-
-  // ---- HELPERS ----
-
-  _drawIsoDiamond(ctx, cx, cy, w, h) {
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - h / 2);
-    ctx.lineTo(cx + w / 2, cy);
-    ctx.lineTo(cx, cy + h / 2);
-    ctx.lineTo(cx - w / 2, cy);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  _drawIsoBox(ctx, cx, cy, w, d, h) {
-    // Top face
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - h - d / 2);
-    ctx.lineTo(cx + w / 2, cy - h);
-    ctx.lineTo(cx, cy - h + d / 2);
-    ctx.lineTo(cx - w / 2, cy - h);
-    ctx.closePath();
-    ctx.fill();
-    // Front face
-    ctx.fillRect(cx - w / 2, cy - h, w, h);
-  }
-
-  _strokeIsoBox(ctx, cx, cy, w, d, h) {
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - h - d / 2);
-    ctx.lineTo(cx + w / 2, cy - h);
-    ctx.lineTo(cx + w / 2, cy);
-    ctx.lineTo(cx, cy + d / 2);
-    ctx.lineTo(cx - w / 2, cy);
-    ctx.lineTo(cx - w / 2, cy - h);
-    ctx.closePath();
-    ctx.stroke();
-  }
-
-  _shade(hex, percent) {
-    const rgb = this._hexToRgb(hex);
-    const r = Math.min(255, Math.max(0, Math.round(rgb.r * (1 + percent / 100))));
-    const g = Math.min(255, Math.max(0, Math.round(rgb.g * (1 + percent / 100))));
-    const b = Math.min(255, Math.max(0, Math.round(rgb.b * (1 + percent / 100))));
-    return this._rgbToHex(r, g, b);
-  }
-
-  _hexToRgb(hex) {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
-      : { r: 0, g: 0, b: 0 };
-  }
-
-  _rgbToHex(r, g, b) {
-    return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
   }
 }
 
-export default SpriteGenerator;
+/**
+ * Draw grass blades.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {{base:string,light:string,dark:string,accent:string,outline:string}} p
+ */
+function _patternGrass(ctx, x, y, p) {
+  ctx.strokeStyle = p.light;
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 12; i++) {
+    const bx = x - 24 + (i * 5) % 52;
+    const by = y + 6 + ((i * 3) % 22);
+    ctx.beginPath();
+    ctx.moveTo(bx, by + 3);
+    ctx.lineTo(bx + 1, by);
+    ctx.stroke();
+  }
+  ctx.fillStyle = p.accent;
+  for (let i = 0; i < 4; i++) {
+    ctx.fillRect(x - 18 + i * 12, y + 14 + (i % 2) * 6, 2, 2);
+  }
+}
+
+/**
+ * Draw sand ripples.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {{base:string,light:string,dark:string,accent:string,outline:string}} p
+ */
+function _patternSand(ctx, x, y, p) {
+  ctx.strokeStyle = p.dark;
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.4;
+  for (let i = 0; i < 6; i++) {
+    const sy = y + 6 + i * 5;
+    ctx.beginPath();
+    ctx.moveTo(x - 24, sy);
+    ctx.lineTo(x + 8, sy + 2);
+    ctx.lineTo(x + 24, sy - 1);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/**
+ * Draw water shimmer.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {{base:string,light:string,dark:string,accent:string,outline:string}} p
+ */
+function _patternWater(ctx, x, y, p) {
+  ctx.strokeStyle = p.accent;
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.5;
+  for (let i = 0; i < 5; i++) {
+    const sy = y + 8 + i * 4;
+    ctx.beginPath();
+    ctx.moveTo(x - 20 + i * 3, sy);
+    ctx.lineTo(x - 8 + i * 5, sy);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = p.light;
+  for (let i = 0; i < 3; i++) {
+    ctx.fillRect(x - 10 + i * 14, y + 10 + (i % 2) * 6, 2, 1);
+  }
+}
+
+/**
+ * Draw snow sparkles.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {{base:string,light:string,dark:string,accent:string,outline:string}} p
+ */
+function _patternSnow(ctx, x, y, p) {
+  ctx.fillStyle = p.light;
+  for (let i = 0; i < 10; i++) {
+    const sx = x - 24 + (i * 7) % 52;
+    const sy = y + 6 + (i * 5) % 20;
+    ctx.fillRect(sx, sy, 1, 1);
+  }
+}
+
+/**
+ * Draw marble veins.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {{base:string,light:string,dark:string,accent:string,outline:string}} p
+ */
+function _patternMarble(ctx, x, y, p) {
+  ctx.strokeStyle = p.accent;
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.4;
+  ctx.beginPath();
+  ctx.moveTo(x - 16, y + 8);
+  ctx.quadraticCurveTo(x - 4, y + 16, x + 8, y + 10);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - 8, y + 20);
+  ctx.quadraticCurveTo(x + 4, y + 24, x + 16, y + 18);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
+/**
+ * Draw terracotta hex pattern.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {{base:string,light:string,dark:string,accent:string,outline:string}} p
+ */
+function _patternTerracotta(ctx, x, y, p) {
+  ctx.strokeStyle = p.dark;
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.5;
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 4; col++) {
+      const hx = x - 18 + col * 12 + (row % 2) * 6;
+      const hy = y + 8 + row * 8;
+      ctx.beginPath();
+      ctx.moveTo(hx, hy);
+      ctx.lineTo(hx + 4, hy - 3);
+      ctx.lineTo(hx + 8, hy);
+      ctx.lineTo(hx + 8, hy + 4);
+      ctx.lineTo(hx + 4, hy + 7);
+      ctx.lineTo(hx, hy + 4);
+      ctx.closePath();
+      ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+/**
+ * Draw dirt pebbles.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {{base:string,light:string,dark:string,accent:string,outline:string}} p
+ */
+function _patternDirt(ctx, x, y, p) {
+  ctx.fillStyle = p.dark;
+  for (let i = 0; i < 8; i++) {
+    const sx = x - 22 + (i * 9) % 48;
+    const sy = y + 8 + (i * 4) % 18;
+    ctx.fillRect(sx, sy, 2, 2);
+  }
+  ctx.fillStyle = p.accent;
+  for (let i = 0; i < 4; i++) {
+    ctx.fillRect(x - 14 + i * 14, y + 14 + (i % 2) * 6, 2, 2);
+  }
+}
+
+/**
+ * Draw neon grid lines.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} x
+ * @param {number} y
+ * @param {{base:string,light:string,dark:string,accent:string,outline:string}} p
+ */
+function _patternNeon(ctx, x, y, p) {
+  ctx.strokeStyle = p.accent;
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.6;
+  for (let i = -2; i <= 2; i++) {
+    ctx.beginPath();
+    ctx.moveTo(x - TILE_HW, y + TILE_HH + i * 6);
+    ctx.lineTo(x + TILE_HW, y + TILE_HH + i * 6);
+    ctx.stroke();
+  }
+  for (let i = -1; i <= 1; i++) {
+    ctx.beginPath();
+    ctx.moveTo(x + i * 16, y);
+    ctx.lineTo(x + i * 16, y + TILE_HH * 2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  // Corner glow dots
+  ctx.fillStyle = p.accent;
+  ctx.globalAlpha = 0.8;
+  ctx.fillRect(x - 2, y + TILE_HH - 2, 4, 4);
+  ctx.globalAlpha = 1;
+}
+
+// =============================================================================
+// FLOOR TILE SPRITE GENERATOR
+// =============================================================================
+
+/**
+ * Pattern dispatch map for floor tile types.
+ * @type {Object<string, Function>}
+ */
+const FLOOR_PATTERNS = {
+  wood_light:      _patternWood,
+  wood_dark:       _patternWood,
+  wood_checker:    _patternWood,
+  stone_gray:      _patternStone,
+  stone_mosaic:    _patternStone,
+  carpet_red:      _patternCarpet,
+  carpet_blue:     _patternCarpet,
+  carpet_green:    _patternCarpet,
+  grass:           _patternGrass,
+  sand:            _patternSand,
+  water:           _patternWater,
+  snow:            _patternSnow,
+  marble_white:    _patternMarble,
+  tile_terracotta: _patternTerracotta,
+  dirt:            _patternDirt,
+  neon_grid:       _patternNeon
+};
+
+/**
+ * Generate a 64x32 floor tile sprite as a Canvas element.
+ *
+ * @param {string} type - One of the FLOOR_TYPES keys
+ * @param {{base:string,light:string,dark:string,accent:string,outline:string}} [palette] - Optional custom palette
+ * @returns {{canvas:HTMLCanvasElement, width:number, height:number, anchorX:number, anchorY:number, hitW:number, hitH:number}}
+ */
+export function generateTileSprite(type, palette) {
+  const p = palette || getFloorPalette(type);
+  const canvas = _createCanvas(TILE_WIDTH, TILE_HEIGHT);
+  const ctx = _getCtx(canvas);
+
+  const cx = TILE_HW; // 32
+  const cy = 0;
+
+  _fillDiamond(ctx, cx, cy, p.base);
+  _clipDiamond(ctx, cx, cy);
+
+  const patternFn = FLOOR_PATTERNS[type] || _patternStone;
+  patternFn(ctx, cx, cy, p);
+
+  ctx.restore(); // restore clip
+
+  _drawEdges(ctx, cx, cy, p.light, p.dark);
+  _strokeDiamond(ctx, cx, cy, p.outline);
+
+  return {
+    canvas,
+    width: TILE_WIDTH,
+    height: TILE_HEIGHT,
+    anchorX: TILE_HW,
+    anchorY: 0,
+    hitW: TILE_WIDTH,
+    hitH: TILE_HEIGHT
+  };
+}
+
+// =============================================================================
+// WALL SPRITE GENERATOR (64x56 with 3 visible faces)
+// =============================================================================
+
+/**
+ * Generate a wall sprite with top, left, and right faces.
+ * Wall is drawn at 64x56 canvas.
+ *
+ * @param {string} type - One of WALL_TYPES
+ * @param {{top:string,left:string,right:string,light:string,dark:string,outline:string}} [palette]
+ * @returns {{canvas:HTMLCanvasElement, width:number, height:number, anchorX:number, anchorY:number, hitW:number, hitH:number}}
+ */
+export function generateWallSprite(type, palette) {
+  const p = palette || getWallPalette(type);
+  const W = 64;
+  const H = 56;
+  const canvas = _createCanvas(W, H);
+  const ctx = _getCtx(canvas);
+
+  const ox = 32; // origin x (center top)
+  const oy = 8;  // origin y (top face sits here)
+
+  // Top face (rhombus)
+  ctx.fillStyle = p.top;
+  ctx.beginPath();
+  ctx.moveTo(ox, oy);
+  ctx.lineTo(ox + TILE_HW, oy + TILE_HH);
+  ctx.lineTo(ox, oy + TILE_HH * 2);
+  ctx.lineTo(ox - TILE_HW, oy + TILE_HH);
+  ctx.closePath();
+  ctx.fill();
+
+  // Left face (parallelogram going down-left)
+  ctx.fillStyle = p.left;
+  ctx.beginPath();
+  ctx.moveTo(ox - TILE_HW, oy + TILE_HH);
+  ctx.lineTo(ox, oy + TILE_HH * 2);
+  ctx.lineTo(ox, oy + TILE_HH * 2 + WALL_H);
+  ctx.lineTo(ox - TILE_HW, oy + TILE_HH + WALL_H);
+  ctx.closePath();
+  ctx.fill();
+
+  // Right face (parallelogram going down-right)
+  ctx.fillStyle = p.right;
+  ctx.beginPath();
+  ctx.moveTo(ox + TILE_HW, oy + TILE_HH);
+  ctx.lineTo(ox, oy + TILE_HH * 2);
+  ctx.lineTo(ox, oy + TILE_HH * 2 + WALL_H);
+  ctx.lineTo(ox + TILE_HW, oy + TILE_HH + WALL_H);
+  ctx.closePath();
+  ctx.fill();
+
+  // Face edge highlights/shadows
+  ctx.lineWidth = 1;
+
+  // Top face left highlight
+  ctx.strokeStyle = p.light;
+  ctx.beginPath();
+  ctx.moveTo(ox - TILE_HW + 1, oy + TILE_HH);
+  ctx.lineTo(ox, oy + 1);
+  ctx.lineTo(ox + TILE_HW - 1, oy + TILE_HH);
+  ctx.stroke();
+
+  // Top face right shadow
+  ctx.strokeStyle = p.dark;
+  ctx.beginPath();
+  ctx.moveTo(ox + TILE_HW - 1, oy + TILE_HH);
+  ctx.lineTo(ox, oy + TILE_HH * 2 - 1);
+  ctx.lineTo(ox - TILE_HW + 1, oy + TILE_HH);
+  ctx.stroke();
+
+  // Left face highlight
+  ctx.strokeStyle = _lighten(p.left, 15);
+  ctx.beginPath();
+  ctx.moveTo(ox - TILE_HW, oy + TILE_HH + 1);
+  ctx.lineTo(ox - TILE_HW, oy + TILE_HH + WALL_H - 1);
+  ctx.stroke();
+
+  // Right face shadow
+  ctx.strokeStyle = _darken(p.right, 15);
+  ctx.beginPath();
+  ctx.moveTo(ox + TILE_HW, oy + TILE_HH + 1);
+  ctx.lineTo(ox + TILE_HW, oy + TILE_HH + WALL_H - 1);
+  ctx.stroke();
+
+  // Outlines
+  ctx.strokeStyle = p.outline;
+  // Top face outline
+  ctx.beginPath();
+  ctx.moveTo(ox, oy);
+  ctx.lineTo(ox + TILE_HW, oy + TILE_HH);
+  ctx.lineTo(ox, oy + TILE_HH * 2);
+  ctx.lineTo(ox - TILE_HW, oy + TILE_HH);
+  ctx.closePath();
+  ctx.stroke();
+
+  // Left face outline
+  ctx.beginPath();
+  ctx.moveTo(ox - TILE_HW, oy + TILE_HH);
+  ctx.lineTo(ox, oy + TILE_HH * 2);
+  ctx.lineTo(ox, oy + TILE_HH * 2 + WALL_H);
+  ctx.lineTo(ox - TILE_HW, oy + TILE_HH + WALL_H);
+  ctx.closePath();
+  ctx.stroke();
+
+  // Right face outline
+  ctx.beginPath();
+  ctx.moveTo(ox + TILE_HW, oy + TILE_HH);
+  ctx.lineTo(ox, oy + TILE_HH * 2);
+  ctx.lineTo(ox, oy + TILE_HH * 2 + WALL_H);
+  ctx.lineTo(ox + TILE_HW, oy + TILE_HH + WALL_H);
+  ctx.closePath();
+  ctx.stroke();
+
+  // Type-specific wall details
+  if (type === 'wall_brick') {
+    ctx.strokeStyle = _darken(p.left, 20);
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.5;
+    for (let i = 0; i < 3; i++) {
+      const ly = oy + TILE_HH + 6 + i * 8;
+      ctx.beginPath();
+      ctx.moveTo(ox - TILE_HW + 2, ly);
+      ctx.lineTo(ox - 2, ly);
+      ctx.stroke();
+      const ry = oy + TILE_HH + 6 + i * 8;
+      ctx.beginPath();
+      ctx.moveTo(ox + 2, ry);
+      ctx.lineTo(ox + TILE_HW - 2, ry);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  } else if (type === 'wall_stone') {
+    ctx.strokeStyle = _darken(p.top, 20);
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.3;
+    ctx.beginPath();
+    ctx.moveTo(ox - 12, oy + TILE_HH);
+    ctx.lineTo(ox, oy + TILE_HH + 6);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(ox + 8, oy + TILE_HH);
+    ctx.lineTo(ox - 4, oy + TILE_HH + 10);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  } else if (type === 'wall_wood') {
+    ctx.strokeStyle = _darken(p.left, 20);
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.4;
+    for (let i = 0; i < 3; i++) {
+      const ly = oy + TILE_HH + 4 + i * 9;
+      ctx.beginPath();
+      ctx.moveTo(ox - TILE_HW + 4, ly);
+      ctx.lineTo(ox - 4, ly);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  } else if (type === 'wall_plaster') {
+    ctx.fillStyle = _lighten(p.top, 10);
+    ctx.globalAlpha = 0.3;
+    for (let i = 0; i < 4; i++) {
+      ctx.fillRect(ox - 16 + i * 10, oy + TILE_HH + 2, 3, 2);
+    }
+    ctx.globalAlpha = 1;
+  } else if (type === 'wall_bamboo') {
+    ctx.strokeStyle = _darken(p.left, 15);
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.4;
+    for (let i = 1; i <= 3; i++) {
+      const lx = ox - TILE_HW + i * 10;
+      ctx.beginPath();
+      ctx.moveTo(lx, oy + TILE_HH + 2);
+      ctx.lineTo(lx, oy + TILE_HH + WALL_H - 2);
+      ctx.stroke();
+      const rx = ox + TILE_HW - i * 10;
+      ctx.beginPath();
+      ctx.moveTo(rx, oy + TILE_HH + 2);
+      ctx.lineTo(rx, oy + TILE_HH + WALL_H - 2);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  } else if (type === 'wall_ice') {
+    ctx.fillStyle = p.light;
+    ctx.globalAlpha = 0.4;
+    for (let i = 0; i < 3; i++) {
+      ctx.fillRect(ox - 10 + i * 10, oy + TILE_HH + 4 + i * 6, 4, 2);
+    }
+    ctx.globalAlpha = 1;
+  } else if (type === 'wall_mossy') {
+    ctx.fillStyle = '#507040';
+    ctx.globalAlpha = 0.4;
+    for (let i = 0; i < 6; i++) {
+      const mx = ox - 20 + (i * 8) % 42;
+      const my = oy + TILE_HH + 4 + (i * 5) % 20;
+      ctx.fillRect(mx, my, 3, 2);
+    }
+    ctx.globalAlpha = 1;
+  } else if (type === 'wall_neon') {
+    ctx.strokeStyle = p.accent;
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.7;
+    ctx.beginPath();
+    ctx.moveTo(ox - TILE_HW + 4, oy + TILE_HH + 6);
+    ctx.lineTo(ox - 4, oy + TILE_HH + 6);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(ox + 4, oy + TILE_HH + 14);
+    ctx.lineTo(ox + TILE_HW - 4, oy + TILE_HH + 14);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  return {
+    canvas,
+    width: W,
+    height: H,
+    anchorX: TILE_HW,
+    anchorY: 0,
+    hitW: W,
+    hitH: H
+  };
+}
+
 
 // =============================================================================
 // FURNITURE SPRITE GENERATOR
@@ -331,8 +943,8 @@ function _pixelOval(ctx, cx, cy, rx, ry, fill, stroke) {
  * @param {string} outline
  */
 function _isoBox(ctx, cx, cy, w, d, h, topColor, leftColor, rightColor, outline) {
-  const hw = w / 2;
-  const hd = d / 2;
+  const hw = Math.floor(w / 2);
+  const hd = Math.floor(d / 2);
   // Top face
   ctx.fillStyle = topColor;
   ctx.beginPath();
@@ -449,7 +1061,7 @@ export function generateFurnitureSprite(id, palette) {
   const c = palette || _defaultFurniturePalette(id);
 
   // Draw shadow
-  _drawShadow(ctx, anchorX, height - 4, width * 0.35, 4);
+  _drawShadow(ctx, anchorX, height - 4, Math.floor(width * 0.35), 4);
 
   // Draw furniture body based on id
   switch (id) {
@@ -1441,8 +2053,7 @@ function _buildAvatarFrame(direction, colors, hairStyle, mouthVariant, frameInde
   const outline = OUTLINE_COLOR;
 
   // Animation offsets
-  const walkPhase = isIdle ? 0 : Math.sin((frameIndex / 4) * Math.PI * 2) * 2;
-  const bobY = isIdle ? 0 : Math.abs(Math.sin((frameIndex / 4) * Math.PI * 2)) * 1;
+  const bobY = isIdle ? 0 : Math.floor(Math.abs(Math.sin((frameIndex / 4) * Math.PI * 2)) * 1);
 
   // Base positions (from top-left of 32x48 canvas)
   const headCX = 16;
@@ -1454,7 +2065,7 @@ function _buildAvatarFrame(direction, colors, hairStyle, mouthVariant, frameInde
   _drawShadow(ctx, 16, 44, 10, 3);
 
   // --- Draw legs ---
-  const legOffset = isIdle ? 0 : Math.sin((frameIndex / 4) * Math.PI * 2) * 3;
+  const legOffset = isIdle ? 0 : Math.floor(Math.sin((frameIndex / 4) * Math.PI * 2) * 3);
 
   if (direction === 'south' || direction === 'north') {
     // Left leg
@@ -1681,8 +2292,8 @@ export function generateDecorSprite(type, color) {
     canvas,
     width: W,
     height: H,
-    anchorX: W / 2,
-    anchorY: H / 2,
+    anchorX: Math.floor(W / 2),
+    anchorY: Math.floor(H / 2),
     hitW: W,
     hitH: H
   };
@@ -1780,29 +2391,3 @@ export function generateFullAssetBundle(avatarColors, hairStyle, mouthVariant) {
     }
   };
 }
-
-/** Default export is the full module API. */
-export default {
-  TILE_WIDTH, TILE_HEIGHT, TILE_HW, TILE_HH, WALL_H,
-  FLOOR_PALETTES, FLOOR_TYPES, getFloorPalette,
-  WALL_PALETTES, WALL_TYPES, getWallPalette,
-  AVATAR_COLOR_PRESETS,
-  generateTileSprite,
-  generateWallSprite,
-  generateFurnitureSprite,
-  generateAvatarHead,
-  generateAvatarBody,
-  generateAvatarLeg,
-  generateAvatarShoes,
-  generateAvatarHair,
-  generateAvatarEyes,
-  generateAvatarMouth,
-  generateAvatarSprite,
-  generateAvatarFullSheet,
-  generateDecorSprite,
-  generateAllFloorSprites,
-  generateAllWallSprites,
-  generateAllFurnitureSprites,
-  generateAllDecorSprites,
-  generateFullAssetBundle
-};

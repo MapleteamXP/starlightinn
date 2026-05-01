@@ -2,9 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#1a1a2e">
   <meta name="description" content="Starlight Inn — A cozy social world where friends gather, explore, and play together in a twilight pixel-art universe.">
@@ -14,18 +11,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=6.0.4">
-  <link rel="stylesheet" href="css/animations.css?v=6.0.4">
-  <link rel="stylesheet" href="css/mobile.css?v=6.0.4">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/mobile.css">
   <style>
     #game-canvas {
       image-rendering: pixelated;
       image-rendering: crisp-edges;
       image-rendering: -moz-crisp-edges;
     }
-    /* Mobile touch fixes */
-    .btn, button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-    #debug-panel { user-select: none; -webkit-user-select: none; }
   </style>
   <!-- Socket.IO client (loaded from CDN or server) -->
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" defer></script>
@@ -46,12 +40,9 @@
       <p class="game-subtitle">A cozy social world where friends gather under the stars</p>
       <p class="game-tagline">Make friends, decorate your space, play games, and explore together</p>
       <div class="landing-actions">
-        <button id="btn-play" class="btn btn-primary btn-glow" aria-label="Enter the world" onclick="document.getElementById('screen-landing').classList.remove('active');document.getElementById('screen-charselect').classList.add('active');if(window.FallbackGame){window.FallbackGame.setScreen('charselect');window.FallbackGame.start();}">
+        <button id="btn-play" class="btn btn-primary btn-glow" aria-label="Enter the world">
           <span class="btn-icon">✨</span>
           <span class="btn-text">Enter World</span>
-        </button>
-        <button id="btn-guest" class="btn btn-ghost" aria-label="Play as guest" onclick="document.getElementById('screen-landing').classList.remove('active');document.getElementById('screen-charselect').classList.add('active');if(window.FallbackGame){window.FallbackGame.setScreen('charselect');window.FallbackGame.start();}">
-          <span class="btn-text">Play as Guest</span>
         </button>
         <button id="btn-settings" class="btn btn-secondary" aria-label="Open settings">
           <span class="btn-icon">⚙️</span>
@@ -65,11 +56,11 @@
         <span class="feature-dot">🎵</span>
       </div>
       <div class="landing-footer">
-        <span class="version">v6.0.4 (2026-05-01)</span>
+        <span class="version">v7.0</span>
         <span class="separator">|</span>
         <span class="online-count"><span id="online-count">0</span> stars online</span>
         <span class="separator">|</span>
-        <span class="server-status" id="server-status">Offline Mode</span>
+        <span class="server-status" id="server-status">Connecting...</span>
       </div>
     </div>
     <button id="btn-about" class="landing-about" aria-label="About Starlight Inn">ⓘ About</button>
@@ -78,27 +69,12 @@
   <!-- ==================== CHARACTER SELECT ==================== -->
   <div id="screen-charselect" class="screen" role="dialog" aria-modal="true" aria-label="Character creation screen">
     <div class="charselect-bg" aria-hidden="true">
-      <div class="inn-wall"></div>
-      <div class="inn-floor"></div>
-      <div class="inn-window">
-        <div class="window-stars"></div>
-        <div class="window-moon">🌙</div>
-      </div>
-      <div class="inn-shelf">
-        <span class="shelf-item">🪴</span>
-        <span class="shelf-item">📚</span>
-        <span class="shelf-item">🕯️</span>
-        <span class="shelf-item">🧸</span>
-      </div>
-      <div class="inn-lamp">🏮</div>
-      <div class="inn-particles"></div>
+      <div class="stars-dim"></div>
     </div>
-
     <div class="charselect-header">
-      <h2>✨ Choose Your Star ✨</h2>
-      <p>Pick your look and paint your colors to shine bright</p>
+      <h2>Choose Your Star</h2>
+      <p>Pick a base and customize your colors to shine bright</p>
     </div>
-
     <div class="charselect-preview" id="char-preview-container" aria-label="Character preview">
       <canvas id="char-preview-canvas" width="200" height="200" aria-hidden="true"></canvas>
       <div class="char-preview-name">
@@ -106,98 +82,46 @@
         <button id="btn-name-random" class="btn-icon-only" title="Random name" aria-label="Generate random name">🎲</button>
       </div>
     </div>
-
-    <!-- 12 Character Base Cards -->
     <div class="charselect-grid" id="char-grid" role="list" aria-label="Character base options">
-      <div class="char-card selected" data-base="human" role="listitem" tabindex="0" aria-label="Human">
-        <span class="char-card-emoji">👤</span>
-        <span class="char-card-name">Human</span>
-      </div>
-      <div class="char-card" data-base="cat" role="listitem" tabindex="0" aria-label="Cat">
-        <span class="char-card-emoji">🐱</span>
-        <span class="char-card-name">Cat</span>
-      </div>
-      <div class="char-card" data-base="fox" role="listitem" tabindex="0" aria-label="Fox">
-        <span class="char-card-emoji">🦊</span>
-        <span class="char-card-name">Fox</span>
-      </div>
-      <div class="char-card" data-base="bunny" role="listitem" tabindex="0" aria-label="Bunny">
-        <span class="char-card-emoji">🐰</span>
-        <span class="char-card-name">Bunny</span>
-      </div>
-      <div class="char-card" data-base="bear" role="listitem" tabindex="0" aria-label="Bear">
-        <span class="char-card-emoji">🐻</span>
-        <span class="char-card-name">Bear</span>
-      </div>
-      <div class="char-card" data-base="dragon" role="listitem" tabindex="0" aria-label="Dragon">
-        <span class="char-card-emoji">🐉</span>
-        <span class="char-card-name">Dragon</span>
-      </div>
-      <div class="char-card" data-base="robot" role="listitem" tabindex="0" aria-label="Robot">
-        <span class="char-card-emoji">🤖</span>
-        <span class="char-card-name">Robot</span>
-      </div>
-      <div class="char-card" data-base="alien" role="listitem" tabindex="0" aria-label="Alien">
-        <span class="char-card-emoji">👽</span>
-        <span class="char-card-name">Alien</span>
-      </div>
-      <div class="char-card" data-base="penguin" role="listitem" tabindex="0" aria-label="Penguin">
-        <span class="char-card-emoji">🐧</span>
-        <span class="char-card-name">Penguin</span>
-      </div>
-      <div class="char-card" data-base="deer" role="listitem" tabindex="0" aria-label="Deer">
-        <span class="char-card-emoji">🦌</span>
-        <span class="char-card-name">Deer</span>
-      </div>
-      <div class="char-card" data-base="wolf" role="listitem" tabindex="0" aria-label="Wolf">
-        <span class="char-card-emoji">🐺</span>
-        <span class="char-card-name">Wolf</span>
-      </div>
-      <div class="char-card" data-base="panda" role="listitem" tabindex="0" aria-label="Panda">
-        <span class="char-card-emoji">🐼</span>
-        <span class="char-card-name">Panda</span>
-      </div>
+      <!-- 12 character cards generated by JS -->
     </div>
-
-    <!-- Circular Color Wheels -->
     <div class="charselect-customize" id="char-customize">
-      <div class="color-wheel-group" data-color="skin">
-        <label>Skin Tone</label>
-        <canvas class="color-wheel" id="wheel-skin" width="72" height="72" aria-label="Skin tone color wheel"></canvas>
-        <span class="color-wheel-dot" id="dot-skin"></span>
+      <div class="color-group">
+        <label for="color-skin">Skin Tone</label>
+        <input type="range" id="color-skin" min="0" max="360" value="30" class="hue-slider" aria-label="Skin tone hue">
+        <span class="color-preview" id="preview-skin"></span>
       </div>
-      <div class="color-wheel-group" data-color="hair">
-        <label>Hair Color</label>
-        <canvas class="color-wheel" id="wheel-hair" width="72" height="72" aria-label="Hair color wheel"></canvas>
-        <span class="color-wheel-dot" id="dot-hair"></span>
+      <div class="color-group">
+        <label for="color-hair">Hair Color</label>
+        <input type="range" id="color-hair" min="0" max="360" value="200" class="hue-slider" aria-label="Hair color hue">
+        <span class="color-preview" id="preview-hair"></span>
       </div>
-      <div class="color-wheel-group" data-color="clothes">
-        <label>Clothes Color</label>
-        <canvas class="color-wheel" id="wheel-clothes" width="72" height="72" aria-label="Clothes color wheel"></canvas>
-        <span class="color-wheel-dot" id="dot-clothes"></span>
+      <div class="color-group">
+        <label for="color-clothes">Clothes Color</label>
+        <input type="range" id="color-clothes" min="0" max="360" value="280" class="hue-slider" aria-label="Clothes color hue">
+        <span class="color-preview" id="preview-clothes"></span>
       </div>
-      <div class="color-wheel-group" data-color="accent">
-        <label>Accent Color</label>
-        <canvas class="color-wheel" id="wheel-accent" width="72" height="72" aria-label="Accent color wheel"></canvas>
-        <span class="color-wheel-dot" id="dot-accent"></span>
+      <div class="color-group">
+        <label for="color-accent">Accent Color</label>
+        <input type="range" id="color-accent" min="0" max="360" value="45" class="hue-slider" aria-label="Accent color hue">
+        <span class="color-preview" id="preview-accent"></span>
       </div>
     </div>
-
     <div class="charselect-actions">
-      <button id="btn-back" class="btn btn-secondary" aria-label="Go back" onclick="document.getElementById('screen-charselect').classList.remove('active');document.getElementById('screen-landing').classList.add('active');if(window.FallbackGame){window.FallbackGame.setScreen('landing');}">
+      <button id="btn-back" class="btn btn-secondary" aria-label="Go back">
         <span class="btn-text">Back</span>
       </button>
       <button id="btn-randomize" class="btn btn-ghost" aria-label="Randomize character">
         <span class="btn-icon">🎲</span>
         <span class="btn-text">Randomize</span>
       </button>
-      <button id="btn-continue" class="btn btn-primary" aria-label="Continue to game" onclick="var n=document.getElementById('char-name-input');if(n&&n.value.trim()&&window.FallbackGame){window.FallbackGame.player.name=n.value.trim();}document.getElementById('screen-charselect').classList.remove('active');document.getElementById('screen-game').classList.add('active');if(window.FallbackGame){window.FallbackGame.setScreen('game');}">
+      <button id="btn-continue" class="btn btn-primary" aria-label="Continue to game">
         <span class="btn-text">Continue</span>
         <span class="btn-icon">➡️</span>
       </button>
     </div>
     <div class="charselect-footer">
-      <span class="hint">Click a base to choose · Drag color wheels to paint · Enter to continue</span>
+      <span class="hint">Arrow keys to navigate · Space to select · Enter to continue</span>
     </div>
   </div>
 
@@ -624,23 +548,6 @@
     <!-- ==================== TOAST / NOTIFICATION CONTAINER ==================== -->
     <div id="toast-container" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
 
-    <!-- Debug panel for troubleshooting -->
-    <div id="debug-panel" style="position:fixed;bottom:4px;left:4px;z-index:9999;background:rgba(0,0,0,0.85);color:#0f0;padding:6px 10px;font-family:monospace;font-size:11px;border-radius:6px;max-width:220px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;border:1px solid rgba(0,255,0,0.3);" role="button" aria-label="Tap to expand debug info">
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span style="font-size:14px;">🐛</span>
-        <span>v6.0.3 | JS:<span id="dbg-js">...</span> | Game:<span id="dbg-game">?</span></span>
-      </div>
-    </div>
-    <!-- Debug overlay (hidden by default) -->
-    <div id="debug-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9998;background:rgba(0,0,0,0.92);color:#0f0;font-family:monospace;font-size:12px;padding:50px 12px 80px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;">
-      <div style="position:fixed;top:8px;right:8px;z-index:9999;">
-        <button onclick="toggleDebug()" style="background:#333;color:#fff;border:1px solid #555;padding:8px 14px;font-size:14px;border-radius:4px;cursor:pointer;">✕ Close</button>
-        <button onclick="copyDebug()" style="background:#333;color:#0f0;border:1px solid #555;padding:8px 14px;font-size:14px;border-radius:4px;cursor:pointer;margin-left:4px;">📋 Copy</button>
-      </div>
-      <div style="position:fixed;top:8px;left:12px;z-index:9999;color:#0f0;font-size:14px;font-weight:bold;">🔧 Debug Console</div>
-      <div id="debug-content" style="margin-top:30px;"></div>
-    </div>
-    <div id="error-box" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#ff4444;color:#fff;padding:8px 12px;font-family:monospace;font-size:12px;text-align:center;"></div>
     <!-- ==================== LOADING OVERLAY ==================== -->
     <div id="loading-overlay" class="loading-overlay" role="alert" aria-live="assertive" aria-label="Loading overlay">
       <div class="loading-bg" aria-hidden="true"></div>
@@ -684,284 +591,7 @@
     <div id="sr-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
   </div>
 
-  <!-- ==================== FALLBACK: Pure HTML button handlers + built-in renderer (works even if modules crash) ==================== -->
-  <script>
-  (function() {
-    'use strict';
-
-    // Immediately hide loading overlay
-    var overlay = document.getElementById('loading-overlay');
-    if (overlay) overlay.classList.add('hidden');
-
-    // Global error handler
-    window._jsErrors = [];
-    window.addEventListener('error', function(e) {
-      console.error('[Global Error]', e.message, 'at', e.filename, ':', e.lineno);
-      window._jsErrors.push(e.message + ' at ' + (e.filename || '?') + ':' + e.lineno);
-      var errBox = document.getElementById('error-box');
-      if (errBox) {
-        errBox.textContent = 'Module error: ' + e.message + ' (line ' + e.lineno + ')';
-        errBox.style.display = 'block';
-      }
-    });
-
-    // Simple fallback renderer
-    var fb = {
-      running: false,
-      canvas: document.getElementById('game-canvas'),
-      previewCanvas: document.getElementById('char-preview-canvas'),
-      player: { name: '', skinColor: 0, hairColor: 0, outfitColor: 0, accentColor: 0, expression: 'happy', facing: 'down', moving: false, base: 'human' },
-      screen: 'landing',
-      start: function() { if (!this.running) { this.running = true; this.loop(); } },
-      stop: function() { this.running = false; },
-      setScreen: function(s) { this.screen = s; },
-      loop: function() {
-        if (!this.running) return;
-        this.render();
-        requestAnimationFrame(this.loop.bind(this));
-      },
-      render: function() {
-        if (this.screen === 'charselect' && this.previewCanvas) {
-          var ctx = this.previewCanvas.getContext('2d');
-          var W = this.previewCanvas.width, H = this.previewCanvas.height;
-          ctx.clearRect(0, 0, W, H);
-          ctx.fillStyle = '#1a1a2e';
-          ctx.fillRect(0, 0, W, H);
-          this._drawPlayer(ctx, W/2, H/2, 1.2);
-        }
-        if (this.screen === 'game' && this.canvas) {
-          var ctx = this.canvas.getContext('2d');
-          var W = 960, H = 540;
-          ctx.fillStyle = '#06030e';
-          ctx.fillRect(0, 0, W, H);
-          this._drawPlayer(ctx, W/2, H*0.58, 1);
-        }
-      },
-      _drawPlayer: function(ctx, x, y, scale) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.scale(scale, scale);
-        // Simple character
-        ctx.fillStyle = '#444';
-        ctx.beginPath(); ctx.ellipse(0, 32, 18, 6, 0, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#b8a9d9';
-        ctx.fillRect(-10, -8, 20, 20);
-        ctx.fillStyle = '#ffd700';
-        ctx.beginPath(); ctx.arc(0, -18, 15, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.beginPath(); ctx.arc(-5, -18, 3, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(5, -18, 3, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#222';
-        ctx.beginPath(); ctx.arc(-5, -18, 1.5, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(5, -18, 1.5, 0, Math.PI*2); ctx.fill();
-        ctx.restore();
-      }
-    };
-
-    window.FallbackGame = fb;
-
-    // Button wiring
-    function wireButtons() {
-      var serverStatus = document.getElementById('server-status');
-      var onlineCount = document.getElementById('online-count');
-      if (serverStatus) { serverStatus.textContent = 'Offline Mode'; serverStatus.style.color = '#888'; }
-      if (onlineCount) onlineCount.textContent = '—';
-
-      var screenLanding = document.getElementById('screen-landing');
-      var screenChar = document.getElementById('screen-charselect');
-      var screenGame = document.getElementById('screen-game');
-
-      function bindBtn(id, fn) {
-        var btn = document.getElementById(id);
-        if (!btn) return;
-        btn.addEventListener('click', fn);
-        btn.addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); fn(e); });
-      }
-
-      bindBtn('btn-play', function() {
-        console.log('[Fallback] Enter World clicked');
-        if (screenLanding) screenLanding.classList.remove('active');
-        if (screenChar) screenChar.classList.add('active');
-        fb.setScreen('charselect');
-        fb.start();
-      });
-
-      bindBtn('btn-guest', function() {
-        console.log('[Fallback] Play as Guest clicked');
-        if (screenLanding) screenLanding.classList.remove('active');
-        if (screenChar) screenChar.classList.add('active');
-        fb.setScreen('charselect');
-        fb.start();
-      });
-
-      bindBtn('btn-back', function() {
-        console.log('[Fallback] Back clicked');
-        if (screenChar) screenChar.classList.remove('active');
-        if (screenLanding) screenLanding.classList.add('active');
-        fb.setScreen('landing');
-      });
-
-      bindBtn('btn-continue', function() {
-        console.log('[Fallback] Continue clicked');
-        var nameInput = document.getElementById('char-name-input');
-        if (nameInput && nameInput.value.trim()) fb.player.name = nameInput.value.trim();
-        if (screenChar) screenChar.classList.remove('active');
-        if (screenGame) screenGame.classList.add('active');
-        fb.setScreen('game');
-      });
-
-      bindBtn('btn-settings', function() {
-        var panel = document.getElementById('settings-panel');
-        if (panel) panel.classList.add('active');
-      });
-
-      // Color wheels
-      var charCards = document.querySelectorAll('.char-card');
-      charCards.forEach(function(card) {
-        card.addEventListener('click', function() {
-          charCards.forEach(function(c) { c.classList.remove('selected'); });
-          card.classList.add('selected');
-          fb.player.base = card.dataset.base || 'human';
-        });
-      });
-
-      console.log('[Fallback] Buttons wired successfully');
-    }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', wireButtons);
-    } else {
-      wireButtons();
-    }
-  })();
-  </script>
-
   <!-- ==================== MODULE ENTRY ==================== -->
-  <script type="module" src="js/main.js?v=6.0.4" id="module-main"></script>
-  <script>
-    // Module load detection -- if main.js fails to load, ensure fallback is active
-    window.MODULE_LOADED = false;
-    window.MODULE_TIMEOUT = false;
-    var moduleScript = document.getElementById('module-main');
-    moduleScript.addEventListener('load', function() {
-      window.MODULE_LOADED = true;
-      console.log('[Module] main.js loaded successfully');
-    });
-    moduleScript.addEventListener('error', function() {
-      console.warn('[Module] main.js failed to load -- fallback renderer active');
-      window.MODULE_ERROR = true;
-    });
-    // Debug panel logic
-    var debugPanel = document.getElementById('debug-panel');
-    if (debugPanel) {
-      debugPanel.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        toggleDebug();
-      });
-      debugPanel.addEventListener('touchend', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        toggleDebug();
-      });
-    }
-    window.DEBUG_OPEN = false;
-    function toggleDebug() {
-      var overlay = document.getElementById('debug-overlay');
-      var panel = document.getElementById('debug-panel');
-      if (!overlay) return;
-      window.DEBUG_OPEN = !window.DEBUG_OPEN;
-      overlay.style.display = window.DEBUG_OPEN ? 'block' : 'none';
-      if (panel) panel.style.opacity = window.DEBUG_OPEN ? '0' : '1';
-      if (window.DEBUG_OPEN) updateDebugContent();
-    }
-    function copyDebug() {
-      var content = document.getElementById('debug-content');
-      if (content && navigator.clipboard) {
-        navigator.clipboard.writeText(content.innerText).then(function() {
-          alert('Debug info copied! Paste it anywhere.');
-        });
-      }
-    }
-    function getDebugInfo() {
-      var info = [];
-      info.push('=== STARLIGHT INN DEBUG REPORT ===');
-      info.push('Version: v6.0.3 (2026-05-01)');
-      info.push('User Agent: ' + navigator.userAgent);
-      info.push('Screen: ' + window.innerWidth + 'x' + window.innerHeight);
-      info.push('Device Pixel Ratio: ' + (window.devicePixelRatio || 1));
-      info.push('Touch: ' + ('ontouchstart' in window ? 'YES' : 'NO'));
-      info.push('Online: ' + (navigator.onLine ? 'YES' : 'NO'));
-      info.push('');
-      info.push('--- MODULE STATUS ---');
-      info.push('main.js Loaded: ' + (window.MODULE_LOADED ? 'YES' : 'NO'));
-      info.push('main.js Error: ' + (window.MODULE_ERROR ? 'YES' : 'NO'));
-      info.push('main.js Timeout: ' + (window.MODULE_TIMEOUT ? 'YES' : 'NO'));
-      info.push('');
-      info.push('--- GAME OBJECT ---');
-      var g = window.StarlightInn;
-      if (g) {
-        info.push('Game Exists: YES');
-        info.push('Game Running: ' + (g.running ? 'YES' : 'NO'));
-        info.push('Screen: ' + (g.state ? g.state.screen : 'null'));
-        info.push('Canvas Exists: ' + (g.canvas ? 'YES' : 'NO'));
-        info.push('Socket Exists: ' + (g.socket ? 'YES' : 'NO'));
-        info.push('Player Exists: ' + (g.player ? 'YES' : 'NO'));
-      } else {
-        info.push('Game Exists: NO (main.js not loaded or crashed)');
-      }
-      info.push('');
-      info.push('--- SOCKET STATUS ---');
-      if (window.SocketClient) {
-        info.push('SocketClient Class: YES');
-      } else {
-        info.push('SocketClient Class: NO');
-      }
-      if (window.socketClient) {
-        info.push('socketClient Instance: YES');
-        info.push('Connected: ' + (window.socketClient.connected ? 'YES' : 'NO'));
-        info.push('Connection State: ' + (window.socketClient.socket ? window.socketClient.socket.connected : 'no socket'));
-      } else {
-        info.push('socketClient Instance: NO');
-      }
-      info.push('');
-      info.push('--- DOM STATE ---');
-      var screens = ['screen-landing','screen-charselect','screen-world','screen-minigame'];
-      screens.forEach(function(id) {
-        var el = document.getElementById(id);
-        info.push(id + ': ' + (el ? (el.classList.contains('active') ? 'ACTIVE' : 'hidden') : 'MISSING'));
-      });
-      info.push('');
-      info.push('--- ERRORS ---');
-      info.push('window._jsErrors: ' + (window._jsErrors ? window._jsErrors.join('\\n') : 'none captured'));
-      info.push('');
-      info.push('--- STORAGE ---');
-      try {
-        info.push('localStorage keys: ' + Object.keys(localStorage).join(', '));
-      } catch(e) { info.push('localStorage: blocked/error'); }
-      return info.join('\\n');
-    }
-    function updateDebugContent() {
-      var content = document.getElementById('debug-content');
-      if (content) content.innerText = getDebugInfo();
-    }
-    // Debug panel updater
-    setInterval(function() {
-      var dbgJs = document.getElementById('dbg-js');
-      var dbgGame = document.getElementById('dbg-game');
-      if (dbgJs) dbgJs.textContent = window.MODULE_LOADED ? 'OK' : (window.MODULE_ERROR ? 'ERR' : 'LOAD');
-      if (dbgGame && window.StarlightInn) {
-        var g = window.StarlightInn;
-        dbgGame.textContent = (g.state ? g.state.screen : '?') + ' | ' + (g.running ? 'RUN' : 'STOP');
-      }
-      if (window.DEBUG_OPEN) updateDebugContent();
-    }, 500);
-    setTimeout(function() {
-      if (!window.MODULE_LOADED && !window.MODULE_ERROR) {
-        console.warn('[Module] main.js load timeout -- forcing fallback');
-        window.MODULE_TIMEOUT = true;
-      }
-    }, 5000);
-  </script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

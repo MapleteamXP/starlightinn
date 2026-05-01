@@ -1488,6 +1488,3 @@ export default class IsoTilemap {
  * @property {number} tileY - Tile Y.
  * @property {number} rotation - Rotation index.
  */
-
-// ── Named class export for main.js compatibility ──
-export { IsoTilemap };
