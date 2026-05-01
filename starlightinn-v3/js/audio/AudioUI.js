@@ -761,10 +761,22 @@ class AudioUI {
   }
 }
 
-// Singleton export for the game
-export const audioUI = new AudioUI({
-  soundManager: (await import('./SoundManager.js')).soundManager,
-  musicPlayer: (await import('./MusicPlayer.js')).musicPlayer,
-});
+// Singleton export for the game — created lazily so the user can provide deps.
+let _audioUIInstance = null;
+
+/**
+ * Get or create the singleton AudioUI instance.
+ * @param {Object} [deps]
+ * @param {import('./SoundManager').default} [deps.soundManager]
+ * @param {import('./MusicPlayer').default} [deps.musicPlayer]
+ * @returns {AudioUI}
+ */
+export function getAudioUI(deps) {
+  if (!_audioUIInstance && deps) {
+    _audioUIInstance = new AudioUI(deps);
+  }
+  return _audioUIInstance;
+}
+
 export { AudioUI };
 export default AudioUI;
