@@ -496,8 +496,13 @@ class StarlightInn {
 
   // ===== SCREENS =====
   showScreen(name) {
+    document.getElementById('titleScreen').style.display = 'none';
+    document.getElementById('charCreator').style.display = 'none';
+    document.getElementById('gameScreen').style.display = 'none';
     document.querySelectorAll('#titleScreen, #charCreator, #gameScreen').forEach(el => el.classList.remove('active'));
-    if(name === 'title') document.getElementById('titleScreen').style.display = 'flex';
+    if(name === 'title') {
+      const el = document.getElementById('titleScreen'); el.style.display = 'flex'; el.classList.add('active');
+    }
     if(name === 'charCreator') {
       const el = document.getElementById('charCreator'); el.style.display = 'flex'; el.classList.add('active');
       this._drawAvatarPreview();
