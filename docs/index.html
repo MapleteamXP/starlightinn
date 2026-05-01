@@ -434,17 +434,29 @@ function makePlaceholder(key){
 async function loadAllAssets(){
   const keys=Object.keys(ASSETS);
   S.total=keys.length;S.loaded=0;
+
+  // Fallback: show title after 3 seconds regardless
+  setTimeout(()=>{
+    if(S.screen==='loading'){
+      document.getElementById('loadScreen').classList.add('done');
+      checkSavedSession();
+    }
+  }, 3000);
+
   for(let i=0;i<keys.length;i+=5){
     const batch=keys.slice(i,i+5);
     await Promise.all(batch.map(k=>loadImg(k,ASSETS[k])));
     S.loaded+=batch.length;
     const pct=Math.round((S.loaded/S.total)*100);
-    document.getElementById('loadFill').style.width=pct+'%';
-    document.getElementById('loadText').textContent='Loading... '+pct+'%';
+    const fill=document.getElementById('loadFill');
+    const txt=document.getElementById('loadText');
+    if(fill)fill.style.width=pct+'%';
+    if(txt)txt.textContent='Loading... '+pct+'%';
   }
-  await new Promise(r=>setTimeout(r,400));
-  document.getElementById('loadScreen').classList.add('done');
-  checkSavedSession();
+  await new Promise(r=>setTimeout(r,200));
+  const ls=document.getElementById('loadScreen');
+  if(ls)ls.classList.add('done');
+  if(S.screen==='loading')checkSavedSession();
 }
 
 // ===== AUTH SYSTEM =====
