@@ -1687,7 +1687,7 @@ function drawFloorTiles(ctx, rd, zm) {
       const p = tileToScreen(x, y, camX, camY, zm);
       if (floorImg) {
         const fw = TILE_W * zm, fh = TILE_H * zm;
-        ctx.drawImage(floorImg, p.x - fw/2, p.y, fw, fh);
+        ctx.drawImage(floorImg, p.x - fw/2, p.y - fh/2, fw, fh);
       } else {
         ctx.fillStyle = '#3a2a1a';
         ctx.beginPath();
@@ -1701,15 +1701,15 @@ function drawFloorTiles(ctx, rd, zm) {
       }
     }
   }
-  // Walls on perimeter
+  // Walls on perimeter — north and west edges of room
   if (wallImg) {
     for (let x = 0; x < rd.w; x++) {
-      const pTop = tileToScreen(x, -0.5, camX, camY, zm);
-      ctx.drawImage(wallImg, pTop.x - TILE_W * zm / 2, pTop.y - TILE_H * zm, TILE_W * zm, TILE_H * zm * 2);
+      const pTop = tileToScreen(x, 0, camX, camY, zm);
+      ctx.drawImage(wallImg, pTop.x - TILE_W * zm / 2, pTop.y - TILE_H * zm * 1.5, TILE_W * zm, TILE_H * zm * 2);
     }
     for (let y = 0; y < rd.h; y++) {
-      const pLeft = tileToScreen(-0.5, y, camX, camY, zm);
-      ctx.drawImage(wallImg, pLeft.x - TILE_W * zm / 2, pLeft.y - TILE_H * zm, TILE_W * zm, TILE_H * zm * 2);
+      const pLeft = tileToScreen(0, y, camX, camY, zm);
+      ctx.drawImage(wallImg, pLeft.x - TILE_W * zm, pLeft.y - TILE_H * zm * 0.5, TILE_W * zm, TILE_H * zm * 2);
     }
   }
 }
@@ -1750,27 +1750,38 @@ function drawAvatar(ctx, px, py, dir, opts, zm, isWalking, walkFrame) {
   const pos = tileToScreen(px, py, camX, camY, zm);
   // Use composite render to temp canvas then draw
   const avc = document.createElement('canvas');
-  avc.width = 80; avc.height = 100;
+  avc.width = 100; avc.height = 120;
   renderAvatarComposite(avc, opts);
-  const sc = zm * 0.9;
+  const sc = zm * 1.2;  // Larger scale for visibility
   const w = avc.width * sc;
   const h = avc.height * sc;
   const x = pos.x - w / 2;
-  const y = pos.y - h + TILE_H * zm * 0.8;
+  const y = pos.y - h + TILE_H * zm * 1.2;
 
   // Bobbing when walking
   let bob = 0;
   if (isWalking) {
-    bob = Math.sin(walkFrame * 0.5) * 3 * zm;
+    bob = Math.sin(walkFrame * 0.5) * 4 * zm;
   }
+
+  // Shadow beneath avatar
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.beginPath();
+  ctx.ellipse(pos.x, pos.y + TILE_H * zm * 0.3, 14 * zm, 7 * zm, 0, 0, Math.PI * 2);
+  ctx.fill();
 
   ctx.drawImage(avc, x, y + bob, w, h);
 
-  // Direction indicator (subtle shadow)
-  ctx.fillStyle = 'rgba(0,0,0,0.2)';
-  ctx.beginPath();
-  ctx.ellipse(pos.x, pos.y + TILE_H * zm * 0.4, 12 * zm, 6 * zm, 0, 0, Math.PI * 2);
-  ctx.fill();
+  // Name tag
+  if (session && settings.showNames !== false) {
+    ctx.font = 'bold ' + Math.round(11 * zm) + 'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#FFD700';
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+    const name = session ? session.name : 'Guest';
+    ctx.strokeText(name, pos.x, y - 6 * zm);
+    ctx.fillText(name, pos.x, y - 6 * zm);
+  }
 }
 
 function drawChatBubble(ctx, msg, px, py, zm) {
@@ -1933,9 +1944,19 @@ function gameLoop(time) {
       const dx = Math.sign(player.tx - player.x);
       const dy = Math.sign(player.ty - player.y);
       if (dx !== 0 || dy !== 0) {
-        player.x += dx;
-        player.y += dy;
-        player.dir = dx > 0 ? 'e' : dx < 0 ? 'w' : dy > 0 ? 's' : 'n';
+        const nx = player.x + dx;
+        const ny = player.y + dy;
+        // Check collision — only move if target tile is walkable
+        if (isTileWalkable(nx, ny, currentRoom)) {
+          player.x = nx;
+          player.y = ny;
+          player.dir = dx > 0 ? 'e' : dx < 0 ? 'w' : dy > 0 ? 's' : 'n';
+        } else {
+          // Blocked — stop moving
+          player.moving = false;
+          player.tx = player.x;
+          player.ty = player.y;
+        }
         if (player.x === player.tx && player.y === player.ty) {
           player.moving = false;
         }
@@ -2039,8 +2060,8 @@ function setupInput() {
     if (currentRoom === 'myroom') {
       handleEditorClick(t, mx, my);
     } else {
-      // Walk to clicked tile
-      if (t.x >= 0 && t.y >= 0 && t.x < roomData.w && t.y < roomData.h) {
+      // Walk to clicked tile (only if walkable)
+      if (t.x >= 0 && t.y >= 0 && t.x < roomData.w && t.y < roomData.h && isTileWalkable(t.x, t.y, currentRoom)) {
         player.tx = Math.max(0, Math.min(roomData.w - 1, t.x));
         player.ty = Math.max(0, Math.min(roomData.h - 1, t.y));
         player.moving = true;
@@ -2072,12 +2093,26 @@ function resizeCanvas() {
 function handleEditorClick(t, mx, my) {
   if (editorTool === 'place' && editorSelectedItem) {
     if (t.x >= 0 && t.y >= 0 && t.x < roomData.w && t.y < roomData.h) {
+      // Check if tile already has furniture (can't stack)
+      if (isFurnitureAt(t.x, t.y, currentRoom)) {
+        addChatMsg('System', 'That spot is already occupied!', true);
+        return;
+      }
+      // Check if tile is walkable for placement
       const furnType = editorSelectedItem.replace('furniture/', '');
       roomData.furniture.push({type: furnType, x: t.x, y: t.y});
-      // Remove from inventory
+      // Remove ONE from inventory — find by matching icon and deduct count
       if (session) {
         const idx = session.inventory.findIndex(i => i.icon === editorSelectedItem);
-        if (idx >= 0) session.inventory.splice(idx, 1);
+        if (idx >= 0) {
+          session.inventory.splice(idx, 1);
+          // If no more of this item, deselect
+          const remaining = session.inventory.filter(i => i.icon === editorSelectedItem).length;
+          if (remaining === 0) {
+            editorSelectedItem = null;
+            editorTool = 'move';
+          }
+        }
         saveSession(session);
         updateInventoryUI();
         updateEditorInvGrid();
