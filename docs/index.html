@@ -471,27 +471,36 @@ const ASSETS = {
   face_cool: 'assets/sprites/parts/face_cool.png',
   face_surprised: 'assets/sprites/parts/face_surprised.png',
 
-  // Hair (20 styles)
+  // Hair (22 styles)
   hair_afro: 'assets/sprites/parts/hair_afro.png',
   hair_bald: 'assets/sprites/parts/hair_bald.png',
   hair_bedhead_blonde: 'assets/sprites/parts/hair_bedhead_blonde.png',
+  hair_bob_black: 'assets/sprites/parts/hair_bob_black.png',
+  hair_braids_brown: 'assets/sprites/parts/hair_braids_brown.png',
+  hair_buzz_cut: 'assets/sprites/parts/hair_buzz_cut.png',
   hair_curly_red: 'assets/sprites/parts/hair_curly_red.png',
+  hair_dreads: 'assets/sprites/parts/hair_dreads.png',
   hair_emo: 'assets/sprites/parts/hair_emo.png',
+  hair_french_braid: 'assets/sprites/parts/hair_french_braid.png',
   hair_long_brown: 'assets/sprites/parts/hair_long_brown.png',
   hair_long_pink: 'assets/sprites/parts/hair_long_pink.png',
   hair_mohawk: 'assets/sprites/parts/hair_mohawk.png',
   hair_pigtails_teal: 'assets/sprites/parts/hair_pigtails_teal.png',
+  hair_pixie_cut: 'assets/sprites/parts/hair_pixie_cut.png',
   hair_ponytail: 'assets/sprites/parts/hair_ponytail.png',
   hair_short_brown: 'assets/sprites/parts/hair_short_brown.png',
   hair_slick_black: 'assets/sprites/parts/hair_slick_black.png',
   hair_spiky_blonde: 'assets/sprites/parts/hair_spiky_blonde.png',
   hair_spiky_blue: 'assets/sprites/parts/hair_spiky_blue.png',
+  hair_undercut: 'assets/sprites/parts/hair_undercut.png',
+  hair_waves_blonde: 'assets/sprites/parts/hair_waves_blonde.png',
 
   // Accessories
   acc_glasses_round: 'assets/sprites/parts/acc_glasses_round.png',
   acc_hat_beanie: 'assets/sprites/parts/acc_hat_beanie.png',
   acc_hat_wizard: 'assets/sprites/parts/acc_hat_wizard.png',
   acc_wings: 'assets/sprites/parts/acc_wings.png',
+  acc_bow_tie: 'assets/sprites/parts/acc_bow_tie.png',
 
   // Room backgrounds
   bg_mainhall: 'assets/sprites/rooms/bg_mainhall.png',
@@ -501,6 +510,12 @@ const ASSETS = {
   bg_bedroom: 'assets/sprites/rooms/bg_bedroom.png',
   bg_beach: 'assets/sprites/rooms/bg_beach.png',
   bg_lido: 'assets/sprites/rooms/bg_lido.png',
+  bg_rooftop: 'assets/sprites/rooms/bg_rooftop.png',
+  bg_arcade: 'assets/sprites/rooms/bg_arcade.png',
+  bg_spa: 'assets/sprites/rooms/bg_spa.png',
+  bg_market: 'assets/sprites/rooms/bg_market.png',
+  bg_event: 'assets/sprites/rooms/bg_event.png',
+  bg_winter: 'assets/sprites/rooms/bg_winter.png',
 
   // Furniture (31 items)
   furni_arcade: 'assets/sprites/furniture/arcade.png',
@@ -621,15 +636,31 @@ const CATALOG = [
   { id:'hair_slick_black', name:'Slick Back', cat:'hair', price:55, rarity:'rare', icon:'slick' },
   { id:'hair_bedhead_blonde', name:'Bed Head', cat:'hair', price:25, rarity:'common', icon:'bedhead' },
   { id:'hair_curly_red', name:'Curly Red', cat:'hair', price:40, rarity:'uncommon', icon:'curly' },
+  { id:'hair_bob_black', name:'Bob Cut', cat:'hair', price:30, rarity:'common', icon:'bob' },
+  { id:'hair_braids_brown', name:'Braids', cat:'hair', price:35, rarity:'common', icon:'braids' },
+  { id:'hair_buzz_cut', name:'Buzz Cut', cat:'hair', price:20, rarity:'common', icon:'buzz' },
+  { id:'hair_dreads', name:'Dreadlocks', cat:'hair', price:45, rarity:'uncommon', icon:'dreads' },
+  { id:'hair_french_braid', name:'French Braid', cat:'hair', price:40, rarity:'uncommon', icon:'braid' },
+  { id:'hair_pixie_cut', name:'Pixie Cut', cat:'hair', price:35, rarity:'common', icon:'pixie' },
+  { id:'hair_undercut', name:'Undercut', cat:'hair', price:50, rarity:'rare', icon:'undercut' },
+  { id:'hair_waves_blonde', name:'Wavy', cat:'hair', price:30, rarity:'common', icon:'waves' },
 
   // Clothes
   { id:'shirt_hoodie', name:'Hoodie', cat:'clothes', price:60, rarity:'common', icon:'hoodie' },
   { id:'shirt_jacket', name:'Leather Jacket', cat:'clothes', price:80, rarity:'uncommon', icon:'jacket' },
   { id:'dress_pink', name:'Pink Dress', cat:'clothes', price:70, rarity:'uncommon', icon:'dress' },
+  { id:'shirt_polo', name:'Polo Shirt', cat:'clothes', price:50, rarity:'common', icon:'polo' },
+  { id:'shirt_tank', name:'Tank Top', cat:'clothes', price:40, rarity:'common', icon:'tank' },
+  { id:'shirt_overalls', name:'Overalls', cat:'clothes', price:65, rarity:'uncommon', icon:'overalls' },
+  { id:'dress_blue', name:'Blue Dress', cat:'clothes', price:75, rarity:'uncommon', icon:'dress2' },
+  { id:'legs_skirt', name:'Skirt', cat:'clothes', price:45, rarity:'common', icon:'skirt' },
+
+  // Items / Accessories
   { id:'acc_hat_wizard', name:'Wizard Hat', cat:'items', price:100, rarity:'epic', icon:'wizard' },
   { id:'acc_wings', name:'Angel Wings', cat:'items', price:500, rarity:'legendary', icon:'wings' },
   { id:'acc_glasses_round', name:'Round Glasses', cat:'items', price:25, rarity:'common', icon:'glasses' },
   { id:'acc_hat_beanie', name:'Beanie', cat:'items', price:35, rarity:'common', icon:'beanie' },
+  { id:'acc_bow_tie', name:'Bow Tie', cat:'items', price:30, rarity:'common', icon:'bowtie' },
   { id:'furni_trophy', name:'Golden Trophy', cat:'rare', price:2000, rarity:'legendary', icon:'trophy' },
   { id:'furni_throne', name:'Emperor Throne', cat:'rare', price:5000, rarity:'legendary', icon:'throne' },
 ];
@@ -740,7 +771,7 @@ const ROOMS = {
   rooftop: {
     name: 'Rooftop Cafe',
     desc: 'Coffee with a view',
-    bg: 'bg_lido',
+    bg: 'bg_rooftop',
     width: 8, height: 7,
     color: '#2e2e1a',
     exits: [{to:'lobby',x:3,y:6}],
@@ -754,7 +785,7 @@ const ROOMS = {
   arcade: {
     name: 'Neon Arcade',
     desc: 'Games and prizes',
-    bg: 'bg_mainhall',
+    bg: 'bg_arcade',
     width: 8, height: 7,
     color: '#1a0a2e',
     exits: [{to:'lobby',x:0,y:3}],
@@ -767,7 +798,7 @@ const ROOMS = {
   spa: {
     name: 'Spa Bay',
     desc: 'Relaxation zone',
-    bg: 'bg_bedroom',
+    bg: 'bg_spa',
     width: 7, height: 7,
     color: '#0a2e2e',
     exits: [{to:'lobby',x:3,y:0}],
@@ -780,7 +811,7 @@ const ROOMS = {
   market: {
     name: 'Market Hall',
     desc: 'Trade and barter',
-    bg: 'bg_tavern',
+    bg: 'bg_market',
     width: 9, height: 7,
     color: '#2e2a1a',
     exits: [{to:'lobby',x:0,y:3}],
@@ -794,7 +825,7 @@ const ROOMS = {
   event: {
     name: 'Event Pavilion',
     desc: 'Special gatherings',
-    bg: 'bg_garden',
+    bg: 'bg_event',
     width: 10, height: 8,
     color: '#2e1a2e',
     exits: [{to:'lobby',x:0,y:3}],
@@ -808,7 +839,7 @@ const ROOMS = {
   winter: {
     name: 'Winter Plaza',
     desc: 'Snow and lights',
-    bg: 'bg_mainhall',
+    bg: 'bg_winter',
     width: 9, height: 8,
     color: '#1a1a3e',
     exits: [{to:'lobby',x:4,y:7}],
@@ -1140,12 +1171,14 @@ function hexToHsl(hex) {
 const HAIR_STYLES = [
   'hair_short_brown','hair_afro','hair_bald','hair_emo','hair_long_brown',
   'hair_mohawk','hair_ponytail','hair_spiky_blonde','hair_long_pink','hair_spiky_blue',
-  'hair_curly_red','hair_bedhead_blonde','hair_pigtails_teal','hair_slick_black'
+  'hair_curly_red','hair_bedhead_blonde','hair_pigtails_teal','hair_slick_black',
+  'hair_bob_black','hair_braids_brown','hair_buzz_cut','hair_dreads','hair_french_braid',
+  'hair_pixie_cut','hair_undercut','hair_waves_blonde'
 ];
 const FACE_STYLES = ['face_happy','face_cool','face_surprised'];
-const SHIRT_STYLES = ['shirt_tshirt','shirt_hoodie','shirt_jacket','dress_pink'];
-const PANTS_STYLES = ['legs_pants','legs_shorts'];
-const ACC_STYLES = ['','acc_glasses_round','acc_hat_beanie','acc_hat_wizard','acc_wings'];
+const SHIRT_STYLES = ['shirt_tshirt','shirt_hoodie','shirt_jacket','shirt_polo','shirt_tank','shirt_overalls','dress_pink','dress_blue'];
+const PANTS_STYLES = ['legs_pants','legs_shorts','legs_skirt'];
+const ACC_STYLES = ['','acc_glasses_round','acc_hat_beanie','acc_hat_wizard','acc_wings','acc_bow_tie'];
 const SKIN_TONES = ['#ffdbac','#f1c27d','#e0ac69','#8d5524','#c68642','#59331b','#ffcea3','#f5d0b5'];
 
 function initCharCreator() {
