@@ -1072,67 +1072,44 @@ function renderAvatar(ctx, avatar, x, y, scale = 1, dir = 's') {
   const AV_W = 48;
   const AV_H = 72;
 
-  const layers = [];
-
-  // Body base (skin tone applied)
-  layers.push({ key: 'body_base', tint: avatar.skin, z: 0 });
-
-  // Legs/pants
-  if (avatar.pantsStyle && state.assets[avatar.pantsStyle]) {
-    const pantsColor = hslToHex(avatar.pantsHue, 70, 40);
-    layers.push({ key: avatar.pantsStyle, tint: pantsColor, z: 1 });
-  }
-
-  // Shirt/dress
-  if (avatar.shirtStyle && state.assets[avatar.shirtStyle]) {
-    const shirtColor = hslToHex(avatar.shirtHue, 70, 50);
-    layers.push({ key: avatar.shirtStyle, tint: shirtColor, z: 2 });
-  }
-
-  // Face
-  if (avatar.faceStyle && state.assets[avatar.faceStyle]) {
-    layers.push({ key: avatar.faceStyle, tint: null, z: 3 });
-  }
-
-  // Hair
-  if (avatar.hairStyle && state.assets[avatar.hairStyle]) {
-    const hairColor = hslToHex(avatar.hairHue, 80, 50);
-    layers.push({ key: avatar.hairStyle, tint: hairColor, z: 4 });
-  }
-
-  // Accessory
-  if (avatar.accStyle && state.assets[avatar.accStyle]) {
-    layers.push({ key: avatar.accStyle, tint: null, z: 5 });
-  }
-
-  // Draw all layers with fixed avatar dimensions
-  layers.forEach(layer => {
-    const img = state.assets[layer.key];
+  // Helper to safely draw an image
+  function drawLayer(key, tint) {
+    const img = state.assets[key];
     if (!img || !img.width || !img.height) return;
 
-    // Determine source rectangle (handle sprite sheets by taking top-left portion)
-    const srcW = Math.min(img.width, AV_W * 2);
-    const srcH = Math.min(img.height, AV_H * 2);
-    const srcX = 0;
-    const srcY = 0;
+    try {
+      const srcW = Math.min(img.width, AV_W * 3);
+      const srcH = Math.min(img.height, AV_H * 3);
 
-    if (layer.tint) {
-      // Draw tinted version using offscreen canvas
-      const c = document.createElement('canvas');
-      c.width = AV_W;
-      c.height = AV_H;
-      const cx = c.getContext('2d');
-      // Draw source portion scaled to avatar size
-      cx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, AV_W, AV_H);
-      cx.globalCompositeOperation = 'source-atop';
-      cx.fillStyle = layer.tint;
-      cx.fillRect(0, 0, AV_W, AV_H);
-      ctx.drawImage(c, -AV_W/2, -AV_H);
-    } else {
-      // Draw source portion scaled to avatar size
-      ctx.drawImage(img, srcX, srcY, srcW, srcH, -AV_W/2, -AV_H, AV_W, AV_H);
+      if (tint) {
+        // Use offscreen canvas for tinting
+        const c = document.createElement('canvas');
+        c.width = AV_W;
+        c.height = AV_H;
+        const cx = c.getContext('2d');
+        cx.drawImage(img, 0, 0, srcW, srcH, 0, 0, AV_W, AV_H);
+        cx.globalCompositeOperation = 'source-atop';
+        cx.fillStyle = tint;
+        cx.fillRect(0, 0, AV_W, AV_H);
+        cx.globalCompositeOperation = 'source-over';
+        ctx.drawImage(c, -AV_W/2, -AV_H);
+      } else {
+        ctx.drawImage(img, 0, 0, srcW, srcH, -AV_W/2, -AV_H, AV_W, AV_H);
+      }
+    } catch(e) {
+      // Fallback: just draw a colored rectangle
+      ctx.fillStyle = tint || '#888';
+      ctx.fillRect(-20, -AV_H + 10, 40, AV_H - 20);
     }
-  });
+  }
+
+  // Draw layers in order
+  drawLayer('body_base', avatar.skin || '#ffdbac');
+  if (avatar.pantsStyle) drawLayer(avatar.pantsStyle, hslToHex(avatar.pantsHue || 220, 70, 40));
+  if (avatar.shirtStyle) drawLayer(avatar.shirtStyle, hslToHex(avatar.shirtHue || 200, 70, 50));
+  if (avatar.faceStyle) drawLayer(avatar.faceStyle, null);
+  if (avatar.hairStyle) drawLayer(avatar.hairStyle, hslToHex(avatar.hairHue || 25, 80, 50));
+  if (avatar.accStyle) drawLayer(avatar.accStyle, null);
 
   // Name tag
   if (avatar.name) {
