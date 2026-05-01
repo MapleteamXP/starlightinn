@@ -3,1799 +3,2487 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Starlight Inn</title>
+<title>Starlight Inn - Isometric Virtual World</title>
 <style>
-/* ============================================
-   RESET & BASE
-   ============================================ */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { width: 100%; height: 100%; overflow: hidden; }
+/* ================================================================
+   STARLIGHT INN v12.0.0 — Complete CSS
+   ================================================================ */
+:root {
+  --bg: #0a0a1a;
+  --panel: rgba(15, 15, 30, 0.95);
+  --gold: #FFD700;
+  --gold-dim: #B8860B;
+  --text: #e0e0e0;
+  --text-dim: #888;
+  --border: 2px solid var(--gold);
+  --radius: 8px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  background: #0a0a1a;
-  color: #e0dcc8;
-  font-family: 'Georgia', 'Times New Roman', serif;
-  -webkit-font-smoothing: antialiased;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-  touch-action: none;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden; width: 100vw; height: 100vh;
 }
+canvas { image-rendering: pixelated; display: block; }
 
-/* ============================================
-   CANVAS
-   ============================================ */
-#gameCanvas {
-  display: block;
-  width: 100vw;
-  height: 100vh;
+/* ---- Loading Screen ---- */
+#loadingScreen {
+  position: fixed; inset: 0; z-index: 2000;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(180deg, #0a0a1a 0%, #1a1020 50%, #0d0d1a 100%);
+  transition: opacity 0.5s;
+}
+.loading-box {
+  text-align: center; padding: 40px;
+  background: rgba(15,15,30,0.9);
+  border: var(--border); border-radius: var(--radius);
+  min-width: 300px;
+}
+.loading-box h2 {
+  color: var(--gold); font-size: 28px;
+  text-shadow: 0 0 20px rgba(255,215,0,0.4);
+  letter-spacing: 0.1em; margin-bottom: 20px;
+}
+.loading-bar {
+  width: 100%; height: 12px;
+  background: #222; border-radius: 6px;
+  overflow: hidden; margin-bottom: 12px;
+}
+.loading-fill {
+  width: 0%; height: 100%;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+  transition: width 0.3s; border-radius: 6px;
+}
+#loadText { color: var(--text-dim); font-size: 13px; }
+
+/* ---- Title Screen ---- */
+#titleScreen {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  background: linear-gradient(180deg, #0a0a1a 0%, #1a1020 50%, #0d0d1a 100%);
+}
+.title-bg {
+  position: absolute; inset: 0;
+}
+.title-bg img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; opacity: 0.5;
   image-rendering: pixelated;
-  image-rendering: crisp-edges;
-  cursor: grab;
 }
-#gameCanvas:active { cursor: grabbing; }
+.title-bg .stars {
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, #fff, transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(2px 2px at 160px 120px, #fff, transparent),
+    radial-gradient(1px 1px at 200px 50px, rgba(255,255,255,0.7), transparent),
+    radial-gradient(2px 2px at 230px 90px, #fff, transparent),
+    radial-gradient(1px 1px at 280px 30px, rgba(255,255,255,0.5), transparent),
+    radial-gradient(2px 2px at 300px 100px, #fff, transparent),
+    radial-gradient(1px 1px at 350px 60px, rgba(255,255,255,0.8), transparent),
+    radial-gradient(2px 2px at 400px 130px, #fff, transparent),
+    radial-gradient(1px 1px at 450px 40px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(2px 2px at 500px 80px, #fff, transparent),
+    radial-gradient(1px 1px at 550px 110px, rgba(255,255,255,0.7), transparent),
+    radial-gradient(2px 2px at 600px 50px, #fff, transparent),
+    radial-gradient(1px 1px at 650px 90px, rgba(255,255,255,0.5), transparent),
+    radial-gradient(2px 2px at 700px 30px, #fff, transparent),
+    radial-gradient(1px 1px at 750px 70px, rgba(255,255,255,0.8), transparent),
+    radial-gradient(2px 2px at 800px 120px, #fff, transparent),
+    radial-gradient(1px 1px at 850px 60px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(2px 2px at 50px 150px, #fff, transparent),
+    radial-gradient(1px 1px at 100px 200px, rgba(255,255,255,0.7), transparent),
+    radial-gradient(2px 2px at 150px 170px, #fff, transparent),
+    radial-gradient(1px 1px at 250px 220px, rgba(255,255,255,0.5), transparent),
+    radial-gradient(2px 2px at 350px 180px, #fff, transparent);
+  animation: twinkle 4s ease-in-out infinite alternate;
+}
+@keyframes twinkle {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+.title-content {
+  position: relative; z-index: 10;
+  text-align: center; padding: 20px;
+}
+.title-text {
+  font-size: clamp(36px, 8vw, 72px);
+  color: #FFD700;
+  text-shadow: 0 0 40px rgba(255,215,0,0.5), 0 4px 8px rgba(0,0,0,0.8);
+  letter-spacing: 0.1em; margin-bottom: 10px;
+  animation: titleGlow 3s ease-in-out infinite;
+}
+@keyframes titleGlow {
+  0%, 100% { text-shadow: 0 0 40px rgba(255,215,0,0.5), 0 4px 8px rgba(0,0,0,0.8); }
+  50% { text-shadow: 0 0 60px rgba(255,215,0,0.8), 0 0 100px rgba(255,215,0,0.3), 0 4px 8px rgba(0,0,0,0.8); }
+}
+.title-sub {
+  font-size: clamp(14px, 3vw, 20px);
+  color: #aaa; margin-bottom: 30px;
+  letter-spacing: 0.05em;
+}
+.title-buttons { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.version {
+  position: absolute; bottom: 15px; right: 20px;
+  color: var(--text-dim); font-size: 12px; z-index: 10;
+}
 
-/* ============================================
-   SCREENS (LOADING / TITLE / CHAR CREATE / GAME)
-   ============================================ */
-.screen {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  display: none; flex-direction: column; align-items: center; justify-content: center;
+/* ---- Buttons ---- */
+.btn {
+  padding: 12px 32px; font-size: 15px; font-weight: bold;
+  border: 2px solid transparent; border-radius: var(--radius);
+  cursor: pointer; letter-spacing: 0.05em;
+  transition: all 0.2s; min-width: 220px;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
+.btn-gold {
+  background: linear-gradient(135deg, #FFD700, #B8860B);
+  color: #1a1200; border-color: #FFD700;
+}
+.btn-gold:hover { box-shadow: 0 0 20px rgba(255,215,0,0.4); }
+.btn-blue {
+  background: linear-gradient(135deg, #4a90d9, #2a5a9a);
+  color: #fff; border-color: #4a90d9;
+}
+.btn-blue:hover { box-shadow: 0 0 20px rgba(74,144,217,0.4); }
+.btn-green {
+  background: linear-gradient(135deg, #4caf50, #2e7d32);
+  color: #fff; border-color: #4caf50;
+}
+.btn-green:hover { box-shadow: 0 0 20px rgba(76,175,80,0.4); }
+.btn-red {
+  background: linear-gradient(135deg, #e74c3c, #922b21);
+  color: #fff; border-color: #e74c3c;
+}
+.btn-red:hover { box-shadow: 0 0 20px rgba(231,76,60,0.4); }
+.btn-small {
+  padding: 6px 14px; font-size: 12px; min-width: auto;
+}
+
+/* ---- Game Screen ---- */
+#gameScreen {
+  position: fixed; inset: 0;
+  display: none;
+}
+#gameCanvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+}
+
+/* ---- UI Overlays ---- */
+.ui-panel {
+  position: absolute;
+  background: var(--panel);
+  border: 1px solid rgba(255,215,0,0.3);
+  border-radius: var(--radius);
+  backdrop-filter: blur(10px);
   z-index: 100;
 }
-.screen.active { display: flex; }
 
-/* Loading */
-#loadingScreen {
-  background: #0a0a1a;
-  z-index: 9999;
-}
-#loadingBarWrap {
-  width: 320px; height: 24px;
-  border: 2px solid #FFD700;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-top: 20px;
-  background: rgba(255,215,0,0.08);
-}
-#loadingBar {
-  width: 0%; height: 100%;
-  background: linear-gradient(90deg, #FFD700, #FFA500);
-  transition: width 0.2s ease;
-}
-#loadingText {
-  color: #FFD700;
-  font-size: 1.1rem;
-  margin-bottom: 12px;
-  letter-spacing: 2px;
-}
-#loadingPercent { color: #c8b888; font-size: 0.9rem; margin-top: 8px; }
-
-/* Title */
-#titleScreen {
-  background: #0a0a1a;
-  z-index: 500;
-}
-#titleArt {
-  width: 320px; height: 200px;
-  background: #1a1a2e;
-  border: 2px solid #FFD700;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  image-rendering: pixelated;
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
-  position: relative;
-}
-#titleArt canvas { image-rendering: pixelated; width: 100%; height: 100%; }
-@keyframes titleFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-#titleText {
-  font-size: 3rem;
-  color: #FFD700;
-  text-shadow: 0 2px 12px rgba(255,215,0,0.4), 0 0 40px rgba(255,215,0,0.15);
-  margin-bottom: 8px;
-  animation: titleFloat 3s ease-in-out infinite;
-  letter-spacing: 6px;
-  font-weight: bold;
-}
-#subtitleText { color: #a09878; font-size: 1rem; margin-bottom: 30px; font-style: italic; }
-
-.titleBtn {
-  width: 220px; padding: 12px 24px;
-  margin: 6px 0;
-  background: rgba(255,215,0,0.1);
-  border: 2px solid #FFD700;
-  border-radius: 8px;
-  color: #FFD700;
-  font-family: inherit;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  letter-spacing: 1px;
-}
-.titleBtn:hover {
-  background: rgba(255,215,0,0.25);
-  transform: scale(1.04);
-  box-shadow: 0 0 20px rgba(255,215,0,0.15);
-}
-
-/* Character Creator */
-#charScreen {
-  background: #0a0a1a;
-  flex-direction: row;
-  z-index: 400;
-  padding: 20px;
-  gap: 20px;
-}
-#charPreview {
-  width: 200px; height: 260px;
-  background: rgba(10,10,26,0.92);
-  border: 2px solid #FFD700;
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  image-rendering: pixelated;
-}
-#charPreview canvas { image-rendering: pixelated; }
-#charPanel {
-  max-width: 420px;
-  background: rgba(10,10,26,0.92);
-  border: 2px solid #FFD700;
-  border-radius: 10px;
-  padding: 20px;
-  overflow-y: auto;
-  max-height: 90vh;
-}
-#charPanel h2 { color: #FFD700; margin-bottom: 16px; text-align: center; font-size: 1.4rem; }
-.charSection { margin-bottom: 18px; }
-.charSection h3 { color: #c8b888; font-size: 0.95rem; margin-bottom: 8px; }
-.charGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-.charOpt {
-  width: 100%; aspect-ratio: 1;
-  background: rgba(255,215,0,0.06);
-  border: 2px solid rgba(255,215,0,0.25);
-  border-radius: 6px;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.75rem;
-  color: #e0dcc8;
-  transition: all 0.2s;
-  padding: 4px;
-}
-.charOpt:hover { border-color: #FFD700; background: rgba(255,215,0,0.15); }
-.charOpt.selected { border-color: #FFD700; background: rgba(255,215,0,0.25); box-shadow: 0 0 10px rgba(255,215,0,0.15); }
-.charOpt img { max-width: 100%; max-height: 100%; image-rendering: pixelated; pointer-events: none; }
-
-#charNameInput {
-  width: 100%; padding: 10px;
-  background: rgba(255,215,0,0.06);
-  border: 2px solid rgba(255,215,0,0.3);
-  border-radius: 6px;
-  color: #FFD700;
-  font-family: inherit;
-  font-size: 1rem;
-  text-align: center;
-  margin-bottom: 12px;
-  outline: none;
-}
-#charNameInput:focus { border-color: #FFD700; }
-#charNameInput::placeholder { color: rgba(255,215,0,0.35); }
-
-#charStartBtn {
-  width: 100%; padding: 12px;
-  background: rgba(255,215,0,0.15);
-  border: 2px solid #FFD700;
-  border-radius: 8px;
-  color: #FFD700;
-  font-family: inherit;
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-top: 8px;
-}
-#charStartBtn:hover { background: rgba(255,215,0,0.3); }
-
-/* ============================================
-   GAME UI OVERLAY
-   ============================================ */
-#gameUI {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+/* ---- Room Label ---- */
+#roomLabel {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  background: rgba(15,15,30,0.9); color: var(--gold);
+  padding: 6px 20px; border-radius: var(--radius);
+  font-size: 14px; font-weight: bold;
+  border: 1px solid rgba(255,215,0,0.4); z-index: 50;
   pointer-events: none;
-  z-index: 50;
-  display: none;
 }
-#gameUI.active { display: block; }
-#gameUI > * { pointer-events: auto; }
 
-/* Top Bar */
-#topBar {
-  position: absolute; top: 0; left: 0; right: 0;
-  height: 48px;
-  background: rgba(10,10,26,0.92);
-  border-bottom: 2px solid #FFD700;
-  display: flex; align-items: center;
-  padding: 0 12px;
-  gap: 8px;
-}
-#roomName { color: #FFD700; font-size: 1rem; margin-right: auto; letter-spacing: 1px; }
-
-.uiBtn {
-  padding: 6px 12px;
-  background: rgba(255,215,0,0.1);
-  border: 1px solid rgba(255,215,0,0.4);
-  border-radius: 6px;
-  color: #e0dcc8;
-  font-family: inherit;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.uiBtn:hover { background: rgba(255,215,0,0.2); border-color: #FFD700; }
-
-#zoomControls {
-  display: flex; gap: 4px;
-}
-.zoomBtn {
-  width: 36px; height: 36px;
-  background: rgba(255,215,0,0.1);
-  border: 1px solid rgba(255,215,0,0.4);
-  border-radius: 6px;
-  color: #FFD700;
-  font-size: 1.2rem;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s;
-}
-.zoomBtn:hover { background: rgba(255,215,0,0.25); border-color: #FFD700; }
-
-/* Side Panel */
-#sidePanel {
-  position: absolute; top: 56px; right: 8px; width: 180px;
-  background: rgba(10,10,26,0.92);
-  border: 2px solid rgba(255,215,0,0.4);
-  border-radius: 8px;
-  padding: 10px;
-  display: none;
-}
-#sidePanel.visible { display: block; }
-#sidePanel h3 { color: #FFD700; font-size: 0.85rem; margin-bottom: 8px; text-align: center; }
-#playerList { list-style: none; }
-#playerList li { color: #c8b888; font-size: 0.78rem; padding: 4px 0; border-bottom: 1px solid rgba(255,215,0,0.1); }
-#playerList li:last-child { border-bottom: none; }
-
-/* Chat */
-#chatWrap {
-  position: absolute; bottom: 8px; left: 8px; right: 8px;
-  display: flex; gap: 6px; align-items: center;
+/* ---- Chat Bar ---- */
+#chatBar {
+  position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 6px; z-index: 50;
+  background: rgba(15,15,30,0.9);
+  padding: 6px; border-radius: var(--radius);
+  border: 1px solid rgba(255,215,0,0.3);
 }
 #chatInput {
-  flex: 1; max-width: 500px;
-  padding: 8px 12px;
-  background: rgba(10,10,26,0.92);
-  border: 2px solid rgba(255,215,0,0.4);
-  border-radius: 8px;
-  color: #e0dcc8;
-  font-family: inherit;
-  font-size: 0.95rem;
-  outline: none;
+  background: rgba(30,30,50,0.9);
+  border: 1px solid rgba(255,215,0,0.3);
+  color: var(--text); padding: 8px 12px;
+  border-radius: 6px; font-size: 13px;
+  width: 280px; outline: none;
 }
-#chatInput:focus { border-color: #FFD700; }
-#chatBtn {
-  padding: 8px 16px;
-  background: rgba(255,215,0,0.15);
-  border: 2px solid #FFD700;
-  border-radius: 8px;
-  color: #FFD700;
-  font-family: inherit;
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-#chatBtn:hover { background: rgba(255,215,0,0.3); }
+#chatInput:focus { border-color: var(--gold); }
+#chatInput::placeholder { color: var(--text-dim); }
 
-/* ============================================
-   VIRTUAL D-PAD (MOBILE)
-   ============================================ */
-#dpad {
-  position: absolute; bottom: 80px; left: 20px;
-  width: 140px; height: 140px;
-  display: none;
-  z-index: 60;
+/* ---- Chat Log ---- */
+#chatLog {
+  position: absolute; bottom: 55px; left: 10px;
+  width: 320px; max-height: 180px; overflow-y: auto;
+  background: rgba(15,15,30,0.85);
+  border-radius: var(--radius); padding: 8px;
+  border: 1px solid rgba(255,215,0,0.2);
+  font-size: 12px; z-index: 50;
 }
-#dpad.show { display: block; }
-.dpadBtn {
+#chatLog .msg-system { color: #4fc3f7; font-style: italic; }
+#chatLog .msg-player { color: #FFD700; }
+#chatLog .msg-chat { color: var(--text); }
+#chatLog > div { margin-bottom: 3px; word-break: break-word; }
+
+/* ---- Chat Bubble (Canvas overlay via DOM) ---- */
+.chat-bubble {
   position: absolute;
-  width: 46px; height: 46px;
-  background: rgba(255,215,0,0.15);
-  border: 2px solid rgba(255,215,0,0.5);
-  border-radius: 50%;
-  color: #FFD700;
-  font-size: 1.3rem;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: none;
+  background: rgba(15,15,30,0.95);
+  border: 1px solid rgba(255,215,0,0.4);
+  border-radius: 10px; padding: 6px 12px;
+  font-size: 12px; color: var(--text);
+  pointer-events: none; z-index: 60;
+  max-width: 180px; word-break: break-word;
+  text-align: center;
+  transform: translate(-50%, -100%);
+  margin-top: -60px;
+  animation: bubblePop 0.2s ease-out;
 }
-.dpadBtn:active { background: rgba(255,215,0,0.35); }
-.dpadUp    { top: 0; left: 47px; }
-.dpadDown  { bottom: 0; left: 47px; }
-.dpadLeft  { top: 47px; left: 0; }
-.dpadRight { top: 47px; right: 0; }
+.chat-bubble::after {
+  content: ''; position: absolute;
+  bottom: -6px; left: 50%; transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(255,215,0,0.4);
+}
+@keyframes bubblePop {
+  0% { transform: translate(-50%, -100%) scale(0.5); opacity: 0; }
+  100% { transform: translate(-50%, -100%) scale(1); opacity: 1; }
+}
 
-/* ============================================
-   AUTH MODAL
-   ============================================ */
-#authModal {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+/* ---- Side Panel (Inventory/Friends/Settings) ---- */
+#sidePanel {
+  position: absolute; right: 10px; top: 50px;
+  width: 220px; max-height: calc(100vh - 70px);
+  overflow-y: auto; z-index: 50;
+  display: none;
+}
+.panel-header {
+  background: rgba(255,215,0,0.15);
+  color: var(--gold); padding: 10px;
+  font-weight: bold; font-size: 14px;
+  border-bottom: 1px solid rgba(255,215,0,0.3);
+  display: flex; justify-content: space-between; align-items: center;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.panel-close {
+  background: none; border: none; color: var(--gold);
+  cursor: pointer; font-size: 18px; padding: 0 4px;
+}
+.panel-body { padding: 10px; }
+
+/* ---- Inventory Grid ---- */
+.inv-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+.inv-slot {
+  aspect-ratio: 1;
+  background: rgba(30,30,50,0.8);
+  border: 1px solid rgba(255,215,0,0.2);
+  border-radius: 6px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; position: relative;
+  overflow: hidden;
+}
+.inv-slot:hover { border-color: var(--gold); transform: scale(1.05); }
+.inv-slot.equipped {
+  border-color: var(--gold);
+  box-shadow: 0 0 8px rgba(255,215,0,0.3);
+  background: rgba(255,215,0,0.1);
+}
+.inv-slot img {
+  max-width: 80%; max-height: 80%;
+  object-fit: contain; pointer-events: none;
+}
+.inv-slot .equip-badge {
+  position: absolute; bottom: 2px; right: 2px;
+  font-size: 10px; color: var(--gold);
+}
+
+/* ---- Trade Panel ---- */
+#tradePanel {
+  position: absolute;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 420px; z-index: 150;
+  display: none;
+  background: var(--panel);
+  border: var(--border); border-radius: var(--radius);
+  box-shadow: 0 0 30px rgba(0,0,0,0.7);
+}
+.trade-section {
+  padding: 10px;
+  border-bottom: 1px solid rgba(255,215,0,0.2);
+}
+.trade-section:last-child { border-bottom: none; }
+.trade-offers {
+  display: flex; gap: 15px;
+  min-height: 80px;
+}
+.trade-col {
+  flex: 1;
+  background: rgba(30,30,50,0.6);
+  border-radius: 6px; padding: 8px;
+  border: 1px solid rgba(255,215,0,0.2);
+}
+.trade-col h4 {
+  color: var(--gold); font-size: 12px;
+  margin-bottom: 6px; text-align: center;
+}
+.trade-status {
+  text-align: center; padding: 8px;
+  color: var(--text-dim); font-size: 12px;
+}
+.trade-status.confirmed { color: #4caf50; }
+.offer-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+.offer-item {
+  aspect-ratio: 1;
+  background: rgba(40,40,60,0.8);
+  border: 1px solid rgba(255,215,0,0.2);
+  border-radius: 4px; display: flex;
+  align-items: center; justify-content: center;
+  font-size: 11px; color: var(--text-dim);
+  cursor: pointer;
+}
+.offer-item img { max-width: 80%; max-height: 80%; object-fit: contain; }
+.offer-item:hover { border-color: var(--gold); }
+.trade-actions {
+  display: flex; gap: 8px; justify-content: center;
+  padding: 10px;
+}
+
+/* ---- Character Creator ---- */
+#charScreen {
+  position: fixed; inset: 0; z-index: 900;
+  display: none; align-items: center; justify-content: center;
+  background: linear-gradient(180deg, #0a0a1a 0%, #1a1020 50%, #0d0d1a 100%);
+}
+.char-container {
+  display: flex; gap: 30px;
+  background: var(--panel);
+  border: var(--border); border-radius: var(--radius);
+  padding: 30px; max-width: 800px; width: 90%;
+}
+.char-preview {
+  flex: 0 0 200px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 15px;
+}
+.char-preview-box {
+  width: 180px; height: 240px;
+  background: rgba(30,30,50,0.8);
+  border: 1px solid rgba(255,215,0,0.3);
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.char-preview-box img {
+  max-width: 70%; max-height: 80%;
+  object-fit: contain;
+}
+.char-name-input {
+  width: 100%; padding: 10px;
+  background: rgba(30,30,50,0.9);
+  border: 1px solid rgba(255,215,0,0.3);
+  border-radius: 6px; color: var(--text);
+  font-size: 14px; text-align: center; outline: none;
+}
+.char-name-input:focus { border-color: var(--gold); }
+.char-options { flex: 1; }
+.char-section { margin-bottom: 20px; }
+.char-section h3 {
+  color: var(--gold); font-size: 14px;
+  margin-bottom: 8px;
+}
+.char-grid {
+  display: grid; grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+.char-opt {
+  aspect-ratio: 1;
+  background: rgba(30,30,50,0.8);
+  border: 2px solid rgba(255,215,0,0.2);
+  border-radius: 8px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; overflow: hidden;
+}
+.char-opt:hover { border-color: var(--gold-dim); transform: scale(1.05); }
+.char-opt.selected {
+  border-color: var(--gold);
+  box-shadow: 0 0 12px rgba(255,215,0,0.4);
+  background: rgba(255,215,0,0.1);
+}
+.char-opt img { max-width: 70%; max-height: 70%; object-fit: contain; }
+.char-opt.label {
+  font-size: 10px; color: var(--text-dim);
+  text-align: center; padding: 4px;
+}
+.char-actions {
+  display: flex; gap: 10px; margin-top: 15px;
+}
+.char-actions .btn { min-width: auto; flex: 1; }
+
+/* ---- Modal ---- */
+.modal-overlay {
+  position: fixed; inset: 0;
   background: rgba(0,0,0,0.7);
   display: none; align-items: center; justify-content: center;
-  z-index: 200;
+  z-index: 1100;
 }
-#authModal.active { display: flex; }
-#authBox {
-  width: 340px;
-  background: rgba(10,10,26,0.95);
-  border: 2px solid #FFD700;
-  border-radius: 12px;
-  padding: 24px;
+.modal-overlay.active { display: flex; }
+.modal-box {
+  background: var(--panel);
+  border: var(--border); border-radius: var(--radius);
+  padding: 25px; min-width: 300px;
+  max-width: 90vw;
 }
-#authBox h2 { color: #FFD700; text-align: center; margin-bottom: 16px; }
-.authInput {
+.modal-box h3 {
+  color: var(--gold); margin-bottom: 15px;
+  font-size: 18px;
+}
+.modal-box input {
   width: 100%; padding: 10px; margin-bottom: 10px;
-  background: rgba(255,215,0,0.06);
+  background: rgba(30,30,50,0.9);
   border: 1px solid rgba(255,215,0,0.3);
-  border-radius: 6px;
-  color: #FFD700;
-  font-family: inherit;
-  font-size: 0.95rem;
+  border-radius: 6px; color: var(--text); font-size: 14px;
   outline: none;
 }
-.authInput:focus { border-color: #FFD700; }
-.authInput::placeholder { color: rgba(255,215,0,0.3); }
-.authBtn {
-  width: 100%; padding: 10px; margin-top: 6px;
-  background: rgba(255,215,0,0.15);
-  border: 2px solid #FFD700;
-  border-radius: 8px;
-  color: #FFD700;
-  font-family: inherit;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.authBtn:hover { background: rgba(255,215,0,0.3); }
-.authToggle { color: #a09878; font-size: 0.8rem; text-align: center; margin-top: 10px; cursor: pointer; text-decoration: underline; }
-.authToggle:hover { color: #FFD700; }
-#authError { color: #ff6b6b; font-size: 0.8rem; text-align: center; margin-top: 6px; min-height: 18px; }
-
-/* ============================================
-   CHAT BUBBLES (RENDERED ON CANVAS, STYLED HERE FOR REFERENCE)
-   ============================================ */
-@keyframes bubblePop {
-  0% { transform: scale(0.5); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+.modal-box input:focus { border-color: var(--gold); }
+.modal-actions {
+  display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;
 }
 
-/* ============================================
-   RESPONSIVE
-   ============================================ */
+/* ---- Friends Panel ---- */
+.friends-list { list-style: none; }
+.friends-list li {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px; border-radius: 6px;
+  cursor: pointer; transition: background 0.15s;
+}
+.friends-list li:hover { background: rgba(255,215,0,0.1); }
+.friend-status {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0;
+}
+.friend-status.online { background: #4caf50; }
+.friend-status.offline { background: #666; }
+.friend-name { font-size: 13px; }
+.friend-action {
+  margin-left: auto; font-size: 11px;
+  color: var(--gold); cursor: pointer;
+}
+
+/* ---- Settings Panel ---- */
+.settings-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid rgba(255,215,0,0.1);
+}
+.settings-row:last-child { border-bottom: none; }
+.toggle-switch {
+  width: 40px; height: 20px;
+  background: #333; border-radius: 10px;
+  cursor: pointer; position: relative;
+  transition: background 0.2s;
+}
+.toggle-switch.active { background: var(--gold-dim); }
+.toggle-switch::after {
+  content: ''; position: absolute;
+  width: 16px; height: 16px;
+  background: #fff; border-radius: 50%;
+  top: 2px; left: 2px;
+  transition: left 0.2s;
+}
+.toggle-switch.active::after { left: 22px; }
+
+/* ---- Toolbar ---- */
+#toolbar {
+  position: absolute; right: 10px; bottom: 10px;
+  display: flex; gap: 6px; z-index: 50;
+}
+.tool-btn {
+  width: 42px; height: 42px;
+  background: rgba(15,15,30,0.9);
+  border: 1px solid rgba(255,215,0,0.3);
+  border-radius: var(--radius); color: var(--gold);
+  cursor: pointer; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.tool-btn:hover {
+  border-color: var(--gold);
+  box-shadow: 0 0 10px rgba(255,215,0,0.3);
+  transform: scale(1.1);
+}
+
+/* ---- Zoom Controls ---- */
+#zoomControls {
+  position: absolute; left: 10px; top: 50px;
+  display: flex; flex-direction: column; gap: 4px;
+  z-index: 50;
+}
+.zoom-btn {
+  width: 36px; height: 36px;
+  background: rgba(15,15,30,0.9);
+  border: 1px solid rgba(255,215,0,0.3);
+  border-radius: 6px; color: var(--gold);
+  cursor: pointer; font-size: 18px; font-weight: bold;
+  display: flex; align-items: center; justify-content: center;
+}
+.zoom-btn:hover { border-color: var(--gold); }
+
+/* ---- Mobile D-Pad ---- */
+#dpad {
+  position: absolute; left: 15px; bottom: 80px;
+  width: 150px; height: 150px;
+  display: none; z-index: 70;
+}
+.dpad-btn {
+  position: absolute; width: 46px; height: 46px;
+  background: rgba(15,15,30,0.85);
+  border: 1px solid rgba(255,215,0,0.3);
+  border-radius: 10px; color: var(--gold);
+  font-size: 20px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  user-select: none; -webkit-user-select: none;
+  touch-action: none;
+}
+.dpad-btn:active { background: rgba(255,215,0,0.2); }
+.dpad-up { top: 0; left: 52px; }
+.dpad-down { bottom: 0; left: 52px; }
+.dpad-left { top: 52px; left: 0; }
+.dpad-right { top: 52px; right: 0; }
+
+/* ---- Player List ---- */
+#playerList {
+  position: absolute; left: 10px; top: 50px;
+  width: 140px; z-index: 50;
+  display: none;
+}
+.player-list-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 8px; cursor: pointer;
+  border-radius: 4px; font-size: 12px;
+}
+.player-list-item:hover { background: rgba(255,215,0,0.1); }
+.player-list-item .pl-name { color: var(--text); }
+
+/* ---- Notification Toast ---- */
+#toastArea {
+  position: absolute; top: 50px; right: 240px;
+  display: flex; flex-direction: column; gap: 6px;
+  z-index: 120; pointer-events: none;
+}
+.toast {
+  background: rgba(15,15,30,0.95);
+  border: 1px solid rgba(255,215,0,0.4);
+  border-radius: 8px; padding: 10px 16px;
+  color: var(--gold); font-size: 13px;
+  animation: toastSlide 0.3s ease-out;
+  pointer-events: none; max-width: 250px;
+}
+@keyframes toastSlide {
+  0% { transform: translateX(50px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,215,0,0.5); }
+
+/* ---- Responsive ---- */
 @media (max-width: 768px) {
-  #titleText { font-size: 2rem; letter-spacing: 3px; }
-  #charScreen { flex-direction: column; align-items: center; padding: 10px; }
-  #charPanel { max-width: 90vw; padding: 14px; }
-  .charGrid { grid-template-columns: repeat(4, 1fr); }
-  #sidePanel { width: 140px; right: 4px; top: 52px; }
-  .uiBtn { padding: 4px 8px; font-size: 0.7rem; }
-  #chatWrap { left: 4px; right: 4px; bottom: 4px; }
-  #roomName { font-size: 0.85rem; }
+  #dpad { display: block; }
+  #chatLog { width: 200px; font-size: 11px; }
+  #chatInput { width: 180px; }
+  #sidePanel { width: 180px; right: 5px; }
+  #toolbar { gap: 4px; }
+  .tool-btn { width: 38px; height: 38px; font-size: 16px; }
+  #roomLabel { font-size: 12px; padding: 4px 12px; }
+  .char-container { flex-direction: column; align-items: center; }
+  .char-preview { flex: none; }
+  .char-grid { grid-template-columns: repeat(4, 1fr); }
 }
 
-@media (max-width: 480px) {
-  #topBar { height: 40px; padding: 0 6px; }
-  .zoomBtn { width: 30px; height: 30px; font-size: 1rem; }
-  .uiBtn { padding: 3px 6px; font-size: 0.65rem; }
-}
+/* ---- Hidden utility ---- */
+.hidden { display: none !important; }
 </style>
 </head>
 <body>
 
-<!-- ============================================
-     LOADING SCREEN
-     ============================================ -->
-<div id="loadingScreen" class="screen active">
-  <div id="loadingText">STARLIGHT INN</div>
-  <div id="loadingBarWrap"><div id="loadingBar"></div></div>
-  <div id="loadingPercent">0%</div>
-</div>
-
-<!-- ============================================
-     TITLE SCREEN
-     ============================================ -->
-<div id="titleScreen" class="screen">
-  <div id="titleArt"><canvas id="titleCanvas" width="320" height="200"></canvas></div>
-  <div id="titleText">STARLIGHT INN</div>
-  <div id="subtitleText">An Isometric Virtual World</div>
-  <button class="titleBtn" id="btnLogin">Login</button>
-  <button class="titleBtn" id="btnRegister">Register</button>
-  <button class="titleBtn" id="btnGuest">Play as Guest</button>
-</div>
-
-<!-- ============================================
-     AUTH MODAL
-     ============================================ -->
-<div id="authModal">
-  <div id="authBox">
-    <h2 id="authTitle">Login</h2>
-    <input type="text" id="authUser" class="authInput" placeholder="Username" autocomplete="off">
-    <input type="password" id="authPass" class="authInput" placeholder="Password">
-    <button class="authBtn" id="authSubmit">Login</button>
-    <div id="authError"></div>
-    <div class="authToggle" id="authToggle">Need an account? Register</div>
-    <div class="authToggle" id="authBack" style="margin-top:6px;font-size:0.75rem;">Back to Title</div>
+<!-- ================================================================ -->
+<!-- LOADING SCREEN                                                   -->
+<!-- ================================================================ -->
+<div id="loadingScreen">
+  <div class="loading-box">
+    <h2>STARLIGHT INN</h2>
+    <div class="loading-bar"><div class="loading-fill" id="loadFill"></div></div>
+    <p id="loadText">Loading assets... 0%</p>
   </div>
 </div>
 
-<!-- ============================================
-     CHARACTER CREATOR
-     ============================================ -->
-<div id="charScreen" class="screen">
-  <div id="charPreview"><canvas id="charCanvas" width="200" height="260"></canvas></div>
-  <div id="charPanel">
-    <h2>Create Your Character</h2>
-    <input type="text" id="charNameInput" placeholder="Enter your name..." maxlength="16" autocomplete="off">
-    <div class="charSection">
-      <h3>Hair Style</h3>
-      <div class="charGrid" id="hairGrid">
-        <div class="charOpt selected" data-hair="hair_bald" data-label="Bald">Bald</div>
-        <div class="charOpt" data-hair="hair_short" data-label="Short">Short</div>
-        <div class="charOpt" data-hair="hair_spiky" data-label="Spiky">Spiky</div>
-        <div class="charOpt" data-hair="hair_long" data-label="Long">Long</div>
-        <div class="charOpt" data-hair="hair_ponytail" data-label="Pony">Pony</div>
-        <div class="charOpt" data-hair="hair_afro" data-label="Afro">Afro</div>
+<!-- ================================================================ -->
+<!-- TITLE SCREEN                                                     -->
+<!-- ================================================================ -->
+<div id="titleScreen">
+  <div class="title-bg">
+    <img src="assets/title-bg.png" alt="Starlight Inn" id="titleBgImg" onerror="this.style.display='none'">
+    <div class="stars"></div>
+  </div>
+  <div class="title-content">
+    <h1 class="title-text">STARLIGHT INN</h1>
+    <p class="title-sub">An Isometric Virtual World</p>
+    <div class="title-buttons">
+      <button class="btn btn-gold" onclick="showScreen('character')">ENTER WORLD</button>
+      <button class="btn btn-blue" onclick="startGuest()">PLAY AS GUEST</button>
+      <button class="btn btn-green" onclick="showModal('login')">LOGIN</button>
+      <button class="btn btn-red" onclick="showModal('register')">REGISTER</button>
+    </div>
+  </div>
+  <div class="version">v12.0.0</div>
+</div>
+
+<!-- ================================================================ -->
+<!-- CHARACTER CREATOR SCREEN                                         -->
+<!-- ================================================================ -->
+<div id="charScreen">
+  <div class="char-container">
+    <div class="char-preview">
+      <h3 style="color:var(--gold);font-size:14px;">Preview</h3>
+      <div class="char-preview-box">
+        <img id="charPreviewImg" src="" alt="Preview" onerror="this.style.display='none'">
+      </div>
+      <input type="text" id="charNameInput" class="char-name-input" placeholder="Your Name" maxlength="16" value="Guest">
+      <div class="char-actions">
+        <button class="btn btn-gold btn-small" onclick="startGame()">START</button>
+        <button class="btn btn-small" style="background:#333;color:#aaa;border-color:#555;" onclick="showScreen('title')">BACK</button>
       </div>
     </div>
-    <div class="charSection">
-      <h3>Outfit</h3>
-      <div class="charGrid" id="outfitGrid">
-        <div class="charOpt selected" data-shirt="shirt_blue" data-label="Blue Shirt">Blue</div>
-        <div class="charOpt" data-shirt="shirt_red" data-label="Red Shirt">Red</div>
-        <div class="charOpt" data-shirt="shirt_green" data-label="Green Shirt">Green</div>
-        <div class="charOpt" data-shirt="dress_pink" data-label="Pink Dress">Pink</div>
+    <div class="char-options">
+      <div class="char-section">
+        <h3>Hair Style</h3>
+        <div class="char-grid" id="hairGrid"></div>
+      </div>
+      <div class="char-section">
+        <h3>Outfit</h3>
+        <div class="char-grid" id="outfitGrid"></div>
+      </div>
+      <div class="char-section">
+        <h3>Accessory</h3>
+        <div class="char-grid" id="accGrid"></div>
       </div>
     </div>
-    <div class="charSection">
-      <h3>Accessory</h3>
-      <div class="charGrid" id="accGrid">
-        <div class="charOpt selected" data-acc="none" data-label="None">None</div>
-        <div class="charOpt" data-acc="acc_crown" data-label="Crown">Crown</div>
-        <div class="charOpt" data-acc="acc_glasses" data-label="Glasses">Glasses</div>
-        <div class="charOpt" data-acc="acc_wings" data-label="Wings">Wings</div>
-      </div>
-    </div>
-    <button id="charStartBtn">Enter the Inn</button>
   </div>
 </div>
 
-<!-- ============================================
-     GAME SCREEN (CANVAS + UI OVERLAY)
-     ============================================ -->
-<canvas id="gameCanvas"></canvas>
-<div id="gameUI">
-  <div id="topBar">
-    <span id="roomName">Main Hall</span>
-    <button class="uiBtn" id="btnFriends">Friends</button>
-    <button class="uiBtn" id="btnInventory">Inventory</button>
-    <button class="uiBtn" id="btnSettings">Settings</button>
-    <div id="zoomControls">
-      <button class="zoomBtn" id="btnZoomOut">-</button>
-      <button class="zoomBtn" id="btnZoomIn">+</button>
-    </div>
-    <button class="uiBtn" id="btnLogout">Logout</button>
+<!-- ================================================================ -->
+<!-- GAME SCREEN                                                      -->
+<!-- ================================================================ -->
+<div id="gameScreen">
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Room Label -->
+  <div id="roomLabel">Main Hall</div>
+
+  <!-- Zoom Controls -->
+  <div id="zoomControls">
+    <button class="zoom-btn" onclick="adjustZoom(0.1)" title="Zoom In">+</button>
+    <button class="zoom-btn" onclick="adjustZoom(-0.1)" title="Zoom Out">-</button>
+    <button class="zoom-btn" onclick="resetZoom()" title="Reset">&#x26F6;</button>
   </div>
-  <div id="sidePanel">
-    <h3 id="sideTitle">Friends</h3>
-    <ul id="playerList"></ul>
+
+  <!-- Player List -->
+  <div class="ui-panel" id="playerList"></div>
+
+  <!-- Chat Log -->
+  <div id="chatLog"></div>
+
+  <!-- Chat Bar -->
+  <div id="chatBar">
+    <input type="text" id="chatInput" placeholder="Press Enter to chat..." maxlength="100" onkeydown="handleChatKey(event)">
+    <button class="btn btn-gold btn-small" onclick="sendChat()">SEND</button>
   </div>
-  <div id="chatWrap">
-    <input type="text" id="chatInput" placeholder="Press Enter to chat..." maxlength="120" autocomplete="off">
-    <button id="chatBtn">Send</button>
-  </div>
+
+  <!-- Mobile D-Pad -->
   <div id="dpad">
-    <div class="dpadBtn dpadUp" data-dir="n">&#9650;</div>
-    <div class="dpadBtn dpadDown" data-dir="s">&#9660;</div>
-    <div class="dpadBtn dpadLeft" data-dir="w">&#9664;</div>
-    <div class="dpadBtn dpadRight" data-dir="e">&#9654;</div>
+    <button class="dpad-btn dpad-up" data-dir="n">&#9650;</button>
+    <button class="dpad-btn dpad-down" data-dir="s">&#9660;</button>
+    <button class="dpad-btn dpad-left" data-dir="w">&#9664;</button>
+    <button class="dpad-btn dpad-right" data-dir="e">&#9654;</button>
+  </div>
+
+  <!-- Toast Area -->
+  <div id="toastArea"></div>
+
+  <!-- Side Panel (Inventory / Friends / Settings) -->
+  <div class="ui-panel" id="sidePanel">
+    <div class="panel-header">
+      <span id="panelTitle">Inventory</span>
+      <button class="panel-close" onclick="closeSidePanel()">&times;</button>
+    </div>
+    <div class="panel-body" id="panelBody"></div>
+  </div>
+
+  <!-- Trade Panel -->
+  <div id="tradePanel">
+    <div class="panel-header">
+      <span>Trading with <span id="tradePartnerName">Player</span></span>
+      <button class="panel-close" onclick="trade.cancel()">&times;</button>
+    </div>
+    <div class="trade-section">
+      <div class="trade-offers">
+        <div class="trade-col">
+          <h4>Your Offers</h4>
+          <div class="offer-grid" id="myOfferGrid"></div>
+        </div>
+        <div class="trade-col">
+          <h4>Their Offers</h4>
+          <div class="offer-grid" id="theirOfferGrid"></div>
+        </div>
+      </div>
+    </div>
+    <div class="trade-section">
+      <div class="trade-status" id="tradeStatus">Offer items to begin trading</div>
+      <div class="trade-actions">
+        <button class="btn btn-gold btn-small" id="tradeConfirmBtn" onclick="trade.confirm()">CONFIRM</button>
+        <button class="btn btn-red btn-small" onclick="trade.cancel()">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div id="toolbar">
+    <button class="tool-btn" onclick="togglePanel('inventory')" title="Inventory">&#128230;</button>
+    <button class="tool-btn" onclick="togglePanel('friends')" title="Friends">&#128101;</button>
+    <button class="tool-btn" onclick="togglePanel('players')" title="Players">&#127919;</button>
+    <button class="tool-btn" onclick="togglePanel('settings')" title="Settings">&#9881;</button>
+    <button class="tool-btn" onclick="togglePanel('help')" title="Help">&#10067;</button>
+    <button class="tool-btn" onclick="showScreen('title')" title="Quit">&#10060;</button>
   </div>
 </div>
 
+<!-- ================================================================ -->
+<!-- MODALS                                                           -->
+<!-- ================================================================ -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal-box">
+    <h3>Login</h3>
+    <input type="text" id="loginUser" placeholder="Username">
+    <input type="password" id="loginPass" placeholder="Password">
+    <div class="modal-actions">
+      <button class="btn btn-small" style="background:#333;color:#aaa;border-color:#555;" onclick="hideModal('login')">Cancel</button>
+      <button class="btn btn-green btn-small" onclick="doLogin()">Login</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="registerModal">
+  <div class="modal-box">
+    <h3>Register</h3>
+    <input type="text" id="regUser" placeholder="Username" maxlength="16">
+    <input type="text" id="regDisplay" placeholder="Display Name" maxlength="16">
+    <input type="password" id="regPass" placeholder="Password">
+    <div class="modal-actions">
+      <button class="btn btn-small" style="background:#333;color:#aaa;border-color:#555;" onclick="hideModal('register')">Cancel</button>
+      <button class="btn btn-green btn-small" onclick="doRegister()">Register</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- GAME SCRIPT                                                      -->
+<!-- ================================================================ -->
 <script>
-// ##############################################################
-//  STARLIGHT INN - COMPLETE ISOMETRIC VIRTUAL WORLD GAME ENGINE
-// ##############################################################
+// ===================================================================
+// STARLIGHT INN v12.0.0 — Complete Game Engine
+// ===================================================================
 
-// ============================================
-// 1. ASSET DEFINITIONS
-// ============================================
-const ASSETS = {
-  // Avatar sprites
-  'avatar/idle_s':      'assets/sprites/avatar/idle_s.png',
-  'avatar/idle_e':      'assets/sprites/avatar/idle_e.png',
-  'avatar/idle_n':      'assets/sprites/avatar/idle_n.png',
-  'avatar/idle_w':      'assets/sprites/avatar/idle_w.png',
-  'avatar/walk1_s':     'assets/sprites/avatar/walk1_s.png',
-  'avatar/walk2_s':     'assets/sprites/avatar/walk2_s.png',
-  // Furniture sprites
-  'furniture/sofa':     'assets/sprites/furniture/sofa.png',
-  'furniture/table':    'assets/sprites/furniture/table.png',
-  'furniture/chair':    'assets/sprites/furniture/chair.png',
-  'furniture/bed':      'assets/sprites/furniture/bed.png',
-  'furniture/bookshelf':'assets/sprites/furniture/bookshelf.png',
-  'furniture/plant':    'assets/sprites/furniture/plant.png',
-  'furniture/lamp':     'assets/sprites/furniture/lamp.png',
-  'furniture/tv':       'assets/sprites/furniture/tv.png',
-  'furniture/rug':      'assets/sprites/furniture/rug.png',
-  'furniture/trophy':   'assets/sprites/furniture/trophy.png',
-  'furniture/piano':    'assets/sprites/furniture/piano.png',
-  'furniture/fountain': 'assets/sprites/furniture/fountain.png',
-  // Floor tiles
-  'tiles/floor_wood':   'assets/sprites/tiles/floor_wood.png',
-  'tiles/floor_carpet': 'assets/sprites/tiles/floor_carpet.png',
-  'tiles/floor_grass':  'assets/sprites/tiles/floor_grass.png',
-  'tiles/floor_stone':  'assets/sprites/tiles/floor_stone.png',
-  'tiles/floor_tile':   'assets/sprites/tiles/floor_tile.png',
-  'tiles/floor_marble': 'assets/sprites/tiles/floor_marble.png',
-  // Wall tiles
-  'tiles/wall_wood':    'assets/sprites/tiles/wall_wood.png',
-  'tiles/wall_brick':   'assets/sprites/tiles/wall_brick.png',
-  'tiles/wall_stone':   'assets/sprites/tiles/wall_stone.png',
-  // Hair sprites
-  'hair/hair_bald':     'assets/sprites/hair/hair_bald.png',
-  'hair/hair_short':    'assets/sprites/hair/hair_short.png',
-  'hair/hair_spiky':    'assets/sprites/hair/hair_spiky.png',
-  'hair/hair_long':     'assets/sprites/hair/hair_long.png',
-  'hair/hair_ponytail': 'assets/sprites/hair/hair_ponytail.png',
-  'hair/hair_afro':     'assets/sprites/hair/hair_afro.png',
-  // Clothing sprites
-  'clothes/shirt_blue': 'assets/sprites/clothes/shirt_blue.png',
-  'clothes/shirt_red':  'assets/sprites/clothes/shirt_red.png',
-  'clothes/shirt_green':'assets/sprites/clothes/shirt_green.png',
-  'clothes/dress_pink': 'assets/sprites/clothes/dress_pink.png',
-  // Item/accessory sprites
-  'items/acc_crown':    'assets/sprites/items/acc_crown.png',
-  'items/acc_glasses':  'assets/sprites/items/acc_glasses.png',
-  'items/acc_wings':    'assets/sprites/items/acc_wings.png',
-  'items/item_dragon_egg':'assets/sprites/items/item_dragon_egg.png',
-  'items/item_star_badge':'assets/sprites/items/item_star_badge.png',
-};
+// ---- Constants ----
+const TILE_W = 64;
+const TILE_H = 32;
+const AVATAR_W = 40;
+const AVATAR_H = 60;
+const AVATAR_OFFSET_Y = -45;
+const FURN_SCALE = 0.8;
+const WALK_SPEED = 5;
+const WALK_FRAME_TIME = 200;
 
-// ============================================
-// 2. GLOBAL STATE
-// ============================================
-const IMAGES = {};
-let assetsLoaded = 0;
-const TOTAL_ASSETS = Object.keys(ASSETS).length;
-
+// ---- Canvas ----
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-let gameState = 'loading'; // loading, title, charcreate, game
-let currentRoom = null;
-let player = null;
-let aiPlayers = [];
+// ---- State ----
+let currentScreen = 'loading';
+let currentRoom = 'mainhall';
+let camera = { x: 0, y: 0 };
+let zoom = 1.0;
+let IMAGES = {};
+let totalAssets = 0;
+let loadedAssets = 0;
+
+// ---- Settings ----
+let settings = {
+  showNames: true,
+  sfx: true,
+  music: true,
+  chatBubbles: true
+};
+
+// ---- Player ----
+let player = {
+  name: 'Guest',
+  tx: 5, ty: 5,
+  x: 5, y: 5,
+  facing: 's',
+  moving: false,
+  walkFrame: 0,
+  walkTimer: 0,
+  targetTx: null, targetTy: null,
+  isLocal: true,
+  hair: 'hair_short',
+  outfit: 'shirt_blue',
+  accessory: null,
+  sprite: 'avatar/idle_s'
+};
+
+// ---- AI Players ----
+let roomPlayers = [];
+const AI_NAMES = ['Aurelia', 'Thorne', 'Luna', 'Drake', 'Mira', 'Zane', 'Elara', 'Kael'];
+const AI_CHAT = [
+  'Hello there!', 'Beautiful room!', 'Anyone want to trade?',
+  'Nice outfit!', 'Where is everyone?', 'Love this place!',
+  'Just got a new item!', 'Hey!', 'Anyone here?',
+  'The garden is lovely.', 'Looking for friends!'
+];
+
+// ---- Chat System ----
 let chatMessages = [];
-let camera = { x: 0, y: 0, zoom: 1.0, minZoom: 0.5, maxZoom: 3.0 };
-let keys = {};
-let mouse = { x: 0, y: 0, down: false, lastX: 0, lastY: 0 };
-let touchState = { active: false, pinchDist: 0, lastPinchDist: 0 };
-let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-let lastTime = 0;
-let animFrameId = null;
-let dpadActive = { n: false, s: false, e: false, w: false };
-let sidePanelVisible = false;
-let sidePanelMode = 'friends'; // friends, inventory, settings
+let chatBubbles = [];
 
-// Isometric constants
-const TILE_W = 64;
-const TILE_H = 32;
-const AVATAR_W = 64;
-const AVATAR_H = 96;
+// ---- Friends ----
+let friends = [
+  { name: 'Aurelia', online: true },
+  { name: 'Thorne', online: false },
+  { name: 'Luna', online: true },
+  { name: 'Drake', online: true },
+  { name: 'Mira', online: false },
+  { name: 'Zane', online: false }
+];
 
-// Character selections
-let charSelections = { hair: 'hair_bald', shirt: 'shirt_blue', acc: 'none', name: '' };
-
-// ============================================
-// 3. ROOM DATA
-// ============================================
+// ---- Room Definitions ----
 const ROOMS = {
   mainhall: {
     name: 'Main Hall',
-    width: 10, height: 10,
-    floor: 'floor_wood',
-    wall: 'wall_wood',
-    exits: { east: 'garden', north: 'library', south: 'tavern' },
+    w: 10, h: 10,
+    floor: 'floor_wood', wall: 'wall_wood',
+    bg: '#1a1520',
+    exits: {
+      east:  { room: 'garden', x: 1, y: 5 },
+      north: { room: 'library', x: 5, y: 8 },
+      south: { room: 'tavern', x: 5, y: 1 }
+    },
     furniture: [
-      {type:'sofa', x:3, y:3},
-      {type:'table', x:5, y:4},
-      {type:'chair', x:4, y:4},
-      {type:'lamp', x:2, y:2},
-      {type:'plant', x:7, y:6},
-      {type:'bookshelf', x:1, y:7},
-      {type:'rug', x:5, y:5},
-      {type:'trophy', x:8, y:1},
+      {type:'rug',    x:5, y:5, offX:0, offY:-10},
+      {type:'sofa',   x:3, y:3, offX:0, offY:-25},
+      {type:'sofa',   x:7, y:3, offX:0, offY:-25},
+      {type:'table',  x:5, y:4, offX:0, offY:-20},
+      {type:'chair',  x:4, y:4, offX:0, offY:-20},
+      {type:'chair',  x:6, y:4, offX:0, offY:-20},
+      {type:'lamp',   x:2, y:2, offX:0, offY:-35},
+      {type:'lamp',   x:8, y:2, offX:0, offY:-35},
+      {type:'plant',  x:1, y:7, offX:0, offY:-20},
+      {type:'plant',  x:8, y:7, offX:0, offY:-20},
+      {type:'bookshelf', x:1, y:1, offX:0, offY:-30},
+      {type:'bookshelf', x:8, y:1, offX:0, offY:-30},
+      {type:'trophy', x:5, y:2, offX:0, offY:-25},
+      {type:'dresser', x:4, y:2, offX:0, offY:-30},
     ]
   },
   garden: {
     name: 'Moon Garden',
-    width: 12, height: 8,
-    floor: 'floor_grass',
-    wall: 'wall_brick',
-    exits: { west: 'mainhall' },
+    w: 12, h: 8,
+    floor: 'floor_grass', wall: 'wall_brick',
+    bg: '#0f1f15',
+    exits: { west: { room: 'mainhall', x: 8, y: 5 } },
     furniture: [
-      {type:'fountain', x:6, y:4},
-      {type:'plant', x:3, y:2},
-      {type:'plant', x:9, y:2},
-      {type:'plant', x:3, y:6},
-      {type:'plant', x:9, y:6},
-      {type:'table', x:5, y:4},
+      {type:'fountain', x:6, y:4, offX:0, offY:-30},
+      {type:'tree', x:2, y:2, offX:0, offY:-40},
+      {type:'tree', x:10, y:2, offX:0, offY:-40},
+      {type:'tree', x:2, y:6, offX:0, offY:-40},
+      {type:'tree', x:10, y:6, offX:0, offY:-40},
+      {type:'flower', x:4, y:3, offX:0, offY:-20},
+      {type:'flower', x:8, y:3, offX:0, offY:-20},
+      {type:'flower', x:4, y:5, offX:0, offY:-20},
+      {type:'flower', x:8, y:5, offX:0, offY:-20},
+      {type:'bench', x:5, y:4, offX:0, offY:-20},
+      {type:'bench', x:7, y:4, offX:0, offY:-20},
+      {type:'lamp', x:1, y:4, offX:0, offY:-35},
+      {type:'lamp', x:11, y:4, offX:0, offY:-35},
     ]
   },
   library: {
     name: 'Arcane Library',
-    width: 8, height: 10,
-    floor: 'floor_carpet',
-    wall: 'wall_stone',
-    exits: { south: 'mainhall' },
+    w: 8, h: 10,
+    floor: 'floor_carpet', wall: 'wall_stone',
+    bg: '#151025',
+    exits: { south: { room: 'mainhall', x: 5, y: 2 } },
     furniture: [
-      {type:'bookshelf', x:1, y:1},
-      {type:'bookshelf', x:1, y:3},
-      {type:'bookshelf', x:6, y:1},
-      {type:'bookshelf', x:6, y:3},
-      {type:'table', x:4, y:5},
-      {type:'chair', x:3, y:5},
-      {type:'chair', x:5, y:5},
-      {type:'lamp', x:4, y:2},
+      {type:'bookshelf', x:1, y:1, offX:0, offY:-30},
+      {type:'bookshelf', x:1, y:3, offX:0, offY:-30},
+      {type:'bookshelf', x:1, y:5, offX:0, offY:-30},
+      {type:'bookshelf', x:6, y:1, offX:0, offY:-30},
+      {type:'bookshelf', x:6, y:3, offX:0, offY:-30},
+      {type:'bookshelf', x:6, y:5, offX:0, offY:-30},
+      {type:'table', x:4, y:5, offX:0, offY:-20},
+      {type:'chair', x:3, y:5, offX:0, offY:-20},
+      {type:'chair', x:5, y:5, offX:0, offY:-20},
+      {type:'lamp', x:4, y:3, offX:0, offY:-35},
+      {type:'lamp', x:2, y:7, offX:0, offY:-35},
+      {type:'lamp', x:6, y:7, offX:0, offY:-35},
+      {type:'rug', x:4, y:5, offX:0, offY:-10},
     ]
   },
   tavern: {
     name: 'Dragon Tavern',
-    width: 10, height: 6,
-    floor: 'floor_stone',
-    wall: 'wall_wood',
-    exits: { north: 'mainhall' },
+    w: 10, h: 6,
+    floor: 'floor_stone', wall: 'wall_wood',
+    bg: '#1f1510',
+    exits: { north: { room: 'mainhall', x: 5, y: 8 } },
     furniture: [
-      {type:'table', x:3, y:3},
-      {type:'table', x:7, y:3},
-      {type:'chair', x:2, y:3},
-      {type:'chair', x:4, y:3},
-      {type:'chair', x:6, y:3},
-      {type:'chair', x:8, y:3},
-      {type:'piano', x:1, y:1},
-      {type:'lamp', x:5, y:1},
+      {type:'table', x:3, y:3, offX:0, offY:-20},
+      {type:'table', x:7, y:3, offX:0, offY:-20},
+      {type:'chair', x:2, y:3, offX:0, offY:-20},
+      {type:'chair', x:4, y:3, offX:0, offY:-20},
+      {type:'chair', x:6, y:3, offX:0, offY:-20},
+      {type:'chair', x:8, y:3, offX:0, offY:-20},
+      {type:'piano', x:1, y:1, offX:0, offY:-30},
+      {type:'stove', x:9, y:1, offX:0, offY:-35},
+      {type:'barrel', x:5, y:1, offX:0, offY:-20},
+      {type:'barrel', x:6, y:1, offX:0, offY:-20},
+      {type:'lamp', x:3, y:1, offX:0, offY:-35},
+      {type:'lamp', x:7, y:1, offX:0, offY:-35},
+      {type:'rug', x:5, y:3, offX:0, offY:-10},
     ]
   }
 };
 
-// ============================================
-// 4. ASSET PRELOADER
-// ============================================
-function loadAssets() {
-  const entries = Object.entries(ASSETS);
-  let loaded = 0;
+// ---- Asset List ----
+const ASSETS = {
+  // Avatars
+  'avatar/idle_s': 'assets/sprites/avatar/idle_s.png',
+  'avatar/idle_e': 'assets/sprites/avatar/idle_e.png',
+  'avatar/idle_n': 'assets/sprites/avatar/idle_n.png',
+  'avatar/idle_w': 'assets/sprites/avatar/idle_w.png',
+  'avatar/walk1_s': 'assets/sprites/avatar/walk1_s.png',
+  'avatar/walk2_s': 'assets/sprites/avatar/walk2_s.png',
+  // Furniture
+  'furniture/sofa': 'assets/sprites/furniture/sofa.png',
+  'furniture/table': 'assets/sprites/furniture/table.png',
+  'furniture/chair': 'assets/sprites/furniture/chair.png',
+  'furniture/bed': 'assets/sprites/furniture/bed.png',
+  'furniture/bookshelf': 'assets/sprites/furniture/bookshelf.png',
+  'furniture/plant': 'assets/sprites/furniture/plant.png',
+  'furniture/lamp': 'assets/sprites/furniture/lamp.png',
+  'furniture/tv': 'assets/sprites/furniture/tv.png',
+  'furniture/rug': 'assets/sprites/furniture/rug.png',
+  'furniture/trophy': 'assets/sprites/furniture/trophy.png',
+  'furniture/piano': 'assets/sprites/furniture/piano.png',
+  'furniture/fountain': 'assets/sprites/furniture/fountain.png',
+  'furniture/tree': 'assets/sprites/furniture/tree.png',
+  'furniture/barrel': 'assets/sprites/furniture/barrel.png',
+  'furniture/flower': 'assets/sprites/furniture/flower.png',
+  'furniture/bench': 'assets/sprites/furniture/bench.png',
+  'furniture/chest': 'assets/sprites/furniture/chest.png',
+  'furniture/dresser': 'assets/sprites/furniture/dresser.png',
+  'furniture/stove': 'assets/sprites/furniture/stove.png',
+  // Floor tiles
+  'tiles/floor_wood': 'assets/sprites/tiles/floor_wood.png',
+  'tiles/floor_carpet': 'assets/sprites/tiles/floor_carpet.png',
+  'tiles/floor_grass': 'assets/sprites/tiles/floor_grass.png',
+  'tiles/floor_stone': 'assets/sprites/tiles/floor_stone.png',
+  'tiles/floor_tile': 'assets/sprites/tiles/floor_tile.png',
+  'tiles/floor_marble': 'assets/sprites/tiles/floor_marble.png',
+  // Wall tiles
+  'tiles/wall_wood': 'assets/sprites/tiles/wall_wood.png',
+  'tiles/wall_brick': 'assets/sprites/tiles/wall_brick.png',
+  'tiles/wall_stone': 'assets/sprites/tiles/wall_stone.png',
+  // Hair
+  'hair/hair_bald': 'assets/sprites/hair/hair_bald.png',
+  'hair/hair_short': 'assets/sprites/hair/hair_short.png',
+  'hair/hair_spiky': 'assets/sprites/hair/hair_spiky.png',
+  'hair/hair_long': 'assets/sprites/hair/hair_long.png',
+  'hair/hair_ponytail': 'assets/sprites/hair/hair_ponytail.png',
+  'hair/hair_afro': 'assets/sprites/hair/hair_afro.png',
+  // Clothes
+  'clothes/shirt_blue': 'assets/sprites/clothes/shirt_blue.png',
+  'clothes/shirt_red': 'assets/sprites/clothes/shirt_red.png',
+  'clothes/shirt_green': 'assets/sprites/clothes/shirt_green.png',
+  'clothes/dress_pink': 'assets/sprites/clothes/dress_pink.png',
+  // Items
+  'items/acc_crown': 'assets/sprites/items/acc_crown.png',
+  'items/acc_glasses': 'assets/sprites/items/acc_glasses.png',
+  'items/acc_wings': 'assets/sprites/items/acc_wings.png',
+  'items/item_dragon_egg': 'assets/sprites/items/item_dragon_egg.png',
+  'items/item_star_badge': 'assets/sprites/items/item_star_badge.png',
+};
 
-  function updateProgress() {
-    loaded++;
-    const pct = Math.round((loaded / TOTAL_ASSETS) * 100);
-    document.getElementById('loadingBar').style.width = pct + '%';
-    document.getElementById('loadingPercent').textContent = pct + '%';
-    if (loaded >= TOTAL_ASSETS) {
-      setTimeout(() => {
-        document.getElementById('loadingScreen').classList.remove('active');
-        document.getElementById('titleScreen').classList.add('active');
-        gameState = 'title';
-        startTitleAnimation();
-        playTitleJingle();
-      }, 400);
+// ---- Inventory System ----
+const inventory = {
+  items: [
+    {id: 'acc_crown', name: 'Golden Crown', type: 'accessory', icon: 'items/acc_crown.png', equipped: false},
+    {id: 'acc_glasses', name: 'Cool Glasses', type: 'accessory', icon: 'items/acc_glasses.png', equipped: false},
+    {id: 'acc_wings', name: 'Angel Wings', type: 'accessory', icon: 'items/acc_wings.png', equipped: false},
+    {id: 'item_dragon_egg', name: 'Dragon Egg', type: 'collectible', icon: 'items/item_dragon_egg.png'},
+    {id: 'item_star_badge', name: 'Star Badge', type: 'collectible', icon: 'items/item_star_badge.png'},
+    {id: 'shirt_blue', name: 'Blue Shirt', type: 'clothing', icon: 'clothes/shirt_blue.png', equipped: true},
+    {id: 'shirt_red', name: 'Red Jacket', type: 'clothing', icon: 'clothes/shirt_red.png', equipped: false},
+    {id: 'shirt_green', name: 'Green Tunic', type: 'clothing', icon: 'clothes/shirt_green.png', equipped: false},
+    {id: 'dress_pink', name: 'Pink Dress', type: 'clothing', icon: 'clothes/dress_pink.png', equipped: false},
+    {id: 'hair_short', name: 'Short Hair', type: 'hair', icon: 'hair/hair_short.png', equipped: true},
+    {id: 'hair_spiky', name: 'Spiky Hair', type: 'hair', icon: 'hair/hair_spiky.png', equipped: false},
+    {id: 'hair_long', name: 'Long Hair', type: 'hair', icon: 'hair/hair_long.png', equipped: false},
+  ],
+
+  equip(itemId) {
+    const item = this.items.find(i => i.id === itemId);
+    if (!item) return;
+    if (item.type === 'accessory' || item.type === 'clothing' || item.type === 'hair') {
+      this.items.filter(i => i.type === item.type).forEach(i => i.equipped = false);
     }
-  }
+    item.equipped = true;
+    updateAvatarLook();
+  },
 
-  for (const [key, src] of entries) {
-    const img = new Image();
-    img.onload = updateProgress;
-    img.onerror = () => { console.warn('Failed to load:', src); updateProgress(); };
-    img.src = src;
-    IMAGES[key] = img;
+  unequip(itemId) {
+    const item = this.items.find(i => i.id === itemId);
+    if (item) item.equipped = false;
+    updateAvatarLook();
   }
-}
+};
 
-// ============================================
-// 5. ISOMETRIC MATH
-// ============================================
-function toIso(x, y) {
-  const cx = canvas.width / 2 + camera.x;
-  const cy = canvas.height / 3 + camera.y;
+// ---- Trade System ----
+const trade = {
+  active: false,
+  partner: null,
+  myOffers: [],
+  theirOffers: [],
+  myConfirmed: false,
+  theyConfirmed: false,
+
+  start(partnerName) {
+    if (this.active) return;
+    this.active = true;
+    this.partner = partnerName;
+    this.myOffers = [];
+    this.theirOffers = [];
+    this.myConfirmed = false;
+    this.theyConfirmed = false;
+    showTradePanel();
+  },
+
+  offerItem(itemId) {
+    if (this.myConfirmed) return;
+    const item = inventory.items.find(i => i.id === itemId);
+    if (item && !this.myOffers.includes(itemId)) {
+      this.myOffers.push(itemId);
+      renderTradePanel();
+    }
+  },
+
+  removeOffer(itemId) {
+    if (this.myConfirmed) return;
+    this.myOffers = this.myOffers.filter(id => id !== itemId);
+    renderTradePanel();
+  },
+
+  confirm() {
+    if (this.myConfirmed) return;
+    this.myConfirmed = true;
+    setTimeout(() => {
+      if (!this.active) return;
+      this.theyConfirmed = true;
+      completeTrade();
+    }, 2000);
+    renderTradePanel();
+  },
+
+  cancel() {
+    if (this.myConfirmed && this.theyConfirmed) return;
+    this.active = false;
+    this.partner = null;
+    hideTradePanel();
+  }
+};
+
+// ---- Input State ----
+const keys = {};
+let isDragging = false;
+let dragStart = { x: 0, y: 0 };
+let dragCamStart = { x: 0, y: 0 };
+
+// ===================================================================
+// ISOMETRIC MATH
+// ===================================================================
+function tileToScreen(tx, ty, camX, camY, z) {
+  const cx = (canvas.width / 2) / z + camX;
+  const cy = (canvas.height / 3) / z + camY;
   return {
-    x: cx + (x - y) * (TILE_W / 2),
-    y: cy + (x + y) * (TILE_H / 2)
+    x: cx + (tx - ty) * (TILE_W / 2),
+    y: cy + (tx + ty) * (TILE_H / 2)
   };
 }
 
-function toGrid(screenX, screenY) {
-  const cx = canvas.width / 2 + camera.x;
-  const cy = canvas.height / 3 + camera.y;
-  const sx = (screenX - cx) / camera.zoom;
-  const sy = (screenY - cy) / camera.zoom;
-  const x = (sx / (TILE_W / 2) + sy / (TILE_H / 2)) / 2;
-  const y = (sy / (TILE_H / 2) - sx / (TILE_W / 2)) / 2;
-  return { x: Math.floor(x), y: Math.floor(y) };
+function screenToTile(sx, sy, camX, camY, z) {
+  const cx = (canvas.width / 2) / z + camX;
+  const cy = (canvas.height / 3) / z + camY;
+  const dx = sx / z - cx;
+  const dy = sy / z - cy;
+  const tx = (dx / (TILE_W/2) + dy / (TILE_H/2)) / 2;
+  const ty = (dy / (TILE_H/2) - dx / (TILE_W/2)) / 2;
+  return { x: Math.floor(tx), y: Math.floor(ty) };
 }
 
-// ============================================
-// 6. AUDIO SYSTEM (Web Audio API procedural)
-// ============================================
-let audioCtx = null;
-function ensureAudio() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function getAssetPath(key) {
+  return ASSETS[key] || '';
+}
+
+// ===================================================================
+// ASSET LOADING
+// ===================================================================
+function loadAssets() {
+  const entries = Object.entries(ASSETS);
+  totalAssets = entries.length;
+
+  if (totalAssets === 0) {
+    onAllLoaded();
+    return;
   }
+
+  entries.forEach(([key, path]) => {
+    const img = new Image();
+    img.onload = () => {
+      IMAGES[key] = img;
+      loadedAssets++;
+      updateLoadingProgress();
+      if (loadedAssets >= totalAssets) onAllLoaded();
+    };
+    img.onerror = () => {
+      IMAGES[key] = null;
+      loadedAssets++;
+      updateLoadingProgress();
+      if (loadedAssets >= totalAssets) onAllLoaded();
+    };
+    img.src = path;
+  });
+}
+
+function updateLoadingProgress() {
+  const pct = Math.floor((loadedAssets / totalAssets) * 100);
+  document.getElementById('loadFill').style.width = pct + '%';
+  document.getElementById('loadText').textContent = 'Loading assets... ' + pct + '%';
+}
+
+function onAllLoaded() {
+  setTimeout(() => {
+    document.getElementById('loadingScreen').style.opacity = '0';
+    setTimeout(() => {
+      document.getElementById('loadingScreen').style.display = 'none';
+      showScreen('title');
+      playTitleJingle();
+    }, 500);
+  }, 800);
+}
+
+// ===================================================================
+// AUDIO SYSTEM (Web Audio API)
+// ===================================================================
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   return audioCtx;
 }
 
+function playTone(freq, duration, type, vol) {
+  if (!settings.sfx) return;
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(vol || 0.1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration);
+  } catch(e) {}
+}
+
+function playSfx(name) {
+  if (!settings.sfx) return;
+  switch(name) {
+    case 'step':
+      playTone(200 + Math.random() * 100, 0.06, 'triangle', 0.04);
+      break;
+    case 'door':
+      playTone(300, 0.15, 'square', 0.06);
+      setTimeout(() => playTone(450, 0.2, 'square', 0.05), 100);
+      break;
+    case 'chat':
+      playTone(800, 0.08, 'sine', 0.05);
+      break;
+    case 'blip':
+      playTone(1200, 0.05, 'sine', 0.04);
+      break;
+    case 'trade':
+      playTone(523, 0.1, 'sine', 0.06);
+      setTimeout(() => playTone(659, 0.1, 'sine', 0.06), 100);
+      setTimeout(() => playTone(784, 0.15, 'sine', 0.06), 200);
+      break;
+    case 'confirm':
+      playTone(784, 0.12, 'sine', 0.07);
+      setTimeout(() => playTone(1047, 0.2, 'sine', 0.07), 120);
+      break;
+    case 'error':
+      playTone(200, 0.2, 'sawtooth', 0.05);
+      break;
+  }
+}
+
 function playTitleJingle() {
-  try {
-    const ctx = ensureAudio();
-    const notes = [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50, 1174.66, 1046.50];
-    const times = [0, 0.15, 0.30, 0.45, 0.60, 0.75, 0.90, 1.10];
-    notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.08, ctx.currentTime + times[i]);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + times[i] + 0.4);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(ctx.currentTime + times[i]);
-      osc.stop(ctx.currentTime + times[i] + 0.4);
-    });
-  } catch (e) { /* audio not available */ }
+  if (!settings.music) return;
+  const notes = [523, 587, 659, 784, 659, 784];
+  const delays = [0, 150, 300, 600, 900, 1200];
+  notes.forEach((freq, i) => {
+    setTimeout(() => playTone(freq, 0.25, 'sine', 0.05), delays[i]);
+  });
 }
 
-function playFootstep() {
-  try {
-    const ctx = ensureAudio();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.value = 200 + Math.random() * 100;
-    gain.gain.setValueAtTime(0.04, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.08);
-  } catch (e) { /* audio not available */ }
-}
-
-function playChatSound() {
-  try {
-    const ctx = ensureAudio();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = 880;
-    gain.gain.setValueAtTime(0.06, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.12);
-  } catch (e) { /* audio not available */ }
-}
-
-function playRoomAmbience() {
-  // Simple ambient drone - called once per room entry
-  try {
-    const ctx = ensureAudio();
-    const freqs = [110, 164.81, 196];
-    freqs.forEach(f => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = f;
-      gain.gain.setValueAtTime(0.025, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 3);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 3);
-    });
-  } catch (e) { /* audio not available */ }
-}
-
-// ============================================
-// 7. TITLE SCREEN ANIMATION
-// ============================================
-let titleStars = [];
-let titleAnimId = null;
-function startTitleAnimation() {
-  const tCanvas = document.getElementById('titleCanvas');
-  const tCtx = tCanvas.getContext('2d');
-  titleStars = [];
-  for (let i = 0; i < 60; i++) {
-    titleStars.push({
-      x: Math.random() * 320,
-      y: Math.random() * 200,
-      r: Math.random() * 1.5 + 0.3,
-      twinkle: Math.random() * Math.PI * 2,
-      speed: Math.random() * 0.02 + 0.01
-    });
+function playRoomAmbient() {
+  // Occasional ambient sounds
+  if (!settings.sfx || Math.random() > 0.01) return;
+  const room = ROOMS[currentRoom];
+  if (!room) return;
+  switch(currentRoom) {
+    case 'garden':
+      playTone(300 + Math.random() * 400, 0.5, 'sine', 0.015);
+      break;
+    case 'library':
+      playTone(150 + Math.random() * 200, 0.8, 'sine', 0.01);
+      break;
+    case 'tavern':
+      playTone(80 + Math.random() * 100, 0.3, 'triangle', 0.02);
+      break;
+    default:
+      playTone(200 + Math.random() * 300, 0.4, 'sine', 0.01);
   }
-  function drawTitle() {
-    tCtx.fillStyle = '#0f0f23';
-    tCtx.fillRect(0, 0, 320, 200);
-    // Stars
-    titleStars.forEach(s => {
-      s.twinkle += s.speed;
-      const alpha = 0.4 + Math.sin(s.twinkle) * 0.35;
-      tCtx.fillStyle = `rgba(255,220,150,${alpha})`;
-      tCtx.fillRect(Math.floor(s.x), Math.floor(s.y), s.r < 1 ? 1 : 2, s.r < 1 ? 1 : 2);
-    });
-    // Inn building silhouette
-    tCtx.fillStyle = '#1a1528';
-    tCtx.fillRect(110, 90, 100, 80);
-    tCtx.fillRect(100, 100, 120, 70);
-    // Roof
-    tCtx.fillStyle = '#2a2038';
-    tCtx.beginPath();
-    tCtx.moveTo(90, 100);
-    tCtx.lineTo(160, 50);
-    tCtx.lineTo(230, 100);
-    tCtx.closePath();
-    tCtx.fill();
-    // Roof outline
-    tCtx.strokeStyle = 'rgba(255,215,0,0.4)';
-    tCtx.lineWidth = 1;
-    tCtx.stroke();
-    // Door
-    tCtx.fillStyle = '#3a3040';
-    tCtx.fillRect(148, 125, 24, 45);
-    tCtx.fillStyle = 'rgba(255,215,0,0.3)';
-    tCtx.fillRect(150, 127, 20, 43);
-    // Windows
-    tCtx.fillStyle = 'rgba(255,220,120,0.4)';
-    tCtx.fillRect(118, 110, 16, 16);
-    tCtx.fillRect(186, 110, 16, 16);
-    // Ground
-    tCtx.fillStyle = '#12121a';
-    tCtx.fillRect(0, 170, 320, 30);
-    if (gameState === 'title') {
-      titleAnimId = requestAnimationFrame(drawTitle);
-    }
+}
+
+// ===================================================================
+// SCREEN MANAGEMENT
+// ===================================================================
+function showScreen(screen) {
+  currentScreen = screen;
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('titleScreen').style.display = 'none';
+  document.getElementById('charScreen').style.display = 'none';
+  document.getElementById('gameScreen').style.display = 'none';
+
+  if (screen === 'title') {
+    document.getElementById('titleScreen').style.display = 'flex';
+  } else if (screen === 'character') {
+    document.getElementById('charScreen').style.display = 'flex';
+    initCharCreator();
+  } else if (screen === 'game') {
+    document.getElementById('gameScreen').style.display = 'block';
+    resizeCanvas();
+    centerCameraOnPlayer();
   }
-  drawTitle();
 }
 
-function stopTitleAnimation() {
-  if (titleAnimId) cancelAnimationFrame(titleAnimId);
+function startGuest() {
+  player.name = 'Guest' + Math.floor(Math.random() * 9999);
+  document.getElementById('charNameInput').value = player.name;
+  showScreen('character');
 }
 
-// ============================================
-// 8. CHARACTER CREATOR
-// ============================================
+// ===================================================================
+// CHARACTER CREATOR
+// ===================================================================
+let charSelections = { hair: 'hair_short', outfit: 'shirt_blue', accessory: null };
+
 function initCharCreator() {
-  // Hair selection
-  document.querySelectorAll('#hairGrid .charOpt').forEach(el => {
-    el.addEventListener('click', () => {
-      document.querySelectorAll('#hairGrid .charOpt').forEach(o => o.classList.remove('selected'));
-      el.classList.add('selected');
-      charSelections.hair = el.dataset.hair;
+  // Hair grid
+  const hairGrid = document.getElementById('hairGrid');
+  const hairs = [
+    {id:'hair_bald', icon:'hair/hair_bald.png'},
+    {id:'hair_short', icon:'hair/hair_short.png'},
+    {id:'hair_spiky', icon:'hair/hair_spiky.png'},
+    {id:'hair_long', icon:'hair/hair_long.png'},
+    {id:'hair_ponytail', icon:'hair/hair_ponytail.png'},
+    {id:'hair_afro', icon:'hair/hair_afro.png'},
+  ];
+  hairGrid.innerHTML = '';
+  hairs.forEach(h => {
+    const div = document.createElement('div');
+    div.className = 'char-opt' + (charSelections.hair === h.id ? ' selected' : '');
+    div.innerHTML = `<img src="${getAssetPath(h.icon)}" onerror="this.style.display='none'">`;
+    div.onclick = () => {
+      charSelections.hair = h.id;
+      initCharCreator();
       updateCharPreview();
-    });
+    };
+    hairGrid.appendChild(div);
   });
-  // Outfit selection
-  document.querySelectorAll('#outfitGrid .charOpt').forEach(el => {
-    el.addEventListener('click', () => {
-      document.querySelectorAll('#outfitGrid .charOpt').forEach(o => o.classList.remove('selected'));
-      el.classList.add('selected');
-      charSelections.shirt = el.dataset.shirt;
+
+  // Outfit grid
+  const outfitGrid = document.getElementById('outfitGrid');
+  const outfits = [
+    {id:'shirt_blue', icon:'clothes/shirt_blue.png'},
+    {id:'shirt_red', icon:'clothes/shirt_red.png'},
+    {id:'shirt_green', icon:'clothes/shirt_green.png'},
+    {id:'dress_pink', icon:'clothes/dress_pink.png'},
+  ];
+  outfitGrid.innerHTML = '';
+  outfits.forEach(o => {
+    const div = document.createElement('div');
+    div.className = 'char-opt' + (charSelections.outfit === o.id ? ' selected' : '');
+    div.innerHTML = `<img src="${getAssetPath(o.icon)}" onerror="this.style.display='none'">`;
+    div.onclick = () => {
+      charSelections.outfit = o.id;
+      initCharCreator();
       updateCharPreview();
-    });
+    };
+    outfitGrid.appendChild(div);
   });
-  // Accessory selection
-  document.querySelectorAll('#accGrid .charOpt').forEach(el => {
-    el.addEventListener('click', () => {
-      document.querySelectorAll('#accGrid .charOpt').forEach(o => o.classList.remove('selected'));
-      el.classList.add('selected');
-      charSelections.acc = el.dataset.acc;
+
+  // Accessory grid
+  const accGrid = document.getElementById('accGrid');
+  const accs = [
+    {id: null, label: 'None'},
+    {id:'acc_crown', icon:'items/acc_crown.png'},
+    {id:'acc_glasses', icon:'items/acc_glasses.png'},
+    {id:'acc_wings', icon:'items/acc_wings.png'},
+  ];
+  accGrid.innerHTML = '';
+  accs.forEach(a => {
+    const div = document.createElement('div');
+    div.className = 'char-opt' + (charSelections.accessory === a.id ? ' selected' : '');
+    if (a.label) {
+      div.innerHTML = `<span style="font-size:10px;color:#888;">${a.label}</span>`;
+    } else {
+      div.innerHTML = `<img src="${getAssetPath(a.icon)}" onerror="this.style.display='none'">`;
+    }
+    div.onclick = () => {
+      charSelections.accessory = a.id;
+      initCharCreator();
       updateCharPreview();
-    });
+    };
+    accGrid.appendChild(div);
   });
+
   updateCharPreview();
 }
 
 function updateCharPreview() {
-  const cCanvas = document.getElementById('charCanvas');
-  const cCtx = cCanvas.getContext('2d');
-  cCtx.clearRect(0, 0, 200, 260);
-
-  const cx = 100, cy = 200;
-  const bounce = Math.sin(Date.now() / 300) * 2;
-
-  // Body (base avatar)
-  const bodyImg = IMAGES['avatar/idle_s'];
-  if (bodyImg && bodyImg.complete) {
-    cCtx.drawImage(bodyImg, cx - 32, cy - 96 + bounce, 64, 96);
-  }
-  // Shirt
-  const shirtImg = IMAGES['clothes/' + charSelections.shirt];
-  if (shirtImg && shirtImg.complete) {
-    cCtx.drawImage(shirtImg, cx - 32, cy - 96 + bounce, 64, 96);
-  }
-  // Hair
-  const hairImg = IMAGES['hair/' + charSelections.hair];
-  if (hairImg && hairImg.complete) {
-    cCtx.drawImage(hairImg, cx - 32, cy - 96 + bounce, 64, 96);
-  }
-  // Accessory
-  if (charSelections.acc !== 'none') {
-    const accImg = IMAGES['items/' + charSelections.acc];
-    if (accImg && accImg.complete) {
-      cCtx.drawImage(accImg, cx - 32, cy - 96 + bounce, 64, 96);
-    }
-  }
-
-  if (gameState === 'charcreate') {
-    requestAnimationFrame(updateCharPreview);
-  }
+  // Show idle_s avatar as preview
+  const img = document.getElementById('charPreviewImg');
+  const path = getAssetPath('avatar/idle_s');
+  if (img) { img.src = path; img.style.display = 'block'; }
 }
 
-// ============================================
-// 9. AUTH SYSTEM (localStorage)
-// ============================================
-function initAuth() {
-  const modal = document.getElementById('authModal');
-  const titleEl = document.getElementById('authTitle');
-  const toggleEl = document.getElementById('authToggle');
-  const submitBtn = document.getElementById('authSubmit');
-  const errorEl = document.getElementById('authError');
-  let isLogin = true;
+function startGame() {
+  const name = document.getElementById('charNameInput').value.trim();
+  if (name) player.name = name.substring(0, 16);
 
-  document.getElementById('btnLogin').addEventListener('click', () => {
-    isLogin = true;
-    titleEl.textContent = 'Login';
-    submitBtn.textContent = 'Login';
-    toggleEl.textContent = 'Need an account? Register';
-    modal.classList.add('active');
-    errorEl.textContent = '';
-    document.getElementById('authUser').value = '';
-    document.getElementById('authPass').value = '';
+  // Apply character selections
+  player.hair = charSelections.hair;
+  player.outfit = charSelections.outfit;
+  player.accessory = charSelections.accessory;
+
+  // Sync inventory
+  inventory.items.forEach(it => {
+    it.equipped = false;
   });
-  document.getElementById('btnRegister').addEventListener('click', () => {
-    isLogin = false;
-    titleEl.textContent = 'Register';
-    submitBtn.textContent = 'Register';
-    toggleEl.textContent = 'Already have an account? Login';
-    modal.classList.add('active');
-    errorEl.textContent = '';
-    document.getElementById('authUser').value = '';
-    document.getElementById('authPass').value = '';
-  });
-  toggleEl.addEventListener('click', () => {
-    isLogin = !isLogin;
-    titleEl.textContent = isLogin ? 'Login' : 'Register';
-    submitBtn.textContent = isLogin ? 'Login' : 'Register';
-    toggleEl.textContent = isLogin ? 'Need an account? Register' : 'Already have an account? Login';
-    errorEl.textContent = '';
-  });
-  document.getElementById('authBack').addEventListener('click', () => {
-    modal.classList.remove('active');
-  });
-  submitBtn.addEventListener('click', () => {
-    const user = document.getElementById('authUser').value.trim();
-    const pass = document.getElementById('authPass').value;
-    if (!user || !pass) { errorEl.textContent = 'Please fill in all fields'; return; }
-    if (user.length < 3) { errorEl.textContent = 'Username must be at least 3 characters'; return; }
-    if (pass.length < 4) { errorEl.textContent = 'Password must be at least 4 characters'; return; }
-
-    if (isLogin) {
-      const stored = localStorage.getItem('si_user_' + user);
-      if (!stored) { errorEl.textContent = 'User not found'; return; }
-      const data = JSON.parse(stored);
-      if (data.password !== pass) { errorEl.textContent = 'Incorrect password'; return; }
-      localStorage.setItem('si_current_user', user);
-      modal.classList.remove('active');
-      enterCharCreate(user);
-    } else {
-      if (localStorage.getItem('si_user_' + user)) { errorEl.textContent = 'Username already taken'; return; }
-      localStorage.setItem('si_user_' + user, JSON.stringify({ password: pass, created: Date.now() }));
-      localStorage.setItem('si_current_user', user);
-      modal.classList.remove('active');
-      enterCharCreate(user);
-    }
-  });
-  document.getElementById('btnGuest').addEventListener('click', () => {
-    const guestName = 'Guest' + Math.floor(Math.random() * 9999);
-    enterCharCreate(guestName);
-  });
-}
-
-function enterCharCreate(name) {
-  charSelections.name = name;
-  document.getElementById('charNameInput').value = name;
-  document.getElementById('titleScreen').classList.remove('active');
-  document.getElementById('charScreen').classList.add('active');
-  stopTitleAnimation();
-  gameState = 'charcreate';
-  updateCharPreview();
-}
-
-// ============================================
-// 10. PLAYER SETUP & GAME ENTRY
-// ============================================
-function createPlayer(name, hair, shirt, acc) {
-  return {
-    name: name,
-    x: Math.floor(currentRoom.width / 2),
-    y: Math.floor(currentRoom.height / 2),
-    targetX: null, targetY: null,
-    facing: 's',
-    moving: false,
-    animFrame: 0,
-    animTimer: 0,
-    hair: hair,
-    shirt: shirt,
-    acc: acc,
-    chatText: null,
-    chatTimer: 0,
-    stepTimer: 0,
-    isLocal: true
-  };
-}
-
-function initGame() {
-  const name = document.getElementById('charNameInput').value.trim() || charSelections.name || 'Guest';
-  charSelections.name = name;
-
-  document.getElementById('charScreen').classList.remove('active');
-  document.getElementById('gameUI').classList.add('active');
-  gameState = 'game';
-
-  loadRoom('mainhall');
-  player = createPlayer(name, charSelections.hair, charSelections.shirt, charSelections.acc);
-
-  // Show D-pad on mobile
-  if (isTouchDevice) {
-    document.getElementById('dpad').classList.add('show');
+  if (player.outfit) {
+    const outfitItem = inventory.items.find(i => i.id === player.outfit);
+    if (outfitItem) outfitItem.equipped = true;
+  }
+  if (player.hair) {
+    const hairItem = inventory.items.find(i => i.id === player.hair);
+    if (hairItem) hairItem.equipped = true;
+  }
+  if (player.accessory) {
+    const accItem = inventory.items.find(i => i.id === player.accessory);
+    if (accItem) accItem.equipped = true;
   }
 
-  // Resize canvas
-  resizeCanvas();
-  playRoomAmbience();
+  player.tx = 5; player.ty = 5;
+  player.x = 5; player.y = 5;
+  player.facing = 's';
+  player.moving = false;
+  player.sprite = 'avatar/idle_s';
 
-  // Start game loop
-  lastTime = performance.now();
-  if (animFrameId) cancelAnimationFrame(animFrameId);
-  gameLoop(lastTime);
+  showScreen('game');
+  spawnRoomPlayers(currentRoom);
+  addSystemMsg('Welcome to Starlight Inn, ' + player.name + '!');
+  addSystemMsg('Use arrow keys, WASD, or click tiles to move.');
+  addSystemMsg('Walk to exit tiles to change rooms.');
+  playSfx('door');
+  gameLoop();
 }
 
-function loadRoom(roomId) {
-  currentRoom = ROOMS[roomId];
-  document.getElementById('roomName').textContent = currentRoom.name;
-
-  // Spawn AI players
-  aiPlayers = [];
-  const aiNames = ['Mira', 'Thorn', 'Luna', 'Finn', 'Aria', 'Zane', 'Ivy', 'Cole', 'Nova', 'Kai'];
-  const hairs = ['hair_bald', 'hair_short', 'hair_spiky', 'hair_long', 'hair_ponytail', 'hair_afro'];
-  const shirts = ['shirt_blue', 'shirt_red', 'shirt_green', 'dress_pink'];
-  const accs = ['none', 'acc_crown', 'acc_glasses', 'acc_wings'];
-  const usedNames = [];
-  for (let i = 0; i < 5; i++) {
-    let n;
-    do { n = aiNames[Math.floor(Math.random() * aiNames.length)]; } while (usedNames.includes(n));
-    usedNames.push(n);
-    aiPlayers.push({
-      name: n,
-      x: Math.floor(Math.random() * currentRoom.width),
-      y: Math.floor(Math.random() * currentRoom.height),
-      targetX: null, targetY: null,
-      facing: ['s','e','n','w'][Math.floor(Math.random() * 4)],
-      moving: false,
-      animFrame: 0,
-      animTimer: 0,
-      hair: hairs[Math.floor(Math.random() * hairs.length)],
-      shirt: shirts[Math.floor(Math.random() * shirts.length)],
-      acc: accs[Math.floor(Math.random() * accs.length)],
-      chatText: null,
-      chatTimer: 0,
-      moveTimer: Math.random() * 3000,
-      stepTimer: 0,
-      isLocal: false
-    });
-  }
-  chatMessages = [];
-  updatePlayerList();
-  playRoomAmbience();
+// ===================================================================
+// AUTH (localStorage)
+// ===================================================================
+function doLogin() {
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  if (!user || !pass) { playSfx('error'); return; }
+  const saved = localStorage.getItem('si_user_' + user);
+  if (!saved) { alert('User not found'); playSfx('error'); return; }
+  let data;
+  try { data = JSON.parse(saved); } catch(e) { alert('Error loading account'); return; }
+  if (data.password !== pass) { alert('Wrong password'); playSfx('error'); return; }
+  player.name = data.displayName || user;
+  document.getElementById('charNameInput').value = player.name;
+  hideModal('login');
+  showScreen('character');
 }
 
-// ============================================
-// 11. INPUT HANDLING
-// ============================================
-function initInput() {
-  // Keyboard
-  window.addEventListener('keydown', (e) => {
-    keys[e.key.toLowerCase()] = true;
-    if (e.key === 'Enter' && gameState === 'game') {
-      const chatInput = document.getElementById('chatInput');
-      if (document.activeElement === chatInput) {
-        sendChat();
-        chatInput.blur();
-      } else {
-        chatInput.focus();
-      }
-    }
-  });
-  window.addEventListener('keyup', (e) => {
-    keys[e.key.toLowerCase()] = false;
-  });
-
-  // Mouse / touch on canvas
-  canvas.addEventListener('mousedown', (e) => {
-    mouse.down = true;
-    mouse.lastX = e.clientX;
-    mouse.lastY = e.clientY;
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-  });
-  canvas.addEventListener('mousemove', (e) => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-    if (mouse.down && gameState === 'game') {
-      const dx = e.clientX - mouse.lastX;
-      const dy = e.clientY - mouse.lastY;
-      camera.x += dx;
-      camera.y += dy;
-      mouse.lastX = e.clientX;
-      mouse.lastY = e.clientY;
-    }
-  });
-  window.addEventListener('mouseup', () => { mouse.down = false; });
-
-  // Mouse wheel zoom
-  canvas.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    if (gameState !== 'game') return;
-    const zoomFactor = e.deltaY > 0 ? 0.92 : 1.08;
-    const newZoom = Math.max(camera.minZoom, Math.min(camera.maxZoom, camera.zoom * zoomFactor));
-    camera.zoom = newZoom;
-  }, { passive: false });
-
-  // Touch events for mobile
-  canvas.addEventListener('touchstart', (e) => {
-    if (gameState !== 'game') return;
-    if (e.touches.length === 1) {
-      mouse.down = true;
-      mouse.lastX = e.touches[0].clientX;
-      mouse.lastY = e.touches[0].clientY;
-      // Tap on floor to move
-      const rect = canvas.getBoundingClientRect();
-      const tx = e.touches[0].clientX - rect.left;
-      const ty = e.touches[0].clientY - rect.top;
-      const grid = toGrid(tx, ty);
-      if (isValidTile(grid.x, grid.y)) {
-        player.targetX = grid.x;
-        player.targetY = grid.y;
-      }
-    } else if (e.touches.length === 2) {
-      touchState.pinchDist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-    }
-  }, { passive: false });
-
-  canvas.addEventListener('touchmove', (e) => {
-    if (gameState !== 'game') return;
-    e.preventDefault();
-    if (e.touches.length === 1 && mouse.down) {
-      const dx = e.touches[0].clientX - mouse.lastX;
-      const dy = e.touches[0].clientY - mouse.lastY;
-      camera.x += dx;
-      camera.y += dy;
-      mouse.lastX = e.touches[0].clientX;
-      mouse.lastY = e.touches[0].clientY;
-    } else if (e.touches.length === 2) {
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      if (touchState.pinchDist > 0) {
-        const factor = dist / touchState.pinchDist;
-        const newZoom = Math.max(camera.minZoom, Math.min(camera.maxZoom, camera.zoom * factor));
-        camera.zoom = newZoom;
-      }
-      touchState.pinchDist = dist;
-    }
-  }, { passive: false });
-
-  canvas.addEventListener('touchend', () => {
-    mouse.down = false;
-    touchState.pinchDist = 0;
-  });
-
-  // Click on floor to move (desktop)
-  canvas.addEventListener('click', (e) => {
-    if (gameState !== 'game' || mouse.down) return;
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    const grid = toGrid(mx, my);
-    if (isValidTile(grid.x, grid.y)) {
-      player.targetX = grid.x;
-      player.targetY = grid.y;
-    }
-  });
-
-  // D-pad controls
-  document.querySelectorAll('.dpadBtn').forEach(btn => {
-    const dir = btn.dataset.dir;
-    btn.addEventListener('touchstart', (e) => { e.preventDefault(); dpadActive[dir] = true; });
-    btn.addEventListener('touchend', (e) => { e.preventDefault(); dpadActive[dir] = false; });
-    btn.addEventListener('touchcancel', () => { dpadActive[dir] = false; });
-    btn.addEventListener('mousedown', () => { dpadActive[dir] = true; });
-    btn.addEventListener('mouseup', () => { dpadActive[dir] = false; });
-    btn.addEventListener('mouseleave', () => { dpadActive[dir] = false; });
-  });
-
-  // Zoom buttons
-  document.getElementById('btnZoomIn').addEventListener('click', () => {
-    camera.zoom = Math.min(camera.maxZoom, camera.zoom * 1.2);
-  });
-  document.getElementById('btnZoomOut').addEventListener('click', () => {
-    camera.zoom = Math.max(camera.minZoom, camera.zoom * 0.8);
-  });
-
-  // UI buttons
-  document.getElementById('btnFriends').addEventListener('click', () => {
-    sidePanelMode = 'friends';
-    sidePanelVisible = !sidePanelVisible;
-    updateSidePanel();
-  });
-  document.getElementById('btnInventory').addEventListener('click', () => {
-    sidePanelMode = 'inventory';
-    sidePanelVisible = !sidePanelVisible;
-    updateSidePanel();
-  });
-  document.getElementById('btnSettings').addEventListener('click', () => {
-    sidePanelMode = 'settings';
-    sidePanelVisible = !sidePanelVisible;
-    updateSidePanel();
-  });
-  document.getElementById('btnLogout').addEventListener('click', () => {
-    logout();
-  });
-  document.getElementById('chatBtn').addEventListener('click', sendChat);
-
-  // Character start
-  document.getElementById('charStartBtn').addEventListener('click', initGame);
-
-  // Resize
-  window.addEventListener('resize', resizeCanvas);
+function doRegister() {
+  const user = document.getElementById('regUser').value.trim();
+  const display = document.getElementById('regDisplay').value.trim() || user;
+  const pass = document.getElementById('regPass').value;
+  if (!user || !pass) { alert('Fill all fields'); playSfx('error'); return; }
+  if (localStorage.getItem('si_user_' + user)) { alert('Username taken'); playSfx('error'); return; }
+  localStorage.setItem('si_user_' + user, JSON.stringify({ displayName: display, password: pass }));
+  player.name = display;
+  document.getElementById('charNameInput').value = player.name;
+  hideModal('register');
+  showScreen('character');
+  addSystemMsg('Account created! Welcome, ' + display + '.');
 }
 
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+function showModal(id) {
+  document.getElementById(id + 'Modal').classList.add('active');
 }
 
-function isValidTile(x, y) {
-  if (!currentRoom) return false;
-  return x >= 0 && y >= 0 && x < currentRoom.width && y < currentRoom.height;
+function hideModal(id) {
+  document.getElementById(id + 'Modal').classList.remove('active');
 }
 
-// ============================================
-// 12. CHAT SYSTEM
-// ============================================
-function sendChat() {
-  const input = document.getElementById('chatInput');
-  const text = input.value.trim();
-  if (!text || !player) return;
-  player.chatText = text;
-  player.chatTimer = 4000;
-  chatMessages.push({ text: text, from: player.name, time: Date.now(), isSystem: false });
-  input.value = '';
-  input.blur();
-  playChatSound();
+// ===================================================================
+// UI PANELS
+// ===================================================================
+let currentPanel = null;
 
-  // AI might respond
-  if (Math.random() < 0.5) {
-    setTimeout(() => {
-      if (!currentRoom) return;
-      const responder = aiPlayers[Math.floor(Math.random() * aiPlayers.length)];
-      const replies = ['Interesting!', 'Indeed!', 'Hello there!', 'How are you?', 'Nice to see you!',
-        'Tell me more!', 'Fascinating!', 'I agree!', 'Haha!', 'Welcome!'];
-      const reply = replies[Math.floor(Math.random() * replies.length)];
-      responder.chatText = reply;
-      responder.chatTimer = 4000;
-      playChatSound();
-    }, 1500 + Math.random() * 2000);
-  }
-}
-
-function updateSidePanel() {
+function togglePanel(type) {
   const panel = document.getElementById('sidePanel');
-  const title = document.getElementById('sideTitle');
+  if (currentPanel === type) { closeSidePanel(); return; }
+  currentPanel = type;
+  panel.style.display = 'block';
+  document.getElementById('playerList').style.display = 'none';
+
+  switch(type) {
+    case 'inventory':
+      document.getElementById('panelTitle').textContent = 'Inventory';
+      renderInventoryPanel();
+      break;
+    case 'friends':
+      document.getElementById('panelTitle').textContent = 'Friends';
+      renderFriendsPanel();
+      break;
+    case 'players':
+      panel.style.display = 'none';
+      document.getElementById('playerList').style.display = 'block';
+      renderPlayerList();
+      break;
+    case 'settings':
+      document.getElementById('panelTitle').textContent = 'Settings';
+      renderSettingsPanel();
+      break;
+    case 'help':
+      document.getElementById('panelTitle').textContent = 'Help';
+      renderHelpPanel();
+      break;
+  }
+}
+
+function closeSidePanel() {
+  document.getElementById('sidePanel').style.display = 'none';
+  document.getElementById('playerList').style.display = 'none';
+  currentPanel = null;
+}
+
+function renderInventoryPanel() {
+  const body = document.getElementById('panelBody');
+  body.innerHTML = '<div class="inv-grid" id="invGrid"></div>';
+  const grid = document.getElementById('invGrid');
+
+  // Equipped items first
+  const sorted = [...inventory.items].sort((a, b) => {
+    if (a.equipped && !b.equipped) return -1;
+    if (!a.equipped && b.equipped) return 1;
+    return 0;
+  });
+
+  sorted.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'inv-slot' + (item.equipped ? ' equipped' : '');
+    div.innerHTML = `<img src="${getAssetPath(item.icon)}" onerror="this.style.display='none'" title="${item.name}">`;
+    if (item.equipped) div.innerHTML += '<span class="equip-badge">&#10003;</span>';
+    div.title = item.name + (item.equipped ? ' (Equipped)' : ' - Click to equip');
+    div.onclick = () => {
+      if (item.equipped) inventory.unequip(item.id);
+      else inventory.equip(item.id);
+      renderInventoryPanel();
+    };
+    grid.appendChild(div);
+  });
+}
+
+function renderFriendsPanel() {
+  const body = document.getElementById('panelBody');
+  let html = '<ul class="friends-list">';
+  friends.forEach(f => {
+    html += `<li onclick="interactFriend('${f.name}')">
+      <span class="friend-status ${f.online ? 'online' : 'offline'}"></span>
+      <span class="friend-name">${f.name}</span>
+      ${f.online ? '<span class="friend-action">Trade</span>' : ''}
+    </li>`;
+  });
+  html += '</ul>';
+  body.innerHTML = html;
+}
+
+function renderPlayerList() {
   const list = document.getElementById('playerList');
-  if (!sidePanelVisible) { panel.classList.remove('visible'); return; }
-  panel.classList.add('visible');
-
-  if (sidePanelMode === 'friends') {
-    title.textContent = 'In Room';
-    list.innerHTML = '';
-    if (player) {
-      const li = document.createElement('li');
-      li.textContent = player.name + ' (You)';
-      li.style.color = '#FFD700';
-      list.appendChild(li);
-    }
-    aiPlayers.forEach(ai => {
-      const li = document.createElement('li');
-      li.textContent = ai.name;
-      list.appendChild(li);
-    });
-  } else if (sidePanelMode === 'inventory') {
-    title.textContent = 'Inventory';
-    list.innerHTML = '<li style="color:#a09878;font-style:italic;">Coming soon...</li>';
-  } else if (sidePanelMode === 'settings') {
-    title.textContent = 'Settings';
-    list.innerHTML = '<li style="color:#a09878;">Music: On</li><li style="color:#a09878;">SFX: On</li><li style="color:#a09878;">Tap to move</li>';
-  }
+  let html = '<div class="panel-header"><span>Players</span></div>';
+  html += '<div class="panel-body">';
+  // Local player
+  html += `<div class="player-list-item"><span class="pl-name" style="color:#FFD700;">${player.name} (You)</span></div>`;
+  // AI players
+  roomPlayers.forEach(p => {
+    html += `<div class="player-list-item" onclick="interactPlayer('${p.name}')">
+      <span class="pl-name">${p.name}</span>
+    </div>`;
+  });
+  html += '</div>';
+  list.innerHTML = html;
 }
 
-function updatePlayerList() {
-  if (sidePanelVisible && sidePanelMode === 'friends') updateSidePanel();
+function renderSettingsPanel() {
+  const body = document.getElementById('panelBody');
+  body.innerHTML = `
+    <div class="settings-row">
+      <span>Sound Effects</span>
+      <div class="toggle-switch ${settings.sfx ? 'active' : ''}" onclick="toggleSetting('sfx')"></div>
+    </div>
+    <div class="settings-row">
+      <span>Music</span>
+      <div class="toggle-switch ${settings.music ? 'active' : ''}" onclick="toggleSetting('music')"></div>
+    </div>
+    <div class="settings-row">
+      <span>Show Name Tags</span>
+      <div class="toggle-switch ${settings.showNames ? 'active' : ''}" onclick="toggleSetting('showNames')"></div>
+    </div>
+    <div class="settings-row">
+      <span>Chat Bubbles</span>
+      <div class="toggle-switch ${settings.chatBubbles ? 'active' : ''}" onclick="toggleSetting('chatBubbles')"></div>
+    </div>
+    <div class="char-actions" style="margin-top:15px;">
+      <button class="btn btn-red btn-small" style="width:100%;" onclick="localStorage.clear();addSystemMsg('Data cleared.');">Clear Data</button>
+    </div>
+  `;
 }
 
-// ============================================
-// 13. PLAYER MOVEMENT & AI
-// ============================================
-function updatePlayer(dt) {
-  if (!player || !currentRoom) return;
+function renderHelpPanel() {
+  const body = document.getElementById('panelBody');
+  body.innerHTML = `
+    <div style="font-size:12px;line-height:1.7;">
+      <p style="color:var(--gold);margin-bottom:8px;"><strong>Controls</strong></p>
+      <p><strong>Move:</strong> Arrow Keys / WASD / Click tile</p>
+      <p><strong>Zoom:</strong> Mouse Wheel / +/- buttons</p>
+      <p><strong>Pan:</strong> Drag with mouse</p>
+      <p><strong>Chat:</strong> Press Enter, type, Enter to send</p>
+      <p><strong>Exit:</strong> Walk to edge tiles with arrows</p>
+      <p style="color:var(--gold);margin:12px 0 8px;"><strong>Rooms</strong></p>
+      <p>Main Hall - Central hub</p>
+      <p>Garden - East of Main Hall</p>
+      <p>Library - North of Main Hall</p>
+      <p>Tavern - South of Main Hall</p>
+      <p style="color:var(--gold);margin:12px 0 8px;"><strong>Tips</strong></p>
+      <p>Click other players to trade.</p>
+      <p>Use Inventory to equip items.</p>
+      <p>Mobile: use on-screen D-pad.</p>
+    </div>
+  `;
+}
 
-  // Handle movement input
-  let dx = 0, dy = 0;
-  if (keys['arrowup'] || keys['w'] || dpadActive['n']) { dy = -1; player.facing = 'n'; }
-  if (keys['arrowdown'] || keys['s'] || dpadActive['s']) { dy = 1; player.facing = 's'; }
-  if (keys['arrowleft'] || keys['a'] || dpadActive['w']) { dx = -1; player.facing = 'w'; }
-  if (keys['arrowright'] || keys['d'] || dpadActive['e']) { dx = 1; player.facing = 'e'; }
+function toggleSetting(key) {
+  settings[key] = !settings[key];
+  renderSettingsPanel();
+}
 
-  // Target-based movement (click/tap to move)
-  if (player.targetX !== null && player.targetY !== null) {
-    dx = 0; dy = 0;
-    if (player.x < player.targetX) { dx = 1; player.facing = 'e'; }
-    else if (player.x > player.targetX) { dx = -1; player.facing = 'w'; }
-    else if (player.y < player.targetY) { dy = 1; player.facing = 's'; }
-    else if (player.y > player.targetY) { dy = -1; player.facing = 'n'; }
-    else { player.targetX = null; player.targetY = null; }
+function interactFriend(name) {
+  trade.start(name);
+}
+
+function interactPlayer(name) {
+  trade.start(name);
+}
+
+// ===================================================================
+// TRADE PANEL UI
+// ===================================================================
+function showTradePanel() {
+  document.getElementById('tradePanel').style.display = 'block';
+  document.getElementById('tradePartnerName').textContent = trade.partner;
+  closeSidePanel();
+  renderTradePanel();
+  playSfx('trade');
+}
+
+function hideTradePanel() {
+  document.getElementById('tradePanel').style.display = 'none';
+}
+
+function renderTradePanel() {
+  if (!trade.active) return;
+
+  // My offers
+  const myGrid = document.getElementById('myOfferGrid');
+  myGrid.innerHTML = '';
+  if (trade.myOffers.length === 0) {
+    myGrid.innerHTML = '<div style="grid-column:1/-1;color:#666;font-size:11px;text-align:center;padding:8px;">Empty</div>';
+  }
+  trade.myOffers.forEach(id => {
+    const item = inventory.items.find(i => i.id === id);
+    if (!item) return;
+    const div = document.createElement('div');
+    div.className = 'offer-item';
+    div.innerHTML = `<img src="${getAssetPath(item.icon)}" onerror="this.style.display='none'" title="${item.name}">`;
+    div.title = item.name + ' - Click to remove';
+    if (!trade.myConfirmed) {
+      div.onclick = () => trade.removeOffer(id);
+    }
+    myGrid.appendChild(div);
+  });
+
+  // Add inventory items that can be offered
+  const offerable = inventory.items.filter(i => !trade.myOffers.includes(i.id) && !i.equipped);
+  offerable.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'offer-item';
+    div.style.opacity = '0.5';
+    div.innerHTML = `<img src="${getAssetPath(item.icon)}" onerror="this.style.display='none'" title="${item.name}">`;
+    div.title = item.name + ' - Click to offer';
+    div.onclick = () => trade.offerItem(item.id);
+    myGrid.appendChild(div);
+  });
+
+  // Their offers (simulated)
+  const theirGrid = document.getElementById('theirOfferGrid');
+  theirGrid.innerHTML = '';
+  if (trade.theirOffers.length === 0) {
+    theirGrid.innerHTML = '<div style="grid-column:1/-1;color:#666;font-size:11px;text-align:center;padding:8px;">Waiting...</div>';
   }
 
-  const moveSpeed = 0.004;
-  if (dx !== 0 || dy !== 0) {
-    const newX = player.x + dx * moveSpeed * dt;
-    const newY = player.y + dy * moveSpeed * dt;
-    if (isValidTile(Math.floor(newX), Math.floor(newY))) {
-      player.x = newX;
-      player.y = newY;
-      player.moving = true;
-      player.animTimer += dt;
-      player.stepTimer += dt;
-      if (player.stepTimer > 300) {
-        playFootstep();
-        player.stepTimer = 0;
-      }
-      if (player.animTimer > 200) {
-        player.animFrame = player.animFrame === 0 ? 1 : 0;
-        player.animTimer = 0;
-      }
-    }
+  // Trade status
+  const statusEl = document.getElementById('tradeStatus');
+  const confirmBtn = document.getElementById('tradeConfirmBtn');
+  if (trade.myConfirmed && trade.theyConfirmed) {
+    statusEl.textContent = 'Trade complete!';
+    statusEl.className = 'trade-status confirmed';
+    confirmBtn.style.display = 'none';
+  } else if (trade.myConfirmed) {
+    statusEl.textContent = 'Waiting for ' + trade.partner + '...';
+    statusEl.className = 'trade-status';
+    confirmBtn.style.display = 'inline-block';
   } else {
-    player.moving = false;
-    player.animFrame = 0;
-  }
-
-  // Check room exits
-  const exitDir = getExitAt(player.x, player.y);
-  if (exitDir) {
-    const nextRoom = currentRoom.exits[exitDir];
-    if (nextRoom) {
-      loadRoom(nextRoom);
-      // Position player at entrance
-      if (exitDir === 'north') { player.x = Math.floor(currentRoom.width / 2); player.y = currentRoom.height - 1; }
-      else if (exitDir === 'south') { player.x = Math.floor(currentRoom.width / 2); player.y = 0; }
-      else if (exitDir === 'east') { player.x = 0; player.y = Math.floor(currentRoom.height / 2); }
-      else if (exitDir === 'west') { player.x = currentRoom.width - 1; player.y = Math.floor(currentRoom.height / 2); }
-      player.targetX = null;
-      player.targetY = null;
-      // Show system message
-      chatMessages.push({ text: 'Entered ' + currentRoom.name, from: 'System', time: Date.now(), isSystem: true });
-    }
-  }
-
-  // Update chat timer
-  if (player.chatTimer > 0) {
-    player.chatTimer -= dt;
-    if (player.chatTimer <= 0) player.chatText = null;
+    statusEl.textContent = 'Offer items, then click CONFIRM';
+    statusEl.className = 'trade-status';
+    confirmBtn.style.display = 'inline-block';
   }
 }
 
-function getExitAt(x, y) {
-  if (!currentRoom || !currentRoom.exits) return null;
-  const fx = Math.floor(x), fy = Math.floor(y);
-  if (fy < 0 && currentRoom.exits.north) return 'north';
-  if (fy >= currentRoom.height && currentRoom.exits.south) return 'south';
-  if (fx < 0 && currentRoom.exits.west) return 'west';
-  if (fx >= currentRoom.width && currentRoom.exits.east) return 'east';
-  // Border tiles count as exits
-  if (fy === 0 && currentRoom.exits.north) return 'north';
-  if (fy === currentRoom.height - 1 && currentRoom.exits.south) return 'south';
-  if (fx === 0 && currentRoom.exits.west) return 'west';
-  if (fx === currentRoom.width - 1 && currentRoom.exits.east) return 'east';
-  return null;
+function completeTrade() {
+  if (!trade.active) return;
+  trade.myOffers.forEach(id => {
+    const item = inventory.items.find(i => i.id === id);
+    if (item) addSystemMsg('Traded: ' + item.name);
+  });
+  addSystemMsg('Trade with ' + trade.partner + ' complete!');
+  playSfx('confirm');
+  setTimeout(() => { trade.active = false; hideTradePanel(); }, 1500);
 }
 
-function updateAI(dt) {
-  if (!currentRoom) return;
-  aiPlayers.forEach(ai => {
-    ai.moveTimer -= dt;
-    if (ai.moveTimer <= 0) {
-      ai.moveTimer = 2000 + Math.random() * 4000;
-      if (Math.random() < 0.7) {
-        const nx = Math.floor(Math.random() * currentRoom.width);
-        const ny = Math.floor(Math.random() * currentRoom.height);
-        ai.targetX = nx;
-        ai.targetY = ny;
-        if (nx > ai.x) ai.facing = 'e';
-        else if (nx < ai.x) ai.facing = 'w';
-        else if (ny > ai.y) ai.facing = 's';
-        else ai.facing = 'n';
+// ===================================================================
+// AVATAR LOOK
+// ===================================================================
+function updateAvatarLook() {
+  // Avatar look is cosmetic - sprite stays as idle/walk
+  // This function syncs inventory selections to player state
+  const equippedHair = inventory.items.find(i => i.type === 'hair' && i.equipped);
+  const equippedOutfit = inventory.items.find(i => i.type === 'clothing' && i.equipped);
+  const equippedAcc = inventory.items.find(i => i.type === 'accessory' && i.equipped);
+  player.hair = equippedHair ? equippedHair.id : null;
+  player.outfit = equippedOutfit ? equippedOutfit.id : null;
+  player.accessory = equippedAcc ? equippedAcc.id : null;
+}
+
+// ===================================================================
+// AI PLAYERS
+// ===================================================================
+function spawnRoomPlayers(roomId) {
+  roomPlayers = [];
+  const room = ROOMS[roomId];
+  if (!room) return;
+
+  const names = AI_NAMES.filter(n => n !== player.name);
+  const count = Math.min(4, names.length);
+
+  for (let i = 0; i < count; i++) {
+    let tx, ty;
+    let attempts = 0;
+    do {
+      tx = Math.floor(Math.random() * room.w);
+      ty = Math.floor(Math.random() * room.h);
+      attempts++;
+    } while (attempts < 20 && (tx === player.tx && ty === player.ty));
+
+    roomPlayers.push({
+      name: names[i],
+      tx: tx, ty: ty,
+      x: tx, y: ty,
+      facing: ['n','s','e','w'][Math.floor(Math.random() * 4)],
+      moving: false,
+      walkFrame: 0,
+      walkTimer: 0,
+      targetTx: null, targetTy: null,
+      moveTimer: Math.random() * 3000,
+      chatTimer: Math.random() * 15000 + 10000,
+      sprite: 'avatar/idle_s'
+    });
+  }
+}
+
+function updateAIPlayers(dt) {
+  const room = ROOMS[currentRoom];
+  if (!room) return;
+
+  roomPlayers.forEach(p => {
+    // Random movement
+    p.moveTimer -= dt;
+    if (p.moveTimer <= 0 && !p.moving) {
+      p.moveTimer = Math.random() * 4000 + 2000;
+      const dirs = [[0,-1],[0,1],[-1,0],[1,0]];
+      const dir = dirs[Math.floor(Math.random() * dirs.length)];
+      const nx = p.tx + dir[0];
+      const ny = p.ty + dir[1];
+      if (nx >= 0 && nx < room.w && ny >= 0 && ny < room.h) {
+        p.targetTx = nx;
+        p.targetTy = ny;
+        p.moving = true;
+        if (dir[1] > 0) p.facing = 's';
+        else if (dir[1] < 0) p.facing = 'n';
+        else if (dir[0] > 0) p.facing = 'e';
+        else p.facing = 'w';
       }
     }
 
     // Move toward target
-    if (ai.targetX !== null && ai.targetY !== null) {
-      let adx = 0, ady = 0;
-      if (ai.x < ai.targetX) adx = 0.003 * dt;
-      else if (ai.x > ai.targetX) adx = -0.003 * dt;
-      if (ai.y < ai.targetY) ady = 0.003 * dt;
-      else if (ai.y > ai.targetY) ady = -0.003 * dt;
-
-      if (Math.abs(adx) < 0.01 && Math.abs(ady) < 0.01) {
-        ai.targetX = null; ai.targetY = null; ai.moving = false;
+    if (p.moving && p.targetTx !== null && p.targetTy !== null) {
+      const dx = p.targetTx - p.x;
+      const dy = p.targetTy - p.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const speed = 2.5 * dt / 16;
+      if (dist < speed) {
+        p.x = p.targetTx;
+        p.y = p.targetTy;
+        p.tx = Math.round(p.x);
+        p.ty = Math.round(p.y);
+        p.moving = false;
+        p.targetTx = null;
+        p.targetTy = null;
+        p.sprite = 'avatar/idle_' + p.facing;
       } else {
-        const newX = ai.x + adx;
-        const newY = ai.y + ady;
-        if (isValidTile(Math.floor(newX), Math.floor(newY))) {
-          ai.x = newX; ai.y = newY;
-          ai.moving = true;
-          ai.animTimer += dt;
-          if (ai.animTimer > 200) { ai.animFrame = ai.animFrame === 0 ? 1 : 0; ai.animTimer = 0; }
-        }
+        p.x += (dx / dist) * speed;
+        p.y += (dy / dist) * speed;
+        p.walkTimer += dt;
+        p.sprite = 'avatar/walk' + (Math.floor(p.walkTimer / WALK_FRAME_TIME) % 2 + 1) + '_s';
       }
-    } else {
-      ai.moving = false;
-      ai.animFrame = 0;
     }
 
-    // Chat timer
-    if (ai.chatTimer > 0) {
-      ai.chatTimer -= dt;
-      if (ai.chatTimer <= 0) ai.chatText = null;
-    }
-
-    // Random idle chat
-    if (!ai.chatText && Math.random() < 0.0003 * dt) {
-      const idleChats = ['...', '*looks around*', '*sighs*', 'Nice place!', 'Hello?'];
-      ai.chatText = idleChats[Math.floor(Math.random() * idleChats.length)];
-      ai.chatTimer = 3000;
+    // Random chat
+    p.chatTimer -= dt;
+    if (p.chatTimer <= 0) {
+      p.chatTimer = Math.random() * 15000 + 12000;
+      const msg = AI_CHAT[Math.floor(Math.random() * AI_CHAT.length)];
+      addChatBubble(p, msg);
     }
   });
 }
 
-// ============================================
-// 14. RENDERER
-// ============================================
-function render(timestamp) {
-  if (gameState !== 'game' || !currentRoom) return;
+// ===================================================================
+// CHAT SYSTEM
+// ===================================================================
+function handleChatKey(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    sendChat();
+  }
+}
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
 
-  // Camera transform
+  // Slash commands
+  if (text.startsWith('/')) {
+    handleCommand(text);
+    return;
+  }
+
+  addChatLog(player.name, text, 'msg-player');
+  addChatBubble(player, text);
+  playSfx('chat');
+}
+
+function handleCommand(cmd) {
+  const parts = cmd.split(' ');
+  switch(parts[0]) {
+    case '/help':
+      addSystemMsg('Commands: /help, /clear, /whisper <name> <msg>, /dance, /wave');
+      break;
+    case '/clear':
+      chatMessages = [];
+      document.getElementById('chatLog').innerHTML = '';
+      break;
+    case '/whisper':
+      if (parts.length >= 3) {
+        const target = parts[1];
+        const msg = parts.slice(2).join(' ');
+        addSystemMsg('To ' + target + ': ' + msg);
+      } else {
+        addSystemMsg('Usage: /whisper <name> <message>');
+      }
+      break;
+    case '/dance':
+      addSystemMsg(player.name + ' starts dancing!');
+      break;
+    case '/wave':
+      addSystemMsg(player.name + ' waves!');
+      break;
+    default:
+      addSystemMsg('Unknown command: ' + parts[0]);
+  }
+}
+
+function addChatLog(name, text, cls) {
+  const log = document.getElementById('chatLog');
+  const div = document.createElement('div');
+  div.className = cls;
+  div.innerHTML = `<strong>${name}:</strong> ${text}`;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  // Limit history
+  while (log.children.length > 50) log.removeChild(log.firstChild);
+}
+
+function addSystemMsg(text) {
+  const log = document.getElementById('chatLog');
+  const div = document.createElement('div');
+  div.className = 'msg-system';
+  div.textContent = text;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  while (log.children.length > 50) log.removeChild(log.firstChild);
+}
+
+function addChatBubble(who, text) {
+  if (!settings.chatBubbles) return;
+  const bubble = {
+    who: who,
+    text: text,
+    timer: 4000,
+    id: Date.now() + Math.random()
+  };
+  chatBubbles.push(bubble);
+}
+
+function updateChatBubbles(dt) {
+  for (let i = chatBubbles.length - 1; i >= 0; i--) {
+    chatBubbles[i].timer -= dt;
+    if (chatBubbles[i].timer <= 0) {
+      chatBubbles.splice(i, 1);
+    }
+  }
+}
+
+// ===================================================================
+// RENDERING
+// ===================================================================
+function drawFloorTile(ctx, tx, ty, floorType, room, z) {
+  const pos = tileToScreen(tx, ty, camera.x, camera.y, z);
+  const img = IMAGES['tiles/' + floorType];
+
   ctx.save();
-  ctx.translate(canvas.width / 2, canvas.height / 3);
-  ctx.scale(camera.zoom, camera.zoom);
-  ctx.translate(camera.x / camera.zoom, camera.y / camera.zoom);
-  // Move back so toIso centering works
-  ctx.translate(-canvas.width / 2, -canvas.height / 3);
+  ctx.beginPath();
+  ctx.moveTo(pos.x, pos.y - TILE_H/2 * z);
+  ctx.lineTo(pos.x + TILE_W/2 * z, pos.y);
+  ctx.lineTo(pos.x, pos.y + TILE_H/2 * z);
+  ctx.lineTo(pos.x - TILE_W/2 * z, pos.y);
+  ctx.closePath();
+  ctx.clip();
 
-  const room = currentRoom;
-  const rw = room.width;
-  const rh = room.height;
+  if (img) {
+    ctx.drawImage(img, pos.x - TILE_W/2 * z, pos.y - TILE_H/2 * z, TILE_W * z, TILE_H * z);
+  } else {
+    ctx.fillStyle = '#5a4a3a';
+    ctx.fill();
+  }
+  ctx.restore();
 
-  // 1. Floor tiles (back to front for proper depth)
-  for (let y = 0; y < rh; y++) {
-    for (let x = 0; x < rw; x++) {
-      const iso = toIso(x, y);
-      const floorImg = IMAGES['tiles/' + room.floor];
-      if (floorImg && floorImg.complete) {
-        ctx.drawImage(floorImg, iso.x - TILE_W / 2, iso.y - TILE_H / 2, TILE_W, TILE_H);
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+}
+
+function drawWallSegment(ctx, img, x, y, z, facing) {
+  const w = TILE_W * z;
+  const h = TILE_H * 2 * z;
+  if (img) {
+    ctx.drawImage(img, x - w/2, y - h, w, h);
+  } else {
+    ctx.fillStyle = '#3a3028';
+    ctx.fillRect(x - w/2, y - h, w, h);
+  }
+}
+
+function drawWalls(ctx, room, z) {
+  for (let x = 0; x < room.w; x++) {
+    for (let y = 0; y < room.h; y++) {
+      const pos = tileToScreen(x, y, camera.x, camera.y, z);
+      const wallImg = IMAGES['tiles/' + room.wall];
+
+      if (y === 0) {
+        drawWallSegment(ctx, wallImg, pos.x, pos.y - TILE_H/2 * z, z, 'n');
+      }
+      if (x === 0) {
+        drawWallSegment(ctx, wallImg, pos.x - TILE_W/2 * z, pos.y, z, 'w');
       }
     }
   }
+}
 
-  // 2. Wall tiles (north and west walls)
-  const wallImgN = IMAGES['tiles/' + room.wall];
-  const wallH = 48;
-  if (wallImgN && wallImgN.complete) {
-    // North wall
-    for (let x = 0; x < rw; x++) {
-      const iso = toIso(x, -0.5);
-      ctx.drawImage(wallImgN, iso.x - TILE_W / 2, iso.y - wallH, TILE_W, wallH + TILE_H / 2);
-    }
-    // West wall
-    for (let y = 0; y < rh; y++) {
-      const iso = toIso(-0.5, y);
-      ctx.drawImage(wallImgN, iso.x - TILE_W / 2, iso.y - wallH, TILE_W, wallH + TILE_H / 2);
-    }
+function drawFurniture(ctx, furn, screenX, screenY, z) {
+  const img = IMAGES['furniture/' + furn.type];
+  if (!img) return;
+
+  const baseW = TILE_W * 1.5 * z * FURN_SCALE;
+  const baseH = TILE_H * 2.5 * z * FURN_SCALE;
+  const x = screenX - baseW/2 + (furn.offX || 0) * z;
+  const y = screenY - baseH + TILE_H * z + (furn.offY || 0) * z;
+
+  ctx.drawImage(img, x, y, baseW, baseH);
+}
+
+function drawAvatar(ctx, who, screenX, screenY, z) {
+  const spriteKey = who.sprite || 'avatar/idle_s';
+  const img = IMAGES[spriteKey];
+  if (!img) return;
+
+  const w = AVATAR_W * z;
+  const h = AVATAR_H * z;
+  const x = screenX - w/2;
+  const y = screenY + AVATAR_OFFSET_Y * z;
+
+  ctx.drawImage(img, x, y, w, h);
+
+  // Name tag
+  if (settings.showNames) {
+    ctx.font = `bold ${Math.round(11 * z)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = who.isLocal ? '#FFD700' : '#aaa';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeText(who.name, screenX, y - 5 * z);
+    ctx.fillText(who.name, screenX, y - 5 * z);
   }
+}
 
-  // 3. Collect all renderable objects for Y-sorting
+function drawExits(ctx, room, z) {
+  const exitPositions = [];
+  if (room.exits.east)  exitPositions.push({x: room.w-1, y: Math.floor(room.h/2), label: '\u2192 ' + ROOMS[room.exits.east.room].name});
+  if (room.exits.west)  exitPositions.push({x: 0, y: Math.floor(room.h/2), label: '\u2190 ' + ROOMS[room.exits.west.room].name});
+  if (room.exits.north) exitPositions.push({x: Math.floor(room.w/2), y: 0, label: '\u2191 ' + ROOMS[room.exits.north.room].name});
+  if (room.exits.south) exitPositions.push({x: Math.floor(room.w/2), y: room.h-1, label: '\u2193 ' + ROOMS[room.exits.south.room].name});
+
+  for (const ep of exitPositions) {
+    const pos = tileToScreen(ep.x, ep.y, camera.x, camera.y, z);
+    ctx.font = `bold ${Math.round(10 * z)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#FFD700';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeText(ep.label, pos.x, pos.y + TILE_H * z);
+    ctx.fillText(ep.label, pos.x, pos.y + TILE_H * z);
+
+    // Exit glow
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y - TILE_H/2 * z);
+    ctx.lineTo(pos.x + TILE_W/2 * z, pos.y);
+    ctx.lineTo(pos.x, pos.y + TILE_H/2 * z);
+    ctx.lineTo(pos.x - TILE_W/2 * z, pos.y);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255, 215, 0, 0.12)';
+    ctx.fill();
+  }
+}
+
+function drawChatBubblesDOM(z) {
+  // Remove old bubbles
+  const oldBubbles = document.querySelectorAll('.chat-bubble');
+  oldBubbles.forEach(b => b.remove());
+
+  if (!settings.chatBubbles) return;
+
+  const room = ROOMS[currentRoom];
+  if (!room) return;
+
+  chatBubbles.forEach(b => {
+    const who = b.who;
+    if (!who) return;
+    const pos = tileToScreen(who.x, who.y, camera.x, camera.y, z);
+    const el = document.createElement('div');
+    el.className = 'chat-bubble';
+    el.textContent = b.text;
+    el.style.left = pos.x + 'px';
+    el.style.top = pos.y + 'px';
+    const gameScreen = document.getElementById('gameScreen');
+    if (gameScreen) gameScreen.appendChild(el);
+  });
+}
+
+// ===================================================================
+// MAIN RENDER
+// ===================================================================
+function render() {
+  const room = ROOMS[currentRoom];
+  if (!room) return;
+
+  // Background
+  ctx.fillStyle = room.bg || '#1a1520';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Zoom transform
+  ctx.save();
+  ctx.scale(zoom, zoom);
+
+  // Walls (behind floor)
+  drawWalls(ctx, room, 1.0);
+
+  // Sort everything by depth (painter's algorithm)
   const renderList = [];
 
-  // Furniture
-  room.furniture.forEach(furn => {
-    const img = IMAGES['furniture/' + furn.type];
-    if (img) {
-      renderList.push({ type: 'furniture', x: furn.x, y: furn.y, z: 0, img: img, obj: furn });
+  // Floor tiles
+  for (let x = 0; x < room.w; x++) {
+    for (let y = 0; y < room.h; y++) {
+      renderList.push({ type: 'floor', x, y, depth: x + y });
     }
+  }
+
+  // Furniture
+  room.furniture.forEach(f => {
+    renderList.push({ type: 'furniture', furn: f, depth: f.x + f.y });
   });
+
+  // Player
+  renderList.push({ type: 'player', who: player, depth: player.x + player.y + 0.5 });
 
   // AI players
-  aiPlayers.forEach(ai => {
-    renderList.push({ type: 'avatar', x: ai.x, y: ai.y, z: 1, entity: ai });
+  roomPlayers.forEach(p => {
+    renderList.push({ type: 'ai', who: p, depth: p.x + p.y + 0.5 });
   });
 
-  // Local player
-  if (player) {
-    renderList.push({ type: 'avatar', x: player.x, y: player.y, z: 2, entity: player });
+  // Exits
+  if (room.exits) {
+    const exitList = [];
+    if (room.exits.east) exitList.push({x: room.w-1, y: Math.floor(room.h/2), depth: room.w + Math.floor(room.h/2)});
+    if (room.exits.west) exitList.push({x: 0, y: Math.floor(room.h/2), depth: Math.floor(room.h/2)});
+    if (room.exits.north) exitList.push({x: Math.floor(room.w/2), y: 0, depth: Math.floor(room.w/2)});
+    if (room.exits.south) exitList.push({x: Math.floor(room.w/2), y: room.h-1, depth: Math.floor(room.w/2) + room.h - 1});
+    exitList.forEach(e => {
+      renderList.push({ type: 'exit', x: e.x, y: e.y, depth: e.depth + 0.3 });
+    });
   }
 
-  // Y-sort: render from back (low y) to front (high y)
-  renderList.sort((a, b) => {
-    const ay = a.y + (a.z || 0) * 0.01;
-    const by = b.y + (b.z || 0) * 0.01;
-    return ay - by;
-  });
+  // Sort by depth
+  renderList.sort((a, b) => a.depth - b.depth);
 
-  // Render sorted objects
+  // Render
   renderList.forEach(item => {
-    if (item.type === 'furniture') {
-      renderFurniture(item.img, item.x, item.y, item.obj.type);
-    } else if (item.type === 'avatar') {
-      renderAvatar(item.entity, timestamp);
+    switch(item.type) {
+      case 'floor':
+        drawFloorTile(ctx, item.x, item.y, room.floor, room, 1.0);
+        break;
+      case 'furniture': {
+        const fpos = tileToScreen(item.furn.x, item.furn.y, camera.x, camera.y, 1.0);
+        drawFurniture(ctx, item.furn, fpos.x, fpos.y, 1.0);
+        break;
+      }
+      case 'player': {
+        const ppos = tileToScreen(player.x, player.y, camera.x, camera.y, 1.0);
+        drawAvatar(ctx, player, ppos.x, ppos.y, 1.0);
+        break;
+      }
+      case 'ai': {
+        const apos = tileToScreen(item.who.x, item.who.y, camera.x, camera.y, 1.0);
+        drawAvatar(ctx, item.who, apos.x, apos.y, 1.0);
+        break;
+      }
+      case 'exit': {
+        const epos = tileToScreen(item.x, item.y, camera.x, camera.y, 1.0);
+        break;
+      }
     }
   });
-
-  // 4. Chat bubbles (render last, on top of everything)
-  renderList.forEach(item => {
-    if (item.type === 'avatar' && item.entity.chatText) {
-      renderChatBubble(item.entity);
-    }
-  });
-
-  // 5. Exit indicators
-  drawExitIndicators();
 
   ctx.restore();
+
+  // Draw exit labels (on top, in screen space)
+  drawExits(ctx, room, zoom);
+
+  // Update chat bubbles
+  drawChatBubblesDOM(zoom);
 }
 
-function renderFurniture(img, x, y, type) {
-  const iso = toIso(x, y);
-  if (!img || !img.complete) return;
-  // Furniture sprites are 1:1 but rendered at isometric scale
-  const fw = 64, fh = 64;
-  let offsetY = 0;
-  // Some furniture sits "on" the tile
-  if (type === 'rug') offsetY = 0;
-  else if (type === 'sofa' || type === 'chair' || type === 'bed') offsetY = -16;
-  else if (type === 'table') offsetY = -12;
-  else if (type === 'bookshelf') offsetY = -32;
-  else if (type === 'lamp') offsetY = -28;
-  else if (type === 'plant') offsetY = -8;
-  else if (type === 'tv') offsetY = -16;
-  else if (type === 'trophy') offsetY = -20;
-  else if (type === 'piano') offsetY = -20;
-  else if (type === 'fountain') offsetY = -24;
+// ===================================================================
+// PLAYER MOVEMENT
+// ===================================================================
+function movePlayer(dx, dy) {
+  if (player.moving) return;
+  const room = ROOMS[currentRoom];
+  if (!room) return;
 
-  ctx.drawImage(img, iso.x - fw / 2, iso.y - fh + offsetY, fw, fh);
+  const nx = player.tx + dx;
+  const ny = player.ty + dy;
+
+  // Bounds check
+  if (nx < 0 || nx >= room.w || ny < 0 || ny >= room.h) {
+    // Check for exits
+    checkRoomTransition(player, room);
+    return;
+  }
+
+  // Set target
+  player.targetTx = nx;
+  player.targetTy = ny;
+  player.moving = true;
+
+  // Set facing
+  if (dy > 0) player.facing = 's';
+  else if (dy < 0) player.facing = 'n';
+  else if (dx > 0) player.facing = 'e';
+  else if (dx < 0) player.facing = 'w';
 }
 
-function renderAvatar(entity, timestamp) {
-  const iso = toIso(entity.x, entity.y);
-  let spriteKey;
+function updatePlayerMovement(dt) {
+  if (!player.moving || player.targetTx === null || player.targetTy === null) return;
 
-  if (entity.moving) {
-    spriteKey = 'avatar/walk' + (entity.animFrame + 1) + '_s';
+  const dx = player.targetTx - player.x;
+  const dy = player.targetTy - player.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  const speed = 3.5 * dt / 16;
+
+  if (dist < speed) {
+    player.x = player.targetTx;
+    player.y = player.targetTy;
+    player.tx = Math.round(player.x);
+    player.ty = Math.round(player.y);
+    player.moving = false;
+    player.targetTx = null;
+    player.targetTy = null;
+    player.sprite = 'avatar/idle_' + player.facing;
+
+    // Check for exit after arriving
+    checkRoomTransition(player, ROOMS[currentRoom]);
   } else {
-    spriteKey = 'avatar/idle_' + entity.facing;
+    player.x += (dx / dist) * speed;
+    player.y += (dy / dist) * speed;
+    player.walkTimer += dt;
+    const frame = Math.floor(player.walkTimer / WALK_FRAME_TIME) % 2 + 1;
+    player.sprite = 'avatar/walk' + frame + '_s';
   }
+}
 
-  const sprite = IMAGES[spriteKey];
-  const bounce = entity.moving ? 0 : Math.sin(timestamp / 300) * 2;
+// ===================================================================
+// ROOM TRANSITIONS (MUST NOT FREEZE)
+// ===================================================================
+function checkRoomTransition(who, room) {
+  if (!room || !room.exits) return;
 
-  if (sprite && sprite.complete) {
-    ctx.drawImage(sprite, iso.x - AVATAR_W / 2, iso.y - AVATAR_H + 8 + bounce, AVATAR_W, AVATAR_H);
-  }
+  for (const [dir, exit] of Object.entries(room.exits)) {
+    let onExit = false;
+    if (dir === 'east'  && who.tx >= room.w - 1) onExit = true;
+    if (dir === 'west'  && who.tx <= 0) onExit = true;
+    if (dir === 'north' && who.ty <= 0) onExit = true;
+    if (dir === 'south' && who.ty >= room.h - 1) onExit = true;
 
-  // Draw clothing layers
-  if (entity.shirt) {
-    const shirtImg = IMAGES['clothes/' + entity.shirt];
-    if (shirtImg && shirtImg.complete) {
-      ctx.drawImage(shirtImg, iso.x - AVATAR_W / 2, iso.y - AVATAR_H + 8 + bounce, AVATAR_W, AVATAR_H);
-    }
-  }
-
-  // Draw hair
-  if (entity.hair) {
-    const hairImg = IMAGES['hair/' + entity.hair];
-    if (hairImg && hairImg.complete) {
-      ctx.drawImage(hairImg, iso.x - AVATAR_W / 2, iso.y - AVATAR_H + 8 + bounce, AVATAR_W, AVATAR_H);
-    }
-  }
-
-  // Draw accessory
-  if (entity.acc && entity.acc !== 'none') {
-    const accImg = IMAGES['items/' + entity.acc];
-    if (accImg && accImg.complete) {
-      ctx.drawImage(accImg, iso.x - AVATAR_W / 2, iso.y - AVATAR_H + 8 + bounce, AVATAR_W, AVATAR_H);
+    if (onExit) {
+      transitionToRoom(exit.room, exit.x, exit.y);
+      return;
     }
   }
 }
 
-function renderChatBubble(entity) {
-  const iso = toIso(entity.x, entity.y);
-  const text = entity.chatText;
-  if (!text) return;
+function transitionToRoom(roomId, startX, startY) {
+  currentRoom = roomId;
+  player.tx = startX;
+  player.ty = startY;
+  player.x = startX;
+  player.y = startY;
+  player.moving = false;
+  player.targetTx = null;
+  player.targetTy = null;
+  player.sprite = 'avatar/idle_' + player.facing;
 
-  ctx.save();
-  ctx.font = 'bold 12px Georgia, serif';
-  const metrics = ctx.measureText(text);
-  const padding = 8;
-  const bw = metrics.width + padding * 2;
-  const bh = 24;
-  const bx = iso.x - bw / 2;
-  const by = iso.y - AVATAR_H - 12;
+  spawnRoomPlayers(roomId);
 
-  // Bubble background
-  ctx.fillStyle = entity.isLocal ? 'rgba(255,250,230,0.95)' : 'rgba(240,240,255,0.95)';
-  ctx.strokeStyle = entity.isLocal ? '#FFD700' : '#aaaacc';
-  ctx.lineWidth = 1.5;
-  roundRect(ctx, bx, by, bw, bh, 8);
-  ctx.fill();
-  ctx.stroke();
-
-  // Tail
-  ctx.beginPath();
-  ctx.moveTo(iso.x - 6, by + bh);
-  ctx.lineTo(iso.x, by + bh + 6);
-  ctx.lineTo(iso.x + 6, by + bh);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-
-  // Text
-  ctx.fillStyle = '#222233';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, iso.x, by + bh / 2 + 1);
-  ctx.restore();
+  const room = ROOMS[roomId];
+  document.getElementById('roomLabel').textContent = room ? room.name : roomId;
+  addSystemMsg('Entered ' + (room ? room.name : roomId));
+  playSfx('door');
+  centerCameraOnPlayer();
 }
 
-function drawExitIndicators() {
-  if (!currentRoom || !currentRoom.exits) return;
-  const exits = currentRoom.exits;
-  ctx.save();
-  ctx.font = 'bold 11px Georgia, serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-
-  if (exits.north) {
-    for (let x = 0; x < currentRoom.width; x++) {
-      const iso = toIso(x, -0.3);
-      ctx.fillStyle = 'rgba(255,215,0,0.7)';
-      ctx.fillText('EXIT', iso.x, iso.y - 20);
-    }
-  }
-  if (exits.south) {
-    for (let x = 0; x < currentRoom.width; x++) {
-      const iso = toIso(x, currentRoom.height - 0.7);
-      ctx.fillStyle = 'rgba(255,215,0,0.7)';
-      ctx.fillText('EXIT', iso.x, iso.y + 8);
-    }
-  }
-  if (exits.east) {
-    for (let y = 0; y < currentRoom.height; y++) {
-      const iso = toIso(currentRoom.width - 0.7, y);
-      ctx.fillStyle = 'rgba(255,215,0,0.7)';
-      ctx.fillText('EXIT', iso.x + 10, iso.y);
-    }
-  }
-  if (exits.west) {
-    for (let y = 0; y < currentRoom.height; y++) {
-      const iso = toIso(-0.3, y);
-      ctx.fillStyle = 'rgba(255,215,0,0.7)';
-      ctx.fillText('EXIT', iso.x - 10, iso.y);
-    }
-  }
-  ctx.restore();
+// ===================================================================
+// CAMERA
+// ===================================================================
+function centerCameraOnPlayer() {
+  const room = ROOMS[currentRoom];
+  if (!room) return;
+  const pos = tileToScreen(player.x, player.y, 0, 0, 1.0);
+  camera.x = player.x - room.w / 2;
+  camera.y = player.y - room.h / 2;
 }
 
-function roundRect(c, x, y, w, h, r) {
-  c.beginPath();
-  c.moveTo(x + r, y);
-  c.lineTo(x + w - r, y);
-  c.quadraticCurveTo(x + w, y, x + w, y + r);
-  c.lineTo(x + w, y + h - r);
-  c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  c.lineTo(x + r, y + h);
-  c.quadraticCurveTo(x, y + h, x, y + h - r);
-  c.lineTo(x, y + r);
-  c.quadraticCurveTo(x, y, x + r, y);
-  c.closePath();
+function updateCamera(dt) {
+  // Smooth follow
+  const targetX = player.x - ROOMS[currentRoom].w / 2;
+  const targetY = player.y - ROOMS[currentRoom].h / 2;
+  camera.x += (targetX - camera.x) * 0.03;
+  camera.y += (targetY - camera.y) * 0.03;
 }
 
-// ============================================
-// 15. GAME LOOP
-// ============================================
+function adjustZoom(delta) {
+  zoom = Math.max(0.5, Math.min(2.5, zoom + delta));
+}
+
+function resetZoom() {
+  zoom = 1.0;
+}
+
+// ===================================================================
+// INPUT HANDLING
+// ===================================================================
+document.addEventListener('keydown', (e) => {
+  keys[e.key.toLowerCase()] = true;
+
+  if (currentScreen !== 'game') return;
+  if (document.activeElement === document.getElementById('chatInput')) return;
+
+  switch(e.key) {
+    case 'ArrowUp':    case 'w': case 'W': movePlayer(0, -1); break;
+    case 'ArrowDown':  case 's': case 'S': movePlayer(0, 1); break;
+    case 'ArrowLeft':  case 'a': case 'A': movePlayer(-1, 0); break;
+    case 'ArrowRight': case 'd': case 'D': movePlayer(1, 0); break;
+    case 'Enter':
+      document.getElementById('chatInput').focus();
+      break;
+    case 'Escape':
+      closeSidePanel();
+      hideTradePanel();
+      break;
+  }
+});
+
+document.addEventListener('keyup', (e) => {
+  keys[e.key.toLowerCase()] = false;
+});
+
+// Mouse wheel zoom
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? -0.08 : 0.08;
+  adjustZoom(delta);
+}, { passive: false });
+
+// Mouse drag pan + click to move
+let mouseDown = false;
+let mouseStartX = 0, mouseStartY = 0;
+
+canvas.addEventListener('mousedown', (e) => {
+  mouseDown = true;
+  mouseStartX = e.clientX;
+  mouseStartY = e.clientY;
+  dragCamStart = { x: camera.x, y: camera.y };
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  if (mouseDown) {
+    const dx = e.clientX - mouseStartX;
+    const dy = e.clientY - mouseStartY;
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+      isDragging = true;
+    }
+    if (isDragging) {
+      camera.x = dragCamStart.x - dx / (TILE_W * zoom);
+      camera.y = dragCamStart.y - dy / (TILE_H * zoom);
+    }
+  }
+});
+
+canvas.addEventListener('mouseup', (e) => {
+  if (!isDragging && currentScreen === 'game') {
+    // Click to move
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const tile = screenToTile(mx, my, camera.x, camera.y, zoom);
+    const room = ROOMS[currentRoom];
+    if (room && tile.x >= 0 && tile.x < room.w && tile.y >= 0 && tile.y < room.h) {
+      // Simple click-to-move: set target and walk toward it
+      const dx = tile.x - player.tx;
+      const dy = tile.y - player.ty;
+      if (Math.abs(dx) + Math.abs(dy) === 1) {
+        movePlayer(dx, dy);
+      }
+    }
+  }
+  mouseDown = false;
+  isDragging = false;
+});
+
+// Touch support
+let touchStart = { x: 0, y: 0 };
+let lastTouchDist = 0;
+
+canvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) {
+    touchStart.x = e.touches[0].clientX;
+    touchStart.y = e.touches[0].clientY;
+    dragCamStart = { x: camera.x, y: camera.y };
+  } else if (e.touches.length === 2) {
+    lastTouchDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  if (e.touches.length === 1) {
+    const dx = e.touches[0].clientX - touchStart.x;
+    const dy = e.touches[0].clientY - touchStart.y;
+    camera.x = dragCamStart.x - dx / (TILE_W * zoom);
+    camera.y = dragCamStart.y - dy / (TILE_H * zoom);
+  } else if (e.touches.length === 2) {
+    const dist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+    if (lastTouchDist > 0) {
+      const delta = (dist - lastTouchDist) * 0.003;
+      adjustZoom(delta);
+    }
+    lastTouchDist = dist;
+  }
+}, { passive: false });
+
+// D-Pad touch support
+document.querySelectorAll('.dpad-btn').forEach(btn => {
+  const handlePress = (e) => {
+    e.preventDefault();
+    const dir = btn.dataset.dir;
+    switch(dir) {
+      case 'n': movePlayer(0, -1); break;
+      case 's': movePlayer(0, 1); break;
+      case 'w': movePlayer(-1, 0); break;
+      case 'e': movePlayer(1, 0); break;
+    }
+  };
+  btn.addEventListener('mousedown', handlePress);
+  btn.addEventListener('touchstart', handlePress, { passive: false });
+});
+
+// ===================================================================
+// CANVAS RESIZE
+// ===================================================================
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+
+// ===================================================================
+// GAME LOOP
+// ===================================================================
+let lastTime = 0;
 function gameLoop(timestamp) {
-  if (gameState !== 'game') return;
+  if (currentScreen !== 'game') return;
+
   const dt = timestamp - lastTime;
   lastTime = timestamp;
 
-  updatePlayer(dt);
-  updateAI(dt);
-  render(timestamp);
+  // Cap delta time to prevent huge jumps
+  const safeDt = Math.min(dt, 100);
 
-  animFrameId = requestAnimationFrame(gameLoop);
+  // Update
+  updatePlayerMovement(safeDt);
+  updateAIPlayers(safeDt);
+  updateCamera(safeDt);
+  updateChatBubbles(safeDt);
+  playRoomAmbient();
+
+  // Render
+  render();
+
+  requestAnimationFrame(gameLoop);
 }
 
-// ============================================
-// 16. LOGOUT / RESET
-// ============================================
-function logout() {
-  gameState = 'title';
-  if (animFrameId) cancelAnimationFrame(animFrameId);
-  player = null;
-  aiPlayers = [];
-  currentRoom = null;
-  chatMessages = [];
-  document.getElementById('gameUI').classList.remove('active');
-  document.getElementById('dpad').classList.remove('show');
-  document.getElementById('sidePanel').classList.remove('visible');
-  document.getElementById('titleScreen').classList.add('active');
-  startTitleAnimation();
+// ===================================================================
+// TOAST NOTIFICATIONS
+// ===================================================================
+function showToast(text) {
+  const area = document.getElementById('toastArea');
+  if (!area) return;
+  const div = document.createElement('div');
+  div.className = 'toast';
+  div.textContent = text;
+  area.appendChild(div);
+  setTimeout(() => div.remove(), 3000);
 }
 
-// ============================================
-// 17. INITIALIZATION
-// ============================================
+// ===================================================================
+// INIT
+// ===================================================================
 function init() {
   resizeCanvas();
-  initAuth();
-  initCharCreator();
-  initInput();
   loadAssets();
 }
 
