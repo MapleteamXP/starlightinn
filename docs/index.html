@@ -1285,11 +1285,16 @@ function renderAvatarComposite(canvasEl, options) {
   const w = canvasEl.width, h = canvasEl.height;
   const cx = w / 2, cy = h / 2;
 
+  // Scale factor for large part images (1024px -> ~120px)
+  const PART_SCALE = 0.15;
+
   function drawPart(key, color, px, py, sc) {
     const img = IMAGES[key];
     if (!img) return;
-    const iw = img.width || 64, ih = img.height || 64;
-    const dw = iw * (sc || 1.2), dh = ih * (sc || 1.2);
+    const iw = img.naturalWidth || img.width || 512;
+    const ih = img.naturalHeight || img.height || 512;
+    const dw = iw * PART_SCALE * (sc || 1.2);
+    const dh = ih * PART_SCALE * (sc || 1.2);
     c.save();
     c.translate(px, py);
     if (color) {
@@ -1307,15 +1312,15 @@ function renderAvatarComposite(canvasEl, options) {
     c.restore();
   }
 
-  if (accessory === 'wings') drawPart('parts/acc_wings', null, cx, cy + 10, 1.2);
-  drawPart(legs, null, cx, cy + 25, 1.2);
-  drawPart(body, skinColor, cx, cy + 5, 1.2);
-  drawPart(shirt, shirtColor, cx, cy + 5, 1.2);
-  drawPart(face, null, cx, cy - 20, 1.0);
-  if (hair !== 'parts/hair_bald') drawPart(hair, hairColor, cx, cy - 20, 1.0);
-  if (accessory === 'beanie') drawPart('parts/acc_hat_beanie', null, cx, cy - 30, 1.0);
-  if (accessory === 'wizard') drawPart('parts/acc_hat_wizard', null, cx, cy - 35, 1.0);
-  if (accessory === 'glasses') drawPart('parts/acc_glasses_round', null, cx, cy - 18, 1.0);
+  if (accessory === 'wings') drawPart('parts/acc_wings', null, cx, cy + 15, 1.3);
+  drawPart(legs, null, cx, cy + 30, 1.2);
+  drawPart(body, skinColor, cx, cy + 5, 1.3);
+  drawPart(shirt, shirtColor, cx, cy + 5, 1.3);
+  drawPart(face, null, cx, cy - 20, 1.1);
+  if (hair !== 'parts/hair_bald') drawPart(hair, hairColor, cx, cy - 22, 1.1);
+  if (accessory === 'beanie') drawPart('parts/acc_hat_beanie', null, cx, cy - 32, 1.1);
+  if (accessory === 'wizard') drawPart('parts/acc_hat_wizard', null, cx, cy - 38, 1.1);
+  if (accessory === 'glasses') drawPart('parts/acc_glasses_round', null, cx, cy - 18, 1.1);
 }
 
 // Parse figure string: hr-1-8B4513.hd-1-1.ch-1-4169E1.lg-1-333333
