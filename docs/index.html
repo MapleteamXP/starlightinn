@@ -1296,12 +1296,22 @@ function updateCharPreview() {
   const ctx = c.getContext('2d');
   ctx.clearRect(0, 0, c.width, c.height);
 
-  // Background
-  ctx.fillStyle = 'rgba(255,255,255,0.02)';
+  // Debug background
+  ctx.fillStyle = 'rgba(255,255,255,0.05)';
   ctx.fillRect(0, 0, c.width, c.height);
 
+  // Debug: draw a red box to verify canvas works
+  ctx.fillStyle = 'rgba(255,0,0,0.3)';
+  ctx.fillRect(20, 20, 50, 50);
+
   // Draw avatar centered
-  renderAvatar(ctx, state.player, c.width/2, c.height - 20, 1.8);
+  try {
+    renderAvatar(ctx, state.player, c.width/2, c.height - 20, 1.8);
+  } catch(e) {
+    ctx.fillStyle = '#fff';
+    ctx.font = '12px sans-serif';
+    ctx.fillText('Error: ' + e.message, 10, c.height/2);
+  }
 }
 
 function setGender(g) {
