@@ -1665,8 +1665,15 @@ function renderGame() {
     if (r.type === 'player') {
       r.render();
     } else {
-      const iw = r.img.width || 64;
-      const ih = r.img.height || 64;
+      let iw = (r.img.naturalWidth || r.img.width || 64);
+      let ih = (r.img.naturalHeight || r.img.height || 64);
+      // Cap furniture size
+      const MAX_FURN = 128;
+      if (iw > MAX_FURN || ih > MAX_FURN) {
+        const scale = MAX_FURN / Math.max(iw, ih);
+        iw *= scale;
+        ih *= scale;
+      }
       ctx.drawImage(r.img, r.x - iw/2, r.y - ih + TILE_H/2, iw, ih);
 
       // Draw placement highlight if editor active
