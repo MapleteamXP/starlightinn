@@ -4,134 +4,151 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<title>Starlight Inn v18</title>
+<title>Starlight Inn v19</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{width:100%;height:100%;overflow:hidden;background:#0a0a1a;font-family:'Segoe UI',system-ui,sans-serif;color:#e0e0e0}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0d0d1a;font-family:'Segoe UI',system-ui,sans-serif;color:#e0e0e0}
   canvas{display:block}
 
-  /* Loading */
-  #loadScreen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0a1a;z-index:9999;transition:opacity .5s}
+  /* ===== LOADING ===== */
+  #loadScreen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0d0d1a;z-index:9999;transition:opacity .5s}
   #loadScreen.done{opacity:0;pointer-events:none}
-  .load-title{font-size:36px;color:#FFD700;letter-spacing:4px;text-shadow:0 0 30px rgba(255,215,0,.3);margin-bottom:24px}
-  .load-bar{width:320px;height:10px;background:#1a1a2e;border-radius:5px;overflow:hidden;border:1px solid #333}
-  .load-fill{width:0%;height:100%;background:linear-gradient(90deg,#FFD700,#FF8C00);transition:width .2s}
-  .load-text{margin-top:14px;color:#888;font-size:13px}
+  .load-title{font-size:38px;color:#9370DB;letter-spacing:5px;text-shadow:0 0 30px rgba(147,112,219,.4);margin-bottom:24px;font-weight:bold}
+  .load-bar{width:340px;height:10px;background:#1a1a2e;border-radius:5px;overflow:hidden;border:1px solid #333}
+  .load-fill{width:0%;height:100%;background:linear-gradient(90deg,#9370DB,#32CD32);transition:width .2s}
+  .load-text{margin-top:14px;color:#666;font-size:13px}
 
-  /* Title */
+  /* ===== TITLE SCREEN ===== */
   #titleScreen{position:fixed;inset:0;display:none;z-index:5000}
   #titleScreen.active{display:block}
-  .title-bg{position:absolute;inset:0;background:#0a0a1a}
-  .title-bg img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
-  .title-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,10,26,.3) 0%,rgba(10,10,26,.7) 60%,rgba(10,10,26,.95) 100%)}
-  .title-content{position:absolute;bottom:12%;left:50%;transform:translateX(-50%);text-align:center;width:90%;max-width:420px}
-  .tbtn{display:block;width:100%;max-width:280px;margin:8px auto;padding:14px 28px;font-size:17px;font-weight:bold;border:none;border-radius:10px;cursor:pointer;transition:transform .15s,box-shadow .15s;letter-spacing:1px}
-  .tbtn:hover{transform:scale(1.04)}
-  .tbtn-gold{background:linear-gradient(135deg,#FFD700,#DAA520);color:#1a1a2e;box-shadow:0 4px 20px rgba(255,215,0,.3)}
-  .tbtn-gold:hover{box-shadow:0 6px 30px rgba(255,215,0,.5)}
-  .tbtn-row{display:flex;gap:10px;justify-content:center}
-  .tbtn-row .tbtn{max-width:140px;font-size:14px;padding:10px 16px}
-  .tbtn-blue{background:linear-gradient(135deg,#4169E1,#1E90FF);color:#fff}
-  .tbtn-green{background:linear-gradient(135deg,#32CD32,#228B22);color:#fff}
-  .tbtn-purple{background:linear-gradient(135deg,#9370DB,#8A2BE2);color:#fff;max-width:200px;font-size:13px;padding:9px}
-  .tver{position:fixed;bottom:10px;right:14px;color:#444;font-size:11px}
+  .ts-bg{position:absolute;inset:0}
+  .ts-bg img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+  .ts-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,13,26,.2) 0%,rgba(13,13,26,.6) 50%,rgba(13,13,26,.95) 100%)}
+  .ts-content{position:absolute;bottom:10%;left:50%;transform:translateX(-50%);text-align:center;width:90%;max-width:440px}
+  .ts-logo{font-size:42px;color:#9370DB;font-weight:bold;letter-spacing:6px;text-shadow:0 0 40px rgba(147,112,219,.5);margin-bottom:8px}
+  .ts-sub{color:#32CD32;font-size:14px;letter-spacing:3px;margin-bottom:30px}
+  .ts-btn{display:block;width:100%;max-width:300px;margin:8px auto;padding:14px 28px;font-size:16px;font-weight:bold;border:none;border-radius:10px;cursor:pointer;transition:all .15s;letter-spacing:1px}
+  .ts-btn:hover{transform:scale(1.04)}
+  .ts-btn-purple{background:linear-gradient(135deg,#9370DB,#8A2BE2);color:#fff;box-shadow:0 4px 20px rgba(147,112,219,.3)}
+  .ts-btn-green{background:linear-gradient(135deg,#32CD32,#228B22);color:#fff;box-shadow:0 4px 20px rgba(50,205,50,.3)}
+  .ts-btn-blue{background:linear-gradient(135deg,#4169E1,#1E90FF);color:#fff;box-shadow:0 4px 20px rgba(65,105,225,.3)}
+  .ts-btn-gold{background:linear-gradient(135deg,#FFD700,#DAA520);color:#1a1a2e}
+  .ts-row{display:flex;gap:10px;justify-content:center}
+  .ts-row .ts-btn{max-width:145px;font-size:14px;padding:10px}
+  .ts-ver{position:fixed;bottom:10px;right:14px;color:#333;font-size:11px}
+  .ts-welcome{color:#aaa;font-size:13px;margin-bottom:12px}
 
-  /* Char Select */
+  /* ===== LOGIN / REGISTER ===== */
+  #authScreen{position:fixed;inset:0;display:none;z-index:4500;background:#0d0d1a}
+  #authScreen.active{display:flex;align-items:center;justify-content:center}
+  .auth-box{background:linear-gradient(180deg,#1a1a2e,#0f0f1a);border:2px solid #9370DB;border-radius:16px;padding:36px;min-width:340px;max-width:90vw;box-shadow:0 0 50px rgba(147,112,219,.2)}
+  .auth-box h2{text-align:center;color:#9370DB;margin-bottom:24px;font-size:22px}
+  .auth-box input{width:100%;padding:14px;margin:8px 0;border:2px solid #333;border-radius:10px;background:#0a0a1a;color:#fff;font-size:15px;outline:none}
+  .auth-box input:focus{border-color:#32CD32}
+  .auth-box .field-label{color:#888;font-size:12px;margin-top:8px;display:block}
+  .auth-err{color:#ff4444;font-size:13px;text-align:center;margin:6px 0;min-height:20px}
+  .auth-btn{width:100%;padding:14px;margin-top:12px;border:none;border-radius:10px;cursor:pointer;font-weight:bold;font-size:16px}
+  .auth-btn-purple{background:linear-gradient(135deg,#9370DB,#8A2BE2);color:#fff}
+  .auth-btn-green{background:linear-gradient(135deg,#32CD32,#228B22);color:#fff}
+  .auth-switch{text-align:center;color:#888;font-size:13px;margin-top:16px;cursor:pointer}
+  .auth-switch span{color:#32CD32;text-decoration:underline}
+  .saved-accounts{margin-top:16px;padding-top:16px;border-top:1px solid #333}
+  .saved-accounts h4{color:#666;font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+  .saved-acc{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:rgba(255,255,255,.03);margin-bottom:6px;cursor:pointer;transition:all .15s;border:1px solid transparent}
+  .saved-acc:hover{border-color:#9370DB;background:rgba(147,112,219,.1)}
+  .saved-acc img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #9370DB}
+  .saved-acc .acc-name{color:#fff;font-weight:bold;font-size:14px}
+  .saved-acc .acc-del{margin-left:auto;color:#666;font-size:12px}
+  .saved-acc .acc-del:hover{color:#ff4444}
+
+  /* ===== CHARACTER CREATOR ===== */
   #charScreen{position:fixed;inset:0;display:none;z-index:4000;background:#0d0d1a;overflow-y:auto}
   #charScreen.active{display:block}
   .cc-head{text-align:center;padding:24px;border-bottom:1px solid #222;position:sticky;top:0;background:#0d0d1a;z-index:10}
-  .cc-head h1{color:#FFD700;font-size:28px;margin-bottom:4px}
-  .cc-head p{color:#888;font-size:14px}
-  .cc-body{max-width:900px;margin:0 auto;padding:24px}
-  .cc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px}
-  .cc-char{cursor:pointer;border:3px solid #333;border-radius:12px;overflow:hidden;background:rgba(255,255,255,.03);transition:all .2s;position:relative}
-  .cc-char:hover{border-color:#666;transform:translateY(-4px)}
-  .cc-char.active{border-color:#FFD700;background:rgba(255,215,0,.1);box-shadow:0 0 20px rgba(255,215,0,.2)}
-  .cc-char img{width:100%;height:auto;display:block;image-rendering:pixelated}
-  .cc-char .lbl{position:absolute;bottom:0;left:0;right:0;padding:6px;background:rgba(0,0,0,.7);color:#FFD700;font-size:11px;font-weight:bold;text-align:center}
-  .cc-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px}
-  .cc-actions button{padding:12px 28px;border:none;border-radius:10px;cursor:pointer;font-weight:bold;font-size:15px;transition:all .15s}
-  .cc-save{background:linear-gradient(135deg,#FFD700,#DAA520);color:#1a1a2e}
-  .cc-random{background:linear-gradient(135deg,#9370DB,#8A2BE2);color:#fff}
+  .cc-head h1{color:#9370DB;font-size:28px}
+  .cc-head p{color:#888;font-size:14px;margin-top:4px}
+  .cc-body{max-width:1000px;margin:0 auto;padding:24px;display:flex;gap:24px}
+  .cc-left{flex:1}
+  .cc-right{flex:0.5;display:flex;flex-direction:column;align-items:center;padding-top:20px;position:sticky;top:80px;align-self:flex-start}
+  .cc-preview{width:180px;height:260px;background:rgba(255,255,255,.03);border:3px solid #9370DB;border-radius:14px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .cc-preview img{max-width:90%;max-height:90%;image-rendering:pixelated;object-fit:contain}
+  .cc-section{background:rgba(255,255,255,.02);border:1px solid #222;border-radius:12px;padding:16px;margin-bottom:16px}
+  .cc-section h3{color:#32CD32;font-size:13px;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+  .gender-row{display:flex;gap:8px;margin-bottom:12px}
+  .gender-btn{flex:1;padding:10px;border:2px solid #333;border-radius:8px;background:transparent;color:#666;font-weight:bold;cursor:pointer;transition:all .15s}
+  .gender-btn.active{border-color:#9370DB;color:#9370DB;background:rgba(147,112,219,.1)}
+  .char-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  .char-slot{cursor:pointer;border:3px solid #333;border-radius:10px;overflow:hidden;background:rgba(255,255,255,.03);transition:all .15s;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center}
+  .char-slot:hover{border-color:#666;transform:translateY(-2px)}
+  .char-slot.active{border-color:#32CD32;background:rgba(50,205,50,.1);box-shadow:0 0 15px rgba(50,205,50,.2)}
+  .char-slot img{width:80%;height:80%;object-fit:contain;image-rendering:pixelated}
+  .color-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .color-dot{width:28px;height:28px;border-radius:50%;border:2px solid #333;cursor:pointer;transition:all .15s}
+  .color-dot:hover{transform:scale(1.15);border-color:#fff}
+  .color-dot.active{border-color:#32CD32;box-shadow:0 0 8px rgba(50,205,50,.4)}
+  .cc-actions{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;justify-content:center}
+  .cc-actions button{padding:12px 24px;border:none;border-radius:10px;cursor:pointer;font-weight:bold;font-size:14px;transition:all .15s}
+  .cc-save{background:linear-gradient(135deg,#9370DB,#8A2BE2);color:#fff}
   .cc-back{background:#333;color:#fff}
 
-  /* Game */
+  /* ===== GAME SCREEN ===== */
   #gameScreen{position:fixed;inset:0;display:none;z-index:100}
   #gameScreen.active{display:block}
   #gameCanvas{position:absolute;inset:0}
 
-  /* Top Bar */
-  #topBar{position:fixed;top:0;left:0;right:0;height:46px;background:rgba(10,10,20,.92);border-bottom:1px solid #333;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:500;backdrop-filter:blur(6px)}
+  /* ===== TOP BAR ===== */
+  #topBar{position:fixed;top:0;left:0;right:0;height:46px;background:rgba(13,13,26,.92);border-bottom:1px solid #333;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:500;backdrop-filter:blur(6px)}
   .top-group{display:flex;align-items:center;gap:10px}
   .top-btn{padding:7px 16px;border:1px solid #444;border-radius:8px;background:rgba(255,255,255,.05);color:#ccc;font-size:12px;font-weight:bold;cursor:pointer;transition:all .15s}
-  .top-btn:hover{border-color:#FFD700;color:#FFD700;background:rgba(255,215,0,.1)}
-  .room-name{color:#FFA500;font-weight:bold;font-size:15px;text-shadow:0 0 8px rgba(255,165,0,.3)}
+  .top-btn:hover{border-color:#9370DB;color:#9370DB;background:rgba(147,112,219,.1)}
+  .room-name{color:#32CD32;font-weight:bold;font-size:15px}
   .currency{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:bold}
   .cur-gold{color:#FFD700}
   .cur-gem{color:#87CEEB}
   .cur-lvl{color:#9370DB}
 
-  /* Bottom Bar */
-  #bottomBar{position:fixed;bottom:0;left:0;right:0;height:52px;background:rgba(10,10,20,.95);border-top:1px solid #333;display:flex;align-items:center;padding:0 16px;gap:10px;z-index:500}
+  /* ===== BOTTOM BAR ===== */
+  #bottomBar{position:fixed;bottom:0;left:0;right:0;height:52px;background:rgba(13,13,26,.95);border-top:1px solid #333;display:flex;align-items:center;padding:0 16px;gap:10px;z-index:500}
   #chatInput{flex:1;max-width:380px;padding:10px 18px;border:1px solid #444;border-radius:24px;background:#0a0a1a;color:#fff;font-size:14px;outline:none}
-  #chatInput:focus{border-color:#FFD700}
+  #chatInput:focus{border-color:#9370DB}
   .bbtn{padding:9px 18px;border:1px solid #444;border-radius:8px;background:rgba(255,255,255,.05);color:#ccc;font-size:12px;cursor:pointer;transition:all .15s}
-  .bbtn:hover{border-color:#FFD700;color:#FFD700}
+  .bbtn:hover{border-color:#32CD32;color:#32CD32}
 
-  /* Panels */
-  .panel{position:fixed;background:rgba(10,10,20,.96);border:2px solid #FFD700;border-radius:14px;z-index:600;display:none;flex-direction:column;overflow:hidden;backdrop-filter:blur(10px);box-shadow:0 8px 40px rgba(0,0,0,.6)}
+  /* ===== PANELS ===== */
+  .panel{position:fixed;background:rgba(13,13,26,.96);border:2px solid #9370DB;border-radius:14px;z-index:600;display:none;flex-direction:column;overflow:hidden;backdrop-filter:blur(10px);box-shadow:0 8px 40px rgba(0,0,0,.6)}
   .panel.active{display:flex}
-  .panel-h{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #333;background:rgba(255,215,0,.05)}
-  .panel-h h2{color:#FFD700;font-size:17px}
-  .panel-close{background:none;border:none;color:#FFD700;font-size:24px;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%}
-  .panel-close:hover{background:rgba(255,215,0,.15)}
+  .panel-h{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #333;background:rgba(147,112,219,.05)}
+  .panel-h h2{color:#9370DB;font-size:17px}
+  .panel-close{background:none;border:none;color:#9370DB;font-size:24px;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+  .panel-close:hover{background:rgba(147,112,219,.15)}
   .panel-body{padding:16px;overflow-y:auto;flex:1}
 
-  /* Room List */
+  /* ===== ROOM NAVIGATOR ===== */
   #roomPanel{width:400px;height:520px;top:58px;left:12px}
   .room-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
   .room-card{background:rgba(255,255,255,.03);border:1px solid #333;border-radius:12px;padding:14px;cursor:pointer;transition:all .15s}
-  .room-card:hover{border-color:#FFD700;transform:scale(1.02);background:rgba(255,215,0,.05)}
+  .room-card:hover{border-color:#32CD32;transform:scale(1.02);background:rgba(50,205,50,.05)}
   .room-card .ricon{font-size:40px;text-align:center;margin-bottom:8px}
-  .room-card .rname{color:#FFD700;font-size:14px;font-weight:bold;text-align:center}
+  .room-card .rname{color:#32CD32;font-size:14px;font-weight:bold;text-align:center}
   .room-card .rdesc{color:#777;font-size:11px;text-align:center;margin-top:4px}
-  .room-visitors{color:#32CD32;font-size:11px;text-align:center;margin-top:6px}
 
-  /* Chat bubbles */
-  .chat-bubble{position:absolute;background:rgba(0,0,0,.8);border:1px solid rgba(255,215,0,.4);border-radius:10px;padding:8px 14px;color:#fff;font-size:13px;max-width:220px;word-wrap:break-word;pointer-events:none;z-index:200;transform:translate(-50%,-100%);margin-top:-16px;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+  /* ===== CHAT BUBBLES ===== */
+  .chat-bubble{position:absolute;background:rgba(0,0,0,.8);border:1px solid rgba(147,112,219,.4);border-radius:10px;padding:8px 14px;color:#fff;font-size:13px;max-width:220px;word-wrap:break-word;pointer-events:none;z-index:200;transform:translate(-50%,-100%);margin-top:-16px;box-shadow:0 2px 10px rgba(0,0,0,.4)}
   .chat-bubble::after{content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid rgba(0,0,0,.8)}
-  .chat-name{color:#FFD700;font-weight:bold;font-size:11px;margin-bottom:2px}
+  .chat-name{color:#9370DB;font-weight:bold;font-size:11px;margin-bottom:2px}
 
-  /* Modals */
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:7000}
-  .modal.active{display:flex}
-  .modal-box{background:linear-gradient(180deg,#1a1a2e,#0f0f1a);border:2px solid #FFD700;border-radius:16px;padding:32px;min-width:320px;max-width:90vw;box-shadow:0 0 50px rgba(255,215,0,.15)}
-  .modal-box h2{text-align:center;color:#FFD700;margin-bottom:20px;font-size:20px}
-  .modal-box input{width:100%;padding:14px;margin:10px 0;border:2px solid #333;border-radius:10px;background:#0a0a1a;color:#fff;font-size:16px;outline:none}
-  .modal-box input:focus{border-color:#FFD700}
-  .modal-err{color:#ff4444;font-size:13px;text-align:center;margin:6px 0;min-height:18px}
-  .modal-row{display:flex;gap:12px;margin-top:16px}
-  .modal-row button{flex:1;padding:14px;border:none;border-radius:10px;cursor:pointer;font-weight:bold;font-size:15px}
-  .btn-gold{background:linear-gradient(135deg,#FFD700,#DAA520);color:#1a1a2e}
-  .btn-dark{background:#333;color:#fff}
+  /* ===== PATH DOTS ===== */
+  .path-dot{position:absolute;width:8px;height:8px;background:rgba(50,205,50,.5);border-radius:50%;pointer-events:none;z-index:50;transform:translate(-50%,-50%)}
 
-  /* Path preview */
-  .path-dot{position:absolute;width:8px;height:8px;background:rgba(255,215,0,.5);border-radius:50%;pointer-events:none;z-index:50;transform:translate(-50%,-50%)}
-
-  /* Avatar selector mini */
-  .ava-mini{width:48px;height:48px;border:2px solid #333;border-radius:8px;overflow:hidden;cursor:pointer;image-rendering:pixelated;transition:all .15s}
-  .ava-mini:hover{border-color:#FFD700}
-  .ava-mini.active{border-color:#FFD700;box-shadow:0 0 10px rgba(255,215,0,.3)}
-  .ava-mini img{width:100%;height:100%;object-fit:cover}
-
-  /* Responsive */
+  /* ===== RESPONSIVE ===== */
   @media(max-width:768px){
-    .cc-grid{grid-template-columns:repeat(3,1fr)}
+    .cc-body{flex-direction:column}
+    .cc-right{order:-1;position:static}
+    .char-grid{grid-template-columns:repeat(3,1fr)}
     .room-grid{grid-template-columns:1fr}
     .panel{max-width:95vw;max-height:80vh}
-    .tbtn-row{flex-direction:column}
-    .tbtn-row .tbtn{max-width:280px}
+    .ts-row{flex-direction:column}
+    .ts-row .ts-btn{max-width:300px}
   }
 </style>
 </head>
@@ -141,35 +158,86 @@
 <div id="loadScreen">
   <div class="load-title">STARLIGHT INN</div>
   <div class="load-bar"><div class="load-fill" id="loadFill"></div></div>
-  <div class="load-text" id="loadText">Connecting to hotel...</div>
+  <div class="load-text" id="loadText">Entering the realm...</div>
 </div>
 
-<!-- TITLE -->
+<!-- TITLE SCREEN -->
 <div id="titleScreen">
-  <div class="title-bg"><img id="titleBg" src="assets/title-bg-v16.png" alt="Starlight Inn"></div>
-  <div class="title-overlay"></div>
-  <div class="title-content">
-    <button class="tbtn tbtn-gold" onclick="enterHotel()">ENTER THE INN</button>
-    <div class="tbtn-row">
-      <button class="tbtn tbtn-blue" onclick="openCharSelect()">CHOOSE AVATAR</button>
-      <button class="tbtn tbtn-green" onclick="showRoomPanel()">VISIT ROOMS</button>
+  <div class="ts-bg"><img id="titleBg" src="assets/title-bg-v16.png" alt="Starlight Inn"></div>
+  <div class="ts-overlay"></div>
+  <div class="ts-content">
+    <div class="ts-logo">STARLIGHT INN</div>
+    <div class="ts-sub">A COZY VIRTUAL WORLD</div>
+    <div id="welcomeMsg" class="ts-welcome" style="display:none"></div>
+    <button class="ts-btn ts-btn-purple" onclick="playNow()">PLAY NOW</button>
+    <div class="ts-row">
+      <button class="ts-btn ts-btn-green" onclick="openAuth('login')">LOG IN</button>
+      <button class="ts-btn ts-btn-blue" onclick="openAuth('register')">REGISTER</button>
     </div>
-    <button class="tbtn tbtn-purple" onclick="showTrophies()">ACHIEVEMENTS</button>
+    <button class="ts-btn ts-btn-gold" style="max-width:220px;font-size:14px;padding:10px" onclick="showTrophies()">ACHIEVEMENTS</button>
   </div>
-  <div class="tver">v18.0 - Pixel Perfect Edition</div>
+  <div class="ts-ver">v19.0 - Night Edition</div>
 </div>
 
-<!-- CHARACTER SELECT -->
+<!-- AUTH SCREEN (Login/Register) -->
+<div id="authScreen">
+  <div class="auth-box" id="authBox">
+    <h2 id="authTitle">Welcome Back</h2>
+    <div id="authForm">
+      <span class="field-label">Username</span>
+      <input type="text" id="authUser" placeholder="Enter username" maxlength="16">
+      <span class="field-label">Password</span>
+      <input type="password" id="authPass" placeholder="Enter password" maxlength="32">
+      <div class="auth-err" id="authErr"></div>
+      <button class="auth-btn auth-btn-purple" id="authActionBtn" onclick="submitAuth()">LOG IN</button>
+    </div>
+    <div class="auth-switch" id="authSwitch" onclick="toggleAuthMode()">No account? <span>Register</span></div>
+    <div class="saved-accounts" id="savedAccounts" style="display:none">
+      <h4>Saved Accounts</h4>
+      <div id="savedList"></div>
+    </div>
+    <button class="auth-btn auth-btn-green" style="margin-top:16px;background:#222" onclick="backToTitle()">BACK</button>
+  </div>
+</div>
+
+<!-- CHARACTER CREATOR -->
 <div id="charScreen">
   <div class="cc-head">
-    <h1>Choose Your Character</h1>
-    <p>Select a Starlight adventurer that matches your style</p>
+    <h1>Create Your Starlight Character</h1>
+    <p>Choose your look and customize your colors</p>
   </div>
   <div class="cc-body">
-    <div class="cc-grid" id="charGrid"></div>
-    <div class="cc-actions">
-      <button class="cc-save" onclick="saveChar()">CONFIRM</button>
-      <button class="cc-back" onclick="backToTitle()">BACK</button>
+    <div class="cc-left">
+      <div class="cc-section">
+        <h3>Gender</h3>
+        <div class="gender-row">
+          <button class="gender-btn active" data-g="boy" onclick="setGender('boy')">BOY</button>
+          <button class="gender-btn" data-g="girl" onclick="setGender('girl')">GIRL</button>
+        </div>
+      </div>
+      <div class="cc-section">
+        <h3>Choose Character</h3>
+        <div class="char-grid" id="charGrid"></div>
+      </div>
+      <div class="cc-section">
+        <h3>Skin Tone</h3>
+        <div class="color-row" id="skinColors"></div>
+      </div>
+      <div class="cc-section">
+        <h3>Hair Color</h3>
+        <div class="color-row" id="hairColors"></div>
+      </div>
+      <div class="cc-section">
+        <h3>Outfit Color</h3>
+        <div class="color-row" id="outfitColors"></div>
+      </div>
+    </div>
+    <div class="cc-right">
+      <div class="cc-preview" id="charPreview"></div>
+      <div class="cc-actions">
+        <button class="cc-save" onclick="saveChar()">SAVE & PLAY</button>
+        <button class="cc-back" onclick="backToTitle()">BACK</button>
+      </div>
     </div>
   </div>
 </div>
@@ -189,17 +257,14 @@
       <div class="currency cur-gold">GOLD: <span id="gold">500</span></div>
       <div class="currency cur-gem">GEMS: <span id="gems">50</span></div>
       <div class="currency cur-lvl">LVL: <span id="level">1</span></div>
+      <button class="top-btn" onclick="togglePanel('roomPanel')">ROOMS</button>
       <button class="top-btn" onclick="togglePanel('catalogPanel')">CATALOG</button>
-      <button class="top-btn" onclick="togglePanel('invPanel')">INVENTORY</button>
-      <button class="top-btn" onclick="togglePanel('tradePanel')">TRADE</button>
       <button class="top-btn" onclick="togglePanel('achPanel')">TROPHIES</button>
     </div>
   </div>
 
   <div id="bottomBar">
     <input type="text" id="chatInput" placeholder="Press Enter to chat..." onkeydown="if(event.key==='Enter'){sendChat(this.value);this.value=''}">
-    <button class="bbtn" onclick="togglePanel('roomPanel')">ROOMS</button>
-    <button class="bbtn" onclick="openTrade()">TRADE</button>
     <button class="bbtn" onclick="backToTitle()">QUIT</button>
   </div>
 
@@ -212,27 +277,7 @@
   <!-- Catalog -->
   <div id="catalogPanel" class="panel">
     <div class="panel-h"><h2>Catalog</h2><button class="panel-close" onclick="closePanel('catalogPanel')">&times;</button></div>
-    <div class="panel-body" style="padding:10px">
-      <div style="display:flex;gap:6px;margin-bottom:12px;border-bottom:1px solid #333;padding-bottom:8px">
-        <button class="top-btn" style="border-color:#FFD700;color:#FFD700" onclick="setCatalogTab('furniture')">Furniture</button>
-        <button class="top-btn" onclick="setCatalogTab('hair')">Hair</button>
-        <button class="top-btn" onclick="setCatalogTab('clothes')">Clothes</button>
-        <button class="top-btn" onclick="setCatalogTab('rare')">Rare</button>
-      </div>
-      <div id="catalogGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"></div>
-    </div>
-  </div>
-
-  <!-- Inventory -->
-  <div id="invPanel" class="panel">
-    <div class="panel-h"><h2>Inventory</h2><button class="panel-close" onclick="closePanel('invPanel')">&times;</button></div>
-    <div class="panel-body"><div id="invGrid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px"></div></div>
-  </div>
-
-  <!-- Trade -->
-  <div id="tradePanel" class="panel">
-    <div class="panel-h"><h2>Trading Post</h2><button class="panel-close" onclick="closePanel('tradePanel')">&times;</button></div>
-    <div class="panel-body" id="tradeBody"></div>
+    <div class="panel-body" id="catalogBody"></div>
   </div>
 
   <!-- Achievements -->
@@ -242,44 +287,33 @@
   </div>
 </div>
 
-<!-- LOGIN MODAL -->
-<div class="modal" id="loginModal">
-  <div class="modal-box">
-    <h2>Welcome Traveler</h2>
-    <input type="text" id="loginName" placeholder="Your name" maxlength="16" onkeydown="if(event.key==='Enter')doLogin()">
-    <div class="modal-err" id="loginErr"></div>
-    <div class="modal-row">
-      <button class="btn-gold" onclick="doLogin()">ENTER INN</button>
-    </div>
-  </div>
-</div>
-
 <script>
 
-// ===== STARLIGHT INN v18 - PUBLIC ROOM HOTEL =====
-// Architecture: Background IS the room. Avatars walk on top. No furniture overlay.
-
+// ===== STARLIGHT INN v19 - NIGHT EDITION =====
 const TILE_W = 64;
 const TILE_H = 32;
-const VERSION = 'v18.0';
+const VERSION = 'v19.0';
 
 // ===== ASSETS =====
-const ASSET_URLS = {
+const ASSETS = {
+  // Title
   title_bg: 'assets/title-bg-v16.png',
-  bg_mainhall: 'assets/sprites/rooms/bg_mainhall.png',
-  bg_tavern: 'assets/sprites/rooms/bg_tavern.png',
-  bg_garden: 'assets/sprites/rooms/bg_garden.png',
-  bg_library: 'assets/sprites/rooms/bg_library.png',
-  bg_bedroom: 'assets/sprites/rooms/bg_bedroom.png',
-  bg_beach: 'assets/sprites/rooms/bg_beach.png',
-  bg_lido: 'assets/sprites/rooms/bg_lido.png',
-  bg_rooftop: 'assets/sprites/rooms/bg_rooftop.png',
-  bg_arcade: 'assets/sprites/rooms/bg_arcade.png',
-  bg_spa: 'assets/sprites/rooms/bg_spa.png',
-  bg_market: 'assets/sprites/rooms/bg_market.png',
-  bg_event: 'assets/sprites/rooms/bg_event.png',
-  bg_winter: 'assets/sprites/rooms/bg_winter.png',
 
+  // Rooms v19 (clean, no NPCs)
+  bg_lobby: 'assets/sprites/rooms/v19/bg_lobby.png',
+  bg_tavern: 'assets/sprites/rooms/v19/bg_tavern.png',
+  bg_garden: 'assets/sprites/rooms/v19/bg_garden.png',
+  bg_library: 'assets/sprites/rooms/v19/bg_library.png',
+  bg_bedroom: 'assets/sprites/rooms/v19/bg_bedroom.png',
+  bg_beach: 'assets/sprites/rooms/v19/bg_beach.png',
+  bg_rooftop: 'assets/sprites/rooms/v19/bg_rooftop.png',
+  bg_arcade: 'assets/sprites/rooms/v19/bg_arcade.png',
+  bg_spa: 'assets/sprites/rooms/v19/bg_spa.png',
+  bg_market: 'assets/sprites/rooms/v19/bg_market.png',
+  bg_event: 'assets/sprites/rooms/v19/bg_event.png',
+  bg_winter: 'assets/sprites/rooms/v19/bg_winter.png',
+
+  // Characters v18+v19
   char_boy_hoodie: 'assets/sprites/avatars/char_boy_hoodie.png',
   char_girl_dress: 'assets/sprites/avatars/char_girl_dress.png',
   char_boy_jacket: 'assets/sprites/avatars/char_boy_jacket.png',
@@ -290,895 +324,716 @@ const ASSET_URLS = {
   char_catgirl: 'assets/sprites/avatars/char_catgirl.png',
   char_innkeeper: 'assets/sprites/avatars/char_innkeeper.png',
   char_vampire: 'assets/sprites/avatars/char_vampire.png',
+  char_lady: 'assets/sprites/avatars/v19/char_lady.png',
+  char_steampunk: 'assets/sprites/avatars/v19/char_steampunk.png',
+  char_goth: 'assets/sprites/avatars/v19/char_goth.png',
+  char_sporty: 'assets/sprites/avatars/v19/char_sporty.png',
 };
 
-const AVATARS = [
-  { id: 'char_boy_hoodie', name: 'Hoodie Boy', icon: '👦' },
-  { id: 'char_girl_dress', name: 'Dress Girl', icon: '👧' },
-  { id: 'char_boy_jacket', name: 'Jacket Boy', icon: '🧑' },
-  { id: 'char_girl_maid', name: 'Maid Girl', icon: '👩' },
-  { id: 'char_boy_tank', name: 'Summer Boy', icon: '🏖️' },
-  { id: 'char_wizard', name: 'Wizard', icon: '🔮' },
-  { id: 'char_knight', name: 'Knight', icon: '⚔️' },
-  { id: 'char_catgirl', name: 'Cat Girl', icon: '🐱' },
-  { id: 'char_innkeeper', name: 'Innkeeper', icon: '👨‍🍳' },
-  { id: 'char_vampire', name: 'Vampire', icon: '🧛' },
+const CHARACTERS = [
+  { id:'char_boy_hoodie', name:'Hoodie Boy', gender:'boy', icon:'👦' },
+  { id:'char_girl_dress', name:'Dress Girl', gender:'girl', icon:'👧' },
+  { id:'char_boy_jacket', name:'Jacket Boy', gender:'boy', icon:'🧑' },
+  { id:'char_girl_maid', name:'Maid Girl', gender:'girl', icon:'👩' },
+  { id:'char_boy_tank', name:'Summer Boy', gender:'boy', icon:'🏖️' },
+  { id:'char_wizard', name:'Wizard', gender:'boy', icon:'🔮' },
+  { id:'char_knight', name:'Knight', gender:'boy', icon:'⚔️' },
+  { id:'char_catgirl', name:'Cat Girl', gender:'girl', icon:'🐱' },
+  { id:'char_innkeeper', name:'Innkeeper', gender:'boy', icon:'👨‍🍳' },
+  { id:'char_vampire', name:'Vampire', gender:'boy', icon:'🧛' },
+  { id:'char_lady', name:'Lady', gender:'girl', icon:'👸' },
+  { id:'char_steampunk', name:'Steampunk', gender:'boy', icon:'🔧' },
+  { id:'char_goth', name:'Goth', gender:'girl', icon:'🦇' },
+  { id:'char_sporty', name:'Sporty', gender:'boy', icon:'🏀' },
 ];
+
+const SKIN_COLORS = ['#ffdbac','#f1c27d','#e0ac69','#8d5524','#c68642','#59331b','#ffcea3','#f5d0b5'];
+const HAIR_COLORS = ['#000000','#3B2618','#8B4513','#FFD700','#FF4500','#DC143C','#9370DB','#4169E1','#32CD32','#FF69B4'];
+const OUTFIT_COLORS = ['#4169E1','#DC143C','#32CD32','#9370DB','#FF8C00','#FFD700','#FF69B4','#00CED1','#8B4513','#2F4F4F'];
 
 // ===== STATE =====
 const S = {
   screen: 'loading',
   assets: {},
-  loaded: 0,
-  total: 0,
-  player: { name: '', x: 3, y: 3, tx: 3, ty: 3, path: [], dir: 's', walkTime: 0, avatar: 'char_boy_hoodie', gold: 500, gems: 50, xp: 0, level: 1 },
+  loaded: 0, total: 0,
+  player: {
+    name: '', pass: '',
+    x: 3, y: 3, tx: 3, ty: 3, path: [], dir: 's', walkTime: 0,
+    avatar: 'char_boy_hoodie',
+    gender: 'boy',
+    skinColor: '#ffdbac',
+    hairColor: '#8B4513',
+    outfitColor: '#4169E1',
+    gold: 500, gems: 50, xp: 0, level: 1,
+  },
   room: null,
-  otherPlayers: [],
   chat: [],
-  catalogTab: 'furniture',
+  hoverTile: null,
+  authMode: 'login',
 };
 
-// ===== ROOMS (Public Room Style) =====
-// Background IS the room. No furniture overlay.
-// Walkable tiles are marked subtly. Exits are walkable zones.
+// ===== ROOMS =====
 const ROOMS = {
-  lobby: {
-    name: 'Grand Lobby', desc: 'The main entrance hall', bg: 'bg_mainhall',
-    width: 10, height: 8,
-    exits: [
-      { to: 'tavern', x: 0, y: 3, label: 'Tavern' },
-      { to: 'garden', x: 9, y: 3, label: 'Garden' },
-      { to: 'library', x: 4, y: 0, label: 'Library' },
-      { to: 'bedroom', x: 5, y: 7, label: 'Bedroom' },
-    ],
-    // Walkable floor area (tiles that are floor, not walls)
-    floorTiles: [], // auto-generated from dimensions
-  },
-  tavern: {
-    name: 'Cozy Tavern', desc: 'Warm drinks by the fire', bg: 'bg_tavern',
-    width: 9, height: 7,
-    exits: [{ to: 'lobby', x: 8, y: 3, label: 'Lobby' }],
-  },
-  garden: {
-    name: 'Garden Path', desc: 'Flowers and moonlight', bg: 'bg_garden',
-    width: 10, height: 8,
-    exits: [
-      { to: 'lobby', x: 0, y: 3, label: 'Lobby' },
-      { to: 'beach', x: 9, y: 6, label: 'Beach' },
-    ],
-  },
-  library: {
-    name: 'Library Lounge', desc: 'Books and silence', bg: 'bg_library',
-    width: 9, height: 8,
-    exits: [{ to: 'lobby', x: 4, y: 7, label: 'Lobby' }],
-  },
-  bedroom: {
-    name: 'Sleepy Bedroom', desc: 'Rest and recharge', bg: 'bg_bedroom',
-    width: 8, height: 7,
-    exits: [{ to: 'lobby', x: 3, y: 0, label: 'Lobby' }],
-  },
-  beach: {
-    name: 'Sunny Beach', desc: 'Sand and ocean breeze', bg: 'bg_beach',
-    width: 10, height: 7,
-    exits: [{ to: 'garden', x: 0, y: 3, label: 'Garden' }],
-  },
-  rooftop: {
-    name: 'Rooftop Cafe', desc: 'Coffee with a view', bg: 'bg_rooftop',
-    width: 9, height: 7,
-    exits: [{ to: 'lobby', x: 3, y: 6, label: 'Lobby' }],
-  },
-  arcade: {
-    name: 'Neon Arcade', desc: 'Games and prizes', bg: 'bg_arcade',
-    width: 9, height: 7,
-    exits: [{ to: 'lobby', x: 0, y: 3, label: 'Lobby' }],
-  },
-  spa: {
-    name: 'Spa Bay', desc: 'Relaxation and zen', bg: 'bg_spa',
-    width: 8, height: 7,
-    exits: [{ to: 'lobby', x: 3, y: 0, label: 'Lobby' }],
-  },
-  market: {
-    name: 'Market Hall', desc: 'Trade and treasures', bg: 'bg_market',
-    width: 10, height: 7,
-    exits: [{ to: 'lobby', x: 0, y: 3, label: 'Lobby' }],
-  },
-  event: {
-    name: 'Event Pavilion', desc: 'Festivals and shows', bg: 'bg_event',
-    width: 11, height: 8,
-    exits: [{ to: 'lobby', x: 0, y: 3, label: 'Lobby' }],
-  },
-  winter: {
-    name: 'Winter Plaza', desc: 'Snow and starlight', bg: 'bg_winter',
-    width: 10, height: 8,
-    exits: [{ to: 'lobby', x: 4, y: 7, label: 'Lobby' }],
-  },
+  lobby: { name:'Grand Lobby', desc:'The main entrance hall', bg:'bg_lobby', width:10, height:8, color:'#1a1a2e',
+    exits:[{to:'tavern',x:0,y:3,label:'Tavern'},{to:'garden',x:9,y:3,label:'Garden'},{to:'library',x:4,y:0,label:'Library'},{to:'bedroom',x:5,y:7,label:'Bedroom'}] },
+  tavern: { name:'Cozy Tavern', desc:'Warm drinks by the fire', bg:'bg_tavern', width:9, height:7, color:'#2e1a0a',
+    exits:[{to:'lobby',x:8,y:3,label:'Lobby'}] },
+  garden: { name:'Garden Path', desc:'Flowers and moonlight', bg:'bg_garden', width:10, height:8, color:'#0a2e1a',
+    exits:[{to:'lobby',x:0,y:3,label:'Lobby'},{to:'beach',x:9,y:6,label:'Beach'}] },
+  library: { name:'Library Lounge', desc:'Books and silence', bg:'bg_library', width:9, height:8, color:'#1a0a2e',
+    exits:[{to:'lobby',x:4,y:7,label:'Lobby'}] },
+  bedroom: { name:'Sleepy Bedroom', desc:'Rest and recharge', bg:'bg_bedroom', width:8, height:7, color:'#2e1a1a',
+    exits:[{to:'lobby',x:3,y:0,label:'Lobby'}] },
+  beach: { name:'Sunny Beach', desc:'Sand and ocean breeze', bg:'bg_beach', width:10, height:7, color:'#1a2e3a',
+    exits:[{to:'garden',x:0,y:3,label:'Garden'}] },
+  rooftop: { name:'Rooftop Cafe', desc:'Coffee with a view', bg:'bg_rooftop', width:9, height:7, color:'#2e2e1a',
+    exits:[{to:'lobby',x:3,y:6,label:'Lobby'}] },
+  arcade: { name:'Neon Arcade', desc:'Games and prizes', bg:'bg_arcade', width:9, height:7, color:'#1a0a2e',
+    exits:[{to:'lobby',x:0,y:3,label:'Lobby'}] },
+  spa: { name:'Spa Bay', desc:'Relaxation and zen', bg:'bg_spa', width:8, height:7, color:'#0a2e2e',
+    exits:[{to:'lobby',x:3,y:0,label:'Lobby'}] },
+  market: { name:'Market Hall', desc:'Trade and treasures', bg:'bg_market', width:10, height:7, color:'#2e2a1a',
+    exits:[{to:'lobby',x:0,y:3,label:'Lobby'}] },
+  event: { name:'Event Pavilion', desc:'Festivals and shows', bg:'bg_event', width:11, height:8, color:'#2e1a2e',
+    exits:[{to:'lobby',x:0,y:3,label:'Lobby'}] },
+  winter: { name:'Winter Plaza', desc:'Snow and starlight', bg:'bg_winter', width:10, height:8, color:'#1a1a3e',
+    exits:[{to:'lobby',x:4,y:7,label:'Lobby'}] },
 };
-
-// Generate floor tiles for each room
-Object.values(ROOMS).forEach(room => {
-  room.floorTiles = [];
-  for (let y = 0; y < room.height; y++) {
-    for (let x = 0; x < room.width; x++) {
-      room.floorTiles.push({ x, y });
-    }
-  }
-});
 
 // ===== ASSET LOADER =====
-function assetUrl(path) {
-  return path + '?v=' + VERSION;
-}
+function aurl(p){return p+'?v='+VERSION}
 
-function loadImg(key, url) {
-  return new Promise(resolve => {
-    const img = new Image();
-    // No crossOrigin needed - same domain assets
-    img.onload = () => {
-      S.assets[key] = img;
-      resolve(true);
-    };
-    img.onerror = () => {
-      console.warn('Failed to load:', key, 'from', url);
-      S.assets[key] = makePlaceholder(key);
-      resolve(false);
-    };
-    img.src = assetUrl(url);
+function loadImg(key,url){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{S.assets[key]=img;resolve(true)};
+    img.onerror=()=>{S.assets[key]=makePlaceholder(key);resolve(false)};
+    img.src=aurl(url);
   });
 }
 
-function makePlaceholder(key) {
-  const c = document.createElement('canvas');
-  const size = key.includes('bg_') ? 400 : 64;
-  c.width = size; c.height = size;
-  const x = c.getContext('2d');
-  if (key.includes('bg_')) {
-    const g = x.createLinearGradient(0, 0, 0, size);
-    g.addColorStop(0, '#1a1a3e'); g.addColorStop(1, '#0a0a1a');
-    x.fillStyle = g; x.fillRect(0, 0, size, size);
-  } else {
-    x.fillStyle = '#444'; x.fillRect(8, 8, size - 16, size - 16);
-    x.fillStyle = '#FFD700'; x.font = (size / 4) + 'px sans-serif';
-    x.textAlign = 'center'; x.fillText('?', size / 2, size / 2 + 8);
+function makePlaceholder(key){
+  const c=document.createElement('canvas');
+  const s=key.includes('bg_')?400:64;
+  c.width=s;c.height=s;
+  const x=c.getContext('2d');
+  if(key.includes('bg_')){
+    const g=x.createLinearGradient(0,0,0,s);
+    g.addColorStop(0,'#1a1a3e');g.addColorStop(1,'#0a0a1a');
+    x.fillStyle=g;x.fillRect(0,0,s,s);
+    for(let i=0;i<50;i++){x.fillStyle='#fff';x.globalAlpha=Math.random()*0.5;x.fillRect(Math.random()*s,Math.random()*s/2,2,2)}
+    x.globalAlpha=1;
+  }else{
+    x.fillStyle='#444';x.fillRect(8,8,s-16,s-16);
+    x.fillStyle='#9370DB';x.font=(s/3)+'px sans-serif';x.textAlign='center';
+    x.fillText('?',s/2,s/2+8);
   }
-  const img = new Image(); img.src = c.toDataURL(); return img;
+  const i=new Image();i.src=c.toDataURL();return i;
 }
 
-async function loadAllAssets() {
-  const keys = Object.keys(ASSET_URLS);
-  S.total = keys.length;
-  S.loaded = 0;
-
-  const batch = 6;
-  for (let i = 0; i < keys.length; i += batch) {
-    const batchKeys = keys.slice(i, i + batch);
-    await Promise.all(batchKeys.map(k => loadImg(k, ASSET_URLS[k])));
-    S.loaded += batchKeys.length;
-    const pct = Math.round((S.loaded / S.total) * 100);
-    document.getElementById('loadFill').style.width = pct + '%';
-    document.getElementById('loadText').textContent = 'Loading hotel... ' + pct + '%';
+async function loadAllAssets(){
+  const keys=Object.keys(ASSETS);
+  S.total=keys.length;S.loaded=0;
+  for(let i=0;i<keys.length;i+=5){
+    const batch=keys.slice(i,i+5);
+    await Promise.all(batch.map(k=>loadImg(k,ASSETS[k])));
+    S.loaded+=batch.length;
+    const pct=Math.round((S.loaded/S.total)*100);
+    document.getElementById('loadFill').style.width=pct+'%';
+    document.getElementById('loadText').textContent='Loading... '+pct+'%';
   }
-
-  // Small delay for smooth transition
-  await new Promise(r => setTimeout(r, 400));
+  await new Promise(r=>setTimeout(r,400));
   document.getElementById('loadScreen').classList.add('done');
+  checkSavedSession();
+}
+
+// ===== AUTH SYSTEM =====
+function openAuth(mode){
+  S.authMode=mode;
+  document.getElementById('authScreen').classList.add('active');
+  document.getElementById('authTitle').textContent=mode==='login'?'Welcome Back':'Create Account';
+  document.getElementById('authActionBtn').textContent=mode==='login'?'LOG IN':'REGISTER';
+  document.getElementById('authSwitch').innerHTML=mode==='login'?'No account? <span>Register</span>':'Have an account? <span>Log In</span>';
+  document.getElementById('authErr').textContent='';
+  document.getElementById('authUser').value='';
+  document.getElementById('authPass').value='';
+  renderSavedAccounts();
+}
+
+function toggleAuthMode(){
+  openAuth(S.authMode==='login'?'register':'login');
+}
+
+function submitAuth(){
+  const user=document.getElementById('authUser').value.trim();
+  const pass=document.getElementById('authPass').value;
+  const err=document.getElementById('authErr');
+
+  if(user.length<2||user.length>16){err.textContent='Username must be 2-16 chars';return}
+  if(pass.length<4){err.textContent='Password must be at least 4 chars';return}
+
+  if(S.authMode==='register'){
+    // Check if account exists
+    const accounts=getAccounts();
+    if(accounts.find(a=>a.name===user)){err.textContent='Username already taken';return}
+    // Create account
+    const newAcc={name:user,pass:pass,avatar:'char_boy_hoodie',gender:'boy',gold:500,gems:50,level:1,xp:0};
+    accounts.push(newAcc);
+    saveAccounts(accounts);
+    loadAccount(newAcc);
+    showScreen('char');
+  }else{
+    // Login
+    const accounts=getAccounts();
+    const acc=accounts.find(a=>a.name===user&&a.pass===pass);
+    if(!acc){err.textContent='Invalid username or password';return}
+    loadAccount(acc);
+    showScreen('game');
+  }
+}
+
+function getAccounts(){
+  try{const raw=localStorage.getItem('si_accounts');return raw?JSON.parse(raw):[]}catch(e){return[]}
+}
+
+function saveAccounts(accounts){
+  localStorage.setItem('si_accounts',JSON.stringify(accounts));
+}
+
+function loadAccount(acc){
+  S.player.name=acc.name;
+  S.player.pass=acc.pass;
+  if(acc.avatar)S.player.avatar=acc.avatar;
+  if(acc.gender)S.player.gender=acc.gender;
+  if(acc.gold)S.player.gold=acc.gold;
+  if(acc.gems)S.player.gems=acc.gems;
+  if(acc.level)S.player.level=acc.level;
+  if(acc.xp)S.player.xp=acc.xp;
+  saveSession();
+}
+
+function saveSession(){
+  localStorage.setItem('si_session',JSON.stringify({name:S.player.name,pass:S.player.pass}));
+}
+
+function checkSavedSession(){
+  try{
+    const raw=localStorage.getItem('si_session');
+    if(raw){
+      const sess=JSON.parse(raw);
+      const accounts=getAccounts();
+      const acc=accounts.find(a=>a.name===sess.name&&a.pass===sess.pass);
+      if(acc){
+        loadAccount(acc);
+        document.getElementById('welcomeMsg').innerHTML='Welcome back, <b style="color:#32CD32">'+acc.name+'</b>!';
+        document.getElementById('welcomeMsg').style.display='block';
+        showScreen('title');
+        return;
+      }
+    }
+  }catch(e){}
   showScreen('title');
 }
 
-// ===== SCREEN MANAGEMENT =====
-function showScreen(name) {
-  S.screen = name;
-  document.querySelectorAll('#loadScreen, #titleScreen, #charScreen, #gameScreen').forEach(el => {
-    el.classList.remove('active');
+function renderSavedAccounts(){
+  const accounts=getAccounts();
+  const container=document.getElementById('savedAccounts');
+  const list=document.getElementById('savedList');
+  if(accounts.length===0){container.style.display='none';return}
+  container.style.display='block';
+  list.innerHTML='';
+  accounts.forEach(acc=>{
+    const div=document.createElement('div');div.className='saved-acc';
+    div.innerHTML='<img src="'+ASSETS[acc.avatar||'char_boy_hoodie']+'?v='+VERSION+'" onerror="this.style.display='none'"><span class="acc-name">'+acc.name+'</span><span class="acc-del" onclick="deleteAccount(event,''+acc.name+'')">Remove</span>';
+    div.onclick=(e)=>{if(e.target.className==='acc-del')return;loadAccount(acc);showScreen('game')};
+    list.appendChild(div);
   });
-  if (name === 'title') document.getElementById('titleScreen').classList.add('active');
-  if (name === 'char') {
-    document.getElementById('charScreen').classList.add('active');
-    renderCharSelect();
-  }
-  if (name === 'game') {
-    document.getElementById('gameScreen').classList.add('active');
-    resizeCanvas();
-    enterRoom('lobby');
-    requestAnimationFrame(gameLoop);
+}
+
+function deleteAccount(e,name){
+  e.stopPropagation();
+  let accounts=getAccounts().filter(a=>a.name!==name);
+  saveAccounts(accounts);
+  renderSavedAccounts();
+}
+
+function saveAccountData(){
+  const accounts=getAccounts();
+  const idx=accounts.findIndex(a=>a.name===S.player.name);
+  if(idx>=0){
+    accounts[idx]={...accounts[idx],avatar:S.player.avatar,gender:S.player.gender,gold:S.player.gems,gems:S.player.gems,level:S.player.level,xp:S.player.xp};
+    saveAccounts(accounts);
   }
 }
 
-// ===== CHARACTER SELECT =====
-function renderCharSelect() {
-  const grid = document.getElementById('charGrid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  AVATARS.forEach(ava => {
-    const div = document.createElement('div');
-    div.className = 'cc-char' + (S.player.avatar === ava.id ? ' active' : '');
-    const img = S.assets[ava.id];
-    if (img) {
-      const imgEl = document.createElement('img');
-      imgEl.src = img.src;
+// ===== SCREEN MANAGEMENT =====
+function showScreen(name){
+  S.screen=name;
+  document.querySelectorAll('#loadScreen,#titleScreen,#authScreen,#charScreen,#gameScreen').forEach(el=>el.classList.remove('active'));
+  if(name==='title')document.getElementById('titleScreen').classList.add('active');
+  if(name==='auth')document.getElementById('authScreen').classList.add('active');
+  if(name==='char'){document.getElementById('charScreen').classList.add('active');initCharCreator()}
+  if(name==='game'){document.getElementById('gameScreen').classList.add('active');resizeCanvas();enterRoom('lobby');requestAnimationFrame(gameLoop)}
+}
+
+function playNow(){
+  if(!S.player.name){openAuth('login');return}
+  if(!S.player.avatar){showScreen('char');return}
+  showScreen('game');
+}
+
+function backToTitle(){
+  showScreen('title');
+}
+
+// ===== CHARACTER CREATOR =====
+function initCharCreator(){
+  renderCharGrid();
+  renderColorPickers();
+  updateCharPreview();
+}
+
+function renderCharGrid(){
+  const grid=document.getElementById('charGrid');
+  if(!grid)return;
+  grid.innerHTML='';
+  CHARACTERS.filter(c=>c.gender===S.player.gender).forEach(char=>{
+    const div=document.createElement('div');div.className='char-slot'+(S.player.avatar===char.id?' active':'');
+    const img=S.assets[char.id];
+    if(img){
+      const imgEl=document.createElement('img');imgEl.src=img.src;
       div.appendChild(imgEl);
     }
-    const lbl = document.createElement('div');
-    lbl.className = 'lbl';
-    lbl.textContent = ava.icon + ' ' + ava.name;
-    div.appendChild(lbl);
-    div.onclick = () => {
-      S.player.avatar = ava.id;
-      renderCharSelect();
-    };
+    div.onclick=()=>{S.player.avatar=char.id;renderCharGrid();updateCharPreview()};
     grid.appendChild(div);
   });
 }
 
-function saveChar() {
-  saveData();
+function setGender(g){
+  S.player.gender=g;
+  document.querySelectorAll('.gender-btn').forEach(b=>b.classList.toggle('active',b.dataset.g===g));
+  // Pick first character of this gender
+  const first=CHARACTERS.find(c=>c.gender===g);
+  if(first)S.player.avatar=first.id;
+  renderCharGrid();updateCharPreview();
+}
+
+function renderColorPickers(){
+  const makeRow=(id,colors,current,onClick)=>{
+    const row=document.getElementById(id);
+    if(!row)return;
+    row.innerHTML='';
+    colors.forEach(c=>{
+      const div=document.createElement('div');div.className='color-dot'+(current===c?' active':'');
+      div.style.background=c;
+      div.onclick=()=>{onClick(c);renderColorPickers();updateCharPreview()};
+      row.appendChild(div);
+    });
+  };
+  makeRow('skinColors',SKIN_COLORS,S.player.skinColor,c=>S.player.skinColor=c);
+  makeRow('hairColors',HAIR_COLORS,S.player.hairColor,c=>S.player.hairColor=c);
+  makeRow('outfitColors',OUTFIT_COLORS,S.player.outfitColor,c=>S.player.outfitColor=c);
+}
+
+function updateCharPreview(){
+  const prev=document.getElementById('charPreview');
+  if(!prev)return;
+  prev.innerHTML='';
+  const img=S.assets[S.player.avatar];
+  if(!img)return;
+  const imgEl=document.createElement('img');
+  imgEl.src=img.src;
+  imgEl.style.maxWidth='90%';
+  imgEl.style.maxHeight='90%';
+  // Apply CSS filters for color customization
+  const skinHsl=hexToHsl(S.player.skinColor);
+  const hairHsl=hexToHsl(S.player.hairColor);
+  const outfitHsl=hexToHsl(S.player.outfitColor);
+  imgEl.style.filter='hue-rotate('+(skinHsl.h-25)+'deg) saturate('+skinHsl.s+'%)';
+  prev.appendChild(imgEl);
+}
+
+function saveChar(){
+  saveAccountData();
   showScreen('game');
 }
 
-function openCharSelect() {
-  if (!S.player.name) { openModal('loginModal'); return; }
-  showScreen('char');
-}
-
-// ===== LOGIN =====
-function enterHotel() {
-  if (!S.player.name) { openModal('loginModal'); return; }
-  showScreen('game');
-}
-
-function doLogin() {
-  const name = document.getElementById('loginName').value.trim();
-  if (name.length < 2 || name.length > 16) {
-    document.getElementById('loginErr').textContent = 'Name must be 2-16 characters';
-    return;
+function hexToHsl(hex){
+  let r=parseInt(hex.slice(1,3),16)/255;
+  let g=parseInt(hex.slice(3,5),16)/255;
+  let b=parseInt(hex.slice(5,7),16)/255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b);
+  let h,s,l=(max+min)/2;
+  if(max!==min){
+    const d=max-min;
+    s=l>0.5?d/(2-max-min):d/(max+min);
+    switch(max){case r:h=((g-b)/d+(g<b?6:0))/6;break;case g:h=((b-r)/d+2)/6;break;case b:h=((r-g)/d+4)/6;break}
   }
-  S.player.name = name;
-  closeModal('loginModal');
-  loadData();
-  showScreen('game');
+  return{h:Math.round(h*360),s:Math.round(s*100),l:Math.round(l*100)};
 }
 
-// ===== SAVE / LOAD =====
-function saveData() {
-  try {
-    localStorage.setItem('si_v18', JSON.stringify({
-      name: S.player.name, avatar: S.player.avatar,
-      gold: S.player.gold, gems: S.player.gems,
-      xp: S.player.xp, level: S.player.level,
-    }));
-  } catch(e) {}
+// ===== ROOM SYSTEM =====
+function enterRoom(id){
+  if(!ROOMS[id])return;
+  const room=ROOMS[id];
+  S.room={...room,id};
+  S.player.x=Math.floor(room.width/2);
+  S.player.y=Math.floor(room.height/2);
+  S.player.tx=S.player.x;S.player.ty=S.player.y;S.player.path=[];
+  document.getElementById('roomName').textContent=room.name;
+  clearPathDots();clearChat();
 }
 
-function loadData() {
-  try {
-    const raw = localStorage.getItem('si_v18');
-    if (raw) {
-      const d = JSON.parse(raw);
-      Object.assign(S.player, d);
-    }
-  } catch(e) {}
-  updateCurrency();
+function isoToScreen(tx,ty){
+  const cx=window.innerWidth/2;
+  const cy=window.innerHeight/2+40;
+  return{x:cx+(tx-ty)*(TILE_W/2),y:cy+(tx+ty)*(TILE_H/2)};
 }
 
-// ===== ROOM SYSTEM (Public Room) =====
-function enterRoom(id) {
-  if (!ROOMS[id]) return;
-  const room = ROOMS[id];
-  S.room = { ...room, id };
-  S.player.x = Math.floor(room.width / 2);
-  S.player.y = Math.floor(room.height / 2);
-  S.player.tx = S.player.x;
-  S.player.ty = S.player.y;
-  S.player.path = [];
-  document.getElementById('roomName').textContent = room.name;
-  clearPathDots();
-  clearChat();
+function screenToIso(sx,sy){
+  const cx=window.innerWidth/2;
+  const cy=window.innerHeight/2+40;
+  const x=(sx-cx)/(TILE_W/2);
+  const y=(sy-cy)/(TILE_H/2);
+  return{x:Math.round((x+y)/2),y:Math.round((y-x)/2)};
 }
 
-function isoToScreen(tx, ty) {
-  const cx = window.innerWidth / 2;
-  const cy = window.innerHeight / 2 + 40; // offset for UI bars
-  return {
-    x: cx + (tx - ty) * (TILE_W / 2),
-    y: cy + (tx + ty) * (TILE_H / 2)
-  };
-}
-
-function screenToIso(sx, sy) {
-  const cx = window.innerWidth / 2;
-  const cy = window.innerHeight / 2 + 40;
-  const x = (sx - cx) / (TILE_W / 2);
-  const y = (sy - cy) / (TILE_H / 2);
-  return {
-    x: Math.round((x + y) / 2),
-    y: Math.round((y - x) / 2)
-  };
-}
-
-// ===== PATHFINDING =====
-function findPath(sx, sy, ex, ey) {
-  if (sx === ex && sy === ey) return [];
-  const w = S.room.width;
-  const h = S.room.height;
-  if (ex < 0 || ey < 0 || ex >= w || ey >= h) return [];
-
-  const open = [{ x: sx, y: sy, g: 0, h: Math.abs(ex - sx) + Math.abs(ey - sy), parent: null }];
-  const closed = new Set();
-
-  while (open.length > 0) {
-    open.sort((a, b) => (a.g + a.h) - (b.g + b.h));
-    const cur = open.shift();
-    const key = cur.x + ',' + cur.y;
-    if (closed.has(key)) continue;
+function findPath(sx,sy,ex,ey){
+  if(sx===ex&&sy===ey)return[];
+  const w=S.room.width,h=S.room.height;
+  if(ex<0||ey<0||ex>=w||ey>=h)return[];
+  const open=[{x:sx,y:sy,g:0,h:Math.abs(ex-sx)+Math.abs(ey-sy),parent:null}];
+  const closed=new Set();
+  while(open.length>0){
+    open.sort((a,b)=>(a.g+a.h)-(b.g+b.h));
+    const cur=open.shift();
+    const key=cur.x+','+cur.y;
+    if(closed.has(key))continue;
     closed.add(key);
-
-    if (cur.x === ex && cur.y === ey) {
-      const path = [];
-      let n = cur;
-      while (n.parent) { path.unshift({ x: n.x, y: n.y }); n = n.parent; }
+    if(cur.x===ex&&cur.y===ey){
+      const path=[];
+      let n=cur;
+      while(n.parent){path.unshift({x:n.x,y:n.y});n=n.parent}
       return path;
     }
-
-    for (const [dx, dy] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) {
-      const nx = cur.x + dx, ny = cur.y + dy;
-      if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
-      const nkey = nx + ',' + ny;
-      if (closed.has(nkey)) continue;
-      const g = cur.g + 1;
-      const hh = Math.abs(ex - nx) + Math.abs(ey - ny);
-      const existing = open.find(o => o.x === nx && o.y === ny);
-      if (!existing || g < existing.g) {
-        if (existing) { existing.g = g; existing.parent = cur; }
-        else open.push({ x: nx, y: ny, g, h: hh, parent: cur });
+    for(const[dx,dy]of[[0,1],[1,0],[0,-1],[-1,0]]){
+      const nx=cur.x+dx,ny=cur.y+dy;
+      if(nx<0||ny<0||nx>=w||ny>=h)continue;
+      const nkey=nx+','+ny;
+      if(closed.has(nkey))continue;
+      const g=cur.g+1,hh=Math.abs(ex-nx)+Math.abs(ey-ny);
+      const existing=open.find(o=>o.x===nx&&o.y===ny);
+      if(!existing||g<existing.g){
+        if(existing){existing.g=g;existing.parent=cur}
+        else open.push({x:nx,y:ny,g,h:hh,parent:cur});
       }
     }
   }
-  return [];
+  return[];
 }
 
-// ===== RENDERING =====
-let lastT = 0;
+// ===== GAME LOOP =====
+let lastT=0;
 
-function resizeCanvas() {
-  const c = document.getElementById('gameCanvas');
-  if (!c) return;
-  c.width = window.innerWidth;
-  c.height = window.innerHeight;
+function resizeCanvas(){
+  const c=document.getElementById('gameCanvas');
+  if(!c)return;
+  c.width=window.innerWidth;c.height=window.innerHeight;
 }
-window.addEventListener('resize', () => { if (S.screen === 'game') resizeCanvas(); });
+window.addEventListener('resize',()=>{if(S.screen==='game')resizeCanvas()});
 
-function gameLoop(t) {
-  if (S.screen !== 'game') return;
-  const dt = t - lastT;
-  lastT = t;
+function gameLoop(t){
+  if(S.screen!=='game')return;
+  const dt=t-lastT;lastT=t;
   updatePlayer(dt);
   renderRoom();
   updateChatBubbles(dt);
   requestAnimationFrame(gameLoop);
 }
 
-function updatePlayer(dt) {
-  if (S.player.path.length > 0) {
-    S.player.walkTime += dt;
-    const next = S.player.path[0];
-    const dx = next.x - S.player.x;
-    const dy = next.y - S.player.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const speed = dt * 0.0045; // comfortable walking speed
-
-    if (dist < speed) {
-      S.player.x = next.x;
-      S.player.y = next.y;
+function updatePlayer(dt){
+  if(S.player.path.length>0){
+    S.player.walkTime+=dt;
+    const next=S.player.path[0];
+    const dx=next.x-S.player.x,dy=next.y-S.player.y;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    const speed=dt*0.0045;
+    if(dist<speed){
+      S.player.x=next.x;S.player.y=next.y;
       S.player.path.shift();
-      if (S.player.path.length === 0) {
-        checkExit();
-        S.player.walkTime = 0;
-        clearPathDots();
-      }
-    } else {
-      S.player.x += (dx / dist) * speed;
-      S.player.y += (dy / dist) * speed;
-      // Direction
-      if (Math.abs(dx) > Math.abs(dy)) S.player.dir = dx > 0 ? 'e' : 'w';
-      else S.player.dir = dy > 0 ? 's' : 'n';
+      if(S.player.path.length===0){checkExit();S.player.walkTime=0;clearPathDots()}
+    }else{
+      S.player.x+=(dx/dist)*speed;S.player.y+=(dy/dist)*speed;
+      if(Math.abs(dx)>Math.abs(dy))S.player.dir=dx>0?'e':'w';
+      else S.player.dir=dy>0?'s':'n';
     }
     updatePathDots();
-  } else {
-    S.player.walkTime = 0;
+  }else{S.player.walkTime=0}
+}
+
+function checkExit(){
+  if(!S.room||!S.room.exits)return;
+  const px=Math.round(S.player.x),py=Math.round(S.player.y);
+  for(const exit of S.room.exits){
+    if(exit.x===px&&exit.y===py){enterRoom(exit.to);return}
   }
 }
 
-function checkExit() {
-  if (!S.room || !S.room.exits) return;
-  const px = Math.round(S.player.x);
-  const py = Math.round(S.player.y);
-  for (const exit of S.room.exits) {
-    if (exit.x === px && exit.y === py) {
-      enterRoom(exit.to);
-      return;
-    }
-  }
-}
+function renderRoom(){
+  const c=document.getElementById('gameCanvas');
+  if(!c)return;
+  const ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  if(!S.room)return;
 
-function renderRoom() {
-  const c = document.getElementById('gameCanvas');
-  if (!c) return;
-  const ctx = c.getContext('2d');
-  ctx.clearRect(0, 0, c.width, c.height);
-  if (!S.room) return;
-
-  // Draw background image (the room itself)
-  const bg = S.assets[S.room.bg];
-  if (bg) {
-    // Draw background centered and covering
-    const scale = Math.max(c.width / bg.width, c.height / bg.height);
-    const bw = bg.width * scale;
-    const bh = bg.height * scale;
-    ctx.drawImage(bg, (c.width - bw) / 2, (c.height - bh) / 2, bw, bh);
-  } else {
-    ctx.fillStyle = S.room.color || '#0a0a1a';
-    ctx.fillRect(0, 0, c.width, c.height);
+  // Draw background
+  const bg=S.assets[S.room.bg];
+  if(bg){
+    const scale=Math.max(c.width/bg.width,c.height/bg.height);
+    const bw=bg.width*scale,bh=bg.height*scale;
+    ctx.drawImage(bg,(c.width-bw)/2,(c.height-bh)/2,bw,bh);
+  }else{
+    ctx.fillStyle=S.room.color||'#0a0a1a';
+    ctx.fillRect(0,0,c.width,c.height);
   }
 
-  const cx = c.width / 2;
-  const cy = c.height / 2 + 40;
-  const w = S.room.width;
-  const h = S.room.height;
+  const cx=c.width/2,cy=c.height/2+40;
+  const w=S.room.width,h=S.room.height;
 
-  // Draw subtle floor tile grid (very faint, just for visual reference)
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const pos = isoToScreen(x, y);
-      ctx.fillStyle = ((x + y) % 2 === 0) ? 'rgba(255,215,0,0.04)' : 'rgba(255,215,0,0.02)';
+  // Draw subtle floor grid
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      const pos=isoToScreen(x,y);
+      ctx.fillStyle=((x+y)%2===0)?'rgba(147,112,219,0.04)':'rgba(50,205,50,0.02)';
       ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y - TILE_H / 2);
-      ctx.lineTo(pos.x + TILE_W / 2, pos.y);
-      ctx.lineTo(pos.x, pos.y + TILE_H / 2);
-      ctx.lineTo(pos.x - TILE_W / 2, pos.y);
+      ctx.moveTo(pos.x,pos.y-TILE_H/2);
+      ctx.lineTo(pos.x+TILE_W/2,pos.y);
+      ctx.lineTo(pos.x,pos.y+TILE_H/2);
+      ctx.lineTo(pos.x-TILE_W/2,pos.y);
       ctx.closePath();
       ctx.fill();
-
-      // Subtle outline
-      ctx.strokeStyle = 'rgba(255,215,0,0.06)';
-      ctx.lineWidth = 0.5;
+      ctx.strokeStyle='rgba(147,112,219,0.05)';
+      ctx.lineWidth=0.5;
       ctx.stroke();
     }
   }
 
-  // Draw exit zones (glowing golden tiles)
-  if (S.room.exits) {
-    S.room.exits.forEach(exit => {
-      const pos = isoToScreen(exit.x, exit.y);
-      // Glow effect
-      ctx.fillStyle = 'rgba(255,215,0,0.2)';
+  // Draw exits
+  if(S.room.exits){
+    S.room.exits.forEach(exit=>{
+      const pos=isoToScreen(exit.x,exit.y);
+      const pulse=Math.sin(Date.now()/300)*0.3+0.5;
+      ctx.fillStyle='rgba(50,205,50,0.2)';
       ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y - TILE_H / 2);
-      ctx.lineTo(pos.x + TILE_W / 2, pos.y);
-      ctx.lineTo(pos.x, pos.y + TILE_H / 2);
-      ctx.lineTo(pos.x - TILE_W / 2, pos.y);
+      ctx.moveTo(pos.x,pos.y-TILE_H/2);
+      ctx.lineTo(pos.x+TILE_W/2,pos.y);
+      ctx.lineTo(pos.x,pos.y+TILE_H/2);
+      ctx.lineTo(pos.x-TILE_W/2,pos.y);
       ctx.closePath();
       ctx.fill();
-
-      // Pulsing border
-      const pulse = Math.sin(Date.now() / 300) * 0.3 + 0.5;
-      ctx.strokeStyle = `rgba(255,215,0,${pulse * 0.6})`;
-      ctx.lineWidth = 2;
+      ctx.strokeStyle='rgba(50,205,50,'+(pulse*0.7)+')';
+      ctx.lineWidth=2;
       ctx.stroke();
-
-      // Label
-      ctx.fillStyle = '#FFD700';
-      ctx.font = 'bold 9px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(exit.label || 'EXIT', pos.x, pos.y + 2);
+      ctx.fillStyle='#32CD32';
+      ctx.font='bold 9px sans-serif';
+      ctx.textAlign='center';
+      ctx.fillText(exit.label||'EXIT',pos.x,pos.y+2);
     });
   }
 
-  // Sort and render all entities by depth (y then x)
-  const entities = [];
+  // Avatar
+  const selfPos=isoToScreen(S.player.x,S.player.y);
+  renderAvatar(ctx,S.player,selfPos.x,selfPos.y,true);
 
-  // Other players (simulated)
-  S.otherPlayers.forEach(p => {
-    const pos = isoToScreen(p.x, p.y);
-    entities.push({ type: 'player', z: p.y * w + p.x + 0.1, x: pos.x, y: pos.y, player: p });
-  });
-
-  // Self
-  const selfPos = isoToScreen(S.player.x, S.player.y);
-  entities.push({ type: 'self', z: S.player.y * w + S.player.x + 0.2, x: selfPos.x, y: selfPos.y });
-
-  entities.sort((a, b) => a.z - b.z);
-
-  // Render each entity
-  entities.forEach(ent => {
-    if (ent.type === 'self') {
-      renderAvatarSprite(ctx, S.player, ent.x, ent.y, true);
-    } else {
-      renderAvatarSprite(ctx, ent.player, ent.x, ent.y, false);
-    }
-  });
-
-  // Draw hovered tile highlight
-  if (S.hoverTile) {
-    const pos = isoToScreen(S.hoverTile.x, S.hoverTile.y);
-    ctx.fillStyle = 'rgba(255,215,0,0.15)';
+  // Hover tile
+  if(S.hoverTile){
+    const pos=isoToScreen(S.hoverTile.x,S.hoverTile.y);
+    ctx.fillStyle='rgba(147,112,219,0.15)';
     ctx.beginPath();
-    ctx.moveTo(pos.x, pos.y - TILE_H / 2);
-    ctx.lineTo(pos.x + TILE_W / 2, pos.y);
-    ctx.lineTo(pos.x, pos.y + TILE_H / 2);
-    ctx.lineTo(pos.x - TILE_W / 2, pos.y);
+    ctx.moveTo(pos.x,pos.y-TILE_H/2);
+    ctx.lineTo(pos.x+TILE_W/2,pos.y);
+    ctx.lineTo(pos.x,pos.y+TILE_H/2);
+    ctx.lineTo(pos.x-TILE_W/2,pos.y);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255,215,0,0.5)';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle='rgba(147,112,219,0.5)';
+    ctx.lineWidth=1.5;
     ctx.stroke();
   }
 }
 
-function renderAvatarSprite(ctx, player, x, y, isSelf) {
-  const img = S.assets[player.avatar || S.player.avatar];
-  if (!img || !img.width || !img.height) return;
+function renderAvatar(ctx,player,x,y,isSelf){
+  const img=S.assets[player.avatar||S.player.avatar];
+  if(!img||!img.width||!img.height)return;
 
-  // Avatar dimensions
-  const avaW = 56;
-  const avaH = 84;
-
-  // Bobbing animation while walking
-  const bob = player.path && player.path.length > 0 ? Math.sin((player.walkTime || 0) * 0.012) * 3 : 0;
+  const avaW=52,avaH=78;
+  const bob=(player.path&&player.path.length>0)?Math.sin((player.walkTime||0)*0.012)*4:0;
 
   ctx.save();
-  ctx.translate(x, y - TILE_H / 2 + bob);
+  ctx.translate(x,y-TILE_H/2+bob);
 
   // Shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillStyle='rgba(0,0,0,0.25)';
   ctx.beginPath();
-  ctx.ellipse(0, avaH / 2 - 2, 18, 6, 0, 0, Math.PI * 2);
+  ctx.ellipse(0,avaH/2-4,16,5,0,0,Math.PI*2);
   ctx.fill();
 
-  // Draw avatar centered
-  const drawW = avaW;
-  const drawH = avaH;
-  ctx.drawImage(img, 0, 0, img.width, img.height, -avaW / 2, -avaH + 8, avaW, avaH);
+  // Draw avatar
+  ctx.drawImage(img,0,0,img.width,img.height,-avaW/2,-avaH+8,avaW,avaH);
 
   // Name tag
-  ctx.font = isSelf ? 'bold 11px sans-serif' : '10px sans-serif';
-  const name = player.name || 'Guest';
-  const tw = ctx.measureText(name).width;
-  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.font=isSelf?'bold 11px sans-serif':'10px sans-serif';
+  const name=player.name||'Guest';
+  const tw=ctx.measureText(name).width;
+  ctx.fillStyle='rgba(0,0,0,0.65)';
   ctx.beginPath();
-  ctx.moveTo(-tw / 2 - 6, -drawH + 2);
-  ctx.lineTo(tw / 2 + 6, -drawH + 2);
-  ctx.lineTo(tw / 2 + 6, -drawH + 18);
-  ctx.lineTo(-tw / 2 - 6, -drawH + 18);
+  ctx.moveTo(-tw/2-6,-avaH+4);
+  ctx.lineTo(tw/2+6,-avaH+4);
+  ctx.lineTo(tw/2+6,-avaH+20);
+  ctx.lineTo(-tw/2-6,-avaH+20);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = isSelf ? '#FFD700' : '#ccc';
-  ctx.textAlign = 'center';
-  ctx.fillText(name, 0, -drawH + 14);
+  ctx.fillStyle=isSelf?'#32CD32':'#ccc';
+  ctx.textAlign='center';
+  ctx.fillText(name,0,-avaH+15);
 
   ctx.restore();
 }
 
+// ===== INPUT =====
+document.getElementById('gameCanvas').addEventListener('mousemove',e=>{
+  if(S.screen!=='game'||!S.room)return;
+  const rect=document.getElementById('gameCanvas').getBoundingClientRect();
+  const iso=screenToIso(e.clientX-rect.left,e.clientY-rect.top);
+  if(iso.x>=0&&iso.y>=0&&iso.x<S.room.width&&iso.y<S.room.height)S.hoverTile=iso;
+  else S.hoverTile=null;
+});
+
+document.getElementById('gameCanvas').addEventListener('mouseleave',()=>S.hoverTile=null);
+
+document.getElementById('gameCanvas').addEventListener('click',e=>{
+  if(S.screen!=='game'||!S.room)return;
+  const rect=document.getElementById('gameCanvas').getBoundingClientRect();
+  const iso=screenToIso(e.clientX-rect.left,e.clientY-rect.top);
+  if(iso.x>=0&&iso.y>=0&&iso.x<S.room.width&&iso.y<S.room.height){
+    const path=findPath(Math.round(S.player.x),Math.round(S.player.y),iso.x,iso.y);
+    if(path.length>0){S.player.path=path;updatePathDots()}
+  }
+});
+
 // ===== PATH VISUALIZATION =====
-function clearPathDots() {
-  document.getElementById('pathLayer').innerHTML = '';
-}
+function clearPathDots(){document.getElementById('pathLayer').innerHTML=''}
 
-function updatePathDots() {
-  const layer = document.getElementById('pathLayer');
-  if (!layer) return;
-
-  // Only show dots for remaining path
-  const dots = layer.querySelectorAll('.path-dot');
-  dots.forEach(d => d.remove());
-
-  S.player.path.forEach((pt, i) => {
-    const pos = isoToScreen(pt.x, pt.y);
-    const dot = document.createElement('div');
-    dot.className = 'path-dot';
-    dot.style.left = pos.x + 'px';
-    dot.style.top = pos.y + 'px';
-    dot.style.opacity = Math.max(0.2, 1 - i * 0.15);
-    dot.style.width = (6 - Math.min(i, 3)) + 'px';
-    dot.style.height = (6 - Math.min(i, 3)) + 'px';
+function updatePathDots(){
+  const layer=document.getElementById('pathLayer');
+  if(!layer)return;
+  layer.innerHTML='';
+  S.player.path.forEach((pt,i)=>{
+    const pos=isoToScreen(pt.x,pt.y);
+    const dot=document.createElement('div');dot.className='path-dot';
+    dot.style.left=pos.x+'px';dot.style.top=pos.y+'px';
+    dot.style.opacity=Math.max(0.2,1-i*0.15);
+    dot.style.width=(6-Math.min(i,3))+'px';
+    dot.style.height=(6-Math.min(i,3))+'px';
     layer.appendChild(dot);
   });
 }
 
-// ===== INPUT =====
-document.getElementById('gameCanvas').addEventListener('mousemove', e => {
-  if (S.screen !== 'game' || !S.room) return;
-  const rect = document.getElementById('gameCanvas').getBoundingClientRect();
-  const iso = screenToIso(e.clientX - rect.left, e.clientY - rect.top);
-  if (iso.x >= 0 && iso.y >= 0 && iso.x < S.room.width && iso.y < S.room.height) {
-    S.hoverTile = iso;
-  } else {
-    S.hoverTile = null;
-  }
-});
-
-document.getElementById('gameCanvas').addEventListener('mouseleave', () => {
-  S.hoverTile = null;
-});
-
-document.getElementById('gameCanvas').addEventListener('click', e => {
-  if (S.screen !== 'game' || !S.room) return;
-  const rect = document.getElementById('gameCanvas').getBoundingClientRect();
-  const iso = screenToIso(e.clientX - rect.left, e.clientY - rect.top);
-  if (iso.x >= 0 && iso.y >= 0 && iso.x < S.room.width && iso.y < S.room.height) {
-    const path = findPath(Math.round(S.player.x), Math.round(S.player.y), iso.x, iso.y);
-    if (path.length > 0) {
-      S.player.path = path;
-      updatePathDots();
-    }
-  }
-});
-
 // ===== CHAT =====
-function sendChat(text) {
-  if (!text.trim()) return;
-  const bubble = document.createElement('div');
-  bubble.className = 'chat-bubble';
-  bubble.innerHTML = '<div class="chat-name">' + (S.player.name || 'You') + '</div>' + escapeHtml(text.trim());
+function sendChat(text){
+  if(!text.trim())return;
+  const bubble=document.createElement('div');
+  bubble.className='chat-bubble';
+  bubble.innerHTML='<div class="chat-name">'+(S.player.name||'You')+'</div>'+escapeHtml(text.trim());
   document.getElementById('chatLayer').appendChild(bubble);
-  S.chat.push({ el: bubble, x: S.player.x, y: S.player.y, life: 5000 });
-  positionChatBubble(bubble, S.player.x, S.player.y);
+  S.chat.push({el:bubble,x:S.player.x,y:S.player.y,life:5000});
+  positionChatBubble(bubble,S.player.x,S.player.y);
 }
 
-function positionChatBubble(el, x, y) {
-  const pos = isoToScreen(x, y);
-  el.style.left = pos.x + 'px';
-  el.style.top = (pos.y - 70) + 'px';
+function positionChatBubble(el,x,y){
+  const pos=isoToScreen(x,y);
+  el.style.left=pos.x+'px';el.style.top=(pos.y-70)+'px';
 }
 
-function updateChatBubbles(dt) {
-  S.chat = S.chat.filter(c => {
-    c.life -= dt;
-    positionChatBubble(c.el, S.player.x, S.player.y);
-    if (c.life <= 0) {
-      c.el.remove();
-      return false;
-    }
-    // Fade out in last second
-    if (c.life < 1000) {
-      c.el.style.opacity = c.life / 1000;
-    }
+function updateChatBubbles(dt){
+  S.chat=S.chat.filter(c=>{
+    c.life-=dt;
+    positionChatBubble(c.el,S.player.x,S.player.y);
+    if(c.life<=0){c.el.remove();return false}
+    if(c.life<1000)c.el.style.opacity=c.life/1000;
     return true;
   });
 }
 
-function clearChat() {
-  document.getElementById('chatLayer').innerHTML = '';
-  S.chat = [];
-}
+function clearChat(){document.getElementById('chatLayer').innerHTML='';S.chat=[]}
 
-function escapeHtml(t) {
-  const d = document.createElement('div');
-  d.textContent = t;
-  return d.innerHTML;
-}
+function escapeHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML}
 
 // ===== UI PANELS =====
-function togglePanel(id) {
-  const p = document.getElementById(id);
-  if (!p) return;
-  const active = p.classList.contains('active');
-  document.querySelectorAll('.panel').forEach(el => el.classList.remove('active'));
-  if (!active) {
-    p.classList.add('active');
-    if (id === 'roomPanel') renderRoomList();
-    if (id === 'catalogPanel') renderCatalog();
-    if (id === 'invPanel') renderInventory();
-    if (id === 'tradePanel') renderTrade();
-    if (id === 'achPanel') renderAch();
-  }
+function togglePanel(id){
+  const p=document.getElementById(id);
+  if(!p)return;
+  const active=p.classList.contains('active');
+  document.querySelectorAll('.panel').forEach(el=>el.classList.remove('active'));
+  if(!active){p.classList.add('active');if(id==='roomPanel')renderRoomList();if(id==='catalogPanel')renderCatalog();if(id==='achPanel')renderAch()}
 }
 
-function closePanel(id) {
-  const p = document.getElementById(id);
-  if (p) p.classList.remove('active');
-}
+function closePanel(id){const p=document.getElementById(id);if(p)p.classList.remove('active')}
 
-// ===== ROOM NAVIGATOR =====
-function showRoomPanel() {
-  if (!S.player.name) { openModal('loginModal'); return; }
-  showScreen('game');
-  togglePanel('roomPanel');
-}
-
-function renderRoomList() {
-  const grid = document.getElementById('roomGrid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  const icons = {
-    lobby: '🏛️', tavern: '🍺', garden: '🌿', library: '📚', bedroom: '🛏️',
-    beach: '🏖️', rooftop: '☕', arcade: '🎮', spa: '🧘', market: '🏪', event: '🎪', winter: '❄️'
-  };
-  Object.entries(ROOMS).forEach(([id, room]) => {
-    const div = document.createElement('div');
-    div.className = 'room-card';
-    div.innerHTML = '<div class="ricon">' + (icons[id] || '🏠') + '</div><div class="rname">' + room.name + '</div><div class="rdesc">' + room.desc + '</div><div class="room-visitors">' + (Math.floor(Math.random() * 8) + 1) + ' visitors</div>';
-    div.onclick = () => { enterRoom(id); closePanel('roomPanel'); };
+function renderRoomList(){
+  const grid=document.getElementById('roomGrid');
+  if(!grid)return;
+  grid.innerHTML='';
+  const icons={lobby:'🏛️',tavern:'🍺',garden:'🌿',library:'📚',bedroom:'🛏️',beach:'🏖️',rooftop:'☕',arcade:'🎮',spa:'🧘',market:'🏪',event:'🎪',winter:'❄️'};
+  Object.entries(ROOMS).forEach(([id,room])=>{
+    const div=document.createElement('div');div.className='room-card';
+    div.innerHTML='<div class="ricon">'+(icons[id]||'🏠')+'</div><div class="rname">'+room.name+'</div><div class="rdesc">'+room.desc+'</div>';
+    div.onclick=()=>{enterRoom(id);closePanel('roomPanel')};
     grid.appendChild(div);
   });
 }
 
-// ===== CATALOG =====
-function setCatalogTab(tab) {
-  S.catalogTab = tab;
-  renderCatalog();
+function renderCatalog(){
+  const body=document.getElementById('catalogBody');
+  if(!body)return;
+  body.innerHTML='<div style="text-align:center;color:#888;padding:40px">Catalog coming soon! Trade with other players for now.</div>';
 }
 
-const CATALOG_ITEMS = [
-  { id: 'furni_chair', name: 'Chair', price: 50, rarity: 'common' },
-  { id: 'furni_table', name: 'Table', price: 80, rarity: 'common' },
-  { id: 'furni_bed', name: 'Bed', price: 120, rarity: 'common' },
-  { id: 'furni_sofa', name: 'Sofa', price: 150, rarity: 'uncommon' },
-  { id: 'furni_lamp', name: 'Lamp', price: 40, rarity: 'common' },
-  { id: 'furni_fireplace', name: 'Fireplace', price: 300, rarity: 'rare' },
-  { id: 'furni_bookshelf', name: 'Bookshelf', price: 100, rarity: 'common' },
-  { id: 'furni_plant', name: 'Plant', price: 30, rarity: 'common' },
-  { id: 'furni_rug', name: 'Rug', price: 60, rarity: 'common' },
-  { id: 'furni_piano', name: 'Piano', price: 500, rarity: 'epic' },
-  { id: 'furni_throne', name: 'Throne', price: 1000, rarity: 'legendary' },
-  { id: 'furni_tv', name: 'TV', price: 200, rarity: 'rare' },
-  { id: 'furni_arcade', name: 'Arcade', price: 400, rarity: 'epic' },
-  { id: 'furni_fountain', name: 'Fountain', price: 450, rarity: 'epic' },
-  { id: 'furni_jukebox', name: 'Jukebox', price: 250, rarity: 'rare' },
-  { id: 'furni_chest', name: 'Chest', price: 220, rarity: 'rare' },
-  { id: 'furni_trophy', name: 'Trophy', price: 600, rarity: 'legendary' },
-  { id: 'furni_gate', name: 'Gate', price: 150, rarity: 'uncommon' },
-  { id: 'furni_dresser', name: 'Dresser', price: 90, rarity: 'common' },
-  { id: 'furni_mirror', name: 'Mirror', price: 180, rarity: 'uncommon' },
+const ACHS=[
+  {id:'enter',name:'First Steps',desc:'Enter the Starlight Inn',icon:'👣',reward:10},
+  {id:'explorer',name:'Explorer',desc:'Visit all 12 rooms',icon:'🗺️',reward:100},
+  {id:'chat',name:'Socialite',desc:'Send 10 chat messages',icon:'💬',reward:30},
+  {id:'rich',name:'Wealthy',desc:'Have 1000 gold',icon:'💰',reward:40},
+  {id:'level',name:'Rising Star',desc:'Reach level 5',icon:'⭐',reward:60},
 ];
 
-function renderCatalog() {
-  const grid = document.getElementById('catalogGrid');
-  if (!grid) return;
-  grid.innerHTML = '';
-
-  const items = S.catalogTab === 'rare' 
-    ? CATALOG_ITEMS.filter(i => i.rarity === 'epic' || i.rarity === 'legendary')
-    : CATALOG_ITEMS;
-
-  items.forEach(item => {
-    const div = document.createElement('div');
-    div.style.cssText = 'aspect-ratio:1;background:rgba(255,255,255,.04);border:1px solid #333;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;padding:8px;transition:all .15s;position:relative';
-    div.onmouseenter = () => { div.style.borderColor = '#FFD700'; div.style.transform = 'scale(1.05)'; };
-    div.onmouseleave = () => { div.style.borderColor = '#333'; div.style.transform = 'scale(1)'; };
-
-    const img = S.assets[item.id];
-    if (img) {
-      const imgEl = document.createElement('img');
-      imgEl.src = img.src;
-      imgEl.style.cssText = 'width:40px;height:40px;object-fit:contain;image-rendering:pixelated';
-      div.appendChild(imgEl);
-    } else {
-      div.innerHTML += '<div style="font-size:28px">📦</div>';
-    }
-
-    const rarityColors = { common: '#888', uncommon: '#32CD32', rare: '#4169E1', epic: '#9370DB', legendary: '#FFD700' };
-    div.innerHTML += '<div style="font-size:10px;color:#aaa;text-align:center;margin-top:4px">' + item.name + '</div>';
-    div.innerHTML += '<div style="font-size:11px;color:' + rarityColors[item.rarity] + ';font-weight:bold">' + item.price + 'g</div>';
-
-    const tag = document.createElement('div');
-    tag.style.cssText = 'position:absolute;top:3px;right:3px;font-size:8px;padding:2px 4px;border-radius:3px;font-weight:bold;background:' + rarityColors[item.rarity] + ';color:' + (item.rarity === 'legendary' ? '#1a1a2e' : '#fff') + '';
-    tag.textContent = item.rarity[0].toUpperCase();
-    div.appendChild(tag);
-
-    div.onclick = () => buyItem(item);
-    grid.appendChild(div);
-  });
-}
-
-function buyItem(item) {
-  if (S.player.gold < item.price) {
-    alert('Not enough gold!');
-    return;
-  }
-  S.player.gold -= item.price;
-  updateCurrency();
-  saveData();
-  // Could add to inventory here
-}
-
-function renderInventory() {
-  const grid = document.getElementById('invGrid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  for (let i = 0; i < 36; i++) {
-    const div = document.createElement('div');
-    div.style.cssText = 'aspect-ratio:1;background:rgba(255,255,255,.03);border:2px solid #333;border-radius:8px;display:flex;align-items:center;justify-content:center';
-    if (i < 3) {
-      // Starter items
-      const icons = ['🪑', '🛋️', '🪴'];
-      div.textContent = icons[i];
-      div.style.fontSize = '24px';
-    }
-    grid.appendChild(div);
-  }
-}
-
-function renderTrade() {
-  const body = document.getElementById('tradeBody');
-  if (!body) return;
-  body.innerHTML = '<div style="text-align:center;color:#888;padding:20px">Trading is available! Find another player to trade with.</div>';
-}
-
-function openTrade() {
-  togglePanel('tradePanel');
-}
-
-// ===== ACHIEVEMENTS =====
-const ACHS = [
-  { id: 'enter', name: 'First Steps', desc: 'Enter the Starlight Inn', icon: '👣', reward: 10 },
-  { id: 'explorer', name: 'Explorer', desc: 'Visit all 12 rooms', icon: '🗺️', reward: 100 },
-  { id: 'chat', name: 'Socialite', desc: 'Send 10 chat messages', icon: '💬', reward: 30 },
-  { id: 'rich', name: 'Wealthy', desc: 'Have 1000 gold', icon: '💰', reward: 40 },
-  { id: 'level', name: 'Rising Star', desc: 'Reach level 5', icon: '⭐', reward: 60 },
-];
-
-function renderAch() {
-  const list = document.getElementById('achList');
-  if (!list) return;
-  list.innerHTML = '';
-  ACHS.forEach(ach => {
-    const div = document.createElement('div');
-    div.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid #333;margin-bottom:8px';
-    div.innerHTML = '<div style="font-size:32px">' + ach.icon + '</div><div style="flex:1"><div style="font-weight:bold;font-size:14px;color:#FFD700">' + ach.name + '</div><div style="font-size:12px;color:#888">' + ach.desc + '</div><div style="font-size:11px;color:#32CD32">+' + ach.reward + ' XP</div></div>';
+function renderAch(){
+  const list=document.getElementById('achList');
+  if(!list)return;
+  list.innerHTML='';
+  ACHS.forEach(ach=>{
+    const div=document.createElement('div');
+    div.style.cssText='display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid #333;margin-bottom:8px';
+    div.innerHTML='<div style="font-size:32px">'+ach.icon+'</div><div style="flex:1"><div style="font-weight:bold;font-size:14px;color:#9370DB">'+ach.name+'</div><div style="font-size:12px;color:#888">'+ach.desc+'</div><div style="font-size:11px;color:#32CD32">+'+ach.reward+' XP</div></div>';
     list.appendChild(div);
   });
 }
 
-function showTrophies() {
-  togglePanel('achPanel');
-}
+function showTrophies(){togglePanel('achPanel')}
 
-// ===== CURRENCY =====
-function updateCurrency() {
-  const g = document.getElementById('gold');
-  const m = document.getElementById('gems');
-  const l = document.getElementById('level');
-  if (g) g.textContent = S.player.gold;
-  if (m) m.textContent = S.player.gems;
-  if (l) l.textContent = S.player.level;
-}
-
-// ===== MODALS =====
-function openModal(id) {
-  const m = document.getElementById(id);
-  if (m) m.classList.add('active');
-}
-
-function closeModal(id) {
-  const m = document.getElementById(id);
-  if (m) m.classList.remove('active');
-  const err = m?.querySelector('.modal-err');
-  if (err) err.textContent = '';
-}
-
-function backToTitle() {
-  showScreen('title');
+function updateCurrency(){
+  const g=document.getElementById('gold'),m=document.getElementById('gems'),l=document.getElementById('level');
+  if(g)g.textContent=S.player.gold;
+  if(m)m.textContent=S.player.gems;
+  if(l)l.textContent=S.player.level;
 }
 
 // ===== INIT =====
-window.addEventListener('DOMContentLoaded', () => {
-  // Check saved name
-  try {
-    const raw = localStorage.getItem('si_v18');
-    if (raw) {
-      const d = JSON.parse(raw);
-      if (d.name) S.player.name = d.name;
-      if (d.avatar) S.player.avatar = d.avatar;
-    }
-  } catch(e) {}
-
-  loadAllAssets();
+window.addEventListener('DOMContentLoaded',()=>{
   updateCurrency();
-
-  // Escape to close panels
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      document.querySelectorAll('.panel, .modal').forEach(el => el.classList.remove('active'));
-    }
+  loadAllAssets();
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape')document.querySelectorAll('.panel').forEach(el=>el.classList.remove('active'));
   });
 });
 </script>
