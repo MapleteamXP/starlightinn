@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Starlight Inn v13.0.0</title>
+<title>Starlight Inn v14.0.0</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
@@ -50,13 +50,7 @@
   #titleScreen .content {
     position: relative; z-index: 10; text-align: center;
   }
-  #titleScreen .logo-img {
-    max-width: 80vw; max-height: 20vh; margin-bottom: 20px;
-  }
-  #titleScreen .subtitle {
-    color: #FFD700; font-size: 18px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-  }
+  /* Title comes from background image only */
   .title-buttons {
     display: flex; flex-direction: column; gap: 12px; margin-top: 30px;
     align-items: center;
@@ -488,8 +482,8 @@
   <img class="bg-img" src="assets/title-bg.png" alt="">
   <div class="overlay"></div>
   <div class="content">
-    <img class="logo-img" src="assets/sprites/ui/starlight_logo.png" alt="Starlight Inn">
-    <p class="subtitle">An Isometric Virtual World</p>
+    <!-- Title comes from background image only - no overlay text/logo -->
+    <div style="height:120px;"></div>
     <div class="title-buttons">
       <button class="btn-gold" onclick="showScreen('character')">ENTER WORLD</button>
       <button class="btn-gold" onclick="startGuest()">PLAY AS GUEST</button>
@@ -499,7 +493,7 @@
       </div>
     </div>
   </div>
-  <div style="position:fixed; bottom:10px; right:15px; color:#888; font-size:12px;">v13.0.0</div>
+  <div style="position:fixed; bottom:10px; right:15px; color:#888; font-size:12px;">v14.0.0</div>
 </div>
 
 <!-- CHARACTER CREATOR -->
