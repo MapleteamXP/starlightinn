@@ -172,6 +172,7 @@ export function tileDepth(tx, ty) {
  * Each area stores a 20x20 floor pattern, wall definitions, furniture props,
  * environmental palette, and ambient particle configuration.
  */
+export class IsoBackgrounds
 export default class IsoAreaBackgrounds {
   /**
    * @param {Object} game - The main Game instance.
@@ -3795,3 +3796,12 @@ export default class IsoAreaBackgrounds {
  * @property {number} destX - Destination tile X.
  * @property {number} destY - Destination tile Y.
  */
+
+
+/** IsoAreaBackgrounds class wrapper for main.js import */
+export class IsoAreaBackgrounds {
+  constructor(game) { this.game = game; this.areas = AREAS || {}; }
+  getArea(id) { return this.areas[id]; }
+  getAll() { return this.areas; }
+}
+export default IsoAreaBackgrounds;

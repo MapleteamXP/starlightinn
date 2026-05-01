@@ -915,3 +915,7 @@ export function getAreaCount() {
 export function getAreaIndex(id) {
   return AREA_ORDER.indexOf(id);
 }
+
+
+/** AreaData convenience export */
+export const AreaData = AREAS;

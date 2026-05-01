@@ -270,7 +270,7 @@ const game = new Game('game-canvas');
 loadStatus.total = 45;
 
 function init() {
-  console.log('[Starlight Inn v8.0.0] Initializing v8.0 massive quality upgrade...');
+  console.log('[Starlight Inn v8.0.1] Initializing v8.0 massive quality upgrade...');
   loadStatus.update('Wiring engine...');
 
   // Core engine
@@ -460,13 +460,23 @@ function wireLandingHandlers() {
   if (btnGuest) {
     btnGuest.addEventListener('click', () => {
       game.soundManager?.play('click');
-      game.auth?.playOffline?.();
-      if (game.characterCreator) {
-        game.characterCreator.show();
-        game.setScreen('charselect');
-      } else {
-        game.setScreen('charselect');
-      }
+      game.setScreen('charselect');
+    });
+  }
+
+  const btnRegister = document.getElementById('btn-register');
+  if (btnRegister) {
+    btnRegister.addEventListener('click', () => {
+      game.soundManager?.play('click');
+      alert('Registration coming in next update! For now, use Guest mode.');
+    });
+  }
+
+  const btnLogin = document.getElementById('btn-login');
+  if (btnLogin) {
+    btnLogin.addEventListener('click', () => {
+      game.soundManager?.play('click');
+      alert('Login coming in next update! For now, use Guest mode.');
     });
   }
 
@@ -483,7 +493,7 @@ function wireLandingHandlers() {
   if (btnAbout) {
     btnAbout.addEventListener('click', () => {
       game.soundManager?.play('click');
-      alert('Starlight Inn v8.0.0\nA premium Habbo-style isometric social MMO.\n\nv8.0 upgrades: auth, 100 hairstyles, sounds, pixel art, collisions! 🌟');
+      alert('Starlight Inn v8.0.1\nA premium Habbo-style isometric social MMO.\n\nv8.0 upgrades: auth, 100 hairstyles, sounds, pixel art, collisions!');
     });
   }
 

@@ -28,6 +28,7 @@ const FALLBACK_TIMEOUT_MS = 8000;
 const STATS_INTERVAL_MS = 10000;
 const DEFAULT_SYNC_INTERVAL_MS = 2000;
 
+export class WebRTCSync
 export default class WebRTCSync {
   constructor(options = {}) {
     this.opts = options; this._debug = options.debug || false;

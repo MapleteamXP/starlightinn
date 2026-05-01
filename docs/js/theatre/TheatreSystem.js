@@ -32,6 +32,7 @@ const EMOTE_DEFS = {
 const PLAYER_STATES = { UNSTARTED:-1, ENDED:0, PLAYING:1, PAUSED:2, BUFFERING:3, CUED:5 };
 const THEMES = { default:'#0f0f1a', midnight:'#0a0a14', velvet:'#1a0a1a', ocean:'#0a1a2e', forest:'#0a1a0a' };
 
+export class TheatreSystem
 export default class TheatreSystem {
   constructor(options = {}) {
     this.opts = { ...THEATRE_CONFIG, ...options };

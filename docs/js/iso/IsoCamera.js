@@ -60,6 +60,7 @@ export const SHAKE_THRESHOLD = 0.5;
  * Isometric camera controller. Manages the view transform between
  * world tile coordinates and screen pixel coordinates.
  */
+export class IsoCamera
 export default class IsoCamera {
   /**
    * Create a new IsoCamera.

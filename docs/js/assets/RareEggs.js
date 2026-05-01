@@ -624,3 +624,13 @@ if (typeof window !== 'undefined') {
     drawEggSprite, drawHatchAnimation, rollRarity,
   };
 }
+
+
+/** RareEggs class wrapper for main.js import */
+export class RareEggs {
+  constructor(game) { this.game = game; }
+  getAll() { return typeof getAllEggs === 'function' ? getAllEggs() : []; }
+  get(id) { return typeof getEgg === 'function' ? getEgg(id) : null; }
+  getByRarity(r) { return typeof getEggsByRarity === 'function' ? getEggsByRarity(r) : []; }
+}
+export default RareEggs;

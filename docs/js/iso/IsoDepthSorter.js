@@ -223,6 +223,7 @@ function _sharesTile(a, b) {
  * Manages topological depth sorting for isometric renderables.
  * Optimized to only re-sort when entities move or objects change.
  */
+export class IsoDepthSorter
 export default class IsoDepthSorter {
   /**
    * Create a new IsoDepthSorter.

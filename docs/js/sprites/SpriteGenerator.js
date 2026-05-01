@@ -2391,3 +2391,27 @@ export function generateFullAssetBundle(avatarColors, hairStyle, mouthVariant) {
     }
   };
 }
+
+
+/** SpriteGenerator class wrapper for main.js import */
+export class SpriteGenerator {
+  constructor(game) {
+    this.game = game;
+  }
+  generateTileSprite(type, palette) {
+    if (typeof generateTileSprite === 'function') return generateTileSprite(type, palette);
+    return null;
+  }
+  generateFurnitureSprite(id, palette) {
+    if (typeof generateFurnitureSprite === 'function') return generateFurnitureSprite(id, palette);
+    return null;
+  }
+  generateAvatarSprite(direction, colors) {
+    if (typeof generateAvatarSprite === 'function') return generateAvatarSprite(direction, colors);
+    return null;
+  }
+  generateAll() {
+    console.log('[SpriteGenerator] Generating all sprites...');
+  }
+}
+export default SpriteGenerator;

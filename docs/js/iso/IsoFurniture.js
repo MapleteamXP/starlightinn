@@ -2787,3 +2787,13 @@ export class FurnitureCatalog {
 export { FURNITURE_CATALOG };
 
 export default FurnitureCatalog;
+
+
+/** IsoFurniture class wrapper for main.js import */
+export class IsoFurniture {
+  constructor(game) { this.game = game; }
+  getAll() { return typeof getFurnitureCatalog === 'function' ? getFurnitureCatalog() : []; }
+  get(id) { return typeof getFurniture === 'function' ? getFurniture(id) : null; }
+  getByCategory(cat) { return typeof getByCategory === 'function' ? getByCategory(cat) : []; }
+}
+export default IsoFurniture;
