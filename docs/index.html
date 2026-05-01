@@ -2,512 +2,270 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Starlight Inn v17 - Cozy Social World</title>
+<title>Starlight Inn v18</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body { width:100%; height:100%; overflow:hidden; background:#0a0a1a; font-family:'Segoe UI',Tahoma,Geneva,sans-serif; color:#e0e0e0; }
-  canvas { display:block; image-rendering:pixelated; image-rendering:crisp-edges; }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0a0a1a;font-family:'Segoe UI',system-ui,sans-serif;color:#e0e0e0}
+  canvas{display:block}
 
-  /* ===== LOADING ===== */
-  #loadingScreen { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#0a0a1a; z-index:9999; transition:opacity 0.5s; }
-  #loadingScreen.hidden { opacity:0; pointer-events:none; }
-  .loading-title { font-size:32px; color:#FFD700; margin-bottom:20px; letter-spacing:3px; text-shadow:0 0 20px rgba(255,215,0,0.4); }
-  .loading-bar { width:300px; height:8px; background:#1a1a2e; border-radius:4px; overflow:hidden; border:1px solid #333; }
-  .loading-fill { width:0%; height:100%; background:linear-gradient(90deg,#FFD700,#FFA500); transition:width 0.3s; }
-  .loading-text { margin-top:12px; color:#888; font-size:13px; }
+  /* Loading */
+  #loadScreen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0a1a;z-index:9999;transition:opacity .5s}
+  #loadScreen.done{opacity:0;pointer-events:none}
+  .load-title{font-size:36px;color:#FFD700;letter-spacing:4px;text-shadow:0 0 30px rgba(255,215,0,.3);margin-bottom:24px}
+  .load-bar{width:320px;height:10px;background:#1a1a2e;border-radius:5px;overflow:hidden;border:1px solid #333}
+  .load-fill{width:0%;height:100%;background:linear-gradient(90deg,#FFD700,#FF8C00);transition:width .2s}
+  .load-text{margin-top:14px;color:#888;font-size:13px}
 
-  /* ===== TITLE SCREEN ===== */
-  #titleScreen { position:fixed; inset:0; display:none; z-index:5000; }
-  #titleScreen.active { display:block; }
-  .title-bg { position:absolute; inset:0; background:#0a0a1a; }
-  .title-bg img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; image-rendering:pixelated; }
-  .title-overlay { position:absolute; inset:0; background:linear-gradient(180deg, rgba(10,10,26,0.2) 0%, rgba(10,10,26,0.5) 50%, rgba(10,10,26,0.85) 100%); }
-  .title-content { position:absolute; bottom:15%; left:50%; transform:translateX(-50%); text-align:center; width:90%; max-width:500px; }
-  .title-btn { display:block; width:100%; max-width:280px; margin:8px auto; padding:14px 32px; font-size:18px; font-weight:bold; border:none; border-radius:10px; cursor:pointer; transition:transform 0.15s, box-shadow 0.15s; letter-spacing:1px; }
-  .title-btn:hover { transform:scale(1.04); }
-  .btn-gold { background:linear-gradient(135deg,#FFD700,#DAA520); color:#1a1a2e; box-shadow:0 4px 20px rgba(255,215,0,0.3); }
-  .btn-gold:hover { box-shadow:0 6px 30px rgba(255,215,0,0.5); }
-  .btn-blue { background:linear-gradient(135deg,#4169E1,#1E90FF); color:#fff; box-shadow:0 4px 15px rgba(65,105,225,0.3); font-size:15px; padding:10px 24px; }
-  .btn-green { background:linear-gradient(135deg,#32CD32,#228B22); color:#fff; font-size:15px; padding:10px 24px; }
-  .btn-purple { background:linear-gradient(135deg,#9370DB,#8A2BE2); color:#fff; font-size:15px; padding:10px 24px; }
-  .btn-row { display:flex; gap:10px; justify-content:center; margin-top:10px; }
-  .title-version { position:fixed; bottom:10px; right:15px; color:#555; font-size:11px; }
+  /* Title */
+  #titleScreen{position:fixed;inset:0;display:none;z-index:5000}
+  #titleScreen.active{display:block}
+  .title-bg{position:absolute;inset:0;background:#0a0a1a}
+  .title-bg img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+  .title-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,10,26,.3) 0%,rgba(10,10,26,.7) 60%,rgba(10,10,26,.95) 100%)}
+  .title-content{position:absolute;bottom:12%;left:50%;transform:translateX(-50%);text-align:center;width:90%;max-width:420px}
+  .tbtn{display:block;width:100%;max-width:280px;margin:8px auto;padding:14px 28px;font-size:17px;font-weight:bold;border:none;border-radius:10px;cursor:pointer;transition:transform .15s,box-shadow .15s;letter-spacing:1px}
+  .tbtn:hover{transform:scale(1.04)}
+  .tbtn-gold{background:linear-gradient(135deg,#FFD700,#DAA520);color:#1a1a2e;box-shadow:0 4px 20px rgba(255,215,0,.3)}
+  .tbtn-gold:hover{box-shadow:0 6px 30px rgba(255,215,0,.5)}
+  .tbtn-row{display:flex;gap:10px;justify-content:center}
+  .tbtn-row .tbtn{max-width:140px;font-size:14px;padding:10px 16px}
+  .tbtn-blue{background:linear-gradient(135deg,#4169E1,#1E90FF);color:#fff}
+  .tbtn-green{background:linear-gradient(135deg,#32CD32,#228B22);color:#fff}
+  .tbtn-purple{background:linear-gradient(135deg,#9370DB,#8A2BE2);color:#fff;max-width:200px;font-size:13px;padding:9px}
+  .tver{position:fixed;bottom:10px;right:14px;color:#444;font-size:11px}
 
-  /* ===== CHARACTER CREATOR ===== */
-  #charScreen { position:fixed; inset:0; display:none; z-index:4000; background:#0d0d1a; overflow-y:auto; }
-  #charScreen.active { display:block; }
-  .cc-header { text-align:center; padding:20px; border-bottom:1px solid #222; position:sticky; top:0; background:#0d0d1a; z-index:10; }
-  .cc-header h1 { color:#FFD700; font-size:26px; }
-  .cc-body { display:flex; gap:20px; padding:20px; max-width:1200px; margin:0 auto; }
-  .cc-left { flex:1.4; min-width:0; }
-  .cc-right { flex:0.6; display:flex; flex-direction:column; align-items:center; padding-top:10px; position:sticky; top:80px; align-self:flex-start; }
-  .cc-section { background:rgba(255,255,255,0.03); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:15px; }
-  .cc-section h3 { color:#FFA500; font-size:14px; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px; }
-  .gender-row { display:flex; gap:8px; margin-bottom:10px; }
-  .gender-btn { flex:1; padding:10px; border:2px solid #333; border-radius:8px; background:transparent; color:#888; font-weight:bold; cursor:pointer; transition:all 0.15s; }
-  .gender-btn.active { border-color:#FFD700; color:#FFD700; background:rgba(255,215,0,0.1); }
-  .hair-grid, .clothes-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
-  .hair-slot, .clothes-slot { aspect-ratio:1; border:2px solid #333; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:20px; transition:all 0.15s; overflow:hidden; background:rgba(255,255,255,0.03); }
-  .hair-slot:hover, .clothes-slot:hover { border-color:#FFD700; }
-  .hair-slot.active, .clothes-slot.active { border-color:#FFD700; background:rgba(255,215,0,0.15); }
-  .hair-slot img, .clothes-slot img { width:80%; height:80%; object-fit:contain; image-rendering:pixelated; }
-  .hair-slot.empty, .clothes-slot.empty { opacity:0.3; cursor:default; }
-  .color-wheel-wrap { display:flex; align-items:center; gap:10px; margin-top:8px; flex-wrap:wrap; }
-  .color-wheel-wrap label { font-size:12px; color:#888; min-width:60px; }
-  .color-wheel-wrap input[type="range"] { flex:1; min-width:120px; }
-  .color-preview { width:32px; height:32px; border-radius:6px; border:2px solid #444; }
-  .color-row-presets { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
-  .color-swatch { width:24px; height:24px; border-radius:50%; border:2px solid #333; cursor:pointer; transition:transform 0.15s; }
-  .color-swatch:hover { transform:scale(1.15); border-color:#FFD700; }
-  .color-swatch.active { border-color:#FFD700; box-shadow:0 0 8px rgba(255,215,0,0.4); }
-  #charPreview { width:200px; height:280px; background:rgba(255,255,255,0.03); border:2px solid #FFD700; border-radius:12px; image-rendering:pixelated; }
-  .cc-actions { display:flex; gap:12px; margin-top:15px; flex-wrap:wrap; justify-content:center; }
-  .cc-actions button { padding:10px 20px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-size:14px; transition:all 0.15s; }
-  .cc-actions .btn-save { background:linear-gradient(135deg,#FFD700,#DAA520); color:#1a1a2e; }
-  .cc-actions .btn-random { background:linear-gradient(135deg,#9370DB,#8A2BE2); color:#fff; }
-  .cc-actions .btn-reset { background:#333; color:#fff; }
-  .cc-actions .btn-back { background:#444; color:#fff; }
+  /* Char Select */
+  #charScreen{position:fixed;inset:0;display:none;z-index:4000;background:#0d0d1a;overflow-y:auto}
+  #charScreen.active{display:block}
+  .cc-head{text-align:center;padding:24px;border-bottom:1px solid #222;position:sticky;top:0;background:#0d0d1a;z-index:10}
+  .cc-head h1{color:#FFD700;font-size:28px;margin-bottom:4px}
+  .cc-head p{color:#888;font-size:14px}
+  .cc-body{max-width:900px;margin:0 auto;padding:24px}
+  .cc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px}
+  .cc-char{cursor:pointer;border:3px solid #333;border-radius:12px;overflow:hidden;background:rgba(255,255,255,.03);transition:all .2s;position:relative}
+  .cc-char:hover{border-color:#666;transform:translateY(-4px)}
+  .cc-char.active{border-color:#FFD700;background:rgba(255,215,0,.1);box-shadow:0 0 20px rgba(255,215,0,.2)}
+  .cc-char img{width:100%;height:auto;display:block;image-rendering:pixelated}
+  .cc-char .lbl{position:absolute;bottom:0;left:0;right:0;padding:6px;background:rgba(0,0,0,.7);color:#FFD700;font-size:11px;font-weight:bold;text-align:center}
+  .cc-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+  .cc-actions button{padding:12px 28px;border:none;border-radius:10px;cursor:pointer;font-weight:bold;font-size:15px;transition:all .15s}
+  .cc-save{background:linear-gradient(135deg,#FFD700,#DAA520);color:#1a1a2e}
+  .cc-random{background:linear-gradient(135deg,#9370DB,#8A2BE2);color:#fff}
+  .cc-back{background:#333;color:#fff}
 
-  /* ===== GAME SCREEN ===== */
-  #gameScreen { position:fixed; inset:0; display:none; z-index:100; }
-  #gameScreen.active { display:block; }
-  #gameCanvas { position:absolute; inset:0; }
+  /* Game */
+  #gameScreen{position:fixed;inset:0;display:none;z-index:100}
+  #gameScreen.active{display:block}
+  #gameCanvas{position:absolute;inset:0}
 
-  /* ===== UI PANELS ===== */
-  .panel { position:fixed; background:rgba(10,10,20,0.95); border:2px solid #FFD700; border-radius:12px; padding:0; z-index:600; display:none; flex-direction:column; overflow:hidden; backdrop-filter:blur(8px); box-shadow:0 8px 40px rgba(0,0,0,0.5); }
-  .panel.active { display:flex; }
-  .panel-header { display:flex; align-items:center; justify-content:space-between; padding:12px 15px; border-bottom:1px solid #333; background:rgba(255,215,0,0.05); }
-  .panel-header h2 { color:#FFD700; font-size:16px; }
-  .btn-close { background:none; border:none; color:#FFD700; font-size:22px; cursor:pointer; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:background 0.15s; }
-  .btn-close:hover { background:rgba(255,215,0,0.15); }
-  .panel-body { padding:15px; overflow-y:auto; flex:1; }
+  /* Top Bar */
+  #topBar{position:fixed;top:0;left:0;right:0;height:46px;background:rgba(10,10,20,.92);border-bottom:1px solid #333;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:500;backdrop-filter:blur(6px)}
+  .top-group{display:flex;align-items:center;gap:10px}
+  .top-btn{padding:7px 16px;border:1px solid #444;border-radius:8px;background:rgba(255,255,255,.05);color:#ccc;font-size:12px;font-weight:bold;cursor:pointer;transition:all .15s}
+  .top-btn:hover{border-color:#FFD700;color:#FFD700;background:rgba(255,215,0,.1)}
+  .room-name{color:#FFA500;font-weight:bold;font-size:15px;text-shadow:0 0 8px rgba(255,165,0,.3)}
+  .currency{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:bold}
+  .cur-gold{color:#FFD700}
+  .cur-gem{color:#87CEEB}
+  .cur-lvl{color:#9370DB}
 
-  /* ===== TOP BAR ===== */
-  #topBar { position:fixed; top:0; left:0; right:0; height:44px; background:rgba(10,10,20,0.9); border-bottom:1px solid #333; display:flex; align-items:center; justify-content:space-between; padding:0 15px; z-index:500; }
-  .top-group { display:flex; align-items:center; gap:10px; }
-  .top-btn { padding:6px 14px; border:1px solid #444; border-radius:6px; background:rgba(255,255,255,0.05); color:#ccc; font-size:12px; font-weight:bold; cursor:pointer; transition:all 0.15s; }
-  .top-btn:hover { border-color:#FFD700; color:#FFD700; background:rgba(255,215,0,0.1); }
-  .top-btn.gold { border-color:#FFD700; color:#FFD700; }
-  .room-label { color:#FFA500; font-weight:bold; font-size:14px; }
-  .currency-display { display:flex; align-items:center; gap:12px; }
-  .currency { display:flex; align-items:center; gap:4px; font-size:13px; font-weight:bold; }
-  .currency.gold { color:#FFD700; }
-  .currency.blue { color:#87CEEB; }
+  /* Bottom Bar */
+  #bottomBar{position:fixed;bottom:0;left:0;right:0;height:52px;background:rgba(10,10,20,.95);border-top:1px solid #333;display:flex;align-items:center;padding:0 16px;gap:10px;z-index:500}
+  #chatInput{flex:1;max-width:380px;padding:10px 18px;border:1px solid #444;border-radius:24px;background:#0a0a1a;color:#fff;font-size:14px;outline:none}
+  #chatInput:focus{border-color:#FFD700}
+  .bbtn{padding:9px 18px;border:1px solid #444;border-radius:8px;background:rgba(255,255,255,.05);color:#ccc;font-size:12px;cursor:pointer;transition:all .15s}
+  .bbtn:hover{border-color:#FFD700;color:#FFD700}
 
-  /* ===== BOTTOM BAR ===== */
-  #bottomBar { position:fixed; bottom:0; left:0; right:0; height:48px; background:rgba(10,10,20,0.95); border-top:1px solid #333; display:flex; align-items:center; padding:0 15px; gap:10px; z-index:500; }
-  #chatInput { flex:1; max-width:400px; padding:8px 14px; border:1px solid #444; border-radius:20px; background:#0a0a1a; color:#fff; font-size:14px; outline:none; }
-  #chatInput:focus { border-color:#FFD700; }
-  .bottom-btn { padding:8px 16px; border:1px solid #444; border-radius:6px; background:rgba(255,255,255,0.05); color:#ccc; font-size:12px; cursor:pointer; }
-  .bottom-btn:hover { border-color:#FFD700; color:#FFD700; }
-  .bottom-btn.active { border-color:#32CD32; color:#32CD32; }
+  /* Panels */
+  .panel{position:fixed;background:rgba(10,10,20,.96);border:2px solid #FFD700;border-radius:14px;z-index:600;display:none;flex-direction:column;overflow:hidden;backdrop-filter:blur(10px);box-shadow:0 8px 40px rgba(0,0,0,.6)}
+  .panel.active{display:flex}
+  .panel-h{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #333;background:rgba(255,215,0,.05)}
+  .panel-h h2{color:#FFD700;font-size:17px}
+  .panel-close{background:none;border:none;color:#FFD700;font-size:24px;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+  .panel-close:hover{background:rgba(255,215,0,.15)}
+  .panel-body{padding:16px;overflow-y:auto;flex:1}
 
-  /* ===== CATALOG ===== */
-  #catalogPanel { width:420px; height:520px; top:60px; right:10px; }
-  .cat-tabs { display:flex; gap:4px; margin-bottom:12px; border-bottom:1px solid #333; padding-bottom:8px; }
-  .cat-tab { padding:6px 14px; border:none; background:transparent; color:#888; font-size:13px; cursor:pointer; border-radius:6px; transition:all 0.15s; }
-  .cat-tab:hover { color:#FFD700; }
-  .cat-tab.active { background:rgba(255,215,0,0.15); color:#FFD700; }
-  .cat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
-  .cat-item { aspect-ratio:1; background:rgba(255,255,255,0.03); border:1px solid #333; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s; padding:6px; position:relative; }
-  .cat-item:hover { border-color:#FFD700; transform:scale(1.05); }
-  .cat-item .icon { font-size:32px; margin-bottom:4px; }
-  .cat-item .name { font-size:10px; color:#aaa; text-align:center; }
-  .cat-item .price { font-size:11px; color:#FFD700; font-weight:bold; }
-  .cat-item .rarity-tag { position:absolute; top:2px; right:2px; font-size:9px; padding:1px 4px; border-radius:3px; font-weight:bold; }
-  .r-tag-common { background:#555; color:#ccc; }
-  .r-tag-uncommon { background:#228B22; color:#fff; }
-  .r-tag-rare { background:#4169E1; color:#fff; }
-  .r-tag-epic { background:#9370DB; color:#fff; }
-  .r-tag-legendary { background:linear-gradient(135deg,#FFD700,#FFA500); color:#1a1a2e; }
+  /* Room List */
+  #roomPanel{width:400px;height:520px;top:58px;left:12px}
+  .room-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .room-card{background:rgba(255,255,255,.03);border:1px solid #333;border-radius:12px;padding:14px;cursor:pointer;transition:all .15s}
+  .room-card:hover{border-color:#FFD700;transform:scale(1.02);background:rgba(255,215,0,.05)}
+  .room-card .ricon{font-size:40px;text-align:center;margin-bottom:8px}
+  .room-card .rname{color:#FFD700;font-size:14px;font-weight:bold;text-align:center}
+  .room-card .rdesc{color:#777;font-size:11px;text-align:center;margin-top:4px}
+  .room-visitors{color:#32CD32;font-size:11px;text-align:center;margin-top:6px}
 
-  /* ===== INVENTORY ===== */
-  #inventoryPanel { width:380px; height:480px; top:60px; right:10px; }
-  .inv-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; }
-  .inv-slot { aspect-ratio:1; background:rgba(255,255,255,0.03); border:2px solid #333; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.15s; position:relative; }
-  .inv-slot:hover { border-color:#FFD700; }
-  .inv-slot.equipped { border-color:#32CD32; background:rgba(50,205,50,0.1); }
-  .inv-slot .eq-badge { position:absolute; top:2px; right:2px; font-size:10px; color:#32CD32; }
-  .inv-slot .rarity-dot { position:absolute; bottom:2px; left:2px; width:8px; height:8px; border-radius:50%; }
-  .rarity-common { border-color:#888 !important; }
-  .rarity-uncommon { border-color:#32CD32 !important; }
-  .rarity-rare { border-color:#4169E1 !important; }
-  .rarity-epic { border-color:#9370DB !important; }
-  .rarity-legendary { border-color:#FFD700 !important; box-shadow:0 0 8px rgba(255,215,0,0.3); }
-  .inv-actions { display:flex; gap:6px; margin-top:10px; }
-  .inv-actions button { flex:1; padding:8px; border:1px solid #444; border-radius:6px; background:rgba(255,255,255,0.05); color:#ccc; font-size:12px; cursor:pointer; }
-  .inv-actions button:hover { border-color:#FFD700; color:#FFD700; }
+  /* Chat bubbles */
+  .chat-bubble{position:absolute;background:rgba(0,0,0,.8);border:1px solid rgba(255,215,0,.4);border-radius:10px;padding:8px 14px;color:#fff;font-size:13px;max-width:220px;word-wrap:break-word;pointer-events:none;z-index:200;transform:translate(-50%,-100%);margin-top:-16px;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+  .chat-bubble::after{content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid rgba(0,0,0,.8)}
+  .chat-name{color:#FFD700;font-weight:bold;font-size:11px;margin-bottom:2px}
 
-  /* ===== TRADE PANEL ===== */
-  #tradePanel { width:460px; height:520px; top:60px; left:50%; transform:translateX(-50%); }
-  .trade-layout { display:flex; gap:15px; height:100%; }
-  .trade-side { flex:1; display:flex; flex-direction:column; }
-  .trade-side h4 { color:#FFD700; font-size:13px; margin-bottom:8px; text-align:center; }
-  .trade-items { flex:1; background:rgba(255,255,255,0.03); border:1px solid #333; border-radius:8px; padding:8px; overflow-y:auto; }
-  .trade-item-slot { display:flex; align-items:center; gap:8px; padding:6px; border-radius:6px; background:rgba(255,255,255,0.03); margin-bottom:4px; cursor:pointer; border:1px solid transparent; }
-  .trade-item-slot:hover { border-color:#FFD700; }
-  .trade-item-slot .t-icon { font-size:20px; }
-  .trade-item-slot .t-name { font-size:11px; flex:1; }
-  .trade-item-slot .t-rarity { font-size:9px; padding:1px 4px; border-radius:3px; }
-  .trade-center { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; }
-  .trade-center .arrow { font-size:24px; color:#FFD700; }
-  .trade-status { font-size:12px; color:#888; text-align:center; }
-  .trade-btns { display:flex; gap:6px; margin-top:10px; }
+  /* Modals */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:7000}
+  .modal.active{display:flex}
+  .modal-box{background:linear-gradient(180deg,#1a1a2e,#0f0f1a);border:2px solid #FFD700;border-radius:16px;padding:32px;min-width:320px;max-width:90vw;box-shadow:0 0 50px rgba(255,215,0,.15)}
+  .modal-box h2{text-align:center;color:#FFD700;margin-bottom:20px;font-size:20px}
+  .modal-box input{width:100%;padding:14px;margin:10px 0;border:2px solid #333;border-radius:10px;background:#0a0a1a;color:#fff;font-size:16px;outline:none}
+  .modal-box input:focus{border-color:#FFD700}
+  .modal-err{color:#ff4444;font-size:13px;text-align:center;margin:6px 0;min-height:18px}
+  .modal-row{display:flex;gap:12px;margin-top:16px}
+  .modal-row button{flex:1;padding:14px;border:none;border-radius:10px;cursor:pointer;font-weight:bold;font-size:15px}
+  .btn-gold{background:linear-gradient(135deg,#FFD700,#DAA520);color:#1a1a2e}
+  .btn-dark{background:#333;color:#fff}
 
-  /* ===== ROOM LIST ===== */
-  #roomListPanel { width:360px; height:480px; top:60px; left:10px; }
-  .room-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
-  .room-card { background:rgba(255,255,255,0.03); border:1px solid #333; border-radius:10px; padding:12px; cursor:pointer; transition:all 0.15s; }
-  .room-card:hover { border-color:#FFD700; transform:scale(1.02); }
-  .room-card .r-icon { font-size:36px; text-align:center; margin-bottom:6px; }
-  .room-card .r-name { font-size:13px; font-weight:bold; color:#FFD700; text-align:center; }
-  .room-card .r-desc { font-size:11px; color:#888; text-align:center; margin-top:4px; }
+  /* Path preview */
+  .path-dot{position:absolute;width:8px;height:8px;background:rgba(255,215,0,.5);border-radius:50%;pointer-events:none;z-index:50;transform:translate(-50%,-50%)}
 
-  /* ===== ACHIEVEMENTS ===== */
-  #achPanel { width:340px; height:460px; top:60px; right:10px; }
-  .ach-list { display:flex; flex-direction:column; gap:8px; }
-  .ach-item { display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px; background:rgba(255,255,255,0.03); border:1px solid #333; }
-  .ach-item.unlocked { border-color:#FFD700; background:rgba(255,215,0,0.08); }
-  .ach-icon { font-size:28px; }
-  .ach-info { flex:1; }
-  .ach-name { font-weight:bold; font-size:13px; }
-  .ach-item.unlocked .ach-name { color:#FFD700; }
-  .ach-desc { font-size:11px; color:#888; }
-  .ach-reward { font-size:11px; color:#32CD32; }
+  /* Avatar selector mini */
+  .ava-mini{width:48px;height:48px;border:2px solid #333;border-radius:8px;overflow:hidden;cursor:pointer;image-rendering:pixelated;transition:all .15s}
+  .ava-mini:hover{border-color:#FFD700}
+  .ava-mini.active{border-color:#FFD700;box-shadow:0 0 10px rgba(255,215,0,.3)}
+  .ava-mini img{width:100%;height:100%;object-fit:cover}
 
-  /* ===== MODALS ===== */
-  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center; z-index:7000; }
-  .modal-overlay.active { display:flex; }
-  .modal-box { background:linear-gradient(180deg,#1a1a2e,#0f0f1a); border:2px solid #FFD700; border-radius:16px; padding:30px; min-width:320px; max-width:90vw; box-shadow:0 0 50px rgba(255,215,0,0.15); }
-  .modal-box h2 { text-align:center; color:#FFD700; margin-bottom:20px; }
-  .modal-box input, .modal-box select { width:100%; padding:12px; margin:8px 0; border:2px solid #333; border-radius:8px; background:#0a0a1a; color:#fff; font-size:16px; }
-  .modal-box input:focus, .modal-box select:focus { border-color:#FFD700; outline:none; }
-  .modal-error { color:#ff4444; font-size:13px; text-align:center; margin:5px 0; }
-  .modal-success { color:#32CD32; font-size:13px; text-align:center; margin:5px 0; }
-  .modal-row { display:flex; gap:10px; margin-top:15px; }
-  .modal-row button { flex:1; padding:12px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; }
-
-  /* ===== TOOLTIP ===== */
-  #tooltip { position:fixed; background:rgba(0,0,0,0.9); border:1px solid #FFD700; border-radius:6px; padding:6px 10px; color:#fff; font-size:12px; pointer-events:none; z-index:8000; display:none; max-width:200px; }
-
-  /* ===== RESPONSIVE ===== */
-  @media (max-width:768px) {
-    .cc-body { flex-direction:column; }
-    .cc-right { order:-1; position:static; }
-    .cat-grid { grid-template-columns:repeat(3,1fr); }
-    .inv-grid { grid-template-columns:repeat(4,1fr); }
-    .panel { max-width:95vw; max-height:80vh; }
-    .trade-layout { flex-direction:column; }
-    .room-grid { grid-template-columns:1fr; }
+  /* Responsive */
+  @media(max-width:768px){
+    .cc-grid{grid-template-columns:repeat(3,1fr)}
+    .room-grid{grid-template-columns:1fr}
+    .panel{max-width:95vw;max-height:80vh}
+    .tbtn-row{flex-direction:column}
+    .tbtn-row .tbtn{max-width:280px}
   }
 </style>
 </head>
 <body>
 
-<!-- ===== LOADING SCREEN ===== -->
-<div id="loadingScreen">
-  <div class="loading-title">STARLIGHT INN</div>
-  <div class="loading-bar"><div class="loading-fill" id="loadFill"></div></div>
-  <div class="loading-text" id="loadText">Loading assets...</div>
+<!-- LOADING -->
+<div id="loadScreen">
+  <div class="load-title">STARLIGHT INN</div>
+  <div class="load-bar"><div class="load-fill" id="loadFill"></div></div>
+  <div class="load-text" id="loadText">Connecting to hotel...</div>
 </div>
 
-<!-- ===== TITLE SCREEN ===== -->
+<!-- TITLE -->
 <div id="titleScreen">
-  <div class="title-bg"><img id="titleBgImg" src="assets/title-bg-v16.png" alt="Starlight Inn"></div>
+  <div class="title-bg"><img id="titleBg" src="assets/title-bg-v16.png" alt="Starlight Inn"></div>
   <div class="title-overlay"></div>
   <div class="title-content">
-    <button class="title-btn btn-gold" onclick="startGame()">ENTER THE INN</button>
-    <div class="btn-row">
-      <button class="title-btn btn-blue" onclick="openCharCreator()">CREATE AVATAR</button>
-      <button class="title-btn btn-green" onclick="showRoomList()">VISIT ROOMS</button>
+    <button class="tbtn tbtn-gold" onclick="enterHotel()">ENTER THE INN</button>
+    <div class="tbtn-row">
+      <button class="tbtn tbtn-blue" onclick="openCharSelect()">CHOOSE AVATAR</button>
+      <button class="tbtn tbtn-green" onclick="showRoomPanel()">VISIT ROOMS</button>
     </div>
-    <button class="title-btn btn-purple" style="max-width:200px;font-size:13px;padding:8px;" onclick="showAchievements()">ACHIEVEMENTS</button>
+    <button class="tbtn tbtn-purple" onclick="showTrophies()">ACHIEVEMENTS</button>
   </div>
-  <div class="title-version">v17.0 - Winter Edition</div>
+  <div class="tver">v18.0 - Pixel Perfect Edition</div>
 </div>
 
-<!-- ===== CHARACTER CREATOR ===== -->
+<!-- CHARACTER SELECT -->
 <div id="charScreen">
-  <div class="cc-header"><h1>Create Your Starlight Character</h1></div>
+  <div class="cc-head">
+    <h1>Choose Your Character</h1>
+    <p>Select a Starlight adventurer that matches your style</p>
+  </div>
   <div class="cc-body">
-    <div class="cc-left">
-      <div class="cc-section">
-        <h3>Gender</h3>
-        <div class="gender-row">
-          <button class="gender-btn active" data-g="M" onclick="setGender('M')">MALE</button>
-          <button class="gender-btn" data-g="F" onclick="setGender('F')">FEMALE</button>
-          <button class="gender-btn" data-g="U" onclick="setGender('U')">UNISEX</button>
-        </div>
-      </div>
-      <div class="cc-section">
-        <h3>Hair Style</h3>
-        <div class="hair-grid" id="hairGrid"></div>
-        <div class="color-wheel-wrap">
-          <label>Hair Color</label>
-          <input type="range" id="hairHue" min="0" max="360" value="25" oninput="updateCharPreview()">
-          <div class="color-preview" id="hairColorPreview"></div>
-        </div>
-      </div>
-      <div class="cc-section">
-        <h3>Face</h3>
-        <div class="hair-grid" id="faceGrid"></div>
-      </div>
-      <div class="cc-section">
-        <h3>Outfit</h3>
-        <div class="clothes-grid" id="shirtGrid"></div>
-        <div class="color-wheel-wrap">
-          <label>Shirt</label>
-          <input type="range" id="shirtHue" min="0" max="360" value="200" oninput="updateCharPreview()">
-          <div class="color-preview" id="shirtColorPreview"></div>
-        </div>
-        <div class="clothes-grid" id="pantsGrid" style="margin-top:10px;"></div>
-        <div class="color-wheel-wrap">
-          <label>Pants</label>
-          <input type="range" id="pantsHue" min="0" max="360" value="220" oninput="updateCharPreview()">
-          <div class="color-preview" id="pantsColorPreview"></div>
-        </div>
-      </div>
-      <div class="cc-section">
-        <h3>Accessories</h3>
-        <div class="clothes-grid" id="accGrid"></div>
-      </div>
-      <div class="cc-section">
-        <h3>Skin Tone</h3>
-        <div class="color-row-presets" id="skinPresets"></div>
-      </div>
-    </div>
-    <div class="cc-right">
-      <div id="charPreview" style="width:200px;height:280px;background:rgba(255,255,255,0.03);border:2px solid #FFD700;border-radius:12px;position:relative;overflow:hidden;">
-  <div id="charPreviewLayers" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;"></div>
-  <div id="charPreviewName" style="position:absolute;bottom:8px;left:0;right:0;text-align:center;color:#FFD700;font-size:12px;font-weight:bold;text-shadow:0 1px 3px rgba(0,0,0,0.8);"></div>
-</div>
-      <div class="cc-actions">
-        <button class="btn-save" onclick="saveCharacter()">SAVE</button>
-        <button class="btn-random" onclick="randomizeCharacter()">RANDOM</button>
-        <button class="btn-reset" onclick="resetCharacter()">RESET</button>
-        <button class="btn-back" onclick="backToTitle()">BACK</button>
-      </div>
+    <div class="cc-grid" id="charGrid"></div>
+    <div class="cc-actions">
+      <button class="cc-save" onclick="saveChar()">CONFIRM</button>
+      <button class="cc-back" onclick="backToTitle()">BACK</button>
     </div>
   </div>
 </div>
 
-<!-- ===== GAME SCREEN ===== -->
+<!-- GAME -->
 <div id="gameScreen">
   <canvas id="gameCanvas"></canvas>
+  <div id="chatLayer" style="position:absolute;inset:0;pointer-events:none;z-index:150"></div>
+  <div id="pathLayer" style="position:absolute;inset:0;pointer-events:none;z-index:50"></div>
 
-  <!-- Top Bar -->
   <div id="topBar">
     <div class="top-group">
-      <button class="top-btn" onclick="togglePanel('roomListPanel')">NAVIGATOR</button>
-      <span class="room-label" id="roomLabel">Main Hall</span>
-      <button class="top-btn" id="editBtn" onclick="toggleEditor()">EDIT</button>
+      <button class="top-btn" onclick="togglePanel('roomPanel')">NAVIGATOR</button>
+      <span class="room-name" id="roomName">Grand Lobby</span>
     </div>
     <div class="top-group">
-      <div class="currency-display">
-        <div class="currency gold">GOLD: <span id="goldAmt">500</span></div>
-        <div class="currency blue">GEMS: <span id="gemAmt">50</span></div>
-        <div class="currency" style="color:#9370DB;">LVL: <span id="lvlAmt">1</span></div>
-      </div>
+      <div class="currency cur-gold">GOLD: <span id="gold">500</span></div>
+      <div class="currency cur-gem">GEMS: <span id="gems">50</span></div>
+      <div class="currency cur-lvl">LVL: <span id="level">1</span></div>
       <button class="top-btn" onclick="togglePanel('catalogPanel')">CATALOG</button>
-      <button class="top-btn" onclick="togglePanel('inventoryPanel')">INVENTORY</button>
+      <button class="top-btn" onclick="togglePanel('invPanel')">INVENTORY</button>
       <button class="top-btn" onclick="togglePanel('tradePanel')">TRADE</button>
       <button class="top-btn" onclick="togglePanel('achPanel')">TROPHIES</button>
     </div>
   </div>
 
-  <!-- Bottom Bar -->
   <div id="bottomBar">
-    <input type="text" id="chatInput" placeholder="Press Enter to chat..." onkeydown="handleChatKey(event)">
-    <button class="bottom-btn" onclick="togglePanel('roomListPanel')">ROOMS</button>
-    <button class="bottom-btn" id="placeBtn" onclick="togglePlaceMode()" style="display:none;">PLACE</button>
-    <button class="bottom-btn" onclick="showTradeModal()">TRADE</button>
-    <button class="bottom-btn" onclick="backToTitle()">QUIT</button>
+    <input type="text" id="chatInput" placeholder="Press Enter to chat..." onkeydown="if(event.key==='Enter'){sendChat(this.value);this.value=''}">
+    <button class="bbtn" onclick="togglePanel('roomPanel')">ROOMS</button>
+    <button class="bbtn" onclick="openTrade()">TRADE</button>
+    <button class="bbtn" onclick="backToTitle()">QUIT</button>
   </div>
 
-  <!-- Catalog Panel -->
+  <!-- Room Navigator -->
+  <div id="roomPanel" class="panel">
+    <div class="panel-h"><h2>Room Navigator</h2><button class="panel-close" onclick="closePanel('roomPanel')">&times;</button></div>
+    <div class="panel-body"><div class="room-grid" id="roomGrid"></div></div>
+  </div>
+
+  <!-- Catalog -->
   <div id="catalogPanel" class="panel">
-    <div class="panel-header"><h2>Catalog</h2><button class="btn-close" onclick="closePanel('catalogPanel')">&times;</button></div>
-    <div class="panel-body">
-      <div class="cat-tabs">
-        <button class="cat-tab active" onclick="setCatTab('furniture', this)">Furniture</button>
-        <button class="cat-tab" onclick="setCatTab('hair', this)">Hair</button>
-        <button class="cat-tab" onclick="setCatTab('clothes', this)">Clothes</button>
-        <button class="cat-tab" onclick="setCatTab('items', this)">Items</button>
-        <button class="cat-tab" onclick="setCatTab('rare', this)">Rare</button>
+    <div class="panel-h"><h2>Catalog</h2><button class="panel-close" onclick="closePanel('catalogPanel')">&times;</button></div>
+    <div class="panel-body" style="padding:10px">
+      <div style="display:flex;gap:6px;margin-bottom:12px;border-bottom:1px solid #333;padding-bottom:8px">
+        <button class="top-btn" style="border-color:#FFD700;color:#FFD700" onclick="setCatalogTab('furniture')">Furniture</button>
+        <button class="top-btn" onclick="setCatalogTab('hair')">Hair</button>
+        <button class="top-btn" onclick="setCatalogTab('clothes')">Clothes</button>
+        <button class="top-btn" onclick="setCatalogTab('rare')">Rare</button>
       </div>
-      <div class="cat-grid" id="catGrid"></div>
+      <div id="catalogGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"></div>
     </div>
   </div>
 
-  <!-- Inventory Panel -->
-  <div id="inventoryPanel" class="panel">
-    <div class="panel-header"><h2>Inventory</h2><button class="btn-close" onclick="closePanel('inventoryPanel')">&times;</button></div>
-    <div class="panel-body">
-      <div class="inv-grid" id="invGrid"></div>
-      <div class="inv-actions">
-        <button onclick="equipSelected()">EQUIP</button>
-        <button onclick="useSelected()">USE</button>
-        <button onclick="tradeSelected()">TRADE</button>
-      </div>
-    </div>
+  <!-- Inventory -->
+  <div id="invPanel" class="panel">
+    <div class="panel-h"><h2>Inventory</h2><button class="panel-close" onclick="closePanel('invPanel')">&times;</button></div>
+    <div class="panel-body"><div id="invGrid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px"></div></div>
   </div>
 
-  <!-- Trade Panel -->
+  <!-- Trade -->
   <div id="tradePanel" class="panel">
-    <div class="panel-header"><h2>Trading</h2><button class="btn-close" onclick="closePanel('tradePanel')">&times;</button></div>
-    <div class="panel-body">
-      <div class="trade-layout">
-        <div class="trade-side">
-          <h4>Your Offer</h4>
-          <div class="trade-items" id="myOffer"></div>
-          <div class="trade-btns"><button class="bottom-btn" onclick="addToMyOffer()">+ Add</button><button class="bottom-btn" onclick="clearMyOffer()">Clear</button></div>
-        </div>
-        <div class="trade-center">
-          <div class="arrow">&#8644;</div>
-          <div class="trade-status" id="tradeStatus">Not started</div>
-          <button class="title-btn btn-gold" style="padding:8px 16px;font-size:13px;" onclick="confirmTrade()">CONFIRM</button>
-          <button class="title-btn btn-blue" style="padding:8px 16px;font-size:13px;" onclick="acceptTrade()">ACCEPT</button>
-        </div>
-        <div class="trade-side">
-          <h4>Their Offer</h4>
-          <div class="trade-items" id="theirOffer"></div>
-        </div>
-      </div>
-    </div>
+    <div class="panel-h"><h2>Trading Post</h2><button class="panel-close" onclick="closePanel('tradePanel')">&times;</button></div>
+    <div class="panel-body" id="tradeBody"></div>
   </div>
 
-  <!-- Room List Panel -->
-  <div id="roomListPanel" class="panel">
-    <div class="panel-header"><h2>Navigator</h2><button class="btn-close" onclick="closePanel('roomListPanel')">&times;</button></div>
-    <div class="panel-body">
-      <div class="room-grid" id="roomGrid"></div>
-    </div>
-  </div>
-
-  <!-- Achievements Panel -->
+  <!-- Achievements -->
   <div id="achPanel" class="panel">
-    <div class="panel-header"><h2>Achievements</h2><button class="btn-close" onclick="closePanel('achPanel')">&times;</button></div>
-    <div class="panel-body">
-      <div class="ach-list" id="achList"></div>
-    </div>
+    <div class="panel-h"><h2>Trophies</h2><button class="panel-close" onclick="closePanel('achPanel')">&times;</button></div>
+    <div class="panel-body" id="achList"></div>
   </div>
 </div>
 
-<!-- ===== MODALS ===== -->
-<div class="modal-overlay" id="loginModal">
+<!-- LOGIN MODAL -->
+<div class="modal" id="loginModal">
   <div class="modal-box">
-    <h2>Welcome to Starlight Inn</h2>
-    <input type="text" id="loginName" placeholder="Your name" maxlength="16">
-    <div class="modal-error" id="loginError"></div>
+    <h2>Welcome Traveler</h2>
+    <input type="text" id="loginName" placeholder="Your name" maxlength="16" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="modal-err" id="loginErr"></div>
     <div class="modal-row">
-      <button class="btn-gold" onclick="doLogin()">ENTER</button>
+      <button class="btn-gold" onclick="doLogin()">ENTER INN</button>
     </div>
   </div>
 </div>
-
-<div class="modal-overlay" id="tradeModal">
-  <div class="modal-box">
-    <h2>Start Trade</h2>
-    <input type="text" id="tradeTarget" placeholder="Player name">
-    <div class="modal-error" id="tradeError"></div>
-    <div class="modal-row">
-      <button class="btn-gold" onclick="startTrade()">OFFER</button>
-      <button style="background:#333;color:#fff;" onclick="closeModal('tradeModal')">CANCEL</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="confirmModal">
-  <div class="modal-box">
-    <h2 id="confirmTitle">Confirm</h2>
-    <p id="confirmText" style="text-align:center;color:#aaa;margin-bottom:15px;"></p>
-    <div class="modal-row">
-      <button class="btn-gold" id="confirmYes">YES</button>
-      <button style="background:#333;color:#fff;" onclick="closeModal('confirmModal')">NO</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="alertModal">
-  <div class="modal-box">
-    <h2 id="alertTitle">Notice</h2>
-    <p id="alertText" style="text-align:center;color:#aaa;margin-bottom:15px;"></p>
-    <div class="modal-row">
-      <button class="btn-gold" onclick="closeModal('alertModal')">OK</button>
-    </div>
-  </div>
-</div>
-
-<!-- Tooltip -->
-<div id="tooltip"></div>
 
 <script>
 
-// ===== STARLIGHT INN v17.20 - HABBO-STYLE HOTEL CLIENT =====
-// Fixed: asset loading, staged loading, avatar rendering, retry logic, caching
+// ===== STARLIGHT INN v18 - PUBLIC ROOM HOTEL =====
+// Architecture: Background IS the room. Avatars walk on top. No furniture overlay.
 
 const TILE_W = 64;
 const TILE_H = 32;
-const AVATAR_W = 48;
-const AVATAR_H = 72;
-const ASSET_VERSION = 'v17.20';
+const VERSION = 'v18.0';
 
-// ===== ASSET DEFINITIONS =====
-const ASSETS = {
+// ===== ASSETS =====
+const ASSET_URLS = {
   title_bg: 'assets/title-bg-v16.png',
-
-  // Avatar parts
-  body_base: 'assets/sprites/parts/body_base.png',
-  legs_pants: 'assets/sprites/parts/legs_pants.png',
-  legs_shorts: 'assets/sprites/parts/legs_shorts.png',
-  legs_skirt: 'assets/sprites/parts/legs_skirt.png',
-  shirt_tshirt: 'assets/sprites/parts/shirt_tshirt.png',
-  shirt_hoodie: 'assets/sprites/parts/shirt_hoodie.png',
-  shirt_jacket: 'assets/sprites/parts/shirt_jacket.png',
-  shirt_polo: 'assets/sprites/parts/shirt_polo.png',
-  shirt_tank: 'assets/sprites/parts/shirt_tank.png',
-  shirt_overalls: 'assets/sprites/parts/shirt_overalls.png',
-  dress_pink: 'assets/sprites/parts/dress_pink.png',
-  dress_blue: 'assets/sprites/parts/dress_blue.png',
-
-  face_happy: 'assets/sprites/parts/face_happy.png',
-  face_cool: 'assets/sprites/parts/face_cool.png',
-  face_surprised: 'assets/sprites/parts/face_surprised.png',
-
-  hair_afro: 'assets/sprites/parts/hair_afro.png',
-  hair_bald: 'assets/sprites/parts/hair_bald.png',
-  hair_bedhead_blonde: 'assets/sprites/parts/hair_bedhead_blonde.png',
-  hair_bob_black: 'assets/sprites/parts/hair_bob_black.png',
-  hair_braids_brown: 'assets/sprites/parts/hair_braids_brown.png',
-  hair_buzz_cut: 'assets/sprites/parts/hair_buzz_cut.png',
-  hair_curly_red: 'assets/sprites/parts/hair_curly_red.png',
-  hair_dreads: 'assets/sprites/parts/hair_dreads.png',
-  hair_emo: 'assets/sprites/parts/hair_emo.png',
-  hair_french_braid: 'assets/sprites/parts/hair_french_braid.png',
-  hair_long_brown: 'assets/sprites/parts/hair_long_brown.png',
-  hair_long_pink: 'assets/sprites/parts/hair_long_pink.png',
-  hair_mohawk: 'assets/sprites/parts/hair_mohawk.png',
-  hair_pigtails_teal: 'assets/sprites/parts/hair_pigtails_teal.png',
-  hair_pixie_cut: 'assets/sprites/parts/hair_pixie_cut.png',
-  hair_ponytail: 'assets/sprites/parts/hair_ponytail.png',
-  hair_short_brown: 'assets/sprites/parts/hair_short_brown.png',
-  hair_slick_black: 'assets/sprites/parts/hair_slick_black.png',
-  hair_spiky_blonde: 'assets/sprites/parts/hair_spiky_blonde.png',
-  hair_spiky_blue: 'assets/sprites/parts/hair_spiky_blue.png',
-  hair_undercut: 'assets/sprites/parts/hair_undercut.png',
-  hair_waves_blonde: 'assets/sprites/parts/hair_waves_blonde.png',
-
-  acc_glasses_round: 'assets/sprites/parts/acc_glasses_round.png',
-  acc_hat_beanie: 'assets/sprites/parts/acc_hat_beanie.png',
-  acc_hat_wizard: 'assets/sprites/parts/acc_hat_wizard.png',
-  acc_wings: 'assets/sprites/parts/acc_wings.png',
-  acc_bow_tie: 'assets/sprites/parts/acc_bow_tie.png',
-
-  // Room backgrounds
   bg_mainhall: 'assets/sprites/rooms/bg_mainhall.png',
   bg_tavern: 'assets/sprites/rooms/bg_tavern.png',
   bg_garden: 'assets/sprites/rooms/bg_garden.png',
@@ -522,457 +280,200 @@ const ASSETS = {
   bg_event: 'assets/sprites/rooms/bg_event.png',
   bg_winter: 'assets/sprites/rooms/bg_winter.png',
 
-  // Furniture (31 items)
-  furni_arcade: 'assets/sprites/furniture/arcade.png',
-  furni_barrel: 'assets/sprites/furniture/barrel.png',
-  furni_bed: 'assets/sprites/furniture/bed.png',
-  furni_bench: 'assets/sprites/furniture/bench.png',
-  furni_bookshelf: 'assets/sprites/furniture/bookshelf.png',
-  furni_chair: 'assets/sprites/furniture/chair.png',
-  furni_chest: 'assets/sprites/furniture/chest.png',
-  furni_door: 'assets/sprites/furniture/door_wood.png',
-  furni_dresser: 'assets/sprites/furniture/dresser.png',
-  furni_fireplace: 'assets/sprites/furniture/fireplace.png',
-  furni_flower: 'assets/sprites/furniture/flower.png',
-  furni_fountain: 'assets/sprites/furniture/fountain.png',
-  furni_gate: 'assets/sprites/furniture/gate.png',
-  furni_jukebox: 'assets/sprites/furniture/jukebox.png',
-  furni_lamp: 'assets/sprites/furniture/lamp.png',
-  furni_mirror: 'assets/sprites/furniture/mirror.png',
-  furni_pet_bed: 'assets/sprites/furniture/pet_bed.png',
-  furni_piano: 'assets/sprites/furniture/piano.png',
-  furni_plant: 'assets/sprites/furniture/plant.png',
-  furni_pool_table: 'assets/sprites/furniture/pool_table.png',
-  furni_poster: 'assets/sprites/furniture/poster.png',
-  furni_rug: 'assets/sprites/furniture/rug.png',
-  furni_sofa: 'assets/sprites/furniture/sofa.png',
-  furni_stove: 'assets/sprites/furniture/stove.png',
-  furni_table: 'assets/sprites/furniture/table.png',
-  furni_throne: 'assets/sprites/furniture/throne.png',
-  furni_tree: 'assets/sprites/furniture/tree.png',
-  furni_trophy: 'assets/sprites/furniture/trophy.png',
-  furni_tv: 'assets/sprites/furniture/tv.png',
-  furni_wall_lamp: 'assets/sprites/furniture/wall_lamp.png',
-  furni_window: 'assets/sprites/furniture/window.png',
+  char_boy_hoodie: 'assets/sprites/avatars/char_boy_hoodie.png',
+  char_girl_dress: 'assets/sprites/avatars/char_girl_dress.png',
+  char_boy_jacket: 'assets/sprites/avatars/char_boy_jacket.png',
+  char_girl_maid: 'assets/sprites/avatars/char_girl_maid.png',
+  char_boy_tank: 'assets/sprites/avatars/char_boy_tank.png',
+  char_wizard: 'assets/sprites/avatars/char_wizard.png',
+  char_knight: 'assets/sprites/avatars/char_knight.png',
+  char_catgirl: 'assets/sprites/avatars/char_catgirl.png',
+  char_innkeeper: 'assets/sprites/avatars/char_innkeeper.png',
+  char_vampire: 'assets/sprites/avatars/char_vampire.png',
 };
+
+const AVATARS = [
+  { id: 'char_boy_hoodie', name: 'Hoodie Boy', icon: '👦' },
+  { id: 'char_girl_dress', name: 'Dress Girl', icon: '👧' },
+  { id: 'char_boy_jacket', name: 'Jacket Boy', icon: '🧑' },
+  { id: 'char_girl_maid', name: 'Maid Girl', icon: '👩' },
+  { id: 'char_boy_tank', name: 'Summer Boy', icon: '🏖️' },
+  { id: 'char_wizard', name: 'Wizard', icon: '🔮' },
+  { id: 'char_knight', name: 'Knight', icon: '⚔️' },
+  { id: 'char_catgirl', name: 'Cat Girl', icon: '🐱' },
+  { id: 'char_innkeeper', name: 'Innkeeper', icon: '👨‍🍳' },
+  { id: 'char_vampire', name: 'Vampire', icon: '🧛' },
+];
 
 // ===== STATE =====
-let state = {
+const S = {
   screen: 'loading',
   assets: {},
-  assetMeta: {}, // Stores {width, height, hasAlpha, actualBounds} for each asset
-  assetsLoaded: 0,
-  assetsTotal: 0,
-  loadStage: 0, // 0=init, 1=critical, 2=room, 3=complete
-  player: {
-    name: '', x: 3, y: 3, targetX: 3, targetY: 3, path: [], dir: 's', walkFrame: 0,
-    gender: 'M', skin: '#ffdbac', hairStyle: 'hair_short_brown', hairHue: 25,
-    faceStyle: 'face_happy', shirtStyle: 'shirt_tshirt', shirtHue: 200,
-    pantsStyle: 'legs_pants', pantsHue: 220, accStyle: '',
-    gold: 500, gems: 50, xp: 0, level: 1,
-    inventory: [], equipped: {},
-  },
+  loaded: 0,
+  total: 0,
+  player: { name: '', x: 3, y: 3, tx: 3, ty: 3, path: [], dir: 's', walkTime: 0, avatar: 'char_boy_hoodie', gold: 500, gems: 50, xp: 0, level: 1 },
   room: null,
-  rooms: {},
-  editor: { active: false, selectedItem: null },
-  chat: { messages: [], input: '' },
-  trade: { myOffer: [], theirOffer: [], confirmed: false, accepted: false, target: '' },
-  catalog: { tab: 'furniture' },
-  achievements: [],
-  lastTime: 0, animTime: 0,
+  otherPlayers: [],
+  chat: [],
+  catalogTab: 'furniture',
 };
 
-// ===== CATALOG DATA =====
-const CATALOG = [
-  { id:'furni_chair', name:'Wooden Chair', cat:'furniture', price:50, rarity:'common', icon:'chair' },
-  { id:'furni_table', name:'Dining Table', cat:'furniture', price:80, rarity:'common', icon:'table' },
-  { id:'furni_bed', name:'Cozy Bed', cat:'furniture', price:120, rarity:'common', icon:'bed' },
-  { id:'furni_sofa', name:'Plush Sofa', cat:'furniture', price:150, rarity:'uncommon', icon:'sofa' },
-  { id:'furni_lamp', name:'Oil Lamp', cat:'furniture', price:40, rarity:'common', icon:'lamp' },
-  { id:'furni_fireplace', name:'Fireplace', cat:'furniture', price:300, rarity:'rare', icon:'fireplace' },
-  { id:'furni_bookshelf', name:'Bookshelf', cat:'furniture', price:100, rarity:'common', icon:'bookshelf' },
-  { id:'furni_plant', name:'Potted Plant', cat:'furniture', price:30, rarity:'common', icon:'plant' },
-  { id:'furni_flower', name:'Flower Vase', cat:'furniture', price:25, rarity:'common', icon:'flower' },
-  { id:'furni_rug', name:'Woven Rug', cat:'furniture', price:60, rarity:'common', icon:'rug' },
-  { id:'furni_piano', name:'Grand Piano', cat:'furniture', price:500, rarity:'epic', icon:'piano' },
-  { id:'furni_throne', name:'Golden Throne', cat:'furniture', price:1000, rarity:'legendary', icon:'throne' },
-  { id:'furni_tv', name:'Crystal TV', cat:'furniture', price:200, rarity:'rare', icon:'tv' },
-  { id:'furni_jukebox', name:'Jukebox', cat:'furniture', price:250, rarity:'rare', icon:'jukebox' },
-  { id:'furni_arcade', name:'Arcade Machine', cat:'furniture', price:400, rarity:'epic', icon:'arcade' },
-  { id:'furni_pool_table', name:'Pool Table', cat:'furniture', price:350, rarity:'epic', icon:'pool_table' },
-  { id:'furni_fountain', name:'Garden Fountain', cat:'furniture', price:450, rarity:'epic', icon:'fountain' },
-  { id:'furni_mirror', name:'Magic Mirror', cat:'furniture', price:180, rarity:'uncommon', icon:'mirror' },
-  { id:'furni_chest', name:'Treasure Chest', cat:'furniture', price:220, rarity:'rare', icon:'chest' },
-  { id:'furni_tree', name:'Pine Tree', cat:'furniture', price:80, rarity:'common', icon:'tree' },
-  { id:'furni_trophy', name:'Champion Trophy', cat:'furniture', price:600, rarity:'legendary', icon:'trophy' },
-  { id:'furni_gate', name:'Iron Gate', cat:'furniture', price:150, rarity:'uncommon', icon:'gate' },
-  { id:'furni_dresser', name:'Dresser', cat:'furniture', price:90, rarity:'common', icon:'dresser' },
-  { id:'furni_stove', name:'Stove', cat:'furniture', price:110, rarity:'common', icon:'stove' },
-  { id:'furni_wall_lamp', name:'Wall Sconce', cat:'furniture', price:35, rarity:'common', icon:'wall_lamp' },
-  { id:'furni_window', name:'Glass Window', cat:'furniture', price:55, rarity:'common', icon:'window' },
-  { id:'furni_poster', name:'Star Poster', cat:'furniture', price:20, rarity:'common', icon:'poster' },
-  { id:'furni_pet_bed', name:'Pet Bed', cat:'furniture', price:70, rarity:'common', icon:'pet_bed' },
-  { id:'furni_barrel', name:'Wooden Barrel', cat:'furniture', price:30, rarity:'common', icon:'barrel' },
-  { id:'furni_bench', name:'Park Bench', cat:'furniture', price:65, rarity:'common', icon:'bench' },
-  { id:'furni_door', name:'Wooden Door', cat:'furniture', price:100, rarity:'uncommon', icon:'door' },
-
-  { id:'hair_afro', name:'Afro', cat:'hair', price:30, rarity:'common', icon:'afro' },
-  { id:'hair_mohawk', name:'Mohawk', cat:'hair', price:40, rarity:'uncommon', icon:'mohawk' },
-  { id:'hair_long_pink', name:'Long Pink', cat:'hair', price:50, rarity:'rare', icon:'long' },
-  { id:'hair_spiky_blue', name:'Spiky Blue', cat:'hair', price:45, rarity:'uncommon', icon:'spiky' },
-  { id:'hair_pigtails_teal', name:'Pigtails', cat:'hair', price:35, rarity:'common', icon:'pigtails' },
-  { id:'hair_slick_black', name:'Slick Back', cat:'hair', price:55, rarity:'rare', icon:'slick' },
-  { id:'hair_bedhead_blonde', name:'Bed Head', cat:'hair', price:25, rarity:'common', icon:'bedhead' },
-  { id:'hair_curly_red', name:'Curly Red', cat:'hair', price:40, rarity:'uncommon', icon:'curly' },
-  { id:'hair_bob_black', name:'Bob Cut', cat:'hair', price:30, rarity:'common', icon:'bob' },
-  { id:'hair_braids_brown', name:'Braids', cat:'hair', price:35, rarity:'common', icon:'braids' },
-  { id:'hair_buzz_cut', name:'Buzz Cut', cat:'hair', price:20, rarity:'common', icon:'buzz' },
-  { id:'hair_dreads', name:'Dreadlocks', cat:'hair', price:45, rarity:'uncommon', icon:'dreads' },
-  { id:'hair_french_braid', name:'French Braid', cat:'hair', price:40, rarity:'uncommon', icon:'braid' },
-  { id:'hair_pixie_cut', name:'Pixie Cut', cat:'hair', price:35, rarity:'common', icon:'pixie' },
-  { id:'hair_undercut', name:'Undercut', cat:'hair', price:50, rarity:'rare', icon:'undercut' },
-  { id:'hair_waves_blonde', name:'Wavy', cat:'hair', price:30, rarity:'common', icon:'waves' },
-
-  { id:'shirt_hoodie', name:'Hoodie', cat:'clothes', price:60, rarity:'common', icon:'hoodie' },
-  { id:'shirt_jacket', name:'Leather Jacket', cat:'clothes', price:80, rarity:'uncommon', icon:'jacket' },
-  { id:'dress_pink', name:'Pink Dress', cat:'clothes', price:70, rarity:'uncommon', icon:'dress' },
-  { id:'shirt_polo', name:'Polo Shirt', cat:'clothes', price:50, rarity:'common', icon:'polo' },
-  { id:'shirt_tank', name:'Tank Top', cat:'clothes', price:40, rarity:'common', icon:'tank' },
-  { id:'shirt_overalls', name:'Overalls', cat:'clothes', price:65, rarity:'uncommon', icon:'overalls' },
-  { id:'dress_blue', name:'Blue Dress', cat:'clothes', price:75, rarity:'uncommon', icon:'dress2' },
-  { id:'legs_skirt', name:'Skirt', cat:'clothes', price:45, rarity:'common', icon:'skirt' },
-
-  { id:'acc_hat_wizard', name:'Wizard Hat', cat:'items', price:100, rarity:'epic', icon:'wizard' },
-  { id:'acc_wings', name:'Angel Wings', cat:'items', price:500, rarity:'legendary', icon:'wings' },
-  { id:'acc_glasses_round', name:'Round Glasses', cat:'items', price:25, rarity:'common', icon:'glasses' },
-  { id:'acc_hat_beanie', name:'Beanie', cat:'items', price:35, rarity:'common', icon:'beanie' },
-  { id:'acc_bow_tie', name:'Bow Tie', cat:'items', price:30, rarity:'common', icon:'bowtie' },
-  { id:'furni_trophy', name:'Golden Trophy', cat:'rare', price:2000, rarity:'legendary', icon:'trophy' },
-  { id:'furni_throne', name:'Emperor Throne', cat:'rare', price:5000, rarity:'legendary', icon:'throne' },
-];
-
-const ACHIEVEMENTS = [
-  { id:'first_login', name:'First Steps', desc:'Enter the Starlight Inn', icon:'👣', reward:10, unlocked:false },
-  { id:'customize', name:'Fashionista', desc:'Customize your avatar', icon:'👗', reward:20, unlocked:false },
-  { id:'buy_item', name:'Shopper', desc:'Buy your first item', icon:'🛒', reward:15, unlocked:false },
-  { id:'place_furni', name:'Decorator', desc:'Place furniture in a room', icon:'🛋️', reward:25, unlocked:false },
-  { id:'chat_10', name:'Socialite', desc:'Send 10 chat messages', icon:'💬', reward:30, unlocked:false },
-  { id:'visit_all', name:'Explorer', desc:'Visit all 12 rooms', icon:'🗺️', reward:100, unlocked:false },
-  { id:'trade_done', name:'Merchant', desc:'Complete a trade', icon:'🤝', reward:50, unlocked:false },
-  { id:'rich', name:'Wealthy', desc:'Own 1000 gold', icon:'💰', reward:40, unlocked:false },
-  { id:'legendary', name:'Legend', desc:'Own a legendary item', icon:'👑', reward:80, unlocked:false },
-  { id:'level_5', name:'Rising Star', desc:'Reach level 5', icon:'⭐', reward:60, unlocked:false },
-  { id:'editor_pro', name:'Architect', desc:'Edit a room layout', icon:'🏗️', reward:35, unlocked:false },
-  { id:'collector', name:'Collector', desc:'Own 20 items', icon:'📦', reward:45, unlocked:false },
-];
-
-// ===== ROOM DEFINITIONS =====
+// ===== ROOMS (Public Room Style) =====
+// Background IS the room. No furniture overlay.
+// Walkable tiles are marked subtly. Exits are walkable zones.
 const ROOMS = {
   lobby: {
-    name: 'Grand Lobby', desc: 'The main entrance', bg: 'bg_mainhall',
-    width: 8, height: 8, color: '#1a1a2e',
-    exits: [{to:'tavern',x:0,y:3},{to:'garden',x:7,y:3},{to:'library',x:3,y:0},{to:'bedroom',x:4,y:7}],
-    furniture: [
-      {id:'furni_throne',x:3,y:0,z:0}, {id:'furni_table',x:3,y:2,z:0}, {id:'furni_chair',x:2,y:2,z:0}, {id:'furni_chair',x:4,y:2,z:0},
-      {id:'furni_lamp',x:1,y:1,z:0}, {id:'furni_lamp',x:6,y:1,z:0}, {id:'furni_rug',x:3,y:3,z:0}, {id:'furni_fountain',x:3,y:5,z:0},
-    ]
+    name: 'Grand Lobby', desc: 'The main entrance hall', bg: 'bg_mainhall',
+    width: 10, height: 8,
+    exits: [
+      { to: 'tavern', x: 0, y: 3, label: 'Tavern' },
+      { to: 'garden', x: 9, y: 3, label: 'Garden' },
+      { to: 'library', x: 4, y: 0, label: 'Library' },
+      { to: 'bedroom', x: 5, y: 7, label: 'Bedroom' },
+    ],
+    // Walkable floor area (tiles that are floor, not walls)
+    floorTiles: [], // auto-generated from dimensions
   },
   tavern: {
-    name: 'Cozy Tavern', desc: 'Warm drinks and stories', bg: 'bg_tavern',
-    width: 8, height: 7, color: '#2e1a0a',
-    exits: [{to:'lobby',x:7,y:3}],
-    furniture: [
-      {id:'furni_barrel',x:0,y:0,z:0}, {id:'furni_barrel',x:1,y:0,z:0}, {id:'furni_table',x:3,y:2,z:0},
-      {id:'furni_chair',x:2,y:2,z:0}, {id:'furni_chair',x:4,y:2,z:0}, {id:'furni_table',x:3,y:4,z:0},
-      {id:'furni_chair',x:2,y:4,z:0}, {id:'furni_chair',x:4,y:4,z:0}, {id:'furni_fireplace',x:0,y:5,z:0},
-      {id:'furni_sofa',x:6,y:3,z:0}, {id:'furni_jukebox',x:7,y:0,z:0},
-    ]
+    name: 'Cozy Tavern', desc: 'Warm drinks by the fire', bg: 'bg_tavern',
+    width: 9, height: 7,
+    exits: [{ to: 'lobby', x: 8, y: 3, label: 'Lobby' }],
   },
   garden: {
-    name: 'Garden Path', desc: 'Flowers and fresh air', bg: 'bg_garden',
-    width: 9, height: 8, color: '#0a2e1a',
-    exits: [{to:'lobby',x:0,y:3},{to:'beach',x:8,y:6}],
-    furniture: [
-      {id:'furni_tree',x:0,y:0,z:0}, {id:'furni_tree',x:8,y:0,z:0}, {id:'furni_tree',x:0,y:7,z:0},
-      {id:'furni_flower',x:2,y:2,z:0}, {id:'furni_flower',x:5,y:3,z:0}, {id:'furni_flower',x:6,y:5,z:0},
-      {id:'furni_bench',x:3,y:4,z:0}, {id:'furni_bench',x:6,y:6,z:0}, {id:'furni_fountain',x:4,y:3,z:0}, {id:'furni_gate',x:4,y:7,z:0},
-    ]
+    name: 'Garden Path', desc: 'Flowers and moonlight', bg: 'bg_garden',
+    width: 10, height: 8,
+    exits: [
+      { to: 'lobby', x: 0, y: 3, label: 'Lobby' },
+      { to: 'beach', x: 9, y: 6, label: 'Beach' },
+    ],
   },
   library: {
     name: 'Library Lounge', desc: 'Books and silence', bg: 'bg_library',
-    width: 8, height: 8, color: '#1a0a2e',
-    exits: [{to:'lobby',x:4,y:7}],
-    furniture: [
-      {id:'furni_bookshelf',x:0,y:0,z:0}, {id:'furni_bookshelf',x:1,y:0,z:0}, {id:'furni_bookshelf',x:2,y:0,z:0},
-      {id:'furni_bookshelf',x:0,y:7,z:0}, {id:'furni_bookshelf',x:1,y:7,z:0}, {id:'furni_chair',x:3,y:3,z:0},
-      {id:'furni_table',x:3,y:4,z:0}, {id:'furni_lamp',x:5,y:2,z:0}, {id:'furni_rug',x:3,y:5,z:0}, {id:'furni_chest',x:7,y:0,z:0},
-    ]
+    width: 9, height: 8,
+    exits: [{ to: 'lobby', x: 4, y: 7, label: 'Lobby' }],
   },
   bedroom: {
     name: 'Sleepy Bedroom', desc: 'Rest and recharge', bg: 'bg_bedroom',
-    width: 7, height: 7, color: '#2e1a1a',
-    exits: [{to:'lobby',x:3,y:0}],
-    furniture: [
-      {id:'furni_bed',x:2,y:2,z:0}, {id:'furni_dresser',x:5,y:2,z:0}, {id:'furni_mirror',x:0,y:0,z:0},
-      {id:'furni_lamp',x:3,y:5,z:0}, {id:'furni_rug',x:3,y:3,z:0}, {id:'furni_plant',x:6,y:6,z:0}, {id:'furni_window',x:3,y:0,z:0},
-    ]
+    width: 8, height: 7,
+    exits: [{ to: 'lobby', x: 3, y: 0, label: 'Lobby' }],
   },
   beach: {
-    name: 'Sunny Beach', desc: 'Sand and waves', bg: 'bg_beach',
-    width: 9, height: 7, color: '#1a2e3a',
-    exits: [{to:'garden',x:0,y:3}],
-    furniture: [
-      {id:'furni_tree',x:0,y:0,z:0}, {id:'furni_tree',x:8,y:0,z:0}, {id:'furni_bench',x:3,y:3,z:0},
-      {id:'furni_bench',x:6,y:4,z:0}, {id:'furni_rug',x:4,y:5,z:0}, {id:'furni_gate',x:5,y:5,z:0},
-    ]
+    name: 'Sunny Beach', desc: 'Sand and ocean breeze', bg: 'bg_beach',
+    width: 10, height: 7,
+    exits: [{ to: 'garden', x: 0, y: 3, label: 'Garden' }],
   },
   rooftop: {
     name: 'Rooftop Cafe', desc: 'Coffee with a view', bg: 'bg_rooftop',
-    width: 8, height: 7, color: '#2e2e1a',
-    exits: [{to:'lobby',x:3,y:6}],
-    furniture: [
-      {id:'furni_table',x:2,y:2,z:0}, {id:'furni_chair',x:1,y:2,z:0}, {id:'furni_chair',x:3,y:2,z:0},
-      {id:'furni_table',x:5,y:3,z:0}, {id:'furni_chair',x:4,y:3,z:0}, {id:'furni_chair',x:6,y:3,z:0},
-      {id:'furni_lamp',x:0,y:0,z:0}, {id:'furni_lamp',x:7,y:0,z:0}, {id:'furni_piano',x:3,y:5,z:0},
-    ]
+    width: 9, height: 7,
+    exits: [{ to: 'lobby', x: 3, y: 6, label: 'Lobby' }],
   },
   arcade: {
     name: 'Neon Arcade', desc: 'Games and prizes', bg: 'bg_arcade',
-    width: 8, height: 7, color: '#1a0a2e',
-    exits: [{to:'lobby',x:0,y:3}],
-    furniture: [
-      {id:'furni_arcade',x:1,y:1,z:0}, {id:'furni_arcade',x:3,y:1,z:0}, {id:'furni_arcade',x:5,y:1,z:0},
-      {id:'furni_pool_table',x:2,y:4,z:0}, {id:'furni_jukebox',x:7,y:0,z:0}, {id:'furni_sofa',x:6,y:5,z:0}, {id:'furni_tv',x:0,y:5,z:0},
-    ]
+    width: 9, height: 7,
+    exits: [{ to: 'lobby', x: 0, y: 3, label: 'Lobby' }],
   },
   spa: {
-    name: 'Spa Bay', desc: 'Relaxation zone', bg: 'bg_spa',
-    width: 7, height: 7, color: '#0a2e2e',
-    exits: [{to:'lobby',x:3,y:0}],
-    furniture: [
-      {id:'furni_bed',x:1,y:1,z:0}, {id:'furni_bed',x:5,y:1,z:0}, {id:'furni_plant',x:0,y:0,z:0},
-      {id:'furni_plant',x:6,y:0,z:0}, {id:'furni_plant',x:0,y:6,z:0}, {id:'furni_fountain',x:3,y:3,z:0}, {id:'furni_rug',x:3,y:4,z:0},
-    ]
+    name: 'Spa Bay', desc: 'Relaxation and zen', bg: 'bg_spa',
+    width: 8, height: 7,
+    exits: [{ to: 'lobby', x: 3, y: 0, label: 'Lobby' }],
   },
   market: {
-    name: 'Market Hall', desc: 'Trade and barter', bg: 'bg_market',
-    width: 9, height: 7, color: '#2e2a1a',
-    exits: [{to:'lobby',x:0,y:3}],
-    furniture: [
-      {id:'furni_table',x:2,y:2,z:0}, {id:'furni_table',x:5,y:2,z:0}, {id:'furni_table',x:2,y:5,z:0},
-      {id:'furni_chest',x:0,y:0,z:0}, {id:'furni_chest',x:8,y:0,z:0}, {id:'furni_barrel',x:1,y:6,z:0},
-      {id:'furni_barrel',x:7,y:6,z:0}, {id:'furni_trophy',x:4,y:3,z:0},
-    ]
+    name: 'Market Hall', desc: 'Trade and treasures', bg: 'bg_market',
+    width: 10, height: 7,
+    exits: [{ to: 'lobby', x: 0, y: 3, label: 'Lobby' }],
   },
   event: {
-    name: 'Event Pavilion', desc: 'Special gatherings', bg: 'bg_event',
-    width: 10, height: 8, color: '#2e1a2e',
-    exits: [{to:'lobby',x:0,y:3}],
-    furniture: [
-      {id:'furni_throne',x:4,y:2,z:0}, {id:'furni_throne',x:5,y:2,z:0}, {id:'furni_table',x:2,y:4,z:0},
-      {id:'furni_table',x:7,y:4,z:0}, {id:'furni_sofa',x:3,y:6,z:0}, {id:'furni_sofa',x:6,y:6,z:0},
-      {id:'furni_fountain',x:5,y:5,z:0}, {id:'furni_tree',x:0,y:0,z:0}, {id:'furni_tree',x:9,y:0,z:0},
-    ]
+    name: 'Event Pavilion', desc: 'Festivals and shows', bg: 'bg_event',
+    width: 11, height: 8,
+    exits: [{ to: 'lobby', x: 0, y: 3, label: 'Lobby' }],
   },
   winter: {
-    name: 'Winter Plaza', desc: 'Snow and lights', bg: 'bg_winter',
-    width: 9, height: 8, color: '#1a1a3e',
-    exits: [{to:'lobby',x:4,y:7}],
-    furniture: [
-      {id:'furni_tree',x:0,y:0,z:0}, {id:'furni_tree',x:8,y:0,z:0}, {id:'furni_tree',x:0,y:7,z:0}, {id:'furni_tree',x:8,y:7,z:0},
-      {id:'furni_bench',x:3,y:3,z:0}, {id:'furni_bench',x:5,y:5,z:0}, {id:'furni_lamp',x:2,y:2,z:0},
-      {id:'furni_lamp',x:6,y:2,z:0}, {id:'furni_lamp',x:2,y:6,z:0}, {id:'furni_lamp',x:6,y:6,z:0}, {id:'furni_rug',x:4,y:4,z:0},
-    ]
+    name: 'Winter Plaza', desc: 'Snow and starlight', bg: 'bg_winter',
+    width: 10, height: 8,
+    exits: [{ to: 'lobby', x: 4, y: 7, label: 'Lobby' }],
   },
 };
 
-// ===== STAGED ASSET LOADER WITH RETRY =====
-function getAssetUrl(path) {
-  // Versioned URLs for cache busting and proper HTTP caching
-  return path + '?' + ASSET_VERSION;
+// Generate floor tiles for each room
+Object.values(ROOMS).forEach(room => {
+  room.floorTiles = [];
+  for (let y = 0; y < room.height; y++) {
+    for (let x = 0; x < room.width; x++) {
+      room.floorTiles.push({ x, y });
+    }
+  }
+});
+
+// ===== ASSET LOADER =====
+function assetUrl(path) {
+  return path + '?v=' + VERSION;
 }
 
-function loadAsset(key, url, retries = 1) {
-  return new Promise((resolve) => {
+function loadImg(key, url) {
+  return new Promise(resolve => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
-
-    img.onload = function() {
-      // Analyze image - find actual sprite bounds within the image
-      const bounds = analyzeSpriteBounds(img);
-      state.assets[key] = img;
-      state.assetMeta[key] = {
-        width: img.naturalWidth || img.width,
-        height: img.naturalHeight || img.height,
-        bounds: bounds,
-        loaded: true,
-        failed: false
-      };
-      resolve({ key, success: true });
+    img.onload = () => {
+      S.assets[key] = img;
+      resolve(true);
     };
-
-    img.onerror = function() {
-      console.warn('[ASSET FAIL] ' + key + ' -> ' + url);
-      if (retries > 0) {
-        console.log('[ASSET RETRY] ' + key + ' in 2s...');
-        setTimeout(() => {
-          loadAsset(key, url, retries - 1).then(resolve);
-        }, 2000);
-      } else {
-        // Create procedural placeholder
-        state.assets[key] = createPlaceholder(key);
-        state.assetMeta[key] = { width: 64, height: 64, bounds: null, loaded: true, failed: true };
-        resolve({ key, success: false });
-      }
+    img.onerror = () => {
+      console.warn('Failed to load:', key);
+      S.assets[key] = makePlaceholder(key);
+      resolve(false);
     };
-
-    img.src = getAssetUrl(url);
+    img.src = assetUrl(url);
   });
 }
 
-function analyzeSpriteBounds(img) {
-  // For AI-generated sprites that are on large transparent canvases,
-  // find the actual non-transparent pixel bounds
-  try {
-    const w = img.naturalWidth || img.width || 64;
-    const h = img.naturalHeight || img.height || 64;
-    if (w <= 128 && h <= 128) {
-      // Already small, use full image
-      return { x: 0, y: 0, w: w, h: h };
-    }
-    // For large images, sample to find non-transparent bounds
-    const c = document.createElement('canvas');
-    c.width = Math.min(w, 256);
-    c.height = Math.min(h, 256);
-    const ctx = c.getContext('2d');
-    ctx.drawImage(img, 0, 0, c.width, c.height);
-    const data = ctx.getImageData(0, 0, c.width, c.height).data;
-    let minX = c.width, minY = c.height, maxX = 0, maxY = 0;
-    for (let y = 0; y < c.height; y++) {
-      for (let x = 0; x < c.width; x++) {
-        const idx = (y * c.width + x) * 4 + 3;
-        if (data[idx] > 10) {
-          minX = Math.min(minX, x);
-          minY = Math.min(minY, y);
-          maxX = Math.max(maxX, x);
-          maxY = Math.max(maxY, y);
-        }
-      }
-    }
-    if (maxX > minX && maxY > minY) {
-      // Scale back to original dimensions
-      const scaleX = w / c.width;
-      const scaleY = h / c.height;
-      return {
-        x: Math.floor(minX * scaleX),
-        y: Math.floor(minY * scaleY),
-        w: Math.ceil((maxX - minX + 1) * scaleX),
-        h: Math.ceil((maxY - minY + 1) * scaleY)
-      };
-    }
-  } catch(e) {
-    console.warn('Bounds analysis failed:', e);
-  }
-  return { x: 0, y: 0, w: 64, h: 64 };
-}
-
-function createPlaceholder(key) {
+function makePlaceholder(key) {
   const c = document.createElement('canvas');
-  c.width = 64; c.height = 64;
+  const size = key.includes('bg_') ? 400 : 64;
+  c.width = size; c.height = size;
   const x = c.getContext('2d');
-
   if (key.includes('bg_')) {
-    c.width = 800; c.height = 600;
-    const g = x.createLinearGradient(0,0,0,600);
+    const g = x.createLinearGradient(0, 0, 0, size);
     g.addColorStop(0, '#1a1a3e'); g.addColorStop(1, '#0a0a1a');
-    x.fillStyle = g; x.fillRect(0,0,800,600);
-    for (let i=0;i<50;i++) {
-      x.fillStyle = '#fff'; x.globalAlpha = Math.random()*0.6;
-      x.fillRect(Math.random()*800, Math.random()*300, 2, 2);
-    }
-    x.globalAlpha = 1;
-  } else if (key.includes('hair_')) {
-    x.fillStyle = '#8B4513';
-    x.beginPath(); x.arc(32, 20, 18, Math.PI, 0); x.fill();
-    x.fillRect(14, 18, 36, 12);
-  } else if (key.includes('face_')) {
-    x.fillStyle = '#ffdbac'; x.fillRect(20, 10, 24, 24);
-    x.fillStyle = '#222'; x.fillRect(26, 18, 4, 4); x.fillRect(34, 18, 4, 4);
-    x.fillStyle = '#c44'; x.beginPath(); x.arc(32, 28, 4, 0, Math.PI); x.fill();
-  } else if (key.includes('body_')) {
-    x.fillStyle = '#ffdbac'; x.fillRect(20, 24, 24, 28);
-    x.fillRect(16, 52, 10, 12); x.fillRect(38, 52, 10, 12);
-  } else if (key.includes('shirt_') || key.includes('dress_')) {
-    x.fillStyle = '#4169E1'; x.fillRect(16, 28, 32, 28);
-    x.fillRect(8, 32, 8, 20); x.fillRect(48, 32, 8, 20);
-  } else if (key.includes('legs_') || key.includes('pants')) {
-    x.fillStyle = '#228B22'; x.fillRect(18, 56, 12, 8); x.fillRect(34, 56, 12, 8);
-  } else if (key.includes('acc_')) {
-    x.fillStyle = '#FFD700'; x.fillRect(8, 4, 48, 8);
+    x.fillStyle = g; x.fillRect(0, 0, size, size);
   } else {
-    // Generic furniture
-    x.fillStyle = '#8B4513'; x.fillRect(8, 24, 48, 36);
-    x.fillStyle = '#A0522D'; x.fillRect(12, 28, 40, 20);
-    x.fillStyle = '#FFD700'; x.font = '9px sans-serif'; x.textAlign = 'center';
-    x.fillText(key.replace('furni_','').slice(0,6), 32, 50);
+    x.fillStyle = '#444'; x.fillRect(8, 8, size - 16, size - 16);
+    x.fillStyle = '#FFD700'; x.font = (size / 4) + 'px sans-serif';
+    x.textAlign = 'center'; x.fillText('?', size / 2, size / 2 + 8);
   }
   const img = new Image(); img.src = c.toDataURL(); return img;
 }
 
-async function loadAssets() {
-  const keys = Object.keys(ASSETS);
-  state.assetsTotal = keys.length;
-  state.assetsLoaded = 0;
-  state.loadStage = 1;
+async function loadAllAssets() {
+  const keys = Object.keys(ASSET_URLS);
+  S.total = keys.length;
+  S.loaded = 0;
 
-  updateLoadingText('Loading core assets...');
-
-  // Load all assets in parallel with batching
-  const BATCH = 8;
-  for (let i = 0; i < keys.length; i += BATCH) {
-    const batch = keys.slice(i, i + BATCH);
-    const promises = batch.map(key => loadAsset(key, ASSETS[key]));
-    const results = await Promise.all(promises);
-
-    results.forEach(r => {
-      state.assetsLoaded++;
-    });
-
-    const pct = Math.round((state.assetsLoaded / state.assetsTotal) * 100);
+  const batch = 6;
+  for (let i = 0; i < keys.length; i += batch) {
+    const batchKeys = keys.slice(i, i + batch);
+    await Promise.all(batchKeys.map(k => loadImg(k, ASSET_URLS[k])));
+    S.loaded += batchKeys.length;
+    const pct = Math.round((S.loaded / S.total) * 100);
     document.getElementById('loadFill').style.width = pct + '%';
-    document.getElementById('loadText').textContent = `Loading hotel assets... ${pct}% (${state.assetsLoaded}/${state.assetsTotal})`;
+    document.getElementById('loadText').textContent = 'Loading hotel... ' + pct + '%';
   }
 
-  state.loadStage = 2;
-  updateLoadingText('Preparing rooms...');
-
-  // Small delay for visual completion
-  await new Promise(r => setTimeout(r, 300));
-
-  state.loadStage = 3;
-  document.getElementById('loadText').textContent = 'Welcome to Starlight Inn!';
-
-  setTimeout(() => {
-    document.getElementById('loadingScreen').classList.add('hidden');
-    showScreen('title');
-  }, 400);
+  // Small delay for smooth transition
+  await new Promise(r => setTimeout(r, 400));
+  document.getElementById('loadScreen').classList.add('done');
+  showScreen('title');
 }
 
-function updateLoadingText(text) {
-  const el = document.getElementById('loadText');
-  if (el) el.textContent = text;
-}
-
+// ===== SCREEN MANAGEMENT =====
 function showScreen(name) {
-  state.screen = name;
-  ['loadingScreen','titleScreen','charScreen','gameScreen'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.remove('active');
+  S.screen = name;
+  document.querySelectorAll('#loadScreen, #titleScreen, #charScreen, #gameScreen').forEach(el => {
+    el.classList.remove('active');
   });
   if (name === 'title') document.getElementById('titleScreen').classList.add('active');
   if (name === 'char') {
     document.getElementById('charScreen').classList.add('active');
-    initCharCreator();
+    renderCharSelect();
   }
   if (name === 'game') {
     document.getElementById('gameScreen').classList.add('active');
@@ -982,495 +483,100 @@ function showScreen(name) {
   }
 }
 
-function startGame() {
-  if (!state.player.name) { openModal('loginModal'); return; }
+// ===== CHARACTER SELECT =====
+function renderCharSelect() {
+  const grid = document.getElementById('charGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  AVATARS.forEach(ava => {
+    const div = document.createElement('div');
+    div.className = 'cc-char' + (S.player.avatar === ava.id ? ' active' : '');
+    const img = S.assets[ava.id];
+    if (img) {
+      const imgEl = document.createElement('img');
+      imgEl.src = img.src;
+      div.appendChild(imgEl);
+    }
+    const lbl = document.createElement('div');
+    lbl.className = 'lbl';
+    lbl.textContent = ava.icon + ' ' + ava.name;
+    div.appendChild(lbl);
+    div.onclick = () => {
+      S.player.avatar = ava.id;
+      renderCharSelect();
+    };
+    grid.appendChild(div);
+  });
+}
+
+function saveChar() {
+  saveData();
   showScreen('game');
 }
 
-function backToTitle() {
-  showScreen('title');
+function openCharSelect() {
+  if (!S.player.name) { openModal('loginModal'); return; }
+  showScreen('char');
+}
+
+// ===== LOGIN =====
+function enterHotel() {
+  if (!S.player.name) { openModal('loginModal'); return; }
+  showScreen('game');
 }
 
 function doLogin() {
   const name = document.getElementById('loginName').value.trim();
   if (name.length < 2 || name.length > 16) {
-    document.getElementById('loginError').textContent = 'Name must be 2-16 characters';
+    document.getElementById('loginErr').textContent = 'Name must be 2-16 characters';
     return;
   }
-  state.player.name = name;
+  S.player.name = name;
   closeModal('loginModal');
-  loadPlayerData();
+  loadData();
   showScreen('game');
-  unlockAchievement('first_login');
 }
 
 // ===== SAVE / LOAD =====
-function savePlayerData() {
-  const data = {
-    name: state.player.name, gender: state.player.gender, skin: state.player.skin,
-    hairStyle: state.player.hairStyle, hairHue: state.player.hairHue,
-    faceStyle: state.player.faceStyle, shirtStyle: state.player.shirtStyle,
-    shirtHue: state.player.shirtHue, pantsStyle: state.player.pantsStyle,
-    pantsHue: state.player.pantsHue, accStyle: state.player.accStyle,
-    gold: state.player.gold, gems: state.player.gems, xp: state.player.xp,
-    level: state.player.level, inventory: state.player.inventory,
-    achievements: state.achievements.map(a => ({id:a.id, unlocked:a.unlocked})),
-  };
-  try { localStorage.setItem('starlight_v17', JSON.stringify(data)); } catch(e) {}
-}
-
-function loadPlayerData() {
+function saveData() {
   try {
-    const raw = localStorage.getItem('starlight_v17');
-    if (!raw) {
-      state.player.inventory = [
-        {id:'furni_chair', cat:'furniture', rarity:'common'},
-        {id:'furni_lamp', cat:'furniture', rarity:'common'},
-        {id:'furni_rug', cat:'furniture', rarity:'common'},
-      ];
-      state.achievements = JSON.parse(JSON.stringify(ACHIEVEMENTS));
-      return;
-    }
-    const data = JSON.parse(raw);
-    Object.assign(state.player, data);
-    if (data.achievements) {
-      data.achievements.forEach(saved => {
-        const a = ACHIEVEMENTS.find(aa => aa.id === saved.id);
-        if (a) a.unlocked = saved.unlocked;
-      });
-    }
-    state.achievements = ACHIEVEMENTS;
-    if (!state.player.inventory) state.player.inventory = [];
-  } catch(e) {
-    state.achievements = JSON.parse(JSON.stringify(ACHIEVEMENTS));
-  }
+    localStorage.setItem('si_v18', JSON.stringify({
+      name: S.player.name, avatar: S.player.avatar,
+      gold: S.player.gold, gems: S.player.gems,
+      xp: S.player.xp, level: S.player.level,
+    }));
+  } catch(e) {}
 }
 
-// ===== PROCEDURAL AVATAR RENDERER =====
-// Draws a proper chibi-style avatar using canvas primitives
-// This ensures avatars ALWAYS render regardless of sprite sheet loading
-
-function renderAvatar(ctx, avatar, x, y, scale, dir) {
-  scale = scale || 1;
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(scale, scale);
-
-  const skin = avatar.skin || '#ffdbac';
-  const hairColor = hslToHex(avatar.hairHue || 25, 80, 55);
-  const shirtColor = hslToHex(avatar.shirtHue || 200, 70, 50);
-  const pantsColor = hslToHex(avatar.pantsHue || 220, 70, 40);
-
-  // Determine if female (for body shape)
-  const isFemale = avatar.gender === 'F';
-  const isDress = avatar.shirtStyle && avatar.shirtStyle.includes('dress');
-
-  // ===== LEGS / BOTTOM =====
-  ctx.fillStyle = pantsColor;
-  if (isDress) {
-    // Dress bottom - wider triangle shape
-    ctx.beginPath();
-    ctx.moveTo(-14, 20);
-    ctx.lineTo(14, 20);
-    ctx.lineTo(18, 50);
-    ctx.lineTo(-18, 50);
-    ctx.closePath();
-    ctx.fill();
-  } else if (avatar.pantsStyle && avatar.pantsStyle.includes('skirt')) {
-    ctx.beginPath();
-    ctx.moveTo(-12, 20);
-    ctx.lineTo(12, 20);
-    ctx.lineTo(16, 45);
-    ctx.lineTo(-16, 45);
-    ctx.closePath();
-    ctx.fill();
-    // Legs showing under skirt
-    ctx.fillStyle = skin;
-    ctx.fillRect(-8, 45, 6, 12);
-    ctx.fillRect(2, 45, 6, 12);
-  } else {
-    // Pants/shorts
-    const shortLegs = avatar.pantsStyle && avatar.pantsStyle.includes('short');
-    const legLength = shortLegs ? 18 : 30;
-    // Left leg
-    ctx.fillRect(-12, 22, 9, legLength);
-    // Right leg
-    ctx.fillRect(3, 22, 9, legLength);
-    // Shoes
-    ctx.fillStyle = '#444';
-    ctx.fillRect(-13, 22 + legLength - 2, 11, 5);
-    ctx.fillRect(2, 22 + legLength - 2, 11, 5);
-  }
-
-  // ===== BODY / TORSO =====
-  if (isDress) {
-    ctx.fillStyle = shirtColor;
-    // Dress bodice
-    ctx.fillRect(-13, -5, 26, 28);
-    // Dress sleeves
-    ctx.fillRect(-20, -2, 7, 18);
-    ctx.fillRect(13, -2, 7, 18);
-  } else {
-    ctx.fillStyle = shirtColor;
-    // Torso
-    if (isFemale) {
-      ctx.beginPath();
-      ctx.moveTo(-12, -5);
-      ctx.lineTo(12, -5);
-      ctx.lineTo(14, 22);
-      ctx.lineTo(-14, 22);
-      ctx.closePath();
-      ctx.fill();
-    } else {
-      ctx.fillRect(-12, -5, 24, 28);
-    }
-    // Arms
-    ctx.fillStyle = shirtColor;
-    ctx.fillRect(-20, -2, 8, 20);
-    ctx.fillRect(12, -2, 8, 20);
-    // Hands
-    ctx.fillStyle = skin;
-    ctx.beginPath(); ctx.arc(-16, 20, 4, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(16, 20, 4, 0, Math.PI*2); ctx.fill();
-  }
-
-  // ===== HEAD =====
-  ctx.fillStyle = skin;
-  // Face shape - rounded
-  ctx.beginPath();
-  ctx.arc(0, -22, 16, 0, Math.PI*2);
-  ctx.fill();
-  // Chin
-  ctx.beginPath();
-  ctx.ellipse(0, -14, 12, 8, 0, 0, Math.PI*2);
-  ctx.fill();
-
-  // ===== FACE =====
-  const faceStyle = avatar.faceStyle || 'face_happy';
-  // Eyes
-  ctx.fillStyle = '#222';
-  ctx.beginPath(); ctx.arc(-5, -24, 3, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(5, -24, 3, 0, Math.PI*2); ctx.fill();
-  // Eye shine
-  ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.arc(-4, -25, 1, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(6, -25, 1, 0, Math.PI*2); ctx.fill();
-
-  // Mouth based on face style
-  ctx.strokeStyle = '#a0522d';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  if (faceStyle.includes('happy')) {
-    ctx.arc(0, -18, 4, 0.1, Math.PI - 0.1);
-  } else if (faceStyle.includes('cool')) {
-    ctx.moveTo(-4, -17); ctx.lineTo(4, -17);
-  } else if (faceStyle.includes('surprised')) {
-    ctx.arc(0, -17, 3, 0, Math.PI*2);
-  } else {
-    ctx.arc(0, -17, 3, 0.1, Math.PI - 0.1);
-  }
-  ctx.stroke();
-
-  // ===== HAIR =====
-  ctx.fillStyle = hairColor;
-  const hairStyle = avatar.hairStyle || 'hair_short_brown';
-
-  if (hairStyle.includes('bald')) {
-    // No hair
-  } else if (hairStyle.includes('buzz') || hairStyle.includes('short')) {
-    // Short / buzz cut
-    ctx.fillRect(-14, -40, 28, 14);
-    ctx.fillRect(-16, -36, 32, 8);
-  } else if (hairStyle.includes('mohawk')) {
-    // Mohawk - center strip
-    ctx.fillRect(-4, -45, 8, 25);
-    ctx.fillRect(-3, -42, 6, 8);
-    // Shaved sides (skin showing)
-  } else if (hairStyle.includes('afro')) {
-    // Afro - big round
-    ctx.beginPath();
-    ctx.arc(0, -28, 20, Math.PI, 0);
-    ctx.fill();
-    ctx.fillRect(-20, -28, 40, 12);
-  } else if (hairStyle.includes('long') || hairStyle.includes('waves') || hairStyle.includes('braids')) {
-    // Long hair - falls down
-    ctx.fillRect(-16, -40, 32, 16);
-    ctx.fillRect(-18, -34, 36, 10);
-    // Hair falling down sides
-    ctx.fillRect(-18, -30, 8, 35);
-    ctx.fillRect(10, -30, 8, 35);
-  } else if (hairStyle.includes('pony') || hairStyle.includes('pigtail')) {
-    // Ponytail / pigtails
-    ctx.fillRect(-14, -40, 28, 14);
-    if (hairStyle.includes('pigtail')) {
-      // Two tails
-      ctx.beginPath(); ctx.ellipse(-20, -20, 6, 14, -0.2, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(20, -20, 6, 14, 0.2, 0, Math.PI*2); ctx.fill();
-    } else {
-      // Single ponytail
-      ctx.beginPath(); ctx.ellipse(0, -36, 8, 16, 0, 0, Math.PI*2); ctx.fill();
-    }
-  } else if (hairStyle.includes('spiky')) {
-    // Spiky hair
-    ctx.fillRect(-14, -40, 28, 12);
-    for (let i = -12; i <= 12; i += 6) {
-      ctx.beginPath();
-      ctx.moveTo(i, -36);
-      ctx.lineTo(i + 3, -48);
-      ctx.lineTo(i + 6, -36);
-      ctx.closePath();
-      ctx.fill();
-    }
-  } else if (hairStyle.includes('emo')) {
-    // Emo - covers one eye
-    ctx.fillRect(-16, -40, 32, 16);
-    ctx.fillRect(-16, -34, 18, 22); // covers left eye
-  } else if (hairStyle.includes('pixie') || hairStyle.includes('bob')) {
-    // Short bob / pixie
-    ctx.fillRect(-15, -40, 30, 14);
-    ctx.fillRect(-17, -34, 10, 18);
-    ctx.fillRect(7, -34, 10, 18);
-  } else if (hairStyle.includes('slick')) {
-    // Slick back
-    ctx.fillRect(-14, -40, 28, 12);
-    ctx.fillRect(-12, -38, 24, 4);
-  } else if (hairStyle.includes('undercut')) {
-    // Undercut - long top, shaved sides
-    ctx.fillRect(-10, -42, 20, 16);
-    ctx.fillRect(-8, -44, 16, 6);
-  } else if (hairStyle.includes('bedhead')) {
-    // Messy bed head
-    ctx.fillRect(-14, -40, 28, 14);
-    for (let i = 0; i < 5; i++) {
-      const hx = -12 + Math.random() * 24;
-      const hy = -42 + Math.random() * 8;
-      ctx.beginPath(); ctx.arc(hx, hy, 4 + Math.random()*4, 0, Math.PI*2); ctx.fill();
-    }
-  } else if (hairStyle.includes('dreads')) {
-    // Dreadlocks - rope-like
-    ctx.fillRect(-14, -40, 28, 12);
-    for (let i = -12; i <= 12; i += 4) {
-      ctx.fillRect(i, -34, 3, 28);
-    }
-  } else if (hairStyle.includes('french') || hairStyle.includes('braid')) {
-    // Braid down back
-    ctx.fillRect(-14, -40, 28, 14);
-    ctx.beginPath(); ctx.ellipse(0, -15, 6, 18, 0, 0, Math.PI*2); ctx.fill();
-  } else if (hairStyle.includes('curly')) {
-    // Curly - rounded puffs
-    ctx.beginPath(); ctx.arc(0, -30, 18, Math.PI, 0); ctx.fill();
-    for (let i = -15; i <= 15; i += 10) {
-      ctx.beginPath(); ctx.arc(i, -28, 8, 0, Math.PI*2); ctx.fill();
-    }
-  } else {
-    // Default short hair
-    ctx.fillRect(-14, -40, 28, 14);
-    ctx.fillRect(-16, -36, 32, 8);
-  }
-
-  // ===== ACCESSORY =====
-  const accStyle = avatar.accStyle;
-  if (accStyle) {
-    if (accStyle.includes('glasses')) {
-      // Round glasses
-      ctx.strokeStyle = '#444';
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(-6, -24, 5, 0, Math.PI*2); ctx.stroke();
-      ctx.beginPath(); ctx.arc(6, -24, 5, 0, Math.PI*2); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-1, -24); ctx.lineTo(1, -24); ctx.stroke();
-      // Lenses
-      ctx.fillStyle = 'rgba(200,220,255,0.3)';
-      ctx.beginPath(); ctx.arc(-6, -24, 4, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(6, -24, 4, 0, Math.PI*2); ctx.fill();
-    } else if (accStyle.includes('beanie')) {
-      ctx.fillStyle = '#8B4513';
-      ctx.fillRect(-14, -44, 28, 10);
-      ctx.fillRect(-12, -48, 24, 6);
-    } else if (accStyle.includes('wizard')) {
-      ctx.fillStyle = '#4B0082';
-      ctx.beginPath();
-      ctx.moveTo(-12, -40);
-      ctx.lineTo(0, -62);
-      ctx.lineTo(12, -40);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#FFD700';
-      ctx.beginPath(); ctx.arc(0, -62, 3, 0, Math.PI*2); ctx.fill();
-    } else if (accStyle.includes('wings')) {
-      ctx.fillStyle = 'rgba(255,255,200,0.7)';
-      ctx.beginPath(); ctx.ellipse(-22, -10, 12, 22, -0.4, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(22, -10, 12, 22, 0.4, 0, Math.PI*2); ctx.fill();
-      // Wing detail lines
-      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-      ctx.lineWidth = 1;
-      for (let i = -30; i < -14; i += 5) {
-        ctx.beginPath(); ctx.moveTo(i, -5); ctx.lineTo(i+4, -20); ctx.stroke();
-      }
-      for (let i = 14; i < 30; i += 5) {
-        ctx.beginPath(); ctx.moveTo(i, -5); ctx.lineTo(i+4, -20); ctx.stroke();
-      }
-    } else if (accStyle.includes('bow_tie')) {
-      ctx.fillStyle = '#DC143C';
-      ctx.beginPath();
-      ctx.moveTo(0, -8);
-      ctx.lineTo(-8, -12); ctx.lineTo(-8, -4); ctx.lineTo(0, -8);
-      ctx.lineTo(8, -4); ctx.lineTo(8, -12); ctx.lineTo(0, -8);
-      ctx.fill();
-      ctx.fillStyle = '#FFD700';
-      ctx.beginPath(); ctx.arc(0, -8, 2, 0, Math.PI*2); ctx.fill();
-    }
-  }
-
-  // ===== NAME TAG =====
-  if (avatar.name) {
-    ctx.font = 'bold 10px sans-serif';
-    const tw = ctx.measureText(avatar.name).width;
-    ctx.fillStyle = 'rgba(0,0,0,0.65)';
-    ctx.beginPath();
-    ctx.roundRect(-tw/2 - 5, 24, tw + 10, 16, 4);
-    ctx.fill();
-    ctx.fillStyle = '#FFD700';
-    ctx.textAlign = 'center';
-    ctx.fillText(avatar.name, 0, 36);
-  }
-
-  ctx.restore();
-}
-
-function _roundRect(ctx, x, y, w, h, r) {
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-}
-function hslToHex(h, s, l) {
-  s /= 100; l /= 100;
-  const a = s * Math.min(l, 1-l);
-  const f = n => {
-    const k = (n + h/30) % 12;
-    const color = l - a * Math.max(Math.min(k-3, 9-k, 1), -1);
-    return Math.round(255 * color).toString(16).padStart(2,'0');
-  };
-  return '#' + f(0) + f(8) + f(4);
-}
-
-function hexToHsl(hex) {
-  let r = parseInt(hex.slice(1,3),16)/255;
-  let g = parseInt(hex.slice(3,5),16)/255;
-  let b = parseInt(hex.slice(5,7),16)/255;
-  const max = Math.max(r,g,b), min = Math.min(r,g,b);
-  let h, s, l = (max+min)/2;
-  if (max === min) { h = s = 0; }
-  else {
-    const d = max - min;
-    s = l > 0.5 ? d/(2-max-min) : d/(max+min);
-    switch(max) {
-      case r: h = ((g-b)/d + (g<b?6:0))/6; break;
-      case g: h = ((b-r)/d + 2)/6; break;
-      case b: h = ((r-g)/d + 4)/6; break;
-    }
-  }
-  return { h: Math.round(h*360), s: Math.round(s*100), l: Math.round(l*100) };
-}
-
-// ===== FURNITURE RENDERING WITH BOUND DETECTION =====
-function drawFurniture(ctx, img, meta, x, y) {
-  if (!img) return;
-
-  let iw = img.naturalWidth || img.width || 64;
-  let ih = img.naturalHeight || img.height || 64;
-
-  // If we have analyzed bounds, use them for tighter drawing
-  let sx = 0, sy = 0, sw = iw, sh = ih;
-  if (meta && meta.bounds && meta.bounds.w > 0 && meta.bounds.h > 0) {
-    sx = meta.bounds.x;
-    sy = meta.bounds.y;
-    sw = meta.bounds.w;
-    sh = meta.bounds.h;
-  }
-
-  // Cap display size to reasonable furniture dimensions
-  const MAX_FURN_W = 100;
-  const MAX_FURN_H = 100;
-  let dw = sw;
-  let dh = sh;
-  if (dw > MAX_FURN_W || dh > MAX_FURN_H) {
-    const scale = Math.min(MAX_FURN_W / dw, MAX_FURN_H / dh);
-    dw *= scale;
-    dh *= scale;
-  }
-
-  // Minimum size for visibility
-  dw = Math.max(dw, 24);
-  dh = Math.max(dh, 24);
-
+function loadData() {
   try {
-    ctx.drawImage(img, sx, sy, sw, sh, x - dw/2, y - dh + TILE_H/2, dw, dh);
-  } catch(e) {
-    // Fallback placeholder
-    ctx.fillStyle = '#8B4513';
-    ctx.fillRect(x - 16, y - 24, 32, 32);
-    ctx.fillStyle = '#FFD700';
-    ctx.font = '8px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('?', x, y - 8);
-  }
+    const raw = localStorage.getItem('si_v18');
+    if (raw) {
+      const d = JSON.parse(raw);
+      Object.assign(S.player, d);
+    }
+  } catch(e) {}
+  updateCurrency();
 }
 
-// ===== ROOM SYSTEM =====
-function enterRoom(roomId) {
-  if (!ROOMS[roomId]) return;
-
-  // Show room loading overlay
-  showRoomLoading(true);
-
-  state.room = JSON.parse(JSON.stringify(ROOMS[roomId]));
-  state.room.id = roomId;
-  state.player.x = Math.floor(state.room.width/2);
-  state.player.y = Math.floor(state.room.height/2);
-  state.player.targetX = state.player.x;
-  state.player.targetY = state.player.y;
-  state.player.path = [];
-
-  document.getElementById('roomLabel').textContent = state.room.name;
-
-  // Check explore achievement
-  const visited = new Set(JSON.parse(localStorage.getItem('starlight_rooms')||'[]'));
-  visited.add(roomId);
-  localStorage.setItem('starlight_rooms', JSON.stringify([...visited]));
-  if (visited.size >= 12) unlockAchievement('visit_all');
-
-  // Preload room-specific assets then hide loading
-  setTimeout(() => {
-    showRoomLoading(false);
-  }, 300);
-}
-
-function showRoomLoading(show) {
-  let overlay = document.getElementById('roomLoadingOverlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'roomLoadingOverlay';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,10,26,0.85);display:flex;align-items:center;justify-content:center;z-index:550;transition:opacity 0.3s;';
-    overlay.innerHTML = '<div style="text-align:center;"><div style="font-size:14px;color:#FFD700;margin-bottom:10px;">Loading room...</div><div style="width:120px;height:4px;background:#222;border-radius:2px;overflow:hidden;"><div style="width:60%;height:100%;background:linear-gradient(90deg,#FFD700,#FFA500);animation:loadPulse 1s infinite;"></div></div></div>';
-    document.body.appendChild(overlay);
-    const style = document.createElement('style');
-    style.textContent = '@keyframes loadPulse {0%{opacity:0.5}50%{opacity:1}100%{opacity:0.5}}';
-    document.head.appendChild(style);
-  }
-  overlay.style.opacity = show ? '1' : '0';
-  overlay.style.pointerEvents = show ? 'all' : 'none';
+// ===== ROOM SYSTEM (Public Room) =====
+function enterRoom(id) {
+  if (!ROOMS[id]) return;
+  const room = ROOMS[id];
+  S.room = { ...room, id };
+  S.player.x = Math.floor(room.width / 2);
+  S.player.y = Math.floor(room.height / 2);
+  S.player.tx = S.player.x;
+  S.player.ty = S.player.y;
+  S.player.path = [];
+  document.getElementById('roomName').textContent = room.name;
+  clearPathDots();
+  clearChat();
 }
 
 function isoToScreen(tx, ty) {
   const cx = window.innerWidth / 2;
-  const cy = window.innerHeight / 2;
+  const cy = window.innerHeight / 2 + 40; // offset for UI bars
   return {
     x: cx + (tx - ty) * (TILE_W / 2),
     y: cy + (tx + ty) * (TILE_H / 2)
@@ -1479,7 +585,7 @@ function isoToScreen(tx, ty) {
 
 function screenToIso(sx, sy) {
   const cx = window.innerWidth / 2;
-  const cy = window.innerHeight / 2;
+  const cy = window.innerHeight / 2 + 40;
   const x = (sx - cx) / (TILE_W / 2);
   const y = (sy - cy) / (TILE_H / 2);
   return {
@@ -1488,110 +594,104 @@ function screenToIso(sx, sy) {
   };
 }
 
-// ===== PATHFINDING (A*) =====
-function findPath(startX, startY, endX, endY) {
-  if (startX === endX && startY === endY) return [];
-  const w = state.room.width;
-  const h = state.room.height;
-  if (endX < 0 || endY < 0 || endX >= w || endY >= h) return [];
+// ===== PATHFINDING =====
+function findPath(sx, sy, ex, ey) {
+  if (sx === ex && sy === ey) return [];
+  const w = S.room.width;
+  const h = S.room.height;
+  if (ex < 0 || ey < 0 || ex >= w || ey >= h) return [];
 
-  const blocked = new Set();
-  state.room.furniture.forEach(f => blocked.add(`${f.x},${f.y}`));
-  if (blocked.has(`${endX},${endY}`)) return [];
-
-  const open = [{x:startX,y:startY,g:0,h:Math.abs(endX-startX)+Math.abs(endY-startY),f:0,parent:null}];
+  const open = [{ x: sx, y: sy, g: 0, h: Math.abs(ex - sx) + Math.abs(ey - sy), parent: null }];
   const closed = new Set();
 
   while (open.length > 0) {
-    open.sort((a,b) => a.f - b.f);
+    open.sort((a, b) => (a.g + a.h) - (b.g + b.h));
     const cur = open.shift();
-    const key = `${cur.x},${cur.y}`;
+    const key = cur.x + ',' + cur.y;
     if (closed.has(key)) continue;
     closed.add(key);
 
-    if (cur.x === endX && cur.y === endY) {
+    if (cur.x === ex && cur.y === ey) {
       const path = [];
-      let node = cur;
-      while (node.parent) {
-        path.unshift({x:node.x,y:node.y});
-        node = node.parent;
-      }
+      let n = cur;
+      while (n.parent) { path.unshift({ x: n.x, y: n.y }); n = n.parent; }
       return path;
     }
 
-    for (const [dx,dy] of [[0,1],[1,0],[0,-1],[-1,0]]) {
+    for (const [dx, dy] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) {
       const nx = cur.x + dx, ny = cur.y + dy;
       if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
-      if (blocked.has(`${nx},${ny}`)) continue;
-      if (closed.has(`${nx},${ny}`)) continue;
+      const nkey = nx + ',' + ny;
+      if (closed.has(nkey)) continue;
       const g = cur.g + 1;
-      const hh = Math.abs(endX - nx) + Math.abs(endY - ny);
-      const f = g + hh;
-      const existing = open.find(n => n.x === nx && n.y === ny);
+      const hh = Math.abs(ex - nx) + Math.abs(ey - ny);
+      const existing = open.find(o => o.x === nx && o.y === ny);
       if (!existing || g < existing.g) {
-        if (existing) { existing.g = g; existing.f = f; existing.parent = cur; }
-        else open.push({x:nx,y:ny,g,h:hh,f,parent:cur});
+        if (existing) { existing.g = g; existing.parent = cur; }
+        else open.push({ x: nx, y: ny, g, h: hh, parent: cur });
       }
     }
   }
   return [];
 }
 
-// ===== GAME LOOP & RENDERING =====
+// ===== RENDERING =====
+let lastT = 0;
+
 function resizeCanvas() {
   const c = document.getElementById('gameCanvas');
   if (!c) return;
   c.width = window.innerWidth;
   c.height = window.innerHeight;
 }
-window.addEventListener('resize', () => { if (state.screen === 'game') resizeCanvas(); });
+window.addEventListener('resize', () => { if (S.screen === 'game') resizeCanvas(); });
 
-function gameLoop(timestamp) {
-  if (state.screen !== 'game') return;
-  const dt = timestamp - state.lastTime;
-  state.lastTime = timestamp;
-  state.animTime += dt;
-
+function gameLoop(t) {
+  if (S.screen !== 'game') return;
+  const dt = t - lastT;
+  lastT = t;
   updatePlayer(dt);
-  renderGame();
+  renderRoom();
   updateChatBubbles(dt);
-
   requestAnimationFrame(gameLoop);
 }
 
 function updatePlayer(dt) {
-  if (state.player.path.length > 0) {
-    state.player.walkFrame += dt * 0.008;
-    const next = state.player.path[0];
-    const dx = next.x - state.player.x;
-    const dy = next.y - state.player.y;
-    const dist = Math.sqrt(dx*dx + dy*dy);
-    const speed = dt * 0.004;
+  if (S.player.path.length > 0) {
+    S.player.walkTime += dt;
+    const next = S.player.path[0];
+    const dx = next.x - S.player.x;
+    const dy = next.y - S.player.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const speed = dt * 0.0045; // comfortable walking speed
 
     if (dist < speed) {
-      state.player.x = next.x;
-      state.player.y = next.y;
-      state.player.path.shift();
-      if (state.player.path.length === 0) {
+      S.player.x = next.x;
+      S.player.y = next.y;
+      S.player.path.shift();
+      if (S.player.path.length === 0) {
         checkExit();
-        state.player.walkFrame = 0;
+        S.player.walkTime = 0;
+        clearPathDots();
       }
     } else {
-      state.player.x += (dx / dist) * speed;
-      state.player.y += (dy / dist) * speed;
-      if (Math.abs(dx) > Math.abs(dy)) state.player.dir = dx > 0 ? 'e' : 'w';
-      else state.player.dir = dy > 0 ? 's' : 'n';
+      S.player.x += (dx / dist) * speed;
+      S.player.y += (dy / dist) * speed;
+      // Direction
+      if (Math.abs(dx) > Math.abs(dy)) S.player.dir = dx > 0 ? 'e' : 'w';
+      else S.player.dir = dy > 0 ? 's' : 'n';
     }
+    updatePathDots();
   } else {
-    state.player.walkFrame = 0;
+    S.player.walkTime = 0;
   }
 }
 
 function checkExit() {
-  if (!state.room || !state.room.exits) return;
-  const px = Math.round(state.player.x);
-  const py = Math.round(state.player.y);
-  for (const exit of state.room.exits) {
+  if (!S.room || !S.room.exits) return;
+  const px = Math.round(S.player.x);
+  const py = Math.round(S.player.y);
+  for (const exit of S.room.exits) {
     if (exit.x === px && exit.y === py) {
       enterRoom(exit.to);
       return;
@@ -1599,230 +699,276 @@ function checkExit() {
   }
 }
 
-function renderGame() {
+function renderRoom() {
   const c = document.getElementById('gameCanvas');
   if (!c) return;
   const ctx = c.getContext('2d');
   ctx.clearRect(0, 0, c.width, c.height);
-  if (!state.room) return;
+  if (!S.room) return;
 
-  const dpr = window.devicePixelRatio || 1;
-
-  // Draw background
-  const bgImg = state.assets[state.room.bg];
-  if (bgImg) {
-    ctx.drawImage(bgImg, 0, 0, c.width, c.height);
+  // Draw background image (the room itself)
+  const bg = S.assets[S.room.bg];
+  if (bg) {
+    // Draw background centered and covering
+    const scale = Math.max(c.width / bg.width, c.height / bg.height);
+    const bw = bg.width * scale;
+    const bh = bg.height * scale;
+    ctx.drawImage(bg, (c.width - bw) / 2, (c.height - bh) / 2, bw, bh);
   } else {
-    ctx.fillStyle = state.room.color || '#0a0a1a';
+    ctx.fillStyle = S.room.color || '#0a0a1a';
     ctx.fillRect(0, 0, c.width, c.height);
   }
 
   const cx = c.width / 2;
-  const cy = c.height / 2;
-  const w = state.room.width;
-  const h = state.room.height;
+  const cy = c.height / 2 + 40;
+  const w = S.room.width;
+  const h = S.room.height;
 
-  // Draw floor tiles
+  // Draw subtle floor tile grid (very faint, just for visual reference)
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      const sx = cx + (x - y) * (TILE_W / 2);
-      const sy = cy + (x + y) * (TILE_H / 2);
-      ctx.fillStyle = ((x + y) % 2 === 0) ? 'rgba(60,50,40,0.35)' : 'rgba(50,40,30,0.35)';
+      const pos = isoToScreen(x, y);
+      ctx.fillStyle = ((x + y) % 2 === 0) ? 'rgba(255,215,0,0.04)' : 'rgba(255,215,0,0.02)';
       ctx.beginPath();
-      ctx.moveTo(sx, sy - TILE_H/2);
-      ctx.lineTo(sx + TILE_W/2, sy);
-      ctx.lineTo(sx, sy + TILE_H/2);
-      ctx.lineTo(sx - TILE_W/2, sy);
+      ctx.moveTo(pos.x, pos.y - TILE_H / 2);
+      ctx.lineTo(pos.x + TILE_W / 2, pos.y);
+      ctx.lineTo(pos.x, pos.y + TILE_H / 2);
+      ctx.lineTo(pos.x - TILE_W / 2, pos.y);
       ctx.closePath();
       ctx.fill();
+
+      // Subtle outline
       ctx.strokeStyle = 'rgba(255,215,0,0.06)';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 0.5;
       ctx.stroke();
     }
   }
 
-  // Collect renderables
-  const renderables = [];
-
-  // Furniture
-  state.room.furniture.forEach((f, i) => {
-    const img = state.assets[f.id];
-    const meta = state.assetMeta[f.id];
-    if (img) {
-      const pos = isoToScreen(f.x, f.y);
-      renderables.push({
-        type: 'furniture', img, meta,
-        x: pos.x, y: pos.y - TILE_H,
-        z: f.y * w + f.x + 0.5,
-        id: f.id, idx: i, fx: f.x, fy: f.y
-      });
-    }
-  });
-
-  // Player avatar
-  const ppos = isoToScreen(state.player.x, state.player.y);
-  renderables.push({
-    type: 'player',
-    z: state.player.y * w + state.player.x + 1,
-    render: () => {
-      renderAvatar(ctx, state.player, ppos.x, ppos.y - TILE_H/2, 1.3, state.player.dir);
-    }
-  });
-
-  // Sort by depth
-  renderables.sort((a, b) => a.z - b.z);
-
-  // Draw all
-  renderables.forEach(r => {
-    if (r.type === 'player') {
-      r.render();
-    } else {
-      drawFurniture(ctx, r.img, r.meta, r.x, r.y);
-
-      // Editor highlight
-      if (state.editor.active && state.editor.selectedItem) {
-        ctx.strokeStyle = 'rgba(255,215,0,0.6)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(r.x - 20, r.y - 40, 40, 40);
-      }
-    }
-  });
-
-  // Exit indicators
-  if (state.room.exits) {
-    state.room.exits.forEach(ex => {
-      const pos = isoToScreen(ex.x, ex.y);
-      ctx.fillStyle = 'rgba(255,215,0,0.25)';
+  // Draw exit zones (glowing golden tiles)
+  if (S.room.exits) {
+    S.room.exits.forEach(exit => {
+      const pos = isoToScreen(exit.x, exit.y);
+      // Glow effect
+      ctx.fillStyle = 'rgba(255,215,0,0.2)';
       ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y - TILE_H/2);
-      ctx.lineTo(pos.x + TILE_W/2, pos.y);
-      ctx.lineTo(pos.x, pos.y + TILE_H/2);
-      ctx.lineTo(pos.x - TILE_W/2, pos.y);
+      ctx.moveTo(pos.x, pos.y - TILE_H / 2);
+      ctx.lineTo(pos.x + TILE_W / 2, pos.y);
+      ctx.lineTo(pos.x, pos.y + TILE_H / 2);
+      ctx.lineTo(pos.x - TILE_W / 2, pos.y);
       ctx.closePath();
       ctx.fill();
+
+      // Pulsing border
+      const pulse = Math.sin(Date.now() / 300) * 0.3 + 0.5;
+      ctx.strokeStyle = `rgba(255,215,0,${pulse * 0.6})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label
       ctx.fillStyle = '#FFD700';
-      ctx.font = '9px sans-serif';
+      ctx.font = 'bold 9px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('EXIT', pos.x, pos.y + 2);
+      ctx.fillText(exit.label || 'EXIT', pos.x, pos.y + 2);
     });
   }
 
-  // Chat bubbles
-  state.chat.messages.forEach(m => {
-    if (m.life > 0) {
-      const pos = isoToScreen(m.x, m.y);
-      ctx.font = '11px sans-serif';
-      const tw = ctx.measureText(m.text).width;
-      const bx = pos.x - tw/2 - 8;
-      const by = pos.y - TILE_H - 38;
-      ctx.fillStyle = 'rgba(0,0,0,0.75)';
-      ctx.beginPath();
-      _roundRect(ctx, bx, by, tw + 16, 20, 6);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,215,0,0.4)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.fillStyle = '#fff';
-      ctx.textAlign = 'center';
-      ctx.fillText(m.text, pos.x, by + 14);
+  // Sort and render all entities by depth (y then x)
+  const entities = [];
+
+  // Other players (simulated)
+  S.otherPlayers.forEach(p => {
+    const pos = isoToScreen(p.x, p.y);
+    entities.push({ type: 'player', z: p.y * w + p.x + 0.1, x: pos.x, y: pos.y, player: p });
+  });
+
+  // Self
+  const selfPos = isoToScreen(S.player.x, S.player.y);
+  entities.push({ type: 'self', z: S.player.y * w + S.player.x + 0.2, x: selfPos.x, y: selfPos.y });
+
+  entities.sort((a, b) => a.z - b.z);
+
+  // Render each entity
+  entities.forEach(ent => {
+    if (ent.type === 'self') {
+      renderAvatarSprite(ctx, S.player, ent.x, ent.y, true);
+    } else {
+      renderAvatarSprite(ctx, ent.player, ent.x, ent.y, false);
     }
   });
 
-  // Editor UI hint
-  if (state.editor.active) {
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(10, 60, 220, 50);
-    ctx.strokeStyle = '#FFD700';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(10, 60, 220, 50);
-    ctx.fillStyle = '#FFD700';
-    ctx.font = 'bold 12px sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('EDITOR MODE', 18, 78);
-    ctx.fillStyle = '#aaa';
-    ctx.font = '11px sans-serif';
-    ctx.fillText('Click tile: place  |  Click item: remove', 18, 96);
+  // Draw hovered tile highlight
+  if (S.hoverTile) {
+    const pos = isoToScreen(S.hoverTile.x, S.hoverTile.y);
+    ctx.fillStyle = 'rgba(255,215,0,0.15)';
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y - TILE_H / 2);
+    ctx.lineTo(pos.x + TILE_W / 2, pos.y);
+    ctx.lineTo(pos.x, pos.y + TILE_H / 2);
+    ctx.lineTo(pos.x - TILE_W / 2, pos.y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,215,0,0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
   }
+}
+
+function renderAvatarSprite(ctx, player, x, y, isSelf) {
+  const img = S.assets[player.avatar || S.player.avatar];
+  if (!img) return;
+
+  // Avatar dimensions
+  const avaW = 56;
+  const avaH = 84;
+
+  // Bobbing animation while walking
+  const bob = player.path && player.path.length > 0 ? Math.sin((player.walkTime || 0) * 0.012) * 3 : 0;
+
+  ctx.save();
+  ctx.translate(x, y - TILE_H / 2 + bob);
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.beginPath();
+  ctx.ellipse(0, avaH / 2 - 2, 18, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Draw avatar centered
+  const drawW = avaW;
+  const drawH = avaH;
+  ctx.drawImage(img, -drawW / 2, -drawH + 10, drawW, drawH);
+
+  // Name tag
+  ctx.font = isSelf ? 'bold 11px sans-serif' : '10px sans-serif';
+  const name = player.name || 'Guest';
+  const tw = ctx.measureText(name).width;
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.beginPath();
+  ctx.moveTo(-tw / 2 - 6, -drawH + 2);
+  ctx.lineTo(tw / 2 + 6, -drawH + 2);
+  ctx.lineTo(tw / 2 + 6, -drawH + 18);
+  ctx.lineTo(-tw / 2 - 6, -drawH + 18);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = isSelf ? '#FFD700' : '#ccc';
+  ctx.textAlign = 'center';
+  ctx.fillText(name, 0, -drawH + 14);
+
+  ctx.restore();
+}
+
+// ===== PATH VISUALIZATION =====
+function clearPathDots() {
+  document.getElementById('pathLayer').innerHTML = '';
+}
+
+function updatePathDots() {
+  const layer = document.getElementById('pathLayer');
+  if (!layer) return;
+
+  // Only show dots for remaining path
+  const dots = layer.querySelectorAll('.path-dot');
+  dots.forEach(d => d.remove());
+
+  S.player.path.forEach((pt, i) => {
+    const pos = isoToScreen(pt.x, pt.y);
+    const dot = document.createElement('div');
+    dot.className = 'path-dot';
+    dot.style.left = pos.x + 'px';
+    dot.style.top = pos.y + 'px';
+    dot.style.opacity = Math.max(0.2, 1 - i * 0.15);
+    dot.style.width = (6 - Math.min(i, 3)) + 'px';
+    dot.style.height = (6 - Math.min(i, 3)) + 'px';
+    layer.appendChild(dot);
+  });
 }
 
 // ===== INPUT =====
-document.getElementById('gameCanvas').addEventListener('click', handleCanvasClick);
-function handleCanvasClick(e) {
-  if (state.screen !== 'game' || !state.room) return;
-
+document.getElementById('gameCanvas').addEventListener('mousemove', e => {
+  if (S.screen !== 'game' || !S.room) return;
   const rect = document.getElementById('gameCanvas').getBoundingClientRect();
-  const sx = e.clientX - rect.left;
-  const sy = e.clientY - rect.top;
-  const iso = screenToIso(sx, sy);
+  const iso = screenToIso(e.clientX - rect.left, e.clientY - rect.top);
+  if (iso.x >= 0 && iso.y >= 0 && iso.x < S.room.width && iso.y < S.room.height) {
+    S.hoverTile = iso;
+  } else {
+    S.hoverTile = null;
+  }
+});
 
-  if (state.editor.active) {
-    if (iso.x >= 0 && iso.y >= 0 && iso.x < state.room.width && iso.y < state.room.height) {
-      if (state.editor.selectedItem) {
-        state.room.furniture.push({id: state.editor.selectedItem, x: iso.x, y: iso.y, z: 0});
-        state.editor.selectedItem = null;
-        unlockAchievement('editor_pro');
-        renderInventory();
-      } else {
-        const idx = state.room.furniture.findIndex(f => f.x === iso.x && f.y === iso.y);
-        if (idx >= 0) {
-          const removed = state.room.furniture[idx];
-          state.player.inventory.push({id: removed.id, cat: 'furniture', rarity: 'common'});
-          state.room.furniture.splice(idx, 1);
-          renderInventory();
-        }
-      }
+document.getElementById('gameCanvas').addEventListener('mouseleave', () => {
+  S.hoverTile = null;
+});
+
+document.getElementById('gameCanvas').addEventListener('click', e => {
+  if (S.screen !== 'game' || !S.room) return;
+  const rect = document.getElementById('gameCanvas').getBoundingClientRect();
+  const iso = screenToIso(e.clientX - rect.left, e.clientY - rect.top);
+  if (iso.x >= 0 && iso.y >= 0 && iso.x < S.room.width && iso.y < S.room.height) {
+    const path = findPath(Math.round(S.player.x), Math.round(S.player.y), iso.x, iso.y);
+    if (path.length > 0) {
+      S.player.path = path;
+      updatePathDots();
     }
-    return;
   }
-
-  if (iso.x >= 0 && iso.y >= 0 && iso.x < state.room.width && iso.y < state.room.height) {
-    const path = findPath(Math.round(state.player.x), Math.round(state.player.y), iso.x, iso.y);
-    if (path.length > 0) state.player.path = path;
-  }
-}
+});
 
 // ===== CHAT =====
-function handleChatKey(e) {
-  if (e.key === 'Enter') {
-    const input = document.getElementById('chatInput');
-    const text = input.value.trim();
-    if (text) { sendChat(text); input.value = ''; }
-  }
+function sendChat(text) {
+  if (!text.trim()) return;
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble';
+  bubble.innerHTML = '<div class="chat-name">' + (S.player.name || 'You') + '</div>' + escapeHtml(text.trim());
+  document.getElementById('chatLayer').appendChild(bubble);
+  S.chat.push({ el: bubble, x: S.player.x, y: S.player.y, life: 5000 });
+  positionChatBubble(bubble, S.player.x, S.player.y);
 }
 
-function sendChat(text) {
-  state.chat.messages.push({
-    text, x: state.player.x, y: state.player.y,
-    life: 4000, maxLife: 4000
-  });
-  if (state.chat.messages.length > 10) state.chat.messages.shift();
-  const count = parseInt(localStorage.getItem('starlight_chat_count')||'0') + 1;
-  localStorage.setItem('starlight_chat_count', count.toString());
-  if (count >= 10) unlockAchievement('chat_10');
+function positionChatBubble(el, x, y) {
+  const pos = isoToScreen(x, y);
+  el.style.left = pos.x + 'px';
+  el.style.top = (pos.y - 70) + 'px';
 }
 
 function updateChatBubbles(dt) {
-  state.chat.messages.forEach(m => {
-    m.life -= dt;
-    m.x = state.player.x;
-    m.y = state.player.y;
+  S.chat = S.chat.filter(c => {
+    c.life -= dt;
+    positionChatBubble(c.el, S.player.x, S.player.y);
+    if (c.life <= 0) {
+      c.el.remove();
+      return false;
+    }
+    // Fade out in last second
+    if (c.life < 1000) {
+      c.el.style.opacity = c.life / 1000;
+    }
+    return true;
   });
-  state.chat.messages = state.chat.messages.filter(m => m.life > 0);
+}
+
+function clearChat() {
+  document.getElementById('chatLayer').innerHTML = '';
+  S.chat = [];
+}
+
+function escapeHtml(t) {
+  const d = document.createElement('div');
+  d.textContent = t;
+  return d.innerHTML;
 }
 
 // ===== UI PANELS =====
 function togglePanel(id) {
   const p = document.getElementById(id);
   if (!p) return;
-  const isActive = p.classList.contains('active');
-  document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
-  if (!isActive) {
+  const active = p.classList.contains('active');
+  document.querySelectorAll('.panel').forEach(el => el.classList.remove('active'));
+  if (!active) {
     p.classList.add('active');
+    if (id === 'roomPanel') renderRoomList();
     if (id === 'catalogPanel') renderCatalog();
-    if (id === 'inventoryPanel') renderInventory();
+    if (id === 'invPanel') renderInventory();
     if (id === 'tradePanel') renderTrade();
-    if (id === 'roomListPanel') renderRoomList();
-    if (id === 'achPanel') renderAchievements();
+    if (id === 'achPanel') renderAch();
   }
 }
 
@@ -1831,438 +977,210 @@ function closePanel(id) {
   if (p) p.classList.remove('active');
 }
 
-// ===== CATALOG =====
-function setCatTab(tab, btn) {
-  state.catalog.tab = tab;
-  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  else {
-    const tabs = document.querySelectorAll('.cat-tab');
-    const idx = ['furniture','hair','clothes','items','rare'].indexOf(tab);
-    if (tabs[idx]) tabs[idx].classList.add('active');
-  }
-  renderCatalog();
-}
-
-function renderCatalog() {
-  const grid = document.getElementById('catGrid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  const items = CATALOG.filter(i => i.cat === state.catalog.tab || (state.catalog.tab === 'rare' && (i.rarity === 'epic' || i.rarity === 'legendary')));
-
-  items.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'cat-item';
-    const img = state.assets[item.id];
-    const icon = document.createElement('div');
-    icon.className = 'icon';
-    if (img) {
-      const imgEl = document.createElement('img');
-      imgEl.src = img.src;
-      imgEl.style.width = '40px'; imgEl.style.height = '40px';
-      imgEl.style.objectFit = 'contain';
-      imgEl.style.imageRendering = 'pixelated';
-      icon.appendChild(imgEl);
-    } else { icon.textContent = item.icon || '📦'; }
-    const name = document.createElement('div'); name.className = 'name'; name.textContent = item.name;
-    const price = document.createElement('div'); price.className = 'price'; price.textContent = item.price + 'g';
-    const rarity = document.createElement('div'); rarity.className = 'rarity-tag r-tag-' + item.rarity; rarity.textContent = item.rarity[0].toUpperCase();
-    div.appendChild(rarity); div.appendChild(icon); div.appendChild(name); div.appendChild(price);
-    div.onclick = () => buyItem(item);
-    grid.appendChild(div);
-  });
-}
-
-function buyItem(item) {
-  if (state.player.gold < item.price) { showAlert('Not enough gold!', 'You need ' + item.price + ' gold.'); return; }
-  openConfirm('Buy ' + item.name + '?', 'Price: ' + item.price + ' gold', () => {
-    state.player.gold -= item.price;
-    state.player.inventory.push({id: item.id, cat: item.cat, rarity: item.rarity});
-    addXP(Math.floor(item.price / 10));
-    updateCurrency(); renderInventory(); savePlayerData();
-    unlockAchievement('buy_item');
-    if (item.rarity === 'legendary') unlockAchievement('legendary');
-    showAlert('Purchased!', item.name + ' added to inventory.');
-  });
-}
-
-// ===== INVENTORY =====
-let selectedInvItem = null;
-
-function renderInventory() {
-  const grid = document.getElementById('invGrid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  state.player.inventory.forEach((item, idx) => {
-    const div = document.createElement('div');
-    const rarity = item.rarity || 'common';
-    div.className = 'inv-slot rarity-' + rarity;
-    if (selectedInvItem === idx) div.classList.add('equipped');
-    const img = state.assets[item.id];
-    if (img) {
-      const imgEl = document.createElement('img');
-      imgEl.src = img.src;
-      imgEl.style.width = '36px'; imgEl.style.height = '36px';
-      imgEl.style.objectFit = 'contain'; imgEl.style.imageRendering = 'pixelated';
-      div.appendChild(imgEl);
-    } else { div.textContent = '📦'; }
-    const dot = document.createElement('div'); dot.className = 'rarity-dot';
-    dot.style.background = getRarityColor(rarity);
-    div.appendChild(dot);
-    div.onclick = () => { selectedInvItem = idx; renderInventory(); };
-    grid.appendChild(div);
-  });
-  const total = Math.max(36, Math.ceil(state.player.inventory.length / 6) * 6);
-  for (let i = state.player.inventory.length; i < total; i++) {
-    const div = document.createElement('div'); div.className = 'inv-slot empty'; div.style.opacity = '0.2';
-    grid.appendChild(div);
-  }
-}
-
-function getRarityColor(r) {
-  const map = {common:'#888', uncommon:'#32CD32', rare:'#4169E1', epic:'#9370DB', legendary:'#FFD700'};
-  return map[r] || '#888';
-}
-
-function equipSelected() {
-  if (selectedInvItem === null || !state.player.inventory[selectedInvItem]) return;
-  const item = state.player.inventory[selectedInvItem];
-  const cat = item.cat || 'furniture';
-  if (cat === 'hair') { state.player.hairStyle = item.id; showAlert('Equipped!', 'New hairstyle applied.'); }
-  else if (cat === 'clothes' || cat === 'items') {
-    if (item.id.includes('shirt') || item.id.includes('dress')) state.player.shirtStyle = item.id;
-    else if (item.id.includes('acc_')) state.player.accStyle = item.id;
-    else if (item.id.includes('legs') || item.id.includes('skirt')) state.player.pantsStyle = item.id;
-    showAlert('Equipped!', 'New outfit applied.');
-  } else {
-    toggleEditor(true); state.editor.selectedItem = item.id;
-    showAlert('Editor Mode', 'Click a tile to place ' + item.name);
-  }
-  savePlayerData();
-}
-
-function useSelected() { equipSelected(); }
-
-function tradeSelected() {
-  if (selectedInvItem === null) return;
-  const item = state.player.inventory[selectedInvItem];
-  if (!item) return;
-  state.trade.myOffer.push({...item});
-  renderTrade(); togglePanel('tradePanel');
-}
-
-// ===== TRADING =====
-function showTradeModal() { openModal('tradeModal'); }
-
-function startTrade() {
-  const target = document.getElementById('tradeTarget').value.trim();
-  if (!target) { document.getElementById('tradeError').textContent = 'Enter a player name'; return; }
-  state.trade.target = target; state.trade.confirmed = false; state.trade.accepted = false;
-  closeModal('tradeModal'); togglePanel('tradePanel'); renderTrade();
-}
-
-function renderTrade() {
-  const myDiv = document.getElementById('myOffer');
-  const theirDiv = document.getElementById('theirOffer');
-  const status = document.getElementById('tradeStatus');
-  if (!myDiv || !theirDiv || !status) return;
-
-  myDiv.innerHTML = '';
-  state.trade.myOffer.forEach((item, i) => {
-    const div = document.createElement('div'); div.className = 'trade-item-slot';
-    div.innerHTML = '<span class="t-icon">📦</span><span class="t-name">' + item.id.replace(/furni_|hair_|acc_/g,'').replace(/_/g,' ') + '</span><span class="t-rarity r-tag-' + item.rarity + '">' + item.rarity + '</span>';
-    div.onclick = () => { state.trade.myOffer.splice(i, 1); renderTrade(); };
-    myDiv.appendChild(div);
-  });
-
-  theirDiv.innerHTML = '';
-  state.trade.theirOffer.forEach(item => {
-    const div = document.createElement('div'); div.className = 'trade-item-slot';
-    div.innerHTML = '<span class="t-icon">📦</span><span class="t-name">' + item.id.replace(/furni_|hair_|acc_/g,'').replace(/_/g,' ') + '</span><span class="t-rarity r-tag-' + item.rarity + '">' + item.rarity + '</span>';
-    theirDiv.appendChild(div);
-  });
-
-  if (state.trade.accepted) status.textContent = 'TRADE COMPLETE!';
-  else if (state.trade.confirmed) status.textContent = 'Waiting for partner...';
-  else status.textContent = 'Add items to offer';
-}
-
-function addToMyOffer() {
-  if (selectedInvItem === null) { showAlert('Select an item', 'Click an inventory item first'); return; }
-  const item = state.player.inventory[selectedInvItem];
-  if (!item) return;
-  state.trade.myOffer.push({...item}); renderTrade();
-}
-
-function clearMyOffer() { state.trade.myOffer = []; state.trade.confirmed = false; renderTrade(); }
-
-function confirmTrade() {
-  if (state.trade.myOffer.length === 0) { showAlert('Empty Offer', 'Add items to your offer first'); return; }
-  state.trade.confirmed = true;
-  setTimeout(() => {
-    state.trade.theirOffer = [{id:'furni_lamp',cat:'furniture',rarity:'common'},{id:'furni_flower',cat:'furniture',rarity:'common'}];
-    renderTrade();
-    showAlert('Trade Ready!', state.trade.target + ' has made an offer. Click ACCEPT to finalize.');
-  }, 1500);
-  renderTrade();
-}
-
-function acceptTrade() {
-  if (!state.trade.confirmed) { showAlert('Not Ready', 'Confirm your offer first'); return; }
-  if (state.trade.theirOffer.length === 0) { showAlert('No Offer', 'Wait for trade partner'); return; }
-  state.trade.myOffer.forEach(offered => {
-    const idx = state.player.inventory.findIndex(i => i.id === offered.id);
-    if (idx >= 0) state.player.inventory.splice(idx, 1);
-  });
-  state.trade.theirOffer.forEach(item => state.player.inventory.push(item));
-  state.trade.accepted = true; renderTrade(); renderInventory(); savePlayerData();
-  unlockAchievement('trade_done');
-  showAlert('Trade Complete!', 'Items exchanged successfully.');
-  setTimeout(() => { state.trade = {myOffer:[],theirOffer:[],confirmed:false,accepted:false,target:''}; closePanel('tradePanel'); }, 2000);
-}
-
-// ===== ROOM LIST =====
-function showRoomList() {
-  if (!state.player.name) { openModal('loginModal'); return; }
-  showScreen('game'); togglePanel('roomListPanel');
+// ===== ROOM NAVIGATOR =====
+function showRoomPanel() {
+  if (!S.player.name) { openModal('loginModal'); return; }
+  showScreen('game');
+  togglePanel('roomPanel');
 }
 
 function renderRoomList() {
   const grid = document.getElementById('roomGrid');
   if (!grid) return;
   grid.innerHTML = '';
-  const icons = {lobby:'🏛️',tavern:'🍺',garden:'🌿',library:'📚',bedroom:'🛏️',beach:'🏖️',rooftop:'☕',arcade:'🎮',spa:'🧘',market:'🏪',event:'🎪',winter:'❄️'};
+  const icons = {
+    lobby: '🏛️', tavern: '🍺', garden: '🌿', library: '📚', bedroom: '🛏️',
+    beach: '🏖️', rooftop: '☕', arcade: '🎮', spa: '🧘', market: '🏪', event: '🎪', winter: '❄️'
+  };
   Object.entries(ROOMS).forEach(([id, room]) => {
-    const div = document.createElement('div'); div.className = 'room-card';
-    div.innerHTML = '<div class="r-icon">' + (icons[id]||'🏠') + '</div><div class="r-name">' + room.name + '</div><div class="r-desc">' + room.desc + '</div>';
-    div.onclick = () => { enterRoom(id); closePanel('roomListPanel'); };
+    const div = document.createElement('div');
+    div.className = 'room-card';
+    div.innerHTML = '<div class="ricon">' + (icons[id] || '🏠') + '</div><div class="rname">' + room.name + '</div><div class="rdesc">' + room.desc + '</div><div class="room-visitors">' + (Math.floor(Math.random() * 8) + 1) + ' visitors</div>';
+    div.onclick = () => { enterRoom(id); closePanel('roomPanel'); };
     grid.appendChild(div);
   });
 }
 
-// ===== ACHIEVEMENTS =====
-function showAchievements() { togglePanel('achPanel'); }
+// ===== CATALOG =====
+function setCatalogTab(tab) {
+  S.catalogTab = tab;
+  renderCatalog();
+}
 
-function renderAchievements() {
+const CATALOG_ITEMS = [
+  { id: 'furni_chair', name: 'Chair', price: 50, rarity: 'common' },
+  { id: 'furni_table', name: 'Table', price: 80, rarity: 'common' },
+  { id: 'furni_bed', name: 'Bed', price: 120, rarity: 'common' },
+  { id: 'furni_sofa', name: 'Sofa', price: 150, rarity: 'uncommon' },
+  { id: 'furni_lamp', name: 'Lamp', price: 40, rarity: 'common' },
+  { id: 'furni_fireplace', name: 'Fireplace', price: 300, rarity: 'rare' },
+  { id: 'furni_bookshelf', name: 'Bookshelf', price: 100, rarity: 'common' },
+  { id: 'furni_plant', name: 'Plant', price: 30, rarity: 'common' },
+  { id: 'furni_rug', name: 'Rug', price: 60, rarity: 'common' },
+  { id: 'furni_piano', name: 'Piano', price: 500, rarity: 'epic' },
+  { id: 'furni_throne', name: 'Throne', price: 1000, rarity: 'legendary' },
+  { id: 'furni_tv', name: 'TV', price: 200, rarity: 'rare' },
+  { id: 'furni_arcade', name: 'Arcade', price: 400, rarity: 'epic' },
+  { id: 'furni_fountain', name: 'Fountain', price: 450, rarity: 'epic' },
+  { id: 'furni_jukebox', name: 'Jukebox', price: 250, rarity: 'rare' },
+  { id: 'furni_chest', name: 'Chest', price: 220, rarity: 'rare' },
+  { id: 'furni_trophy', name: 'Trophy', price: 600, rarity: 'legendary' },
+  { id: 'furni_gate', name: 'Gate', price: 150, rarity: 'uncommon' },
+  { id: 'furni_dresser', name: 'Dresser', price: 90, rarity: 'common' },
+  { id: 'furni_mirror', name: 'Mirror', price: 180, rarity: 'uncommon' },
+];
+
+function renderCatalog() {
+  const grid = document.getElementById('catalogGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const items = S.catalogTab === 'rare' 
+    ? CATALOG_ITEMS.filter(i => i.rarity === 'epic' || i.rarity === 'legendary')
+    : CATALOG_ITEMS;
+
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.style.cssText = 'aspect-ratio:1;background:rgba(255,255,255,.04);border:1px solid #333;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;padding:8px;transition:all .15s;position:relative';
+    div.onmouseenter = () => { div.style.borderColor = '#FFD700'; div.style.transform = 'scale(1.05)'; };
+    div.onmouseleave = () => { div.style.borderColor = '#333'; div.style.transform = 'scale(1)'; };
+
+    const img = S.assets[item.id];
+    if (img) {
+      const imgEl = document.createElement('img');
+      imgEl.src = img.src;
+      imgEl.style.cssText = 'width:40px;height:40px;object-fit:contain;image-rendering:pixelated';
+      div.appendChild(imgEl);
+    } else {
+      div.innerHTML += '<div style="font-size:28px">📦</div>';
+    }
+
+    const rarityColors = { common: '#888', uncommon: '#32CD32', rare: '#4169E1', epic: '#9370DB', legendary: '#FFD700' };
+    div.innerHTML += '<div style="font-size:10px;color:#aaa;text-align:center;margin-top:4px">' + item.name + '</div>';
+    div.innerHTML += '<div style="font-size:11px;color:' + rarityColors[item.rarity] + ';font-weight:bold">' + item.price + 'g</div>';
+
+    const tag = document.createElement('div');
+    tag.style.cssText = 'position:absolute;top:3px;right:3px;font-size:8px;padding:2px 4px;border-radius:3px;font-weight:bold;background:' + rarityColors[item.rarity] + ';color:' + (item.rarity === 'legendary' ? '#1a1a2e' : '#fff') + '';
+    tag.textContent = item.rarity[0].toUpperCase();
+    div.appendChild(tag);
+
+    div.onclick = () => buyItem(item);
+    grid.appendChild(div);
+  });
+}
+
+function buyItem(item) {
+  if (S.player.gold < item.price) {
+    alert('Not enough gold!');
+    return;
+  }
+  S.player.gold -= item.price;
+  updateCurrency();
+  saveData();
+  // Could add to inventory here
+}
+
+function renderInventory() {
+  const grid = document.getElementById('invGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  for (let i = 0; i < 36; i++) {
+    const div = document.createElement('div');
+    div.style.cssText = 'aspect-ratio:1;background:rgba(255,255,255,.03);border:2px solid #333;border-radius:8px;display:flex;align-items:center;justify-content:center';
+    if (i < 3) {
+      // Starter items
+      const icons = ['🪑', '🛋️', '🪴'];
+      div.textContent = icons[i];
+      div.style.fontSize = '24px';
+    }
+    grid.appendChild(div);
+  }
+}
+
+function renderTrade() {
+  const body = document.getElementById('tradeBody');
+  if (!body) return;
+  body.innerHTML = '<div style="text-align:center;color:#888;padding:20px">Trading is available! Find another player to trade with.</div>';
+}
+
+function openTrade() {
+  togglePanel('tradePanel');
+}
+
+// ===== ACHIEVEMENTS =====
+const ACHS = [
+  { id: 'enter', name: 'First Steps', desc: 'Enter the Starlight Inn', icon: '👣', reward: 10 },
+  { id: 'explorer', name: 'Explorer', desc: 'Visit all 12 rooms', icon: '🗺️', reward: 100 },
+  { id: 'chat', name: 'Socialite', desc: 'Send 10 chat messages', icon: '💬', reward: 30 },
+  { id: 'rich', name: 'Wealthy', desc: 'Have 1000 gold', icon: '💰', reward: 40 },
+  { id: 'level', name: 'Rising Star', desc: 'Reach level 5', icon: '⭐', reward: 60 },
+];
+
+function renderAch() {
   const list = document.getElementById('achList');
   if (!list) return;
   list.innerHTML = '';
-  ACHIEVEMENTS.forEach(ach => {
+  ACHS.forEach(ach => {
     const div = document.createElement('div');
-    div.className = 'ach-item' + (ach.unlocked ? ' unlocked' : '');
-    div.innerHTML = '<div class="ach-icon">' + ach.icon + '</div><div class="ach-info"><div class="ach-name">' + ach.name + '</div><div class="ach-desc">' + ach.desc + '</div><div class="ach-reward">+' + ach.reward + ' XP</div></div>';
+    div.style.cssText = 'display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid #333;margin-bottom:8px';
+    div.innerHTML = '<div style="font-size:32px">' + ach.icon + '</div><div style="flex:1"><div style="font-weight:bold;font-size:14px;color:#FFD700">' + ach.name + '</div><div style="font-size:12px;color:#888">' + ach.desc + '</div><div style="font-size:11px;color:#32CD32">+' + ach.reward + ' XP</div></div>';
     list.appendChild(div);
   });
 }
 
-function unlockAchievement(id) {
-  const ach = ACHIEVEMENTS.find(a => a.id === id);
-  if (ach && !ach.unlocked) {
-    ach.unlocked = true; addXP(ach.reward);
-    showAlert('Achievement Unlocked!', ach.icon + ' ' + ach.name + ' (+' + ach.reward + ' XP)');
-    savePlayerData();
-  }
+function showTrophies() {
+  togglePanel('achPanel');
 }
 
-// ===== EDITOR =====
-function toggleEditor(force) {
-  state.editor.active = force !== undefined ? force : !state.editor.active;
-  state.editor.selectedItem = null;
-  const editBtn = document.getElementById('editBtn');
-  const placeBtn = document.getElementById('placeBtn');
-  if (editBtn) editBtn.classList.toggle('active', state.editor.active);
-  if (placeBtn) placeBtn.style.display = state.editor.active ? 'inline-block' : 'none';
-  if (state.editor.active) showAlert('Editor Mode', 'Click inventory item, then click tile to place. Click placed item to remove.');
-}
-
-function togglePlaceMode() {
-  state.editor.selectedItem = null;
-  showAlert('Select Item', 'Click an inventory item to select it for placement');
-  togglePanel('inventoryPanel');
+// ===== CURRENCY =====
+function updateCurrency() {
+  const g = document.getElementById('gold');
+  const m = document.getElementById('gems');
+  const l = document.getElementById('level');
+  if (g) g.textContent = S.player.gold;
+  if (m) m.textContent = S.player.gems;
+  if (l) l.textContent = S.player.level;
 }
 
 // ===== MODALS =====
-function openModal(id) { const m = document.getElementById(id); if (m) m.classList.add('active'); }
-function closeModal(id) { const m = document.getElementById(id); if (m) m.classList.remove('active'); }
-
-function openConfirm(title, text, onYes) {
-  document.getElementById('confirmTitle').textContent = title;
-  document.getElementById('confirmText').textContent = text;
-  document.getElementById('confirmYes').onclick = () => { closeModal('confirmModal'); onYes(); };
-  openModal('confirmModal');
+function openModal(id) {
+  const m = document.getElementById(id);
+  if (m) m.classList.add('active');
 }
 
-function showAlert(title, text) {
-  document.getElementById('alertTitle').textContent = title;
-  document.getElementById('alertText').textContent = text;
-  openModal('alertModal');
+function closeModal(id) {
+  const m = document.getElementById(id);
+  if (m) m.classList.remove('active');
+  const err = m?.querySelector('.modal-err');
+  if (err) err.textContent = '';
 }
 
-// ===== CURRENCY & XP =====
-function updateCurrency() {
-  const goldAmt = document.getElementById('goldAmt');
-  const gemAmt = document.getElementById('gemAmt');
-  const lvlAmt = document.getElementById('lvlAmt');
-  if (goldAmt) goldAmt.textContent = state.player.gold;
-  if (gemAmt) gemAmt.textContent = state.player.gems;
-  if (lvlAmt) lvlAmt.textContent = state.player.level;
-  if (state.player.gold >= 1000) unlockAchievement('rich');
-  if (state.player.inventory.length >= 20) unlockAchievement('collector');
-}
-
-function addXP(amount) {
-  state.player.xp += amount;
-  const needed = state.player.level * 100;
-  if (state.player.xp >= needed) {
-    state.player.xp -= needed; state.player.level++;
-    showAlert('Level Up!', 'You reached level ' + state.player.level + '!');
-    if (state.player.level >= 5) unlockAchievement('level_5');
-  }
-  updateCurrency();
-}
-
-// ===== CHARACTER CREATOR =====
-const HAIR_STYLES = [
-  'hair_short_brown','hair_afro','hair_bald','hair_emo','hair_long_brown',
-  'hair_mohawk','hair_ponytail','hair_spiky_blonde','hair_long_pink','hair_spiky_blue',
-  'hair_curly_red','hair_bedhead_blonde','hair_pigtails_teal','hair_slick_black',
-  'hair_bob_black','hair_braids_brown','hair_buzz_cut','hair_dreads','hair_french_braid',
-  'hair_pixie_cut','hair_undercut','hair_waves_blonde'
-];
-const FACE_STYLES = ['face_happy','face_cool','face_surprised'];
-const SHIRT_STYLES = ['shirt_tshirt','shirt_hoodie','shirt_jacket','shirt_polo','shirt_tank','shirt_overalls','dress_pink','dress_blue'];
-const PANTS_STYLES = ['legs_pants','legs_shorts','legs_skirt'];
-const ACC_STYLES = ['','acc_glasses_round','acc_hat_beanie','acc_hat_wizard','acc_wings','acc_bow_tie'];
-const SKIN_TONES = ['#ffdbac','#f1c27d','#e0ac69','#8d5524','#c68642','#59331b','#ffcea3','#f5d0b5'];
-
-function initCharCreator() {
-  buildGrid('hairGrid', HAIR_STYLES, state.player.hairStyle, (v) => { state.player.hairStyle = v; updatePreview(); });
-  buildGrid('faceGrid', FACE_STYLES, state.player.faceStyle, (v) => { state.player.faceStyle = v; updatePreview(); });
-  buildGrid('shirtGrid', SHIRT_STYLES, state.player.shirtStyle, (v) => { state.player.shirtStyle = v; updatePreview(); });
-  buildGrid('pantsGrid', PANTS_STYLES, state.player.pantsStyle, (v) => { state.player.pantsStyle = v; updatePreview(); });
-  buildGrid('accGrid', ACC_STYLES, state.player.accStyle, (v) => { state.player.accStyle = v; updatePreview(); }, true);
-
-  const sk = document.getElementById('skinPresets');
-  if (sk) {
-    sk.innerHTML = '';
-    SKIN_TONES.forEach(c => {
-      const div = document.createElement('div'); div.className = 'color-swatch' + (state.player.skin === c ? ' active' : '');
-      div.style.background = c; div.onclick = () => { state.player.skin = c; updateCharUI(); updatePreview(); };
-      sk.appendChild(div);
-    });
-  }
-
-  document.getElementById('hairHue').value = state.player.hairHue;
-  document.getElementById('shirtHue').value = state.player.shirtHue;
-  document.getElementById('pantsHue').value = state.player.pantsHue;
-  updateCharUI(); updatePreview();
-}
-
-function buildGrid(id, items, current, onClick, allowEmpty) {
-  const grid = document.getElementById(id);
-  if (!grid) return;
-  grid.innerHTML = '';
-  items.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'hair-slot' + (current === item ? ' active' : '');
-    if (!item && allowEmpty) { div.textContent = '✕'; div.style.fontSize = '14px'; }
-    else {
-      const img = state.assets[item];
-      if (img) { const imgEl = document.createElement('img'); imgEl.src = img.src; div.appendChild(imgEl); }
-      else { div.textContent = item.replace(/hair_|face_|shirt_|legs_|acc_/g,'').slice(0,2).toUpperCase(); }
-    }
-    div.onclick = () => { onClick(item); updateCharUI(); updatePreview(); };
-    grid.appendChild(div);
-  });
-}
-
-function updateCharUI() {
-  document.querySelectorAll('.gender-btn').forEach(b => b.classList.toggle('active', b.dataset.g === state.player.gender));
-  const hp = document.getElementById('hairColorPreview');
-  const sp = document.getElementById('shirtColorPreview');
-  const pp = document.getElementById('pantsColorPreview');
-  if (hp) hp.style.background = hslToHex(state.player.hairHue, 80, 50);
-  if (sp) sp.style.background = hslToHex(state.player.shirtHue, 70, 50);
-  if (pp) pp.style.background = hslToHex(state.player.pantsHue, 70, 40);
-}
-
-function updatePreview() {
-  const container = document.getElementById('charPreviewLayers');
-  const nameLabel = document.getElementById('charPreviewName');
-  if (!container) return;
-  container.innerHTML = '';
-  if (nameLabel) nameLabel.textContent = state.player.name || '';
-
-  // Use the same procedural renderer as in-game
-  const c = document.createElement('canvas');
-  c.width = 140; c.height = 200;
-  const ctx = c.getContext('2d');
-  ctx.translate(70, 180);
-  ctx.scale(1.6, 1.6);
-  renderAvatar(ctx, state.player, 0, 0, 1);
-
-  const img = document.createElement('img');
-  img.src = c.toDataURL();
-  img.style.width = '100%';
-  img.style.height = '100%';
-  img.style.objectFit = 'contain';
-  img.style.imageRendering = 'pixelated';
-  container.appendChild(img);
-}
-
-function setGender(g) { state.player.gender = g; updateCharUI(); updatePreview(); }
-
-function saveCharacter() {
-  savePlayerData(); unlockAchievement('customize');
-  showAlert('Character Saved!', 'Your avatar has been saved successfully.');
-}
-
-function randomizeCharacter() {
-  state.player.hairStyle = HAIR_STYLES[Math.floor(Math.random()*HAIR_STYLES.length)];
-  state.player.hairHue = Math.floor(Math.random()*360);
-  state.player.faceStyle = FACE_STYLES[Math.floor(Math.random()*FACE_STYLES.length)];
-  state.player.shirtStyle = SHIRT_STYLES[Math.floor(Math.random()*SHIRT_STYLES.length)];
-  state.player.shirtHue = Math.floor(Math.random()*360);
-  state.player.pantsStyle = PANTS_STYLES[Math.floor(Math.random()*PANTS_STYLES.length)];
-  state.player.pantsHue = Math.floor(Math.random()*360);
-  state.player.accStyle = ACC_STYLES[Math.floor(Math.random()*ACC_STYLES.length)];
-  state.player.skin = SKIN_TONES[Math.floor(Math.random()*SKIN_TONES.length)];
-  initCharCreator();
-}
-
-function resetCharacter() {
-  state.player.hairStyle = 'hair_short_brown'; state.player.hairHue = 25;
-  state.player.faceStyle = 'face_happy'; state.player.shirtStyle = 'shirt_tshirt';
-  state.player.shirtHue = 200; state.player.pantsStyle = 'legs_pants';
-  state.player.pantsHue = 220; state.player.accStyle = ''; state.player.skin = '#ffdbac';
-  initCharCreator();
-}
-
-function openCharCreator() {
-  if (!state.player.name) { openModal('loginModal'); return; }
-  showScreen('char');
+function backToTitle() {
+  showScreen('title');
 }
 
 // ===== INIT =====
 window.addEventListener('DOMContentLoaded', () => {
+  // Check saved name
   try {
-    const raw = localStorage.getItem('starlight_v17');
+    const raw = localStorage.getItem('si_v18');
     if (raw) {
-      const data = JSON.parse(raw);
-      if (data.name) state.player.name = data.name;
+      const d = JSON.parse(raw);
+      if (d.name) S.player.name = d.name;
+      if (d.avatar) S.player.avatar = d.avatar;
     }
   } catch(e) {}
-  loadAssets();
-  state.achievements = ACHIEVEMENTS;
+
+  loadAllAssets();
   updateCurrency();
+
+  // Escape to close panels
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+      document.querySelectorAll('.panel, .modal').forEach(el => el.classList.remove('active'));
     }
   });
 });
-
 </script>
 </body>
 </html>
