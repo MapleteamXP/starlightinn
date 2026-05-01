@@ -1,11 +1,74 @@
 /**
- * Starlight Inn v7.0 -- Habbo-Grade Isometric Social MMO
- * Full-Stack Entry Point with All Systems Integrated
+ * Starlight Inn v8.0.0 — Massive Quality Upgrade
+ * Auth, 100 hairstyles, sounds, pixel art, collisions, offline-first boot.
  *
- * @version 7.0.0
- * @description Habbo-style isometric pixel-art world with hundreds of assets,
- * battle pass, YouTube theatre, achievements, security, and Stripe monetization.
+ * @version 8.0.0
+ * @description AAA cozy-core social virtual world with v8.0 quality upgrades.
  */
+
+// ============================================================
+// LOADING STATUS — per-module tracker
+// ============================================================
+const loadStatus = {
+  total: 0,
+  done: 0,
+  failed: 0,
+  modules: {},
+  update(text) {
+    const overlay = document.getElementById('loading-overlay');
+    if (!overlay) return;
+    const sub = overlay.querySelector('.loading-subtext');
+    const fill = document.getElementById('loading-fill');
+    if (sub) sub.textContent = text;
+    if (fill && this.total > 0) {
+      const pct = Math.min(100, Math.round(((this.done + this.failed) / this.total) * 100));
+      fill.style.width = pct + '%';
+    }
+  },
+  mark(name, ok) {
+    this.modules[name] = ok ? 'ok' : 'fail';
+    if (ok) this.done++; else this.failed++;
+    const statusText = Object.entries(this.modules).map(([n, s]) => `${n}:${s==='ok'?'OK':'--'}`).join(' · ');
+    this.update(statusText);
+  },
+  forceFade() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+      overlay.style.transition = 'opacity 0.8s ease';
+      overlay.style.opacity = '0';
+      setTimeout(() => { overlay.style.display = 'none'; }, 900);
+    }
+  }
+};
+
+// ============================================================
+// OFFLINE MODE GUARD — 2-second max wait
+// ============================================================
+let offlineForced = false;
+function forceOfflineSoon() {
+  setTimeout(() => {
+    if (!offlineForced) {
+      offlineForced = true;
+      loadStatus.update('Offline mode — continuing...');
+      loadStatus.forceFade();
+    }
+  }, 2000);
+}
+
+// ============================================================
+// MODULE LOADER — wraps every init in try/catch
+// ============================================================
+function safeInit(name, fn) {
+  try {
+    const result = fn();
+    loadStatus.mark(name, true);
+    return result;
+  } catch (err) {
+    console.warn(`[Init] ${name} failed — continuing without it:`, err);
+    loadStatus.mark(name, false);
+    return null;
+  }
+}
 
 // ============================================================
 // ENGINE CORE
@@ -33,7 +96,7 @@ import { IsoWalkCycle } from './iso/IsoWalkCycle.js';
 import { IsoIdleAnimation } from './iso/IsoIdleAnimation.js';
 
 // ============================================================
-// ISOMETRIC ENGINE v6.0 -- TILEMAP & MOVEMENT
+// ISOMETRIC ENGINE v6.0 — TILEMAP & MOVEMENT
 // ============================================================
 import IsoTilemap from './iso/IsoTilemap.js';
 import IsoChunk from './iso/IsoChunk.js';
@@ -62,7 +125,7 @@ import { RareEggs } from './assets/RareEggs.js';
 import { AnimationCatalog } from './assets/AnimationCatalog.js';
 
 // ============================================================
-// AVATAR SYSTEMS
+// AVATAR SYSTEMS (existing + v8.0)
 // ============================================================
 import { Avatar } from './avatar/Avatar.js';
 import { Customizer } from './avatar/Customizer.js';
@@ -70,6 +133,11 @@ import { Gestures } from './avatar/Gestures.js';
 import { Presets } from './avatar/Presets.js';
 import { AnimationEngine } from './avatar/AnimationEngine.js';
 import { ShadowAnchor } from './avatar/ShadowAnchor.js';
+// v8.0
+import { ColorWheel } from './avatar/ColorWheel.js';
+import { HairCatalog } from './avatar/HairCatalog.js';
+import { AvatarPreview } from './avatar/AvatarPreview.js';
+import { CharacterCreator } from './avatar/CharacterCreator.js';
 
 // ============================================================
 // WORLD SYSTEMS
@@ -84,12 +152,14 @@ import { IslandEditor } from './world/IslandEditor.js';
 import { IslandEditorUI } from './world/IslandEditorUI.js';
 
 // ============================================================
-// SOCIAL SYSTEMS
+// SOCIAL SYSTEMS (existing + v8.0)
 // ============================================================
 import { Chat } from './social/Chat.js';
 import { RadialMenu } from './social/RadialMenu.js';
 import { Friends } from './social/Friends.js';
 import { TradeWindow } from './social/Trade.js';
+// v8.0
+import { FriendSystem } from './social/FriendSystem.js';
 
 // ============================================================
 // ECONOMY SYSTEMS
@@ -134,29 +204,57 @@ import { UppercutEjection } from './UppercutEjection.js';
 import { ScreenEffects } from './ScreenEffects.js';
 
 // ============================================================
-// v7.0 PROFILE -- ACHIEVEMENTS, BADGES, STATS
+// v7.0 PROFILE
 // ============================================================
 import { AchievementSystem } from './profile/AchievementSystem.js';
 import { BadgeSystem } from './profile/BadgeSystem.js';
 import { ProfileStats } from './profile/ProfileStats.js';
 
 // ============================================================
-// v7.0 THEATRE -- YOUTUBE SYNC
+// v7.0 THEATRE
 // ============================================================
 import { TheatreSystem } from './theatre/TheatreSystem.js';
 import { WebRTCSync } from './theatre/WebRTCSync.js';
 
 // ============================================================
-// v7.0 SECURITY -- FIREWALL
+// v7.0 SECURITY
 // ============================================================
 import { ContentFirewall } from './security/ContentFirewall.js';
 import { ChatModeration } from './security/ChatModeration.js';
 
 // ============================================================
-// v7.0 MONETIZATION -- BATTLE PASS & STORE
+// v7.0 MONETIZATION
 // ============================================================
 import { BattlePass } from './monetization/BattlePass.js';
 import Store from './monetization/Store.js';
+
+// ============================================================
+// v8.0 AUTH
+// ============================================================
+import { AuthSystem } from './auth/AuthSystem.js';
+
+// ============================================================
+// v8.0 AUDIO
+// ============================================================
+import { SoundManager } from './audio/SoundManager.js';
+import { MusicPlayer } from './audio/MusicPlayer.js';
+import { AudioUI } from './audio/AudioUI.js';
+
+// ============================================================
+// v8.0 PIXEL EMOJI
+// ============================================================
+import { PixelEmoji } from './sprites/PixelEmoji.js';
+
+// ============================================================
+// v8.0 COLLISION
+// ============================================================
+import { CollisionSystemV8 } from './collision/CollisionSystem.js';
+import { HitBox, HITBOX_PRESETS } from './collision/HitBox.js';
+
+// ============================================================
+// v8.0 UI
+// ============================================================
+import { PixelIcon } from './ui/PixelIcon.js';
 
 // ============================================================
 // NETWORK
@@ -164,148 +262,176 @@ import Store from './monetization/Store.js';
 import { SocketClient } from './net/SocketClient.js';
 
 // ============================================================
-// GAME INITIALIZATION
+// GAME INSTANCE
 // ============================================================
-
 const game = new Game('game-canvas');
 
+// Count total modules for loading bar
+loadStatus.total = 45;
+
 function init() {
-  console.log('[Starlight Inn v7.0.0] Initializing Habbo-grade MMO world...');
+  console.log('[Starlight Inn v8.0.0] Initializing v8.0 massive quality upgrade...');
+  loadStatus.update('Wiring engine...');
 
   // Core engine
-  game.renderer = new Renderer(game);
-  game.camera = new Camera(game);
-  game.input = new Input(game);
-  game.audio = new Audio();
-  game.assets = new Assets();
-  game.debugConsole = new DebugConsole(game);
+  safeInit('Renderer', () => { game.renderer = new Renderer(game); });
+  safeInit('Camera', () => { game.camera = new Camera(game); });
+  safeInit('Input', () => { game.input = new Input(game); });
+  safeInit('Audio', () => { game.audio = new Audio(); });
+  safeInit('Assets', () => { game.assets = new Assets(); });
+  safeInit('DebugConsole', () => { game.debugConsole = new DebugConsole(game); });
 
   // Isometric engine
-  game.isoRenderer = new IsoRenderer(game);
-  game.isoCamera = new IsoCamera(game);
-  game.isoDepthSorter = new IsoDepthSorter(game);
-  game.isoTileset = new IsoTileset(game);
-  game.isoFurniture = new IsoFurniture(game);
-  game.isoAssetLoader = new IsoAssetLoader(game);
-  game.isoAreaBackgrounds = new IsoAreaBackgrounds(game);
-  game.isoAvatarRenderer = new IsoAvatarRenderer(game);
-  game.isoWalkCycle = new IsoWalkCycle(game);
-  game.isoIdleAnimation = new IsoIdleAnimation(game);
+  safeInit('IsoRenderer', () => { game.isoRenderer = new IsoRenderer(game); });
+  safeInit('IsoCamera', () => { game.isoCamera = new IsoCamera(game); });
+  safeInit('IsoDepthSorter', () => { game.isoDepthSorter = new IsoDepthSorter(game); });
+  safeInit('IsoTileset', () => { game.isoTileset = new IsoTileset(game); });
+  safeInit('IsoFurniture', () => { game.isoFurniture = new IsoFurniture(game); });
+  safeInit('IsoAssetLoader', () => { game.isoAssetLoader = new IsoAssetLoader(game); });
+  safeInit('IsoAreaBackgrounds', () => { game.isoAreaBackgrounds = new IsoAreaBackgrounds(game); });
+  safeInit('IsoAvatarRenderer', () => { game.isoAvatarRenderer = new IsoAvatarRenderer(game); });
+  safeInit('IsoWalkCycle', () => { game.isoWalkCycle = new IsoWalkCycle(game); });
+  safeInit('IsoIdleAnimation', () => { game.isoIdleAnimation = new IsoIdleAnimation(game); });
 
   // v6.0 Tilemap pipeline
-  game.isoTilemap = new IsoTilemap(game);
-  game.isoChunk = new IsoChunk(game);
-  game.isoGrid = new IsoGrid(game);
-  game.isoMovement = new IsoMovement(game);
-  game.ySortRenderer = new YSortRenderer(game);
-  game.pixelPerfectScaler = new PixelPerfectScaler(game);
-  game.renderPipeline = new RenderPipeline(game);
+  safeInit('IsoTilemap', () => { game.isoTilemap = new IsoTilemap(game); });
+  safeInit('IsoChunk', () => { game.isoChunk = new IsoChunk(game); });
+  safeInit('IsoGrid', () => { game.isoGrid = new IsoGrid(game); });
+  safeInit('IsoMovement', () => { game.isoMovement = new IsoMovement(game); });
+  safeInit('YSortRenderer', () => { game.ySortRenderer = new YSortRenderer(game); });
+  safeInit('PixelPerfectScaler', () => { game.pixelPerfectScaler = new PixelPerfectScaler(game); });
+  safeInit('RenderPipeline', () => { game.renderPipeline = new RenderPipeline(game); });
 
   // Sprite pipeline
-  game.spriteGenerator = new SpriteGenerator(game);
-  game.spriteSheet = new SpriteSheet(game);
-  game.spriteCache = new SpriteCache(game);
-  game.paletteManager = new PaletteManager(game);
-  game.colorTable = new ColorTable(game);
-  game.paletteValidator = new PaletteValidator(game);
+  safeInit('SpriteGenerator', () => { game.spriteGenerator = new SpriteGenerator(game); });
+  safeInit('SpriteSheet', () => { game.spriteSheet = new SpriteSheet(game); });
+  safeInit('SpriteCache', () => { game.spriteCache = new SpriteCache(game); });
+  safeInit('PaletteManager', () => { game.paletteManager = new PaletteManager(game); });
+  safeInit('ColorTable', () => { game.colorTable = new ColorTable(game); });
+  safeInit('PaletteValidator', () => { game.paletteValidator = new PaletteValidator(game); });
 
-  // v7.0 Asset catalogs (93 furniture, 48 clothing, 20 eggs, 16 animations)
-  game.furnitureCatalog = new FurnitureCatalog(game);
-  game.clothingCatalog = new ClothingCatalog(game);
-  game.rareEggs = new RareEggs(game);
-  game.animationCatalog = new AnimationCatalog(game);
+  // Asset catalogs
+  safeInit('FurnitureCatalog', () => { game.furnitureCatalog = new FurnitureCatalog(game); });
+  safeInit('ClothingCatalog', () => { game.clothingCatalog = new ClothingCatalog(game); });
+  safeInit('RareEggs', () => { game.rareEggs = new RareEggs(game); });
+  safeInit('AnimationCatalog', () => { game.animationCatalog = new AnimationCatalog(game); });
 
-  // Avatar
-  game.avatar = new Avatar(game);
-  game.customizer = new Customizer(game);
-  game.gestures = new Gestures(game);
-  game.presets = new Presets();
-  game.animationEngine = new AnimationEngine(game);
-  game.shadowAnchor = new ShadowAnchor(game);
+  // Avatar (existing)
+  safeInit('Avatar', () => { game.avatar = new Avatar(game); });
+  safeInit('Customizer', () => { game.customizer = new Customizer(game); });
+  safeInit('Gestures', () => { game.gestures = new Gestures(game); });
+  safeInit('Presets', () => { game.presets = new Presets(); });
+  safeInit('AnimationEngine', () => { game.animationEngine = new AnimationEngine(game); });
+  safeInit('ShadowAnchor', () => { game.shadowAnchor = new ShadowAnchor(game); });
+
+  // v8.0 Avatar upgrades
+  safeInit('ColorWheel', () => { game.colorWheel = ColorWheel; }); // class export
+  safeInit('HairCatalog', () => { game.hairCatalog = HairCatalog; }); // class export
+  safeInit('AvatarPreview', () => { game.avatarPreview = AvatarPreview; }); // class export
+  safeInit('CharacterCreator', () => { game.characterCreator = new CharacterCreator(game); });
 
   // World
-  game.areaManager = new AreaManager(game);
-  game.npcManager = new NPCManager(game);
-  game.areaData = new AreaData(game);
-  game.pathfinding = new GridPathfinding(game);
-  game.collision = new CollisionSystem(game);
-  game.seasonal = new SeasonalContent(game);
-  game.islandEditor = new IslandEditor(game);
-  game.islandEditorUI = new IslandEditorUI(game);
+  safeInit('AreaManager', () => { game.areaManager = new AreaManager(game); });
+  safeInit('NPCManager', () => { game.npcManager = new NPCManager(game); });
+  safeInit('AreaData', () => { game.areaData = new AreaData(game); });
+  safeInit('Pathfinding', () => { game.pathfinding = new GridPathfinding(game); });
+  safeInit('Collision', () => { game.collision = new CollisionSystem(game); });
+  safeInit('SeasonalContent', () => { game.seasonal = new SeasonalContent(game); });
+  safeInit('IslandEditor', () => { game.islandEditor = new IslandEditor(game); });
+  safeInit('IslandEditorUI', () => { game.islandEditorUI = new IslandEditorUI(game); });
 
-  // Social
-  game.chat = new Chat(game);
-  game.radialMenu = new RadialMenu(game);
-  game.friends = new Friends(game);
-  game.tradeWindow = new TradeWindow(game);
+  // Social (existing)
+  safeInit('Chat', () => { game.chat = new Chat(game); });
+  safeInit('RadialMenu', () => { game.radialMenu = new RadialMenu(game); });
+  safeInit('Friends', () => { game.friends = new Friends(game); });
+  safeInit('TradeWindow', () => { game.tradeWindow = new TradeWindow(game); });
+
+  // v8.0 Social upgrades
+  safeInit('FriendSystem', () => { game.friendSystem = new FriendSystem(game); });
 
   // Economy
-  game.currency = new Currency(game);
-  game.catalog = new Catalog(game);
-  game.inventory = new Inventory(game);
-  game.tradeEngine = new TradeEngine(game);
+  safeInit('Currency', () => { game.currency = new Currency(game); });
+  safeInit('Catalog', () => { game.catalog = new Catalog(game); });
+  safeInit('Inventory', () => { game.inventory = new Inventory(game); });
+  safeInit('TradeEngine', () => { game.tradeEngine = new TradeEngine(game); });
 
   // Minigames
-  game.minigameHub = new MinigameHub(game);
-  game.minigameHub.register('starcatcher', StarCatcher, { minPlayers: 1, maxPlayers: 4, description: 'Catch falling stars!', icon: '⭐' });
-  game.minigameHub.register('memorymatch', MemoryMatch, { minPlayers: 1, maxPlayers: 2, description: 'Match pairs of starlight cards.', icon: '🃏' });
-  game.minigameHub.register('rhythmdance', RhythmDance, { minPlayers: 1, maxPlayers: 4, description: 'Dance to the rhythm of the cosmos.', icon: '💃' });
-  game.minigameHub.register('trivia', Trivia, { minPlayers: 1, maxPlayers: 4, description: 'Test your knowledge of the starlight world.', icon: '🧠' });
+  safeInit('MinigameHub', () => {
+    game.minigameHub = new MinigameHub(game);
+    game.minigameHub.register('starcatcher', StarCatcher, { minPlayers: 1, maxPlayers: 4, description: 'Catch falling stars!', icon: 'star' });
+    game.minigameHub.register('memorymatch', MemoryMatch, { minPlayers: 1, maxPlayers: 2, description: 'Match pairs of starlight cards.', icon: 'card' });
+    game.minigameHub.register('rhythmdance', RhythmDance, { minPlayers: 1, maxPlayers: 4, description: 'Dance to the rhythm of the cosmos.', icon: 'dance' });
+    game.minigameHub.register('trivia', Trivia, { minPlayers: 1, maxPlayers: 4, description: 'Test your knowledge of the starlight world.', icon: 'brain' });
+  });
 
   // Events
-  game.chestManager = new ChestManager(game);
-  game.powerUps = new PowerUps(game);
-  game.eventCalendar = new EventCalendar(game);
+  safeInit('ChestManager', () => { game.chestManager = new ChestManager(game); });
+  safeInit('PowerUps', () => { game.powerUps = new PowerUps(game); });
+  safeInit('EventCalendar', () => { game.eventCalendar = new EventCalendar(game); });
 
   // Safety
-  game.filter = new Filter();
-  game.rateLimit = new RateLimit();
-  game.spamDetector = new SpamDetector();
-  game.report = new Report(game);
-  game.moderation = new Moderation(game);
-  game.childSafety = new ChildSafety(game);
-  game.aiModeration = new AIModeration(game);
+  safeInit('Filter', () => { game.filter = new Filter(); });
+  safeInit('RateLimit', () => { game.rateLimit = new RateLimit(); });
+  safeInit('SpamDetector', () => { game.spamDetector = new SpamDetector(); });
+  safeInit('Report', () => { game.report = new Report(game); });
+  safeInit('Moderation', () => { game.moderation = new Moderation(game); });
+  safeInit('ChildSafety', () => { game.childSafety = new ChildSafety(game); });
+  safeInit('AIModeration', () => { game.aiModeration = new AIModeration(game); });
 
-  // v7.0 Security -- Content Firewall
-  game.contentFirewall = new ContentFirewall(game);
-  game.chatModeration = new ChatModeration(game);
+  // Security
+  safeInit('ContentFirewall', () => { game.contentFirewall = new ContentFirewall(game); });
+  safeInit('ChatModeration', () => { game.chatModeration = new ChatModeration(game); });
 
   // Game Feel
-  game.fartMechanic = new FartMechanic(game);
-  game.uppercutEjection = new UppercutEjection(game);
-  game.screenEffects = new ScreenEffects(game);
+  safeInit('FartMechanic', () => { game.fartMechanic = new FartMechanic(game); });
+  safeInit('UppercutEjection', () => { game.uppercutEjection = new UppercutEjection(game); });
+  safeInit('ScreenEffects', () => { game.screenEffects = new ScreenEffects(game); });
 
-  // v7.0 Profile -- Achievements, Badges, Stats
-  game.achievementSystem = new AchievementSystem(game);
-  game.badgeSystem = new BadgeSystem(game);
-  game.profileStats = new ProfileStats(game);
+  // Profile
+  safeInit('AchievementSystem', () => { game.achievementSystem = new AchievementSystem(game); });
+  safeInit('BadgeSystem', () => { game.badgeSystem = new BadgeSystem(game); });
+  safeInit('ProfileStats', () => { game.profileStats = new ProfileStats(game); });
 
-  // v7.0 Theatre -- YouTube Sync
-  game.theatreSystem = new TheatreSystem(game);
-  game.webrtcSync = new WebRTCSync(game);
+  // Theatre
+  safeInit('TheatreSystem', () => { game.theatreSystem = new TheatreSystem(game); });
+  safeInit('WebRTCSync', () => { game.webrtcSync = new WebRTCSync(game); });
 
-  // v7.0 Monetization -- Battle Pass & Store
-  game.battlePass = new BattlePass(game);
-  game.store = new Store(game);
+  // Monetization
+  safeInit('BattlePass', () => { game.battlePass = new BattlePass(game); });
+  safeInit('Store', () => { game.store = new Store(game); });
 
-  // Network (offline fallback)
-  try {
+  // v8.0 Auth
+  safeInit('AuthSystem', () => { game.auth = new AuthSystem(game); });
+
+  // v8.0 Audio
+  safeInit('SoundManager', () => { game.soundManager = new SoundManager(); });
+  safeInit('MusicPlayer', () => { game.musicPlayer = new MusicPlayer(); });
+  safeInit('AudioUI', () => { game.audioUI = new AudioUI(game, game.soundManager, game.musicPlayer); });
+
+  // v8.0 Pixel Emoji
+  safeInit('PixelEmoji', () => { game.pixelEmoji = new PixelEmoji(18); });
+
+  // v8.0 Collision
+  safeInit('CollisionSystemV8', () => { game.collisionV8 = new CollisionSystemV8(64); });
+  safeInit('HitBox', () => { game.hitBox = HitBox; game.hitBoxPresets = HITBOX_PRESETS; });
+
+  // v8.0 UI
+  safeInit('PixelIcon', () => { game.pixelIcon = new PixelIcon(20); });
+
+  // Network (offline fallback within safeInit)
+  safeInit('Network', () => {
     game.socket = new SocketClient(game);
     game.socket.connect();
-  } catch (err) {
-    console.log('[Net] Offline mode -- no server');
-    game.socket = null;
-  }
+  });
 
   // Initialize world
-  game.init();
+  safeInit('GameInit', () => {
+    game.init();
+    game.spriteGenerator?.generateAll?.();
+    game.paletteManager?.initPalettes?.();
+  });
 
-  // v7.0 -- Generate assets after init
-  game.spriteGenerator?.generateAll();
-  game.paletteManager?.initPalettes();
-
-  console.log('[Starlight Inn v7.0.0] Habbo MMO world initialized!');
-  console.log('[v7.0] Features: 93 furniture, 48 clothing, 20 eggs, 45 achievements, 20 badges, YouTube theatre, battle pass, security firewall');
+  console.log('[Starlight Inn v8.0.0] All modules wired — OK:', loadStatus.done, 'Failed:', loadStatus.failed);
 }
 
 // ============================================================
@@ -316,26 +442,51 @@ function wireLandingHandlers() {
   const btnPlay = document.getElementById('btn-play');
   if (btnPlay) {
     btnPlay.addEventListener('click', () => {
+      game.soundManager?.play('click');
       btnPlay.style.transform = 'scale(0.95)';
       setTimeout(() => {
         btnPlay.style.transform = '';
-        game.setScreen('charselect');
+        if (game.characterCreator) {
+          game.characterCreator.show();
+          game.setScreen('charselect');
+        } else {
+          game.setScreen('charselect');
+        }
       }, 150);
     });
   }
+
+  const btnGuest = document.getElementById('btn-guest');
+  if (btnGuest) {
+    btnGuest.addEventListener('click', () => {
+      game.soundManager?.play('click');
+      game.auth?.playOffline?.();
+      if (game.characterCreator) {
+        game.characterCreator.show();
+        game.setScreen('charselect');
+      } else {
+        game.setScreen('charselect');
+      }
+    });
+  }
+
   const btnSettings = document.getElementById('btn-settings');
   if (btnSettings) {
     btnSettings.addEventListener('click', () => {
+      game.soundManager?.play('click');
       const panel = document.getElementById('settings-panel');
       if (panel) panel.classList.add('active');
     });
   }
+
   const btnAbout = document.getElementById('btn-about');
   if (btnAbout) {
     btnAbout.addEventListener('click', () => {
-      alert('Starlight Inn v7.0.0\nA premium Habbo-style isometric social MMO.\nGather, explore, trade, and play together! 🌟');
+      game.soundManager?.play('click');
+      alert('Starlight Inn v8.0.0\nA premium Habbo-style isometric social MMO.\n\nv8.0 upgrades: auth, 100 hairstyles, sounds, pixel art, collisions! 🌟');
     });
   }
+
   const settingsPanel = document.getElementById('settings-panel');
   if (settingsPanel) {
     const closeBtn = settingsPanel.querySelector('.panel-close');
@@ -345,19 +496,29 @@ function wireLandingHandlers() {
 
 function wireCharSelectHandlers() {
   const btnBack = document.getElementById('btn-back');
-  if (btnBack) btnBack.addEventListener('click', () => game.setScreen('landing'));
+  if (btnBack) btnBack.addEventListener('click', () => {
+    game.soundManager?.play('back');
+    game.setScreen('landing');
+  });
 
   const btnContinue = document.getElementById('btn-continue');
   if (btnContinue) {
     btnContinue.addEventListener('click', () => {
+      game.soundManager?.play('success');
       const nameInput = document.getElementById('char-name-input');
       if (nameInput && nameInput.value.trim()) game.state.player.name = nameInput.value.trim();
       game.setScreen('game');
       game.start();
     });
   }
+
   const btnRandom = document.getElementById('btn-randomize');
-  if (btnRandom && game.customizer) btnRandom.addEventListener('click', () => game.customizer.randomize());
+  if (btnRandom && game.customizer) {
+    btnRandom.addEventListener('click', () => {
+      game.soundManager?.play('dice');
+      game.customizer.randomize();
+    });
+  }
 }
 
 // ============================================================
@@ -366,69 +527,105 @@ function wireCharSelectHandlers() {
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
-    game.stop();
+    game.stop?.();
     console.log('[Game] Paused');
   } else {
-    game.start();
+    game.start?.();
     console.log('[Game] Resumed');
   }
 });
 
-document.getElementById('game-canvas').addEventListener('contextmenu', e => e.preventDefault());
+document.getElementById('game-canvas')?.addEventListener('contextmenu', e => e.preventDefault());
 
 window.addEventListener('resize', () => {
-  game.renderer?.resize();
-  game.camera?.updateBounds();
+  game.renderer?.resize?.();
+  game.camera?.updateBounds?.();
 });
 
 document.addEventListener('keydown', e => {
   const tag = document.activeElement?.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA') {
     if (e.key === 'Escape') {
-      game.chat?.close();
-      game.inventory?.close();
-      game.catalog?.close();
+      game.chat?.close?.();
+      game.inventory?.close?.();
+      game.catalog?.close?.();
     }
     return;
   }
   if (e.key === 'Escape') {
-    game.chat?.close();
-    game.inventory?.close();
-    game.catalog?.close();
-    game.friends?.close();
-    game.tradeWindow?.close();
-    game.debugConsole?.hide();
+    game.chat?.close?.(); game.inventory?.close?.(); game.catalog?.close?.();
+    game.friends?.close?.(); game.tradeWindow?.close?.(); game.debugConsole?.hide?.();
     return;
   }
   if (e.key === '`' || e.key === '~') {
-    game.debugConsole?.toggle();
+    game.debugConsole?.toggle?.();
     return;
   }
   if (e.key === 'Enter' || e.key === 't' || e.key === 'T') {
-    game.chat?.focus();
+    game.chat?.focus?.();
     return;
   }
-  const shortcuts = { f: 'friends', F: 'friends', i: 'inventory', I: 'inventory', b: 'catalog', B: 'catalog', g: 'minigames', G: 'minigames', s: 'store', S: 'store' };
+  const shortcuts = { f: 'friends', F: 'friends', i: 'inventory', I: 'inventory', b: 'catalog', B: 'catalog', g: 'minigames', G: 'minigames', s: 'store', S: 'store', a: 'areaBrowser', A: 'areaBrowser' };
   const panel = shortcuts[e.key];
-  if (panel && game[panel]) game[panel].toggle();
+  if (panel && game[panel]?.toggle) game[panel].toggle();
+});
+
+window.addEventListener('online', () => {
+  console.log('[Net] Online');
+  if (game.socket && !game.socket.connected) game.socket.connect?.();
+});
+
+window.addEventListener('offline', () => {
+  console.log('[Net] Offline');
+  game.socket?.disconnect?.();
 });
 
 // ============================================================
-// BOOT
+// BOOT — guaranteed fade + offline fallback
 // ============================================================
 
 function boot() {
+  // Start the 2-second safety timer immediately
+  forceOfflineSoon();
+
   try {
     init();
     wireLandingHandlers();
     wireCharSelectHandlers();
+
+    // Replace text emojis with pixel emojis on chat panel
+    if (game.pixelEmoji) {
+      const chatPanel = document.getElementById('chat-panel');
+      if (chatPanel) {
+        const mo = new MutationObserver(() => game.pixelEmoji.replaceInElement(chatPanel));
+        mo.observe(chatPanel, { childList: true, subtree: true });
+      }
+    }
+
+    // Inject pixel icons into HUD buttons
+    if (game.pixelIcon) {
+      game.pixelIcon.injectButton('btn-area-browser', 'map');
+      game.pixelIcon.injectButton('btn-friends', 'friends');
+      game.pixelIcon.injectButton('btn-inventory', 'bag');
+      game.pixelIcon.injectButton('btn-catalog', 'shop');
+      game.pixelIcon.injectButton('btn-minigames', 'game');
+      game.pixelIcon.injectButton('btn-notifications', 'bell');
+      game.pixelIcon.injectButton('btn-settings-game', 'settings');
+    }
+
+    // Start area music if available
+    if (game.musicPlayer) {
+      game.musicPlayer.playArea('starlight_hub');
+    }
+
   } catch (err) {
     console.error('[Boot] Fatal error:', err);
-    const overlay = document.getElementById('loading-overlay');
-    if (overlay) {
-      const text = overlay.querySelector('.loading-text');
-      if (text) text.textContent = 'Something went wrong ✨';
-    }
+  } finally {
+    // ALWAYS fade the loading screen — no matter what
+    setTimeout(() => {
+      loadStatus.forceFade();
+      offlineForced = true;
+    }, 1500);
   }
 }
 
@@ -439,4 +636,4 @@ if (document.readyState === 'loading') {
 }
 
 window.StarlightInn = game;
-console.log('🌟 Starlight Inn v7.0.0 -- Habbo-grade isometric MMO ready');
+console.log('🌟 Starlight Inn v8.0.0 — Massive quality upgrade ready');
