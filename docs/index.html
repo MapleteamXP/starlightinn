@@ -1729,7 +1729,9 @@ function drawFurnitureItem(ctx, f, rd, zm) {
   const pos = tileToScreen(f.x, f.y, camX, camY, zm);
   const img = IMAGES['furniture/' + f.type];
   if (!img) return;
-  const sc = 0.8 * zm;
+  // Normalize furniture to consistent ~100px base regardless of source resolution
+  const BASE_FURN_SIZE = 100;
+  const sc = (BASE_FURN_SIZE / (img.width || 64)) * zm;
   const w = (img.width || 64) * sc;
   const h = (img.height || 64) * sc;
   const offX = (f.offX || 0) * zm;
