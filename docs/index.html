@@ -1136,7 +1136,7 @@ class StarlightInn {
     hist.appendChild(div);
     hist.scrollTop = hist.scrollHeight;
   }
-  _escapeHtml(t) { return t.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;","':'&#39;'}[m])); }
+  _escapeHtml(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
 
   // ===== SIMULATED PLAYERS =====
   _spawnSimulatedPlayers() {
