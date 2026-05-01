@@ -1,9 +1,9 @@
 /**
- * Starlight Inn v8.0.0 — Massive Quality Upgrade
- * Auth, 100 hairstyles, sounds, pixel art, collisions, offline-first boot.
+ * Starlight Inn v8.1.0 — Authentication & Save System
+ * Working client-side auth, encrypted localStorage, guest mode, character save.
  *
- * @version 8.0.0
- * @description AAA cozy-core social virtual world with v8.0 quality upgrades.
+ * @version 8.1.0
+ * @description AAA cozy-core social virtual world with full account system.
  */
 
 // ============================================================
@@ -229,9 +229,9 @@ import { BattlePass } from './monetization/BattlePass.js';
 import Store from './monetization/Store.js';
 
 // ============================================================
-// v8.0 AUTH
+// v8.1 AUTH — Working client-side account system
 // ============================================================
-import { AuthSystem } from './auth/AuthSystem.js';
+import { AccountSystem } from './auth/AccountSystem.js';
 
 // ============================================================
 // v8.0 AUDIO
@@ -239,6 +239,7 @@ import { AuthSystem } from './auth/AuthSystem.js';
 import { SoundManager } from './audio/SoundManager.js';
 import { MusicPlayer } from './audio/MusicPlayer.js';
 import { AudioUI } from './audio/AudioUI.js';
+import { TitleJingle } from './audio/TitleJingle.js';
 
 // ============================================================
 // v8.0 PIXEL EMOJI
@@ -270,7 +271,7 @@ const game = new Game('game-canvas');
 loadStatus.total = 45;
 
 function init() {
-  console.log('[Starlight Inn v8.0.1] Initializing v8.0 massive quality upgrade...');
+  console.log('[Starlight Inn v8.1.0] Initializing v8.1 auth & save system...');
   loadStatus.update('Wiring engine...');
 
   // Core engine
@@ -400,13 +401,14 @@ function init() {
   safeInit('BattlePass', () => { game.battlePass = new BattlePass(game); });
   safeInit('Store', () => { game.store = new Store(game); });
 
-  // v8.0 Auth
-  safeInit('AuthSystem', () => { game.auth = new AuthSystem(game); });
+  // v8.1 Auth — working account system
+  safeInit('AccountSystem', () => { game.accountSystem = new AccountSystem(game); });
 
   // v8.0 Audio
   safeInit('SoundManager', () => { game.soundManager = new SoundManager(); });
   safeInit('MusicPlayer', () => { game.musicPlayer = new MusicPlayer(); });
-  safeInit('AudioUI', () => { game.audioUI = new AudioUI(game, game.soundManager, game.musicPlayer); });
+  safeInit('AudioUI', () => { game.audioUI = new AudioUI({ soundManager: game.soundManager, musicPlayer: game.musicPlayer }); });
+  safeInit('TitleJingle', () => { game.titleJingle = new TitleJingle(); });
 
   // v8.0 Pixel Emoji
   safeInit('PixelEmoji', () => { game.pixelEmoji = new PixelEmoji(18); });
@@ -439,6 +441,7 @@ function init() {
 // ============================================================
 
 function wireLandingHandlers() {
+  // Enter World → goes to character select
   const btnPlay = document.getElementById('btn-play');
   if (btnPlay) {
     btnPlay.addEventListener('click', () => {
@@ -446,40 +449,90 @@ function wireLandingHandlers() {
       btnPlay.style.transform = 'scale(0.95)';
       setTimeout(() => {
         btnPlay.style.transform = '';
-        if (game.characterCreator) {
-          game.characterCreator.show();
-          game.setScreen('charselect');
-        } else {
-          game.setScreen('charselect');
-        }
+        game.setScreen('charselect');
       }, 150);
     });
   }
 
+  // Guest → skip auth, go to character select
   const btnGuest = document.getElementById('btn-guest');
   if (btnGuest) {
     btnGuest.addEventListener('click', () => {
       game.soundManager?.play('click');
+      const result = game.accountSystem?.guestMode();
+      if (result?.success) {
+        game.state.player.name = result.user.username;
+      }
       game.setScreen('charselect');
     });
   }
 
+  // Register → show register modal
   const btnRegister = document.getElementById('btn-register');
   if (btnRegister) {
     btnRegister.addEventListener('click', () => {
       game.soundManager?.play('click');
-      alert('Registration coming in next update! For now, use Guest mode.');
+      document.getElementById('register-modal')?.classList.remove('hidden');
+      document.getElementById('login-modal')?.classList.add('hidden');
     });
   }
 
+  // Login → show login modal
   const btnLogin = document.getElementById('btn-login');
   if (btnLogin) {
     btnLogin.addEventListener('click', () => {
       game.soundManager?.play('click');
-      alert('Login coming in next update! For now, use Guest mode.');
+      document.getElementById('login-modal')?.classList.remove('hidden');
+      document.getElementById('register-modal')?.classList.add('hidden');
     });
   }
 
+  // Submit Register
+  const submitRegister = document.getElementById('btn-submit-register');
+  if (submitRegister) {
+    submitRegister.addEventListener('click', (e) => {
+      e.preventDefault();
+      const user = document.getElementById('reg-username')?.value?.trim();
+      const pass = document.getElementById('reg-password')?.value;
+      const confirm = document.getElementById('reg-confirm')?.value;
+      const errorEl = document.getElementById('register-error');
+      
+      const result = game.accountSystem?.register(user, pass, confirm);
+      if (result?.success) {
+        closeAuthModal();
+        game.state.player.name = result.user.username;
+        game.setScreen('charselect');
+      } else {
+        if (errorEl) errorEl.textContent = result?.error || 'Registration failed';
+      }
+    });
+  }
+
+  // Submit Login
+  const submitLogin = document.getElementById('btn-submit-login');
+  if (submitLogin) {
+    submitLogin.addEventListener('click', (e) => {
+      e.preventDefault();
+      const user = document.getElementById('login-username')?.value?.trim();
+      const pass = document.getElementById('login-password')?.value;
+      const errorEl = document.getElementById('login-error');
+      
+      const result = game.accountSystem?.login(user, pass);
+      if (result?.success) {
+        closeAuthModal();
+        game.state.player.name = result.user.username;
+        // Load saved character
+        if (result.user.character) {
+          game.state.player.character = result.user.character;
+        }
+        game.setScreen('charselect');
+      } else {
+        if (errorEl) errorEl.textContent = result?.error || 'Login failed';
+      }
+    });
+  }
+
+  // Settings
   const btnSettings = document.getElementById('btn-settings');
   if (btnSettings) {
     btnSettings.addEventListener('click', () => {
@@ -489,13 +542,51 @@ function wireLandingHandlers() {
     });
   }
 
+  // About
   const btnAbout = document.getElementById('btn-about');
   if (btnAbout) {
     btnAbout.addEventListener('click', () => {
       game.soundManager?.play('click');
-      alert('Starlight Inn v8.0.1\nA premium Habbo-style isometric social MMO.\n\nv8.0 upgrades: auth, 100 hairstyles, sounds, pixel art, collisions!');
+      alert('Starlight Inn v8.1.0\nA premium isometric social virtual world.\nMake friends, decorate rooms, play games!');
     });
   }
+
+  // Mute button for jingle
+  const btnMute = document.getElementById('btn-mute');
+  if (btnMute) {
+    btnMute.addEventListener('click', () => {
+      window.jingleMuted = !window.jingleMuted;
+      btnMute.textContent = window.jingleMuted ? 'Sound Off' : 'Sound On';
+      if (window.jingleMuted && window.jingleGain) {
+        window.jingleGain.gain.setValueAtTime(0, window.jingleCtx.currentTime);
+      } else if (!window.jingleMuted && window.jingleGain) {
+        window.jingleGain.gain.setValueAtTime(0.3, window.jingleCtx.currentTime);
+      }
+    });
+  }
+
+  // Close modal helper
+  window.closeAuthModal = () => {
+    document.getElementById('register-modal')?.classList.add('hidden');
+    document.getElementById('login-modal')?.classList.add('hidden');
+  };
+  window.showRegister = () => {
+    document.getElementById('register-modal')?.classList.remove('hidden');
+    document.getElementById('login-modal')?.classList.add('hidden');
+  };
+  window.showLogin = () => {
+    document.getElementById('login-modal')?.classList.remove('hidden');
+    document.getElementById('register-modal')?.classList.add('hidden');
+  };
+
+  // Auto-login on page load
+  setTimeout(() => {
+    const auto = game.accountSystem?.autoLogin();
+    if (auto?.success) {
+      console.log('[Auth] Auto-logged in as', auto.user.username);
+      game.state.player.name = auto.user.username;
+    }
+  }, 100);
 
   const settingsPanel = document.getElementById('settings-panel');
   if (settingsPanel) {
@@ -628,6 +719,35 @@ function boot() {
       game.musicPlayer.playArea('starlight_hub');
     }
 
+    // Start magical title jingle on the landing screen
+    if (game.titleJingle) {
+      game.titleJingle.init();
+      game.titleJingle.loop(40); // Play every 40 seconds
+      window.titleJingle = game.titleJingle;
+
+      // Wire jingle mute to the SoundManager mute state
+      const syncJingleMute = () => {
+        if (!game.titleJingle) return;
+        const smMuted = game.soundManager?.isMuted() ?? false;
+        const mpMuted = game.musicPlayer?.isMuted() ?? false;
+        if (smMuted || mpMuted) {
+          game.titleJingle.mute();
+        } else {
+          game.titleJingle.unmute();
+        }
+      };
+
+      // Observe mute changes via a tiny proxy on the audio UI buttons
+      const audioPanel = document.getElementById('si-audio-panel');
+      if (audioPanel) {
+        const mo = new MutationObserver(syncJingleMute);
+        mo.observe(audioPanel, { attributes: true, subtree: true, attributeFilter: ['class'] });
+      }
+
+      // Also sync on any document click (user may toggle via AudioUI)
+      document.addEventListener('click', syncJingleMute);
+    }
+
   } catch (err) {
     console.error('[Boot] Fatal error:', err);
   } finally {
@@ -646,4 +766,4 @@ if (document.readyState === 'loading') {
 }
 
 window.StarlightInn = game;
-console.log('🌟 Starlight Inn v8.0.0 — Massive quality upgrade ready');
+console.log('🌟 Starlight Inn v8.1.0 — Authentication & save system ready');
