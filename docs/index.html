@@ -594,24 +594,12 @@
     <button class="btn-gold" style="min-width:auto; padding:8px 14px;" onclick="sendChat()">SEND</button>
   </div>
 
-  <!-- Exit Arrows -->
-  <div class="exit-arrow" id="exitNorth" onclick="goExit('north')" style="display:none;">&#9650;</div>
-  <div class="exit-arrow" id="exitSouth" onclick="goExit('south')" style="display:none;">&#9660;</div>
-  <div class="exit-arrow" id="exitEast" onclick="goExit('east')" style="display:none;">&#9654;</div>
-  <div class="exit-arrow" id="exitWest" onclick="goExit('west')" style="display:none;">&#9664;</div>
+  <!-- Exit arrows removed — walk to room edges instead -->
 
   <!-- Minimap -->
   <canvas id="minimap" width="120" height="90"></canvas>
 
-  <!-- Touch Controls -->
-  <div id="touchControls">
-    <div class="dpad">
-      <div class="dpad-btn dpad-up" ontouchstart="touchMove('up')">&#9650;</div>
-      <div class="dpad-btn dpad-down" ontouchstart="touchMove('down')">&#9660;</div>
-      <div class="dpad-btn dpad-left" ontouchstart="touchMove('left')">&#9664;</div>
-      <div class="dpad-btn dpad-right" ontouchstart="touchMove('right')">&#9654;</div>
-    </div>
-  </div>
+  <!-- Touch controls removed — tap to walk instead -->
 </div>
 
 <!-- CATALOG PANEL -->
@@ -1162,55 +1150,68 @@ const CATALOG = [
   {id:'hair_mohawk', name:'Mohawk', type:'hair', icon:'parts/hair_mohawk', category:'clothing', credits:50, duckets:0},
   {id:'face_cool', name:'Cool Face', type:'face', icon:'parts/face_cool', category:'clothing', credits:30, duckets:0},
   {id:'face_surprised', name:'Surprised Face', type:'face', icon:'parts/face_surprised', category:'clothing', credits:30, duckets:0},
-  {id:'rare_crown', name:'Royal Crown', type:'accessory', icon:'parts/acc_hat_wizard', category:'rare', credits:5000, duckets:0, limited:true},
+  {id:'rare_crown', name:'Royal Crown', type:'accessory', icon:'parts/acc_hat_wizard', category:'rare', credits:500, duckets:0, limited:true},
 ];
 
 // ======================= ROOM DEFINITIONS =======================
 const PUBLIC_ROOMS = {
   mainhall: {
-    name: 'Main Hall', w: 10, h: 10,
+    name: 'Main Hall', w: 16, h: 16,
     floor: 'floor_wood', wall: 'wall_wood', bg: 'bg_mainhall',
     exits: { east: 'garden', north: 'library', south: 'tavern' },
     furniture: [
-      {type:'rug',x:5,y:5,offX:0,offY:-10},{type:'sofa',x:3,y:3},{type:'sofa',x:7,y:3},
-      {type:'table',x:5,y:4},{type:'chair',x:4,y:4},{type:'chair',x:6,y:4},
-      {type:'lamp',x:2,y:2},{type:'lamp',x:8,y:2},{type:'plant',x:1,y:7},{type:'plant',x:8,y:7},
-      {type:'bookshelf',x:1,y:1},{type:'bookshelf',x:8,y:1},{type:'trophy',x:5,y:2},{type:'dresser',x:4,y:2},
-      {type:'fireplace',x:5,y:0},{type:'window',x:0,y:5},{type:'window',x:9,y:5}
+      {type:'rug',x:8,y:8,offX:0,offY:-10},{type:'sofa',x:5,y:5},{type:'sofa',x:11,y:5},
+      {type:'table',x:8,y:6},{type:'chair',x:7,y:6},{type:'chair',x:9,y:6},
+      {type:'lamp',x:3,y:3},{type:'lamp',x:13,y:3},{type:'plant',x:2,y:12},{type:'plant',x:13,y:12},
+      {type:'bookshelf',x:2,y:2},{type:'bookshelf',x:13,y:2},{type:'trophy',x:8,y:3},{type:'dresser',x:6,y:3},
+      {type:'fireplace',x:8,y:1},{type:'window',x:1,y:8},{type:'window',x:14,y:8},
+      {type:'piano',x:2,y:10},{type:'throne',x:8,y:14},{type:'mirror',x:10,y:3}
     ]
   },
   garden: {
-    name: 'Moon Garden', w: 12, h: 8,
+    name: 'Moon Garden', w: 20, h: 14,
     floor: 'floor_grass', wall: 'wall_brick', bg: 'bg_garden',
     exits: { west: 'mainhall' },
     furniture: [
-      {type:'fountain',x:6,y:4},{type:'tree',x:2,y:2},{type:'tree',x:10,y:2},
-      {type:'tree',x:2,y:6},{type:'tree',x:10,y:6},{type:'flower',x:4,y:3},{type:'flower',x:8,y:3},
-      {type:'flower',x:4,y:5},{type:'flower',x:8,y:5},{type:'bench',x:5,y:4},{type:'bench',x:7,y:4},
-      {type:'lamp',x:1,y:4},{type:'lamp',x:11,y:4},{type:'gate',x:6,y:0}
+      {type:'fountain',x:10,y:7},{type:'tree',x:3,y:3},{type:'tree',x:17,y:3},
+      {type:'tree',x:3,y:11},{type:'tree',x:17,y:11},{type:'tree',x:10,y:2},
+      {type:'flower',x:6,y:6},{type:'flower',x:14,y:6},{type:'flower',x:6,y:10},{type:'flower',x:14,y:10},
+      {type:'bench',x:8,y:7},{type:'bench',x:12,y:7},{type:'bench',x:10,y:5},{type:'bench',x:10,y:9},
+      {type:'lamp',x:2,y:7},{type:'lamp',x:18,y:7},{type:'lamp',x:10,y:3},{type:'lamp',x:10,y:11},
+      {type:'gate',x:10,y:1},{type:'plant',x:5,y:12},{type:'plant',x:15,y:12}
     ]
   },
   library: {
-    name: 'Arcane Library', w: 8, h: 10,
+    name: 'Arcane Library', w: 14, h: 18,
     floor: 'floor_carpet', wall: 'wall_stone', bg: 'bg_library',
     exits: { south: 'mainhall' },
     furniture: [
-      {type:'bookshelf',x:1,y:1},{type:'bookshelf',x:1,y:3},{type:'bookshelf',x:1,y:5},
-      {type:'bookshelf',x:6,y:1},{type:'bookshelf',x:6,y:3},{type:'bookshelf',x:6,y:5},
-      {type:'table',x:4,y:5},{type:'chair',x:3,y:5},{type:'chair',x:5,y:5},
-      {type:'lamp',x:4,y:3},{type:'lamp',x:2,y:7},{type:'lamp',x:6,y:7},
-      {type:'rug',x:4,y:5},{type:'window',x:4,y:0}
+      {type:'bookshelf',x:2,y:2},{type:'bookshelf',x:2,y:5},{type:'bookshelf',x:2,y:8},
+      {type:'bookshelf',x:2,y:11},{type:'bookshelf',x:2,y:14},
+      {type:'bookshelf',x:11,y:2},{type:'bookshelf',x:11,y:5},{type:'bookshelf',x:11,y:8},
+      {type:'bookshelf',x:11,y:11},{type:'bookshelf',x:11,y:14},
+      {type:'table',x:7,y:7},{type:'table',x:7,y:12},
+      {type:'chair',x:6,y:7},{type:'chair',x:8,y:7},{type:'chair',x:6,y:12},{type:'chair',x:8,y:12},
+      {type:'lamp',x:4,y:4},{type:'lamp',x:10,y:4},{type:'lamp',x:4,y:14},{type:'lamp',x:10,y:14},
+      {type:'lamp',x:7,y:4},{type:'lamp',x:7,y:14},
+      {type:'rug',x:7,y:7},{type:'rug',x:7,y:12},
+      {type:'window',x:7,y:1},{type:'dresser',x:7,y:16},{type:'chest',x:6,y:16},{type:'chest',x:8,y:16}
     ]
   },
   tavern: {
-    name: 'Dragon Tavern', w: 10, h: 6,
+    name: 'Dragon Tavern', w: 16, h: 12,
     floor: 'floor_stone', wall: 'wall_wood', bg: 'bg_tavern',
     exits: { north: 'mainhall' },
     furniture: [
-      {type:'table',x:3,y:3},{type:'table',x:7,y:3},
-      {type:'chair',x:2,y:3},{type:'chair',x:4,y:3},{type:'chair',x:6,y:3},{type:'chair',x:8,y:3},
-      {type:'piano',x:1,y:1},{type:'stove',x:9,y:1},{type:'barrel',x:5,y:1},{type:'barrel',x:6,y:1},
-      {type:'lamp',x:3,y:1},{type:'lamp',x:7,y:1},{type:'rug',x:5,y:3},{type:'wall_lamp',x:0,y:3},{type:'wall_lamp',x:9,y:3}
+      {type:'table',x:4,y:5},{type:'table',x:12,y:5},{type:'table',x:4,y:9},{type:'table',x:12,y:9},
+      {type:'chair',x:3,y:5},{type:'chair',x:5,y:5},{type:'chair',x:3,y:9},{type:'chair',x:5,y:9},
+      {type:'chair',x:11,y:5},{type:'chair',x:13,y:5},{type:'chair',x:11,y:9},{type:'chair',x:13,y:9},
+      {type:'piano',x:2,y:2},{type:'stove',x:14,y:2},
+      {type:'barrel',x:7,y:2},{type:'barrel',x:8,y:2},{type:'barrel',x:9,y:2},
+      {type:'lamp',x:4,y:3},{type:'lamp',x:12,y:3},{type:'lamp',x:4,y:7},{type:'lamp',x:12,y:7},
+      {type:'wall_lamp',x:1,y:6},{type:'wall_lamp',x:1,y:7},{type:'wall_lamp',x:15,y:6},{type:'wall_lamp',x:15,y:7},
+      {type:'rug',x:4,y:5},{type:'rug',x:12,y:5},{type:'rug',x:4,y:9},{type:'rug',x:12,y:9},
+      {type:'jukebox',x:14,y:10},{type:'trophy',x:8,y:1}
     ]
   }
 };
@@ -1568,7 +1569,7 @@ function loadRoom(roomId) {
     player.tx = player.x; player.ty = player.y;
     player.moving = false;
     camX = 0; camY = 0; zoom = 1.0;
-    updateExitArrows();
+    // Exit arrows removed
     showRoomLabel(def.name);
     playDoor();
     return;
@@ -1583,7 +1584,7 @@ function loadRoom(roomId) {
     player.moving = false;
     camX = 0; camY = 0; zoom = 1.0;
     roomData.exits = roomData.exits || {};
-    updateExitArrows();
+    // Exit arrows removed
     showRoomLabel(session.name + "'s Room");
     playDoor();
     return;
@@ -1608,7 +1609,7 @@ function loadRoom(roomId) {
     player.tx = 6; player.ty = 4;
     player.moving = false;
     camX = 0; camY = 0; zoom = 1.0;
-    updateExitArrows();
+    // Exit arrows removed
     showRoomLabel("My Room");
     playDoor();
     return;
@@ -1624,7 +1625,7 @@ function showRoomLabel(name) {
   }
 }
 
-function updateExitArrows() {
+function updateExitArrows_DEPRECATED() {
   if (!roomData) return;
   const dirs = ['north','south','east','west'];
   dirs.forEach(d => {
@@ -1712,12 +1713,25 @@ function drawFloorTiles(ctx, rd, zm) {
 }
 
 function drawBackground(ctx, rd, zm) {
+  // Room atmosphere tint
+  const atmosphere = {
+    'mainhall': {color:'#1a0f00', alpha:0.15},
+    'garden': {color:'#0a1a0a', alpha:0.2},
+    'library': {color:'#0a0a1a', alpha:0.25},
+    'tavern': {color:'#1a0a00', alpha:0.2},
+    'myroom': {color:'#0f0a1a', alpha:0.1}
+  };
+  const atm = atmosphere[rd.bg] || {color:'#0a0a1a', alpha:0.15};
+  ctx.fillStyle = atm.color;
+  ctx.globalAlpha = atm.alpha;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.globalAlpha = 1.0;
+
   const bgImg = IMAGES['rooms/' + rd.bg];
   if (bgImg) {
-    const sx = (canvas.width / 2) / zm + camX - bgImg.width * zm / 2;
-    const sy = (canvas.height / 3) / zm + camY - bgImg.height * zm / 3;
-    ctx.globalAlpha = 0.4;
-    ctx.drawImage(bgImg, sx, sy, bgImg.width * zm, bgImg.height * zm);
+    // Canvas-relative background (doesn't pan with camera)
+    ctx.globalAlpha = 0.35;
+    ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
     ctx.globalAlpha = 1.0;
   }
 }
@@ -1748,7 +1762,7 @@ function drawAvatar(ctx, px, py, dir, opts, zm, isWalking, walkFrame) {
   // Use composite render to temp canvas then draw
   const avc = document.createElement('canvas');
   avc.width = 100; avc.height = 120;
-  renderAvatarComposite(avc, opts);
+  renderAvatarComposite(avc, opts, isWalking ? walkFrame : 0);
   const sc = zm * 1.2;  // Larger scale for visibility
   const w = avc.width * sc;
   const h = avc.height * sc;
@@ -1817,7 +1831,16 @@ function drawChatBubble(ctx, msg, px, py, zm) {
 function drawHoverTile(ctx, zm) {
   if (!hoverTile) return;
   const p = tileToScreen(hoverTile.x, hoverTile.y, camX, camY, zm);
-  ctx.fillStyle = 'rgba(255,215,0,0.15)';
+  const isWalkable = isTileWalkable(hoverTile.x, hoverTile.y, currentRoom);
+
+  // Different color for walkable vs blocked
+  if (isWalkable) {
+    ctx.fillStyle = 'rgba(255,215,0,0.2)';
+    ctx.strokeStyle = 'rgba(255,215,0,0.7)';
+  } else {
+    ctx.fillStyle = 'rgba(255,0,0,0.15)';
+    ctx.strokeStyle = 'rgba(255,0,0,0.4)';
+  }
   ctx.beginPath();
   ctx.moveTo(p.x, p.y + TILE_H * zm / 2);
   ctx.lineTo(p.x + TILE_W * zm / 2, p.y);
@@ -1825,8 +1848,16 @@ function drawHoverTile(ctx, zm) {
   ctx.lineTo(p.x + TILE_W * zm / 2, p.y + TILE_H * zm);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = 'rgba(255,215,0,0.5)'; ctx.lineWidth = 1;
+  ctx.lineWidth = 1.5;
   ctx.stroke();
+
+  // Walk here indicator
+  if (isWalkable) {
+    ctx.fillStyle = 'rgba(255,215,0,0.8)';
+    ctx.font = 'bold ' + Math.round(9 * zm) + 'px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Walk', p.x + TILE_W * zm / 2, p.y + TILE_H * zm / 2);
+  }
 }
 
 function renderFrame() {
@@ -2258,14 +2289,17 @@ function openFriends() {
   const list = document.getElementById('friendsList');
   if (list) {
     list.innerHTML = '';
-    Object.keys(peerPositions).forEach(id => {
-      const item = document.createElement('div');
-      item.className = 'friend-item';
-      item.innerHTML = '<span class="friend-online">&#9679;</span> Friend ' + id.slice(0,6);
-      list.appendChild(item);
-    });
-    if (Object.keys(peerPositions).length === 0) {
-      list.innerHTML = '<div class="friend-item" style="color:#555;">No friends online</div>';
+    const peers = Object.entries(peerPositions);
+    if (peers.length === 0) {
+      list.innerHTML = '<div class="friend-item" style="color:#555;">No friends in this room. Use MULTIPLAYER to connect!</div>';
+    } else {
+      peers.forEach(([id, pp]) => {
+        const isHere = pp.room === currentRoom;
+        const item = document.createElement('div');
+        item.className = 'friend-item';
+        item.innerHTML = '<span class="friend-online" style="color:' + (isHere ? '#32CD32' : '#666') + ';">&#9679;</span> Guest ' + id.slice(0,6) + (isHere ? ' <span style="color:#888;font-size:11px;">(here)</span>' : ' <span style="color:#888;font-size:11px;">(' + (pp.room || '?') + ')</span>');
+        list.appendChild(item);
+      });
     }
   }
 }
