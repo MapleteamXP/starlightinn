@@ -1069,6 +1069,9 @@ function renderAvatar(ctx, avatar, x, y, scale = 1, dir = 's') {
   ctx.translate(x, y);
   ctx.scale(scale, scale);
 
+  const AV_W = 48;
+  const AV_H = 72;
+
   const layers = [];
 
   // Body base (skin tone applied)
@@ -1102,24 +1105,32 @@ function renderAvatar(ctx, avatar, x, y, scale = 1, dir = 's') {
     layers.push({ key: avatar.accStyle, tint: null, z: 5 });
   }
 
-  // Draw all layers
+  // Draw all layers with fixed avatar dimensions
   layers.forEach(layer => {
     const img = state.assets[layer.key];
-    if (!img) return;
+    if (!img || !img.width || !img.height) return;
+
+    // Determine source rectangle (handle sprite sheets by taking top-left portion)
+    const srcW = Math.min(img.width, AV_W * 2);
+    const srcH = Math.min(img.height, AV_H * 2);
+    const srcX = 0;
+    const srcY = 0;
 
     if (layer.tint) {
-      // Draw tinted version using source-atop
+      // Draw tinted version using offscreen canvas
       const c = document.createElement('canvas');
-      c.width = img.width || 48;
-      c.height = img.height || 72;
+      c.width = AV_W;
+      c.height = AV_H;
       const cx = c.getContext('2d');
-      cx.drawImage(img, 0, 0);
+      // Draw source portion scaled to avatar size
+      cx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, AV_W, AV_H);
       cx.globalCompositeOperation = 'source-atop';
       cx.fillStyle = layer.tint;
-      cx.fillRect(0, 0, c.width, c.height);
-      ctx.drawImage(c, -c.width/2, -c.height);
+      cx.fillRect(0, 0, AV_W, AV_H);
+      ctx.drawImage(c, -AV_W/2, -AV_H);
     } else {
-      ctx.drawImage(img, -(img.width||48)/2, -(img.height||72));
+      // Draw source portion scaled to avatar size
+      ctx.drawImage(img, srcX, srcY, srcW, srcH, -AV_W/2, -AV_H, AV_W, AV_H);
     }
   });
 
