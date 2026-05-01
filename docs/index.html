@@ -3,987 +3,854 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Starlight Inn - Isometric Virtual World</title>
+<title>Starlight Inn v13.0.0</title>
 <style>
-/* ================================================================
-   STARLIGHT INN v12.0.0 — Complete CSS
-   ================================================================ */
-:root {
-  --bg: #0a0a1a;
-  --panel: rgba(15, 15, 30, 0.95);
-  --gold: #FFD700;
-  --gold-dim: #B8860B;
-  --text: #e0e0e0;
-  --text-dim: #888;
-  --border: 2px solid var(--gold);
-  --radius: 8px;
-}
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  overflow: hidden; width: 100vw; height: 100vh;
-}
-canvas { image-rendering: pixelated; display: block; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: #0a0a1a;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
+  img { image-rendering: pixelated; image-rendering: crisp-edges; }
 
-/* ---- Loading Screen ---- */
-#loadingScreen {
-  position: fixed; inset: 0; z-index: 2000;
-  display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(180deg, #0a0a1a 0%, #1a1020 50%, #0d0d1a 100%);
-  transition: opacity 0.5s;
-}
-.loading-box {
-  text-align: center; padding: 40px;
-  background: rgba(15,15,30,0.9);
-  border: var(--border); border-radius: var(--radius);
-  min-width: 300px;
-}
-.loading-box h2 {
-  color: var(--gold); font-size: 28px;
-  text-shadow: 0 0 20px rgba(255,215,0,0.4);
-  letter-spacing: 0.1em; margin-bottom: 20px;
-}
-.loading-bar {
-  width: 100%; height: 12px;
-  background: #222; border-radius: 6px;
-  overflow: hidden; margin-bottom: 12px;
-}
-.loading-fill {
-  width: 0%; height: 100%;
-  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
-  transition: width 0.3s; border-radius: 6px;
-}
-#loadText { color: var(--text-dim); font-size: 13px; }
+  /* Loading Screen */
+  #loadingScreen {
+    position: fixed; inset: 0; z-index: 2000;
+    background: #0a0a1a;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  #loadText { color: #FFD700; font-size: 22px; margin-bottom: 20px; letter-spacing: 2px; }
+  .loadBar {
+    width: 300px; height: 12px; background: #222; border-radius: 6px;
+    border: 2px solid #FFD700; overflow: hidden;
+  }
+  #loadFill {
+    height: 100%; width: 0%; background: linear-gradient(90deg, #FFD700, #FFA500);
+    transition: width 0.2s ease;
+  }
+  .loadSub { color: #888; font-size: 13px; margin-top: 12px; }
 
-/* ---- Title Screen ---- */
-#titleScreen {
-  position: fixed; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  z-index: 1000;
-  background: linear-gradient(180deg, #0a0a1a 0%, #1a1020 50%, #0d0d1a 100%);
-}
-.title-bg {
-  position: absolute; inset: 0;
-}
-.title-bg img {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: cover; opacity: 0.5;
-  image-rendering: pixelated;
-}
-.title-bg .stars {
-  position: absolute; inset: 0;
-  background-image:
-    radial-gradient(2px 2px at 20px 30px, #fff, transparent),
-    radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
-    radial-gradient(1px 1px at 90px 40px, #fff, transparent),
-    radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
-    radial-gradient(2px 2px at 160px 120px, #fff, transparent),
-    radial-gradient(1px 1px at 200px 50px, rgba(255,255,255,0.7), transparent),
-    radial-gradient(2px 2px at 230px 90px, #fff, transparent),
-    radial-gradient(1px 1px at 280px 30px, rgba(255,255,255,0.5), transparent),
-    radial-gradient(2px 2px at 300px 100px, #fff, transparent),
-    radial-gradient(1px 1px at 350px 60px, rgba(255,255,255,0.8), transparent),
-    radial-gradient(2px 2px at 400px 130px, #fff, transparent),
-    radial-gradient(1px 1px at 450px 40px, rgba(255,255,255,0.6), transparent),
-    radial-gradient(2px 2px at 500px 80px, #fff, transparent),
-    radial-gradient(1px 1px at 550px 110px, rgba(255,255,255,0.7), transparent),
-    radial-gradient(2px 2px at 600px 50px, #fff, transparent),
-    radial-gradient(1px 1px at 650px 90px, rgba(255,255,255,0.5), transparent),
-    radial-gradient(2px 2px at 700px 30px, #fff, transparent),
-    radial-gradient(1px 1px at 750px 70px, rgba(255,255,255,0.8), transparent),
-    radial-gradient(2px 2px at 800px 120px, #fff, transparent),
-    radial-gradient(1px 1px at 850px 60px, rgba(255,255,255,0.6), transparent),
-    radial-gradient(2px 2px at 50px 150px, #fff, transparent),
-    radial-gradient(1px 1px at 100px 200px, rgba(255,255,255,0.7), transparent),
-    radial-gradient(2px 2px at 150px 170px, #fff, transparent),
-    radial-gradient(1px 1px at 250px 220px, rgba(255,255,255,0.5), transparent),
-    radial-gradient(2px 2px at 350px 180px, #fff, transparent);
-  animation: twinkle 4s ease-in-out infinite alternate;
-}
-@keyframes twinkle {
-  0% { opacity: 0.5; }
-  100% { opacity: 1; }
-}
-.title-content {
-  position: relative; z-index: 10;
-  text-align: center; padding: 20px;
-}
-.title-text {
-  font-size: clamp(36px, 8vw, 72px);
-  color: #FFD700;
-  text-shadow: 0 0 40px rgba(255,215,0,0.5), 0 4px 8px rgba(0,0,0,0.8);
-  letter-spacing: 0.1em; margin-bottom: 10px;
-  animation: titleGlow 3s ease-in-out infinite;
-}
-@keyframes titleGlow {
-  0%, 100% { text-shadow: 0 0 40px rgba(255,215,0,0.5), 0 4px 8px rgba(0,0,0,0.8); }
-  50% { text-shadow: 0 0 60px rgba(255,215,0,0.8), 0 0 100px rgba(255,215,0,0.3), 0 4px 8px rgba(0,0,0,0.8); }
-}
-.title-sub {
-  font-size: clamp(14px, 3vw, 20px);
-  color: #aaa; margin-bottom: 30px;
-  letter-spacing: 0.05em;
-}
-.title-buttons { display: flex; flex-direction: column; gap: 10px; align-items: center; }
-.version {
-  position: absolute; bottom: 15px; right: 20px;
-  color: var(--text-dim); font-size: 12px; z-index: 10;
-}
+  /* Title Screen */
+  #titleScreen {
+    position: fixed; inset: 0; z-index: 1000;
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+  }
+  #titleScreen .bg-img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; image-rendering: pixelated;
+  }
+  #titleScreen .overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(10,10,26,0.3) 0%, rgba(10,10,26,0.7) 100%);
+  }
+  #titleScreen .content {
+    position: relative; z-index: 10; text-align: center;
+  }
+  #titleScreen .logo-img {
+    max-width: 80vw; max-height: 20vh; margin-bottom: 20px;
+  }
+  #titleScreen .subtitle {
+    color: #FFD700; font-size: 18px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  }
+  .title-buttons {
+    display: flex; flex-direction: column; gap: 12px; margin-top: 30px;
+    align-items: center;
+  }
+  .title-buttons .row { display: flex; gap: 12px; justify-content: center; }
 
-/* ---- Buttons ---- */
-.btn {
-  padding: 12px 32px; font-size: 15px; font-weight: bold;
-  border: 2px solid transparent; border-radius: var(--radius);
-  cursor: pointer; letter-spacing: 0.05em;
-  transition: all 0.2s; min-width: 220px;
-}
-.btn:hover { transform: translateY(-2px); }
-.btn:active { transform: translateY(0); }
-.btn-gold {
-  background: linear-gradient(135deg, #FFD700, #B8860B);
-  color: #1a1200; border-color: #FFD700;
-}
-.btn-gold:hover { box-shadow: 0 0 20px rgba(255,215,0,0.4); }
-.btn-blue {
-  background: linear-gradient(135deg, #4a90d9, #2a5a9a);
-  color: #fff; border-color: #4a90d9;
-}
-.btn-blue:hover { box-shadow: 0 0 20px rgba(74,144,217,0.4); }
-.btn-green {
-  background: linear-gradient(135deg, #4caf50, #2e7d32);
-  color: #fff; border-color: #4caf50;
-}
-.btn-green:hover { box-shadow: 0 0 20px rgba(76,175,80,0.4); }
-.btn-red {
-  background: linear-gradient(135deg, #e74c3c, #922b21);
-  color: #fff; border-color: #e74c3c;
-}
-.btn-red:hover { box-shadow: 0 0 20px rgba(231,76,60,0.4); }
-.btn-small {
-  padding: 6px 14px; font-size: 12px; min-width: auto;
-}
+  /* Buttons */
+  .btn-gold {
+    background: linear-gradient(180deg, #FFD700, #DAA520);
+    border: 2px solid #B8860B; border-radius: 8px;
+    color: #1a1a2e; font-weight: bold; font-size: 15px;
+    padding: 10px 28px; cursor: pointer; text-transform: uppercase;
+    letter-spacing: 1px; box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    transition: transform 0.1s, box-shadow 0.1s;
+    min-width: 160px;
+  }
+  .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.5); }
+  .btn-gold:active { transform: translateY(1px); }
+  .btn-dark {
+    background: rgba(20,20,40,0.9); border: 2px solid #FFD700; border-radius: 8px;
+    color: #FFD700; font-weight: bold; font-size: 14px;
+    padding: 8px 20px; cursor: pointer; min-width: 120px;
+    transition: background 0.2s;
+  }
+  .btn-dark:hover { background: rgba(40,40,60,0.9); }
+  .btn-close {
+    position: absolute; top: 8px; right: 12px;
+    background: none; border: none; color: #FFD700;
+    font-size: 24px; cursor: pointer; z-index: 10;
+  }
 
-/* ---- Game Screen ---- */
-#gameScreen {
-  position: fixed; inset: 0;
-  display: none;
-}
-#gameCanvas {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-}
+  /* Game Screen */
+  #gameScreen {
+    position: fixed; inset: 0; z-index: 100;
+    display: none;
+  }
+  #gameCanvas {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    background: #0a0a1a;
+    touch-action: none;
+  }
 
-/* ---- UI Overlays ---- */
-.ui-panel {
-  position: absolute;
-  background: var(--panel);
-  border: 1px solid rgba(255,215,0,0.3);
-  border-radius: var(--radius);
-  backdrop-filter: blur(10px);
-  z-index: 100;
-}
+  /* HUD */
+  #hud {
+    position: fixed; top: 8px; left: 8px; right: 8px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    pointer-events: none; z-index: 200;
+  }
+  .hud-left, .hud-right {
+    display: flex; gap: 8px; pointer-events: auto;
+  }
+  .hud-panel {
+    background: rgba(15,15,30,0.92); border: 2px solid #FFD700;
+    border-radius: 10px; padding: 6px 12px;
+    display: flex; align-items: center; gap: 6px;
+    backdrop-filter: blur(4px);
+  }
+  .hud-icon { width: 20px; height: 20px; }
+  .hud-text { color: #FFD700; font-weight: bold; font-size: 14px; }
+  .hud-btn {
+    background: rgba(15,15,30,0.92); border: 2px solid #FFD700;
+    border-radius: 8px; padding: 6px 10px; cursor: pointer;
+    color: #FFD700; font-size: 13px; font-weight: bold;
+    backdrop-filter: blur(4px);
+  }
+  .hud-btn:hover { background: rgba(30,30,50,0.95); }
 
-/* ---- Room Label ---- */
-#roomLabel {
-  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-  background: rgba(15,15,30,0.9); color: var(--gold);
-  padding: 6px 20px; border-radius: var(--radius);
-  font-size: 14px; font-weight: bold;
-  border: 1px solid rgba(255,215,0,0.4); z-index: 50;
-  pointer-events: none;
-}
+  /* Chat Bar */
+  #chatBar {
+    position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 6px; z-index: 200; pointer-events: auto;
+  }
+  #chatInput {
+    width: 320px; padding: 8px 14px;
+    border: 2px solid #FFD700; border-radius: 20px;
+    background: rgba(15,15,30,0.95); color: #fff; font-size: 14px;
+    outline: none;
+  }
+  #chatInput::placeholder { color: #888; }
 
-/* ---- Chat Bar ---- */
-#chatBar {
-  position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
-  display: flex; gap: 6px; z-index: 50;
-  background: rgba(15,15,30,0.9);
-  padding: 6px; border-radius: var(--radius);
-  border: 1px solid rgba(255,215,0,0.3);
-}
-#chatInput {
-  background: rgba(30,30,50,0.9);
-  border: 1px solid rgba(255,215,0,0.3);
-  color: var(--text); padding: 8px 12px;
-  border-radius: 6px; font-size: 13px;
-  width: 280px; outline: none;
-}
-#chatInput:focus { border-color: var(--gold); }
-#chatInput::placeholder { color: var(--text-dim); }
+  /* Chat Bubbles in-world */
+  .chat-bubble {
+    position: absolute; pointer-events: none; z-index: 300;
+    background: rgba(15,15,30,0.9); border: 2px solid #FFD700;
+    border-radius: 12px; padding: 6px 12px;
+    color: #fff; font-size: 13px; white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    transform: translate(-50%, -100%); margin-top: -10px;
+  }
 
-/* ---- Chat Log ---- */
-#chatLog {
-  position: absolute; bottom: 55px; left: 10px;
-  width: 320px; max-height: 180px; overflow-y: auto;
-  background: rgba(15,15,30,0.85);
-  border-radius: var(--radius); padding: 8px;
-  border: 1px solid rgba(255,215,0,0.2);
-  font-size: 12px; z-index: 50;
-}
-#chatLog .msg-system { color: #4fc3f7; font-style: italic; }
-#chatLog .msg-player { color: #FFD700; }
-#chatLog .msg-chat { color: var(--text); }
-#chatLog > div { margin-bottom: 3px; word-break: break-word; }
+  /* Panels (Catalog, Inventory, etc.) */
+  .panel {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 720px; max-width: 95vw; height: 520px; max-height: 90vh;
+    background: rgba(10,10,20,0.97); border: 2px solid #FFD700;
+    border-radius: 14px; z-index: 500; display: none; flex-direction: column;
+    overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,0.8);
+  }
+  .panel-header {
+    background: rgba(20,20,40,0.9); border-bottom: 2px solid #FFD700;
+    padding: 10px 16px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .panel-header h2 { color: #FFD700; font-size: 18px; margin: 0; }
+  .panel-body { flex: 1; overflow-y: auto; padding: 12px; }
+  .panel-footer {
+    border-top: 2px solid #FFD700; padding: 8px 16px;
+    background: rgba(20,20,40,0.9); display: flex; gap: 8px; justify-content: flex-end;
+  }
 
-/* ---- Chat Bubble (Canvas overlay via DOM) ---- */
-.chat-bubble {
-  position: absolute;
-  background: rgba(15,15,30,0.95);
-  border: 1px solid rgba(255,215,0,0.4);
-  border-radius: 10px; padding: 6px 12px;
-  font-size: 12px; color: var(--text);
-  pointer-events: none; z-index: 60;
-  max-width: 180px; word-break: break-word;
-  text-align: center;
-  transform: translate(-50%, -100%);
-  margin-top: -60px;
-  animation: bubblePop 0.2s ease-out;
-}
-.chat-bubble::after {
-  content: ''; position: absolute;
-  bottom: -6px; left: 50%; transform: translateX(-50%);
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 6px solid rgba(255,215,0,0.4);
-}
-@keyframes bubblePop {
-  0% { transform: translate(-50%, -100%) scale(0.5); opacity: 0; }
-  100% { transform: translate(-50%, -100%) scale(1); opacity: 1; }
-}
+  /* Catalog specific */
+  .catalog-tabs {
+    display: flex; gap: 4px; padding: 0 12px 8px;
+    border-bottom: 1px solid #333;
+  }
+  .cat-tab {
+    padding: 6px 14px; background: rgba(30,30,50,0.9);
+    border: 1px solid #555; border-radius: 6px 6px 0 0;
+    color: #aaa; cursor: pointer; font-size: 13px; font-weight: bold;
+  }
+  .cat-tab.active { background: rgba(60,50,20,0.9); border-color: #FFD700; color: #FFD700; }
+  .catalog-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px; padding: 10px;
+  }
+  .cat-item {
+    background: rgba(20,20,35,0.9); border: 2px solid #444;
+    border-radius: 8px; padding: 8px; text-align: center; cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .cat-item:hover { border-color: #FFD700; }
+  .cat-item img { width: 48px; height: 48px; object-fit: contain; display: block; margin: 0 auto 4px; }
+  .cat-item .name { color: #fff; font-size: 12px; }
+  .cat-item .price { color: #FFD700; font-size: 11px; margin-top: 2px; }
+  .cat-item .price-d { color: #00BFFF; }
 
-/* ---- Side Panel (Inventory/Friends/Settings) ---- */
-#sidePanel {
-  position: absolute; right: 10px; top: 50px;
-  width: 220px; max-height: calc(100vh - 70px);
-  overflow-y: auto; z-index: 50;
-  display: none;
-}
-.panel-header {
-  background: rgba(255,215,0,0.15);
-  color: var(--gold); padding: 10px;
-  font-weight: bold; font-size: 14px;
-  border-bottom: 1px solid rgba(255,215,0,0.3);
-  display: flex; justify-content: space-between; align-items: center;
-  border-radius: var(--radius) var(--radius) 0 0;
-}
-.panel-close {
-  background: none; border: none; color: var(--gold);
-  cursor: pointer; font-size: 18px; padding: 0 4px;
-}
-.panel-body { padding: 10px; }
+  /* Inventory */
+  .inv-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px; padding: 8px;
+  }
+  .inv-item {
+    background: rgba(20,20,35,0.9); border: 2px solid #444;
+    border-radius: 8px; padding: 6px; text-align: center; cursor: pointer;
+    position: relative;
+  }
+  .inv-item:hover { border-color: #FFD700; }
+  .inv-item img { width: 40px; height: 40px; object-fit: contain; display: block; margin: 0 auto 2px; }
+  .inv-item .name { color: #fff; font-size: 11px; }
+  .inv-item .equipped {
+    position: absolute; top: 2px; right: 2px;
+    color: #0f0; font-size: 14px; font-weight: bold;
+  }
+  .inv-filters {
+    display: flex; gap: 6px; padding-bottom: 8px; border-bottom: 1px solid #333; margin-bottom: 8px;
+  }
+  .inv-filter {
+    padding: 4px 12px; background: rgba(30,30,50,0.9);
+    border: 1px solid #555; border-radius: 6px;
+    color: #aaa; cursor: pointer; font-size: 12px;
+  }
+  .inv-filter.active { border-color: #FFD700; color: #FFD700; }
 
-/* ---- Inventory Grid ---- */
-.inv-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 5px;
-}
-.inv-slot {
-  aspect-ratio: 1;
-  background: rgba(30,30,50,0.8);
-  border: 1px solid rgba(255,215,0,0.2);
-  border-radius: 6px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s; position: relative;
-  overflow: hidden;
-}
-.inv-slot:hover { border-color: var(--gold); transform: scale(1.05); }
-.inv-slot.equipped {
-  border-color: var(--gold);
-  box-shadow: 0 0 8px rgba(255,215,0,0.3);
-  background: rgba(255,215,0,0.1);
-}
-.inv-slot img {
-  max-width: 80%; max-height: 80%;
-  object-fit: contain; pointer-events: none;
-}
-.inv-slot .equip-badge {
-  position: absolute; bottom: 2px; right: 2px;
-  font-size: 10px; color: var(--gold);
-}
+  /* Character Creator */
+  #characterScreen {
+    position: fixed; inset: 0; z-index: 1000;
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    background: #0a0a1a;
+  }
+  .char-layout {
+    display: flex; gap: 30px; align-items: flex-start;
+    max-width: 90vw;
+  }
+  .char-preview-box {
+    background: rgba(20,20,40,0.9); border: 3px solid #FFD700;
+    border-radius: 14px; padding: 16px; text-align: center;
+  }
+  #charPreview { width: 200px; height: 280px; border-radius: 8px; background: rgba(0,0,0,0.3); }
+  .char-options {
+    background: rgba(20,20,40,0.9); border: 2px solid #FFD700;
+    border-radius: 14px; padding: 16px; width: 380px; max-height: 70vh; overflow-y: auto;
+  }
+  .char-section { margin-bottom: 16px; }
+  .char-section h4 { color: #FFD700; margin-bottom: 6px; font-size: 14px; }
+  .char-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+  .char-opt {
+    width: 48px; height: 48px; background: rgba(30,30,50,0.9);
+    border: 2px solid #555; border-radius: 6px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .char-opt img { width: 40px; height: 40px; object-fit: contain; }
+  .char-opt:hover { border-color: #FFD700; }
+  .char-opt.selected { border-color: #FFD700; background: rgba(60,50,20,0.9); }
+  .color-picker {
+    display: flex; gap: 4px; flex-wrap: wrap;
+  }
+  .color-swatch {
+    width: 24px; height: 24px; border-radius: 4px;
+    border: 2px solid #333; cursor: pointer;
+  }
+  .color-swatch:hover { border-color: #FFD700; }
+  .color-swatch.selected { border-color: #fff; }
+  #customColor { width: 60px; height: 28px; border: 2px solid #555; border-radius: 4px; cursor: pointer; }
 
-/* ---- Trade Panel ---- */
-#tradePanel {
-  position: absolute;
-  top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: 420px; z-index: 150;
-  display: none;
-  background: var(--panel);
-  border: var(--border); border-radius: var(--radius);
-  box-shadow: 0 0 30px rgba(0,0,0,0.7);
-}
-.trade-section {
-  padding: 10px;
-  border-bottom: 1px solid rgba(255,215,0,0.2);
-}
-.trade-section:last-child { border-bottom: none; }
-.trade-offers {
-  display: flex; gap: 15px;
-  min-height: 80px;
-}
-.trade-col {
-  flex: 1;
-  background: rgba(30,30,50,0.6);
-  border-radius: 6px; padding: 8px;
-  border: 1px solid rgba(255,215,0,0.2);
-}
-.trade-col h4 {
-  color: var(--gold); font-size: 12px;
-  margin-bottom: 6px; text-align: center;
-}
-.trade-status {
-  text-align: center; padding: 8px;
-  color: var(--text-dim); font-size: 12px;
-}
-.trade-status.confirmed { color: #4caf50; }
-.offer-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-}
-.offer-item {
-  aspect-ratio: 1;
-  background: rgba(40,40,60,0.8);
-  border: 1px solid rgba(255,215,0,0.2);
-  border-radius: 4px; display: flex;
-  align-items: center; justify-content: center;
-  font-size: 11px; color: var(--text-dim);
-  cursor: pointer;
-}
-.offer-item img { max-width: 80%; max-height: 80%; object-fit: contain; }
-.offer-item:hover { border-color: var(--gold); }
-.trade-actions {
-  display: flex; gap: 8px; justify-content: center;
-  padding: 10px;
-}
+  /* Room Editor */
+  #roomEditorPanel { width: 800px; height: 600px; }
+  .editor-canvas-wrap { display: flex; gap: 12px; height: 100%; }
+  #editorCanvas { flex: 1; background: #0a0a1a; border-radius: 8px; border: 1px solid #444; }
+  .editor-sidebar { width: 200px; display: flex; flex-direction: column; gap: 8px; }
+  .editor-instructions { color: #aaa; font-size: 12px; line-height: 1.5; }
+  .editor-instructions kbd {
+    background: #333; border: 1px solid #555; border-radius: 3px;
+    padding: 1px 4px; color: #FFD700; font-size: 11px;
+  }
 
-/* ---- Character Creator ---- */
-#charScreen {
-  position: fixed; inset: 0; z-index: 900;
-  display: none; align-items: center; justify-content: center;
-  background: linear-gradient(180deg, #0a0a1a 0%, #1a1020 50%, #0d0d1a 100%);
-}
-.char-container {
-  display: flex; gap: 30px;
-  background: var(--panel);
-  border: var(--border); border-radius: var(--radius);
-  padding: 30px; max-width: 800px; width: 90%;
-}
-.char-preview {
-  flex: 0 0 200px;
-  display: flex; flex-direction: column;
-  align-items: center; gap: 15px;
-}
-.char-preview-box {
-  width: 180px; height: 240px;
-  background: rgba(30,30,50,0.8);
-  border: 1px solid rgba(255,215,0,0.3);
-  border-radius: var(--radius);
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
-}
-.char-preview-box img {
-  max-width: 70%; max-height: 80%;
-  object-fit: contain;
-}
-.char-name-input {
-  width: 100%; padding: 10px;
-  background: rgba(30,30,50,0.9);
-  border: 1px solid rgba(255,215,0,0.3);
-  border-radius: 6px; color: var(--text);
-  font-size: 14px; text-align: center; outline: none;
-}
-.char-name-input:focus { border-color: var(--gold); }
-.char-options { flex: 1; }
-.char-section { margin-bottom: 20px; }
-.char-section h3 {
-  color: var(--gold); font-size: 14px;
-  margin-bottom: 8px;
-}
-.char-grid {
-  display: grid; grid-template-columns: repeat(6, 1fr);
-  gap: 6px;
-}
-.char-opt {
-  aspect-ratio: 1;
-  background: rgba(30,30,50,0.8);
-  border: 2px solid rgba(255,215,0,0.2);
-  border-radius: 8px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s; overflow: hidden;
-}
-.char-opt:hover { border-color: var(--gold-dim); transform: scale(1.05); }
-.char-opt.selected {
-  border-color: var(--gold);
-  box-shadow: 0 0 12px rgba(255,215,0,0.4);
-  background: rgba(255,215,0,0.1);
-}
-.char-opt img { max-width: 70%; max-height: 70%; object-fit: contain; }
-.char-opt.label {
-  font-size: 10px; color: var(--text-dim);
-  text-align: center; padding: 4px;
-}
-.char-actions {
-  display: flex; gap: 10px; margin-top: 15px;
-}
-.char-actions .btn { min-width: auto; flex: 1; }
+  /* Multiplayer Panel */
+  #multiplayerPanel { width: 500px; height: 400px; }
+  .mp-section { margin-bottom: 16px; }
+  .mp-section h4 { color: #FFD700; margin-bottom: 8px; font-size: 14px; }
+  .mp-code {
+    background: rgba(0,0,0,0.5); border: 1px solid #FFD700; border-radius: 6px;
+    padding: 8px 12px; color: #FFD700; font-family: monospace; font-size: 18px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .mp-code button {
+    background: none; border: 1px solid #FFD700; border-radius: 4px;
+    color: #FFD700; padding: 2px 8px; cursor: pointer; font-size: 11px;
+  }
+  .mp-qr {
+    width: 120px; height: 120px; background: #fff;
+    border-radius: 8px; padding: 8px; margin: 0 auto;
+  }
+  .mp-peers { max-height: 100px; overflow-y: auto; }
+  .mp-peer {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px; border-bottom: 1px solid #333;
+  }
+  .mp-peer img { width: 24px; height: 24px; border-radius: 4px; }
+  .mp-peer-name { color: #FFD700; font-size: 13px; }
 
-/* ---- Modal ---- */
-.modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.7);
-  display: none; align-items: center; justify-content: center;
-  z-index: 1100;
-}
-.modal-overlay.active { display: flex; }
-.modal-box {
-  background: var(--panel);
-  border: var(--border); border-radius: var(--radius);
-  padding: 25px; min-width: 300px;
-  max-width: 90vw;
-}
-.modal-box h3 {
-  color: var(--gold); margin-bottom: 15px;
-  font-size: 18px;
-}
-.modal-box input {
-  width: 100%; padding: 10px; margin-bottom: 10px;
-  background: rgba(30,30,50,0.9);
-  border: 1px solid rgba(255,215,0,0.3);
-  border-radius: 6px; color: var(--text); font-size: 14px;
-  outline: none;
-}
-.modal-box input:focus { border-color: var(--gold); }
-.modal-actions {
-  display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;
-}
+  /* Signaling */
+  .signal-box {
+    background: rgba(0,0,0,0.5); border: 1px solid #555; border-radius: 6px;
+    padding: 8px; margin-top: 8px;
+  }
+  .signal-box textarea {
+    width: 100%; height: 60px; background: #111; border: 1px solid #333;
+    color: #0f0; font-family: monospace; font-size: 11px; resize: none; border-radius: 4px;
+  }
+  .signal-box button {
+    margin-top: 4px; padding: 4px 10px;
+    background: rgba(30,60,30,0.9); border: 1px solid #0f0;
+    color: #0f0; border-radius: 4px; cursor: pointer; font-size: 12px;
+  }
 
-/* ---- Friends Panel ---- */
-.friends-list { list-style: none; }
-.friends-list li {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px; border-radius: 6px;
-  cursor: pointer; transition: background 0.15s;
-}
-.friends-list li:hover { background: rgba(255,215,0,0.1); }
-.friend-status {
-  width: 8px; height: 8px; border-radius: 50%;
-  flex-shrink: 0;
-}
-.friend-status.online { background: #4caf50; }
-.friend-status.offline { background: #666; }
-.friend-name { font-size: 13px; }
-.friend-action {
-  margin-left: auto; font-size: 11px;
-  color: var(--gold); cursor: pointer;
-}
+  /* Modal (Login/Register) */
+  .modal-backdrop {
+    position: fixed; inset: 0; z-index: 1500;
+    background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center;
+  }
+  .modal {
+    background: rgba(15,15,30,0.98); border: 2px solid #FFD700;
+    border-radius: 14px; padding: 24px; width: 340px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.8);
+  }
+  .modal h3 { color: #FFD700; margin-bottom: 16px; text-align: center; }
+  .modal label { display: block; color: #aaa; font-size: 13px; margin-bottom: 4px; }
+  .modal input {
+    width: 100%; padding: 8px 12px; margin-bottom: 12px;
+    border: 1px solid #555; border-radius: 6px;
+    background: rgba(0,0,0,0.3); color: #fff; font-size: 14px;
+  }
+  .modal .error { color: #f55; font-size: 12px; margin-bottom: 8px; }
+  .modal .success { color: #5f5; font-size: 12px; margin-bottom: 8px; }
 
-/* ---- Settings Panel ---- */
-.settings-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 0; border-bottom: 1px solid rgba(255,215,0,0.1);
-}
-.settings-row:last-child { border-bottom: none; }
-.toggle-switch {
-  width: 40px; height: 20px;
-  background: #333; border-radius: 10px;
-  cursor: pointer; position: relative;
-  transition: background 0.2s;
-}
-.toggle-switch.active { background: var(--gold-dim); }
-.toggle-switch::after {
-  content: ''; position: absolute;
-  width: 16px; height: 16px;
-  background: #fff; border-radius: 50%;
-  top: 2px; left: 2px;
-  transition: left 0.2s;
-}
-.toggle-switch.active::after { left: 22px; }
+  /* Notification Toast */
+  #toastContainer {
+    position: fixed; top: 60px; right: 12px; z-index: 1800;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .toast {
+    background: rgba(15,15,30,0.95); border: 2px solid #FFD700;
+    border-radius: 8px; padding: 10px 16px; color: #fff; font-size: 13px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+    max-width: 260px;
+  }
+  @keyframes toastIn { from { transform: translateX(100px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+  @keyframes toastOut { from { transform: translateX(0); opacity:1; } to { transform: translateX(100px); opacity:0; } }
 
-/* ---- Toolbar ---- */
-#toolbar {
-  position: absolute; right: 10px; bottom: 10px;
-  display: flex; gap: 6px; z-index: 50;
-}
-.tool-btn {
-  width: 42px; height: 42px;
-  background: rgba(15,15,30,0.9);
-  border: 1px solid rgba(255,215,0,0.3);
-  border-radius: var(--radius); color: var(--gold);
-  cursor: pointer; font-size: 18px;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s;
-}
-.tool-btn:hover {
-  border-color: var(--gold);
-  box-shadow: 0 0 10px rgba(255,215,0,0.3);
-  transform: scale(1.1);
-}
+  /* Room Navigator */
+  #roomNav {
+    position: fixed; top: 50px; right: 8px;
+    background: rgba(15,15,30,0.95); border: 2px solid #FFD700;
+    border-radius: 10px; padding: 10px; z-index: 200;
+    display: none; min-width: 160px;
+  }
+  #roomNav h4 { color: #FFD700; font-size: 13px; margin-bottom: 6px; }
+  .room-link {
+    display: block; padding: 6px 8px; color: #aaa; font-size: 13px;
+    cursor: pointer; border-radius: 4px;
+  }
+  .room-link:hover { background: rgba(40,40,60,0.9); color: #FFD700; }
 
-/* ---- Zoom Controls ---- */
-#zoomControls {
-  position: absolute; left: 10px; top: 50px;
-  display: flex; flex-direction: column; gap: 4px;
-  z-index: 50;
-}
-.zoom-btn {
-  width: 36px; height: 36px;
-  background: rgba(15,15,30,0.9);
-  border: 1px solid rgba(255,215,0,0.3);
-  border-radius: 6px; color: var(--gold);
-  cursor: pointer; font-size: 18px; font-weight: bold;
-  display: flex; align-items: center; justify-content: center;
-}
-.zoom-btn:hover { border-color: var(--gold); }
+  /* Touch Controls */
+  #touchControls {
+    position: fixed; bottom: 60px; left: 12px; z-index: 200;
+    display: none; /* shown on mobile */
+  }
+  .dpad {
+    width: 120px; height: 120px; position: relative;
+  }
+  .dpad-btn {
+    position: absolute; width: 40px; height: 40px;
+    background: rgba(255,215,0,0.2); border: 2px solid rgba(255,215,0,0.5);
+    border-radius: 8px; color: #FFD700; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; user-select: none;
+  }
+  .dpad-btn:active { background: rgba(255,215,0,0.4); }
+  .dpad-up { top: 0; left: 40px; }
+  .dpad-down { bottom: 0; left: 40px; }
+  .dpad-left { top: 40px; left: 0; }
+  .dpad-right { top: 40px; right: 0; }
 
-/* ---- Mobile D-Pad ---- */
-#dpad {
-  position: absolute; left: 15px; bottom: 80px;
-  width: 150px; height: 150px;
-  display: none; z-index: 70;
-}
-.dpad-btn {
-  position: absolute; width: 46px; height: 46px;
-  background: rgba(15,15,30,0.85);
-  border: 1px solid rgba(255,215,0,0.3);
-  border-radius: 10px; color: var(--gold);
-  font-size: 20px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  user-select: none; -webkit-user-select: none;
-  touch-action: none;
-}
-.dpad-btn:active { background: rgba(255,215,0,0.2); }
-.dpad-up { top: 0; left: 52px; }
-.dpad-down { bottom: 0; left: 52px; }
-.dpad-left { top: 52px; left: 0; }
-.dpad-right { top: 52px; right: 0; }
+  /* Minimap */
+  #minimap {
+    position: fixed; bottom: 50px; right: 12px;
+    width: 120px; height: 90px;
+    background: rgba(10,10,20,0.8); border: 2px solid #FFD700;
+    border-radius: 8px; z-index: 200; display: none;
+  }
 
-/* ---- Player List ---- */
-#playerList {
-  position: absolute; left: 10px; top: 50px;
-  width: 140px; z-index: 50;
-  display: none;
-}
-.player-list-item {
-  display: flex; align-items: center; gap: 6px;
-  padding: 4px 8px; cursor: pointer;
-  border-radius: 4px; font-size: 12px;
-}
-.player-list-item:hover { background: rgba(255,215,0,0.1); }
-.player-list-item .pl-name { color: var(--text); }
+  /* Responsive */
+  @media (max-width: 768px) {
+    .panel { width: 98vw !important; height: 85vh !important; }
+    .char-layout { flex-direction: column; align-items: center; }
+    .char-options { width: 90vw; }
+    #chatInput { width: 200px; }
+    #touchControls { display: block; }
+    .hud-panel { padding: 4px 8px; }
+    .hud-text { font-size: 12px; }
+  }
 
-/* ---- Notification Toast ---- */
-#toastArea {
-  position: absolute; top: 50px; right: 240px;
-  display: flex; flex-direction: column; gap: 6px;
-  z-index: 120; pointer-events: none;
-}
-.toast {
-  background: rgba(15,15,30,0.95);
-  border: 1px solid rgba(255,215,0,0.4);
-  border-radius: 8px; padding: 10px 16px;
-  color: var(--gold); font-size: 13px;
-  animation: toastSlide 0.3s ease-out;
-  pointer-events: none; max-width: 250px;
-}
-@keyframes toastSlide {
-  0% { transform: translateX(50px); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
-}
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+  ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #FFD700; }
 
-/* ---- Scrollbar ---- */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.3); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,215,0,0.5); }
+  /* Room label */
+  #roomLabel {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    color: rgba(255,215,0,0.15); font-size: 48px; font-weight: bold;
+    pointer-events: none; z-index: 50; text-transform: uppercase;
+    letter-spacing: 6px; text-shadow: 0 0 30px rgba(0,0,0,0.5);
+    transition: opacity 0.5s;
+  }
 
-/* ---- Responsive ---- */
-@media (max-width: 768px) {
-  #dpad { display: block; }
-  #chatLog { width: 200px; font-size: 11px; }
-  #chatInput { width: 180px; }
-  #sidePanel { width: 180px; right: 5px; }
-  #toolbar { gap: 4px; }
-  .tool-btn { width: 38px; height: 38px; font-size: 16px; }
-  #roomLabel { font-size: 12px; padding: 4px 12px; }
-  .char-container { flex-direction: column; align-items: center; }
-  .char-preview { flex: none; }
-  .char-grid { grid-template-columns: repeat(4, 1fr); }
-}
+  /* Friends Panel */
+  #friendsPanel {
+    position: fixed; top: 50px; left: 8px; z-index: 200;
+    background: rgba(15,15,30,0.95); border: 2px solid #FFD700;
+    border-radius: 10px; padding: 10px; min-width: 140px; display: none;
+  }
+  #friendsPanel h4 { color: #FFD700; font-size: 13px; margin-bottom: 6px; }
+  .friend-item { display: flex; align-items: center; gap: 6px; padding: 4px; color: #aaa; font-size: 12px; }
+  .friend-online { color: #0f0; font-size: 10px; }
+  .friend-offline { color: #f55; font-size: 10px; }
 
-/* ---- Hidden utility ---- */
-.hidden { display: none !important; }
+  /* Trade Panel */
+  #tradePanel { width: 600px; height: 400px; }
+  .trade-layout { display: flex; gap: 16px; height: 100%; }
+  .trade-side { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .trade-side h4 { color: #FFD700; font-size: 14px; }
+  .trade-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .trade-slot {
+    width: 60px; height: 60px; background: rgba(20,20,35,0.9);
+    border: 2px solid #444; border-radius: 6px; display: flex;
+    align-items: center; justify-content: center; cursor: pointer;
+  }
+  .trade-slot img { max-width: 48px; max-height: 48px; }
+  .trade-accept {
+    padding: 8px 20px; background: rgba(30,60,30,0.9);
+    border: 2px solid #0f0; color: #0f0; border-radius: 8px; cursor: pointer;
+  }
+  .trade-accept.locked { background: rgba(60,30,30,0.9); border-color: #f55; color: #f55; }
+
+  /* Context Menu */
+  #contextMenu {
+    position: fixed; z-index: 500; display: none;
+    background: rgba(15,15,30,0.98); border: 2px solid #FFD700;
+    border-radius: 8px; padding: 4px 0; min-width: 140px;
+  }
+  .ctx-item {
+    padding: 6px 12px; color: #ccc; font-size: 13px; cursor: pointer;
+  }
+  .ctx-item:hover { background: rgba(40,40,60,0.9); color: #FFD700; }
+  .ctx-sep { border-top: 1px solid #333; margin: 4px 0; }
+
+  /* Exit arrows */
+  .exit-arrow {
+    position: fixed; z-index: 90; pointer-events: auto; cursor: pointer;
+    background: rgba(0,0,0,0.5); border: 2px solid #FFD700;
+    border-radius: 50%; width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    color: #FFD700; font-size: 20px; font-weight: bold;
+    box-shadow: 0 0 10px rgba(255,215,0,0.3);
+  }
+  .exit-arrow:hover { background: rgba(40,30,10,0.8); }
+  #exitNorth { top: 10px; left: 50%; transform: translateX(-50%); }
+  #exitSouth { bottom: 50px; left: 50%; transform: translateX(-50%); }
+  #exitEast { right: 10px; top: 50%; transform: translateY(-50%); }
+  #exitWest { left: 10px; top: 50%; transform: translateY(-50%); }
 </style>
 </head>
 <body>
 
-<!-- ================================================================ -->
-<!-- LOADING SCREEN                                                   -->
-<!-- ================================================================ -->
+<!-- LOADING SCREEN -->
 <div id="loadingScreen">
-  <div class="loading-box">
-    <h2>STARLIGHT INN</h2>
-    <div class="loading-bar"><div class="loading-fill" id="loadFill"></div></div>
-    <p id="loadText">Loading assets... 0%</p>
-  </div>
+  <div id="loadText">Loading Starlight Inn...</div>
+  <div class="loadBar"><div id="loadFill"></div></div>
+  <div class="loadSub">Preparing your virtual world</div>
 </div>
 
-<!-- ================================================================ -->
-<!-- TITLE SCREEN                                                     -->
-<!-- ================================================================ -->
+<!-- TITLE SCREEN -->
 <div id="titleScreen">
-  <div class="title-bg">
-    <img src="assets/title-bg.png" alt="Starlight Inn" id="titleBgImg" onerror="this.style.display='none'">
-    <div class="stars"></div>
-  </div>
-  <div class="title-content">
-    <h1 class="title-text">STARLIGHT INN</h1>
-    <p class="title-sub">An Isometric Virtual World</p>
+  <img class="bg-img" src="assets/title-bg.png" alt="">
+  <div class="overlay"></div>
+  <div class="content">
+    <img class="logo-img" src="assets/sprites/ui/starlight_logo.png" alt="Starlight Inn">
+    <p class="subtitle">An Isometric Virtual World</p>
     <div class="title-buttons">
-      <button class="btn btn-gold" onclick="showScreen('character')">ENTER WORLD</button>
-      <button class="btn btn-blue" onclick="startGuest()">PLAY AS GUEST</button>
-      <button class="btn btn-green" onclick="showModal('login')">LOGIN</button>
-      <button class="btn btn-red" onclick="showModal('register')">REGISTER</button>
+      <button class="btn-gold" onclick="showScreen('character')">ENTER WORLD</button>
+      <button class="btn-gold" onclick="startGuest()">PLAY AS GUEST</button>
+      <div class="row">
+        <button class="btn-dark" onclick="showModal('login')">LOGIN</button>
+        <button class="btn-dark" onclick="showModal('register')">REGISTER</button>
+      </div>
     </div>
   </div>
-  <div class="version">v12.0.0</div>
+  <div style="position:fixed; bottom:10px; right:15px; color:#888; font-size:12px;">v13.0.0</div>
 </div>
 
-<!-- ================================================================ -->
-<!-- CHARACTER CREATOR SCREEN                                         -->
-<!-- ================================================================ -->
-<div id="charScreen">
-  <div class="char-container">
-    <div class="char-preview">
-      <h3 style="color:var(--gold);font-size:14px;">Preview</h3>
-      <div class="char-preview-box">
-        <img id="charPreviewImg" src="" alt="Preview" onerror="this.style.display='none'">
-      </div>
-      <input type="text" id="charNameInput" class="char-name-input" placeholder="Your Name" maxlength="16" value="Guest">
-      <div class="char-actions">
-        <button class="btn btn-gold btn-small" onclick="startGame()">START</button>
-        <button class="btn btn-small" style="background:#333;color:#aaa;border-color:#555;" onclick="showScreen('title')">BACK</button>
-      </div>
+<!-- CHARACTER CREATOR -->
+<div id="characterScreen">
+  <div style="color:#FFD700; font-size:22px; margin-bottom:16px; font-weight:bold;">Create Your Avatar</div>
+  <div class="char-layout">
+    <div class="char-preview-box">
+      <canvas id="charPreview" width="200" height="280"></canvas>
+      <div style="color:#aaa; font-size:12px; margin-top:8px;">Live Preview</div>
     </div>
     <div class="char-options">
       <div class="char-section">
-        <h3>Hair Style</h3>
-        <div class="char-grid" id="hairGrid"></div>
+        <h4>Hair Style</h4>
+        <div class="char-row" id="hairOpts"></div>
+        <h4>Hair Color</h4>
+        <div class="color-picker" id="hairColors"></div>
+        <input type="color" id="customHairColor" value="#8B4513" style="margin-top:4px;">
       </div>
       <div class="char-section">
-        <h3>Outfit</h3>
-        <div class="char-grid" id="outfitGrid"></div>
+        <h4>Outfit</h4>
+        <div class="char-row" id="shirtOpts"></div>
+        <h4>Outfit Color</h4>
+        <div class="color-picker" id="shirtColors"></div>
+        <input type="color" id="customShirtColor" value="#4169E1" style="margin-top:4px;">
       </div>
       <div class="char-section">
-        <h3>Accessory</h3>
-        <div class="char-grid" id="accGrid"></div>
+        <h4>Legs</h4>
+        <div class="char-row" id="legsOpts"></div>
+      </div>
+      <div class="char-section">
+        <h4>Face</h4>
+        <div class="char-row" id="faceOpts"></div>
+      </div>
+      <div class="char-section">
+        <h4>Accessory</h4>
+        <div class="char-row" id="accOpts"></div>
+      </div>
+      <div class="char-section">
+        <h4>Skin Tone</h4>
+        <div class="color-picker" id="skinColors"></div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button class="btn-gold" onclick="finishCharacter()" style="flex:1;">DONE</button>
+        <button class="btn-dark" onclick="showScreen('title')">BACK</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ================================================================ -->
-<!-- GAME SCREEN                                                      -->
-<!-- ================================================================ -->
+<!-- GAME SCREEN -->
 <div id="gameScreen">
   <canvas id="gameCanvas"></canvas>
 
-  <!-- Room Label -->
-  <div id="roomLabel">Main Hall</div>
-
-  <!-- Zoom Controls -->
-  <div id="zoomControls">
-    <button class="zoom-btn" onclick="adjustZoom(0.1)" title="Zoom In">+</button>
-    <button class="zoom-btn" onclick="adjustZoom(-0.1)" title="Zoom Out">-</button>
-    <button class="zoom-btn" onclick="resetZoom()" title="Reset">&#x26F6;</button>
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-left">
+      <div class="hud-panel" id="hudUser">
+        <span id="hudUsername" style="color:#FFD700; font-weight:bold; font-size:13px;">Guest</span>
+      </div>
+      <div class="hud-panel">
+        <img class="hud-icon" src="assets/sprites/ui/icon_credits.png" alt="">
+        <span class="hud-text" id="hudCredits">1000</span>
+      </div>
+      <div class="hud-panel">
+        <img class="hud-icon" src="assets/sprites/ui/icon_duckets.png" alt="">
+        <span class="hud-text" id="hudDuckets" style="color:#00BFFF;">500</span>
+      </div>
+      <button class="hud-btn" onclick="toggleRoomNav()">ROOMS</button>
+      <button class="hud-btn" onclick="openFriends()">FRIENDS</button>
+    </div>
+    <div class="hud-right">
+      <button class="hud-btn" onclick="toggleInventory()">INVENTORY</button>
+      <button class="hud-btn" onclick="toggleCatalog()">CATALOG</button>
+      <button class="hud-btn" onclick="toggleRoomEditor()">EDITOR</button>
+      <button class="hud-btn" onclick="toggleMultiplayer()">MULTIPLAYER</button>
+      <button class="hud-btn" onclick="toggleSettings()">SETTINGS</button>
+    </div>
   </div>
 
-  <!-- Player List -->
-  <div class="ui-panel" id="playerList"></div>
+  <!-- Room Navigator -->
+  <div id="roomNav">
+    <h4>Public Rooms</h4>
+    <div id="roomNavList"></div>
+  </div>
 
-  <!-- Chat Log -->
-  <div id="chatLog"></div>
+  <!-- Friends Panel -->
+  <div id="friendsPanel">
+    <h4>Friends</h4>
+    <div id="friendsList"></div>
+  </div>
 
   <!-- Chat Bar -->
   <div id="chatBar">
-    <input type="text" id="chatInput" placeholder="Press Enter to chat..." maxlength="100" onkeydown="handleChatKey(event)">
-    <button class="btn btn-gold btn-small" onclick="sendChat()">SEND</button>
+    <input type="text" id="chatInput" placeholder="Press Enter to chat..." maxlength="100">
+    <button class="btn-gold" style="min-width:auto; padding:8px 14px;" onclick="sendChat()">SEND</button>
   </div>
 
-  <!-- Mobile D-Pad -->
-  <div id="dpad">
-    <button class="dpad-btn dpad-up" data-dir="n">&#9650;</button>
-    <button class="dpad-btn dpad-down" data-dir="s">&#9660;</button>
-    <button class="dpad-btn dpad-left" data-dir="w">&#9664;</button>
-    <button class="dpad-btn dpad-right" data-dir="e">&#9654;</button>
-  </div>
+  <!-- Exit Arrows -->
+  <div class="exit-arrow" id="exitNorth" onclick="goExit('north')" style="display:none;">&#9650;</div>
+  <div class="exit-arrow" id="exitSouth" onclick="goExit('south')" style="display:none;">&#9660;</div>
+  <div class="exit-arrow" id="exitEast" onclick="goExit('east')" style="display:none;">&#9654;</div>
+  <div class="exit-arrow" id="exitWest" onclick="goExit('west')" style="display:none;">&#9664;</div>
 
-  <!-- Toast Area -->
-  <div id="toastArea"></div>
+  <!-- Minimap -->
+  <canvas id="minimap" width="120" height="90"></canvas>
 
-  <!-- Side Panel (Inventory / Friends / Settings) -->
-  <div class="ui-panel" id="sidePanel">
-    <div class="panel-header">
-      <span id="panelTitle">Inventory</span>
-      <button class="panel-close" onclick="closeSidePanel()">&times;</button>
+  <!-- Touch Controls -->
+  <div id="touchControls">
+    <div class="dpad">
+      <div class="dpad-btn dpad-up" ontouchstart="touchMove('up')">&#9650;</div>
+      <div class="dpad-btn dpad-down" ontouchstart="touchMove('down')">&#9660;</div>
+      <div class="dpad-btn dpad-left" ontouchstart="touchMove('left')">&#9664;</div>
+      <div class="dpad-btn dpad-right" ontouchstart="touchMove('right')">&#9654;</div>
     </div>
-    <div class="panel-body" id="panelBody"></div>
-  </div>
-
-  <!-- Trade Panel -->
-  <div id="tradePanel">
-    <div class="panel-header">
-      <span>Trading with <span id="tradePartnerName">Player</span></span>
-      <button class="panel-close" onclick="trade.cancel()">&times;</button>
-    </div>
-    <div class="trade-section">
-      <div class="trade-offers">
-        <div class="trade-col">
-          <h4>Your Offers</h4>
-          <div class="offer-grid" id="myOfferGrid"></div>
-        </div>
-        <div class="trade-col">
-          <h4>Their Offers</h4>
-          <div class="offer-grid" id="theirOfferGrid"></div>
-        </div>
-      </div>
-    </div>
-    <div class="trade-section">
-      <div class="trade-status" id="tradeStatus">Offer items to begin trading</div>
-      <div class="trade-actions">
-        <button class="btn btn-gold btn-small" id="tradeConfirmBtn" onclick="trade.confirm()">CONFIRM</button>
-        <button class="btn btn-red btn-small" onclick="trade.cancel()">CANCEL</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toolbar -->
-  <div id="toolbar">
-    <button class="tool-btn" onclick="togglePanel('inventory')" title="Inventory">&#128230;</button>
-    <button class="tool-btn" onclick="togglePanel('friends')" title="Friends">&#128101;</button>
-    <button class="tool-btn" onclick="togglePanel('players')" title="Players">&#127919;</button>
-    <button class="tool-btn" onclick="togglePanel('settings')" title="Settings">&#9881;</button>
-    <button class="tool-btn" onclick="togglePanel('help')" title="Help">&#10067;</button>
-    <button class="tool-btn" onclick="showScreen('title')" title="Quit">&#10060;</button>
   </div>
 </div>
 
-<!-- ================================================================ -->
-<!-- MODALS                                                           -->
-<!-- ================================================================ -->
-<div class="modal-overlay" id="loginModal">
-  <div class="modal-box">
+<!-- CATALOG PANEL -->
+<div id="catalogPanel" class="panel">
+  <div class="panel-header">
+    <h2>Catalog</h2>
+    <button class="btn-close" onclick="toggleCatalog()">&times;</button>
+  </div>
+  <div class="catalog-tabs" id="catalogTabs"></div>
+  <div class="panel-body" id="catalogBody"></div>
+  <div class="panel-footer">
+    <div class="hud-panel" style="margin-right:auto;">
+      <img class="hud-icon" src="assets/sprites/ui/icon_credits.png" alt="">
+      <span class="hud-text" id="catCredits">1000</span>
+    </div>
+    <div class="hud-panel">
+      <img class="hud-icon" src="assets/sprites/ui/icon_duckets.png" alt="">
+      <span class="hud-text" id="catDuckets" style="color:#00BFFF;">500</span>
+    </div>
+  </div>
+</div>
+
+<!-- INVENTORY PANEL -->
+<div id="inventoryPanel" class="panel">
+  <div class="panel-header">
+    <h2>Inventory</h2>
+    <button class="btn-close" onclick="toggleInventory()">&times;</button>
+  </div>
+  <div class="inv-filters" id="invFilters"></div>
+  <div class="panel-body" id="inventoryBody"></div>
+</div>
+
+<!-- ROOM EDITOR PANEL -->
+<div id="roomEditorPanel" class="panel">
+  <div class="panel-header">
+    <h2>Room Editor</h2>
+    <button class="btn-close" onclick="toggleRoomEditor()">&times;</button>
+  </div>
+  <div class="panel-body" style="padding:0; display:flex; flex-direction:column;">
+    <div style="display:flex; padding:8px; gap:8px; border-bottom:1px solid #333;">
+      <button class="hud-btn" onclick="setEditorTool('place')">Place</button>
+      <button class="hud-btn" onclick="setEditorTool('move')">Move</button>
+      <button class="hud-btn" onclick="setEditorTool('delete')">Delete</button>
+      <button class="hud-btn" onclick="setEditorTool('floor')">Floor</button>
+      <button class="hud-btn" onclick="setEditorTool('wall')">Wall</button>
+      <button class="btn-gold" style="min-width:auto; padding:6px 14px;" onclick="saveRoomLayout()">SAVE</button>
+    </div>
+    <div class="editor-canvas-wrap" style="padding:8px; flex:1;">
+      <canvas id="editorCanvas" width="540" height="380"></canvas>
+      <div class="editor-sidebar">
+        <div class="editor-instructions">
+          <strong style="color:#FFD700;">Instructions</strong><br>
+          <kbd>Click</kbd> tile to place<br>
+          <kbd>Click</kbd> furniture to select<br>
+          <kbd>Drag</kbd> to move<br>
+          <kbd>R</kbd> to rotate<br>
+          <kbd>Del</kbd> to remove<br>
+          <kbd>Save</kbd> to store
+        </div>
+        <div style="margin-top:8px;">
+          <strong style="color:#FFD700; font-size:12px;">Inventory Items</strong>
+          <div class="inv-grid" id="editorInvGrid" style="margin-top:4px; max-height:200px; overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MULTIPLAYER PANEL -->
+<div id="multiplayerPanel" class="panel">
+  <div class="panel-header">
+    <h2>Multiplayer</h2>
+    <button class="btn-close" onclick="toggleMultiplayer()">&times;</button>
+  </div>
+  <div class="panel-body">
+    <div class="mp-section">
+      <h4>Room Code</h4>
+      <div class="mp-code" id="mpCode">
+        <span id="mpCodeText">Not connected</span>
+        <button onclick="copyRoomCode()">COPY</button>
+      </div>
+    </div>
+    <div class="mp-section">
+      <h4>QR Code</h4>
+      <div class="mp-qr" id="mpQR"></div>
+    </div>
+    <div class="mp-section">
+      <h4>Connected Friends</h4>
+      <div class="mp-peers" id="mpPeers"></div>
+    </div>
+    <div class="mp-section">
+      <h4>Manual Signaling</h4>
+      <button class="btn-gold" style="min-width:auto; font-size:12px; padding:6px 12px;" onclick="createRoom()">CREATE ROOM</button>
+      <button class="btn-dark" style="font-size:12px; padding:6px 12px;" onclick="joinRoomPrompt()">JOIN ROOM</button>
+      <div class="signal-box" id="signalOutBox" style="display:none;">
+        <label style="color:#aaa; font-size:11px;">Your Offer (send to friend):</label>
+        <textarea id="signalOut" readonly></textarea>
+      </div>
+      <div class="signal-box" id="signalInBox" style="display:none;">
+        <label style="color:#aaa; font-size:11px;">Paste Friend's Answer/Offer:</label>
+        <textarea id="signalIn"></textarea>
+        <button onclick="processSignal()">CONNECT</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TRADE PANEL -->
+<div id="tradePanel" class="panel">
+  <div class="panel-header">
+    <h2>Trade</h2>
+    <button class="btn-close" onclick="toggleTrade()">&times;</button>
+  </div>
+  <div class="panel-body">
+    <div class="trade-layout">
+      <div class="trade-side">
+        <h4>You</h4>
+        <div class="trade-slots" id="tradeMySlots"></div>
+        <button class="trade-accept" id="tradeMyAccept" onclick="toggleTradeAccept()">ACCEPT</button>
+      </div>
+      <div class="trade-side">
+        <h4 id="tradePartnerName">Partner</h4>
+        <div class="trade-slots" id="tradePartnerSlots"></div>
+        <button class="trade-accept" id="tradePartnerAccept" disabled>PENDING</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS PANEL -->
+<div id="settingsPanel" class="panel" style="width:400px; height:320px;">
+  <div class="panel-header">
+    <h2>Settings</h2>
+    <button class="btn-close" onclick="toggleSettings()">&times;</button>
+  </div>
+  <div class="panel-body">
+    <div style="margin-bottom:12px;">
+      <label>Music Volume</label>
+      <input type="range" id="musicVol" min="0" max="100" value="30" oninput="setMusicVolume(this.value)">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label>SFX Volume</label>
+      <input type="range" id="sfxVol" min="0" max="100" value="40" oninput="setSFXVolume(this.value)">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label>Zoom Level</label>
+      <input type="range" id="zoomSlider" min="50" max="200" value="100" oninput="setZoom(this.value/100)">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label><input type="checkbox" id="showMinimap" onchange="toggleMinimap()"> Show Minimap</label>
+    </div>
+    <button class="btn-dark" onclick="logout()">LOGOUT</button>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="if(event.target===this)hideModal()"></div>
+<div class="modal-backdrop" id="modalContent" style="z-index:1600;">
+  <div class="modal" id="loginModal" style="display:none;">
     <h3>Login</h3>
-    <input type="text" id="loginUser" placeholder="Username">
-    <input type="password" id="loginPass" placeholder="Password">
-    <div class="modal-actions">
-      <button class="btn btn-small" style="background:#333;color:#aaa;border-color:#555;" onclick="hideModal('login')">Cancel</button>
-      <button class="btn btn-green btn-small" onclick="doLogin()">Login</button>
-    </div>
+    <div id="loginError" class="error"></div>
+    <label>Username</label>
+    <input type="text" id="loginUser" maxlength="16">
+    <label>Password</label>
+    <input type="password" id="loginPass" maxlength="32">
+    <button class="btn-gold" style="width:100%; margin-top:8px;" onclick="doLogin()">LOGIN</button>
+    <button class="btn-dark" style="width:100%; margin-top:8px;" onclick="hideModal()">CANCEL</button>
   </div>
-</div>
-
-<div class="modal-overlay" id="registerModal">
-  <div class="modal-box">
+  <div class="modal" id="registerModal" style="display:none;">
     <h3>Register</h3>
-    <input type="text" id="regUser" placeholder="Username" maxlength="16">
-    <input type="text" id="regDisplay" placeholder="Display Name" maxlength="16">
-    <input type="password" id="regPass" placeholder="Password">
-    <div class="modal-actions">
-      <button class="btn btn-small" style="background:#333;color:#aaa;border-color:#555;" onclick="hideModal('register')">Cancel</button>
-      <button class="btn btn-green btn-small" onclick="doRegister()">Register</button>
-    </div>
+    <div id="regError" class="error"></div>
+    <div id="regSuccess" class="success"></div>
+    <label>Username</label>
+    <input type="text" id="regUser" maxlength="16">
+    <label>Password</label>
+    <input type="password" id="regPass" maxlength="32">
+    <button class="btn-gold" style="width:100%; margin-top:8px;" onclick="doRegister()">REGISTER</button>
+    <button class="btn-dark" style="width:100%; margin-top:8px;" onclick="hideModal()">CANCEL</button>
+  </div>
+  <div class="modal" id="guestModal" style="display:none;">
+    <h3>Play as Guest</h3>
+    <p style="color:#aaa; font-size:13px; margin-bottom:12px;">Enter a name for your guest character.</p>
+    <input type="text" id="guestName" placeholder="Guest Name" maxlength="16">
+    <button class="btn-gold" style="width:100%; margin-top:8px;" onclick="startGuestGo()">PLAY</button>
+    <button class="btn-dark" style="width:100%; margin-top:8px;" onclick="hideModal()">CANCEL</button>
   </div>
 </div>
 
-<!-- ================================================================ -->
-<!-- GAME SCRIPT                                                      -->
-<!-- ================================================================ -->
+<!-- CONTEXT MENU -->
+<div id="contextMenu">
+  <div class="ctx-item" onclick="ctxWalkHere()">Walk Here</div>
+  <div class="ctx-item" onclick="ctxInteract()">Interact</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="ctxTrade()">Trade</div>
+  <div class="ctx-item" onclick="ctxFriend()">Add Friend</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="ctxCancel()">Cancel</div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toastContainer"></div>
+
+<!-- ROOM LABEL -->
+<div id="roomLabel">MAIN HALL</div>
+
 <script>
-// ===================================================================
-// STARLIGHT INN v12.0.0 — Complete Game Engine
-// ===================================================================
-
-// ---- Constants ----
-const TILE_W = 64;
-const TILE_H = 32;
-const AVATAR_W = 40;
-const AVATAR_H = 60;
-const AVATAR_OFFSET_Y = -45;
-const FURN_SCALE = 0.8;
-const WALK_SPEED = 5;
-const WALK_FRAME_TIME = 200;
-
-// ---- Canvas ----
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-
-// ---- State ----
-let currentScreen = 'loading';
-let currentRoom = 'mainhall';
-let camera = { x: 0, y: 0 };
-let zoom = 1.0;
-let IMAGES = {};
-let totalAssets = 0;
-let loadedAssets = 0;
-
-// ---- Settings ----
-let settings = {
-  showNames: true,
-  sfx: true,
-  music: true,
-  chatBubbles: true
-};
-
-// ---- Player ----
-let player = {
-  name: 'Guest',
-  tx: 5, ty: 5,
-  x: 5, y: 5,
-  facing: 's',
-  moving: false,
-  walkFrame: 0,
-  walkTimer: 0,
-  targetTx: null, targetTy: null,
-  isLocal: true,
-  hair: 'hair_short',
-  outfit: 'shirt_blue',
-  accessory: null,
-  sprite: 'avatar/idle_s'
-};
-
-// ---- AI Players ----
-let roomPlayers = [];
-const AI_NAMES = ['Aurelia', 'Thorne', 'Luna', 'Drake', 'Mira', 'Zane', 'Elara', 'Kael'];
-const AI_CHAT = [
-  'Hello there!', 'Beautiful room!', 'Anyone want to trade?',
-  'Nice outfit!', 'Where is everyone?', 'Love this place!',
-  'Just got a new item!', 'Hey!', 'Anyone here?',
-  'The garden is lovely.', 'Looking for friends!'
-];
-
-// ---- Chat System ----
-let chatMessages = [];
-let chatBubbles = [];
-
-// ---- Friends ----
-let friends = [
-  { name: 'Aurelia', online: true },
-  { name: 'Thorne', online: false },
-  { name: 'Luna', online: true },
-  { name: 'Drake', online: true },
-  { name: 'Mira', online: false },
-  { name: 'Zane', online: false }
-];
-
-// ---- Room Definitions ----
-const ROOMS = {
-  mainhall: {
-    name: 'Main Hall',
-    w: 10, h: 10,
-    floor: 'floor_wood', wall: 'wall_wood',
-    bg: '#1a1520',
-    exits: {
-      east:  { room: 'garden', x: 1, y: 5 },
-      north: { room: 'library', x: 5, y: 8 },
-      south: { room: 'tavern', x: 5, y: 1 }
-    },
-    furniture: [
-      {type:'rug',    x:5, y:5, offX:0, offY:-10},
-      {type:'sofa',   x:3, y:3, offX:0, offY:-25},
-      {type:'sofa',   x:7, y:3, offX:0, offY:-25},
-      {type:'table',  x:5, y:4, offX:0, offY:-20},
-      {type:'chair',  x:4, y:4, offX:0, offY:-20},
-      {type:'chair',  x:6, y:4, offX:0, offY:-20},
-      {type:'lamp',   x:2, y:2, offX:0, offY:-35},
-      {type:'lamp',   x:8, y:2, offX:0, offY:-35},
-      {type:'plant',  x:1, y:7, offX:0, offY:-20},
-      {type:'plant',  x:8, y:7, offX:0, offY:-20},
-      {type:'bookshelf', x:1, y:1, offX:0, offY:-30},
-      {type:'bookshelf', x:8, y:1, offX:0, offY:-30},
-      {type:'trophy', x:5, y:2, offX:0, offY:-25},
-      {type:'dresser', x:4, y:2, offX:0, offY:-30},
-    ]
-  },
-  garden: {
-    name: 'Moon Garden',
-    w: 12, h: 8,
-    floor: 'floor_grass', wall: 'wall_brick',
-    bg: '#0f1f15',
-    exits: { west: { room: 'mainhall', x: 8, y: 5 } },
-    furniture: [
-      {type:'fountain', x:6, y:4, offX:0, offY:-30},
-      {type:'tree', x:2, y:2, offX:0, offY:-40},
-      {type:'tree', x:10, y:2, offX:0, offY:-40},
-      {type:'tree', x:2, y:6, offX:0, offY:-40},
-      {type:'tree', x:10, y:6, offX:0, offY:-40},
-      {type:'flower', x:4, y:3, offX:0, offY:-20},
-      {type:'flower', x:8, y:3, offX:0, offY:-20},
-      {type:'flower', x:4, y:5, offX:0, offY:-20},
-      {type:'flower', x:8, y:5, offX:0, offY:-20},
-      {type:'bench', x:5, y:4, offX:0, offY:-20},
-      {type:'bench', x:7, y:4, offX:0, offY:-20},
-      {type:'lamp', x:1, y:4, offX:0, offY:-35},
-      {type:'lamp', x:11, y:4, offX:0, offY:-35},
-    ]
-  },
-  library: {
-    name: 'Arcane Library',
-    w: 8, h: 10,
-    floor: 'floor_carpet', wall: 'wall_stone',
-    bg: '#151025',
-    exits: { south: { room: 'mainhall', x: 5, y: 2 } },
-    furniture: [
-      {type:'bookshelf', x:1, y:1, offX:0, offY:-30},
-      {type:'bookshelf', x:1, y:3, offX:0, offY:-30},
-      {type:'bookshelf', x:1, y:5, offX:0, offY:-30},
-      {type:'bookshelf', x:6, y:1, offX:0, offY:-30},
-      {type:'bookshelf', x:6, y:3, offX:0, offY:-30},
-      {type:'bookshelf', x:6, y:5, offX:0, offY:-30},
-      {type:'table', x:4, y:5, offX:0, offY:-20},
-      {type:'chair', x:3, y:5, offX:0, offY:-20},
-      {type:'chair', x:5, y:5, offX:0, offY:-20},
-      {type:'lamp', x:4, y:3, offX:0, offY:-35},
-      {type:'lamp', x:2, y:7, offX:0, offY:-35},
-      {type:'lamp', x:6, y:7, offX:0, offY:-35},
-      {type:'rug', x:4, y:5, offX:0, offY:-10},
-    ]
-  },
-  tavern: {
-    name: 'Dragon Tavern',
-    w: 10, h: 6,
-    floor: 'floor_stone', wall: 'wall_wood',
-    bg: '#1f1510',
-    exits: { north: { room: 'mainhall', x: 5, y: 8 } },
-    furniture: [
-      {type:'table', x:3, y:3, offX:0, offY:-20},
-      {type:'table', x:7, y:3, offX:0, offY:-20},
-      {type:'chair', x:2, y:3, offX:0, offY:-20},
-      {type:'chair', x:4, y:3, offX:0, offY:-20},
-      {type:'chair', x:6, y:3, offX:0, offY:-20},
-      {type:'chair', x:8, y:3, offX:0, offY:-20},
-      {type:'piano', x:1, y:1, offX:0, offY:-30},
-      {type:'stove', x:9, y:1, offX:0, offY:-35},
-      {type:'barrel', x:5, y:1, offX:0, offY:-20},
-      {type:'barrel', x:6, y:1, offX:0, offY:-20},
-      {type:'lamp', x:3, y:1, offX:0, offY:-35},
-      {type:'lamp', x:7, y:1, offX:0, offY:-35},
-      {type:'rug', x:5, y:3, offX:0, offY:-10},
-    ]
-  }
-};
-
-// ---- Asset List ----
+// ======================= CONSTANTS & ASSETS =======================
 const ASSETS = {
-  // Avatars
+  'parts/body_base': 'assets/sprites/parts/body_base.png',
+  'parts/legs_pants': 'assets/sprites/parts/legs_pants.png',
+  'parts/legs_shorts': 'assets/sprites/parts/legs_shorts.png',
+  'parts/shirt_tshirt': 'assets/sprites/parts/shirt_tshirt.png',
+  'parts/shirt_hoodie': 'assets/sprites/parts/shirt_hoodie.png',
+  'parts/shirt_jacket': 'assets/sprites/parts/shirt_jacket.png',
+  'parts/dress_pink': 'assets/sprites/parts/dress_pink.png',
+  'parts/hair_bald': 'assets/sprites/parts/hair_bald.png',
+  'parts/hair_short_brown': 'assets/sprites/parts/hair_short_brown.png',
+  'parts/hair_long_brown': 'assets/sprites/parts/hair_long_brown.png',
+  'parts/hair_spiky_blonde': 'assets/sprites/parts/hair_spiky_blonde.png',
+  'parts/hair_afro': 'assets/sprites/parts/hair_afro.png',
+  'parts/hair_ponytail': 'assets/sprites/parts/hair_ponytail.png',
+  'parts/hair_emo': 'assets/sprites/parts/hair_emo.png',
+  'parts/hair_mohawk': 'assets/sprites/parts/hair_mohawk.png',
+  'parts/face_happy': 'assets/sprites/parts/face_happy.png',
+  'parts/face_cool': 'assets/sprites/parts/face_cool.png',
+  'parts/face_surprised': 'assets/sprites/parts/face_surprised.png',
+  'parts/acc_hat_beanie': 'assets/sprites/parts/acc_hat_beanie.png',
+  'parts/acc_hat_wizard': 'assets/sprites/parts/acc_hat_wizard.png',
+  'parts/acc_glasses_round': 'assets/sprites/parts/acc_glasses_round.png',
+  'parts/acc_wings': 'assets/sprites/parts/acc_wings.png',
   'avatar/idle_s': 'assets/sprites/avatar/idle_s.png',
   'avatar/idle_e': 'assets/sprites/avatar/idle_e.png',
   'avatar/idle_n': 'assets/sprites/avatar/idle_n.png',
   'avatar/idle_w': 'assets/sprites/avatar/idle_w.png',
   'avatar/walk1_s': 'assets/sprites/avatar/walk1_s.png',
   'avatar/walk2_s': 'assets/sprites/avatar/walk2_s.png',
-  // Furniture
   'furniture/sofa': 'assets/sprites/furniture/sofa.png',
   'furniture/table': 'assets/sprites/furniture/table.png',
   'furniture/chair': 'assets/sprites/furniture/chair.png',
@@ -1003,1492 +870,2127 @@ const ASSETS = {
   'furniture/chest': 'assets/sprites/furniture/chest.png',
   'furniture/dresser': 'assets/sprites/furniture/dresser.png',
   'furniture/stove': 'assets/sprites/furniture/stove.png',
-  // Floor tiles
+  'furniture/gate': 'assets/sprites/furniture/gate.png',
+  'furniture/door_wood': 'assets/sprites/furniture/door_wood.png',
+  'furniture/window': 'assets/sprites/furniture/window.png',
+  'furniture/fireplace': 'assets/sprites/furniture/fireplace.png',
+  'furniture/pool_table': 'assets/sprites/furniture/pool_table.png',
+  'furniture/jukebox': 'assets/sprites/furniture/jukebox.png',
+  'furniture/arcade': 'assets/sprites/furniture/arcade.png',
+  'furniture/poster': 'assets/sprites/furniture/poster.png',
+  'furniture/wall_lamp': 'assets/sprites/furniture/wall_lamp.png',
+  'furniture/throne': 'assets/sprites/furniture/throne.png',
+  'furniture/pet_bed': 'assets/sprites/furniture/pet_bed.png',
+  'furniture/mirror': 'assets/sprites/furniture/mirror.png',
   'tiles/floor_wood': 'assets/sprites/tiles/floor_wood.png',
   'tiles/floor_carpet': 'assets/sprites/tiles/floor_carpet.png',
   'tiles/floor_grass': 'assets/sprites/tiles/floor_grass.png',
   'tiles/floor_stone': 'assets/sprites/tiles/floor_stone.png',
   'tiles/floor_tile': 'assets/sprites/tiles/floor_tile.png',
   'tiles/floor_marble': 'assets/sprites/tiles/floor_marble.png',
-  // Wall tiles
   'tiles/wall_wood': 'assets/sprites/tiles/wall_wood.png',
   'tiles/wall_brick': 'assets/sprites/tiles/wall_brick.png',
   'tiles/wall_stone': 'assets/sprites/tiles/wall_stone.png',
-  // Hair
-  'hair/hair_bald': 'assets/sprites/hair/hair_bald.png',
-  'hair/hair_short': 'assets/sprites/hair/hair_short.png',
-  'hair/hair_spiky': 'assets/sprites/hair/hair_spiky.png',
-  'hair/hair_long': 'assets/sprites/hair/hair_long.png',
-  'hair/hair_ponytail': 'assets/sprites/hair/hair_ponytail.png',
-  'hair/hair_afro': 'assets/sprites/hair/hair_afro.png',
-  // Clothes
-  'clothes/shirt_blue': 'assets/sprites/clothes/shirt_blue.png',
-  'clothes/shirt_red': 'assets/sprites/clothes/shirt_red.png',
-  'clothes/shirt_green': 'assets/sprites/clothes/shirt_green.png',
-  'clothes/dress_pink': 'assets/sprites/clothes/dress_pink.png',
-  // Items
-  'items/acc_crown': 'assets/sprites/items/acc_crown.png',
-  'items/acc_glasses': 'assets/sprites/items/acc_glasses.png',
-  'items/acc_wings': 'assets/sprites/items/acc_wings.png',
-  'items/item_dragon_egg': 'assets/sprites/items/item_dragon_egg.png',
-  'items/item_star_badge': 'assets/sprites/items/item_star_badge.png',
+  'ui/panel_frame': 'assets/sprites/ui/panel_frame.png',
+  'ui/btn_gold_idle': 'assets/sprites/ui/btn_gold_idle.png',
+  'ui/btn_gold_hover': 'assets/sprites/ui/btn_gold_hover.png',
+  'ui/slot_empty': 'assets/sprites/ui/slot_empty.png',
+  'ui/slot_selected': 'assets/sprites/ui/slot_selected.png',
+  'ui/icon_credits': 'assets/sprites/ui/icon_credits.png',
+  'ui/icon_duckets': 'assets/sprites/ui/icon_duckets.png',
+  'ui/icon_catalog': 'assets/sprites/ui/icon_catalog.png',
+  'ui/chat_bubble': 'assets/sprites/ui/chat_bubble.png',
+  'ui/room_editor_cursor': 'assets/sprites/ui/room_editor_cursor.png',
+  'ui/starlight_logo': 'assets/sprites/ui/starlight_logo.png',
+  'ui/free_hat': 'assets/sprites/ui/free_hat.png',
+  'title-bg': 'assets/title-bg.png',
 };
 
-// ---- Inventory System ----
-const inventory = {
-  items: [
-    {id: 'acc_crown', name: 'Golden Crown', type: 'accessory', icon: 'items/acc_crown.png', equipped: false},
-    {id: 'acc_glasses', name: 'Cool Glasses', type: 'accessory', icon: 'items/acc_glasses.png', equipped: false},
-    {id: 'acc_wings', name: 'Angel Wings', type: 'accessory', icon: 'items/acc_wings.png', equipped: false},
-    {id: 'item_dragon_egg', name: 'Dragon Egg', type: 'collectible', icon: 'items/item_dragon_egg.png'},
-    {id: 'item_star_badge', name: 'Star Badge', type: 'collectible', icon: 'items/item_star_badge.png'},
-    {id: 'shirt_blue', name: 'Blue Shirt', type: 'clothing', icon: 'clothes/shirt_blue.png', equipped: true},
-    {id: 'shirt_red', name: 'Red Jacket', type: 'clothing', icon: 'clothes/shirt_red.png', equipped: false},
-    {id: 'shirt_green', name: 'Green Tunic', type: 'clothing', icon: 'clothes/shirt_green.png', equipped: false},
-    {id: 'dress_pink', name: 'Pink Dress', type: 'clothing', icon: 'clothes/dress_pink.png', equipped: false},
-    {id: 'hair_short', name: 'Short Hair', type: 'hair', icon: 'hair/hair_short.png', equipped: true},
-    {id: 'hair_spiky', name: 'Spiky Hair', type: 'hair', icon: 'hair/hair_spiky.png', equipped: false},
-    {id: 'hair_long', name: 'Long Hair', type: 'hair', icon: 'hair/hair_long.png', equipped: false},
-  ],
+const IMAGES = {};
+let loadedCount = 0;
+const totalAssets = Object.keys(ASSETS).length;
 
-  equip(itemId) {
-    const item = this.items.find(i => i.id === itemId);
-    if (!item) return;
-    if (item.type === 'accessory' || item.type === 'clothing' || item.type === 'hair') {
-      this.items.filter(i => i.type === item.type).forEach(i => i.equipped = false);
-    }
-    item.equipped = true;
-    updateAvatarLook();
+function createPlaceholder(key) {
+  const c = document.createElement('canvas');
+  c.width = 64; c.height = 64;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = key.includes('floor') ? '#8B4513' : key.includes('wall') ? '#666' : '#444';
+  ctx.fillRect(0, 0, 64, 64);
+  ctx.strokeStyle = '#FFD700'; ctx.strokeRect(2, 2, 60, 60);
+  ctx.fillStyle = '#FFD700'; ctx.font = '9px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(key.split('/').pop().slice(0,8), 32, 36);
+  return c;
+}
+
+function loadAllAssets(callback) {
+  for (const [key, path] of Object.entries(ASSETS)) {
+    const img = new Image();
+    img.onload = () => {
+      loadedCount++;
+      IMAGES[key] = img;
+      const pct = Math.round((loadedCount / totalAssets) * 100);
+      const fill = document.getElementById('loadFill');
+      const txt = document.getElementById('loadText');
+      if (fill) fill.style.width = pct + '%';
+      if (txt) txt.textContent = `Loading assets... ${pct}%`;
+      if (loadedCount >= totalAssets && callback) callback();
+    };
+    img.onerror = () => {
+      loadedCount++;
+      IMAGES[key] = createPlaceholder(key);
+      const pct = Math.round((loadedCount / totalAssets) * 100);
+      const fill = document.getElementById('loadFill');
+      const txt = document.getElementById('loadText');
+      if (fill) fill.style.width = pct + '%';
+      if (txt) txt.textContent = `Loading assets... ${pct}%`;
+      if (loadedCount >= totalAssets && callback) callback();
+    };
+    img.src = path;
+  }
+}
+
+// ======================= AUDIO SYSTEM =======================
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const musicGain = audioCtx.createGain();
+const sfxGain = audioCtx.createGain();
+musicGain.connect(audioCtx.destination);
+sfxGain.connect(audioCtx.destination);
+musicGain.gain.value = 0.3;
+sfxGain.gain.value = 0.4;
+
+let musicPlaying = false;
+let musicOscillators = [];
+
+function playNote(freq, duration, type, when) {
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = type || 'sine';
+  osc.frequency.value = freq;
+  g.gain.setValueAtTime(0, audioCtx.currentTime + when);
+  g.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + when + 0.05);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + when + duration);
+  osc.connect(g); g.connect(sfxGain);
+  osc.start(audioCtx.currentTime + when);
+  osc.stop(audioCtx.currentTime + when + duration + 0.1);
+}
+
+function playTitleJingle() {
+  const notes = [
+    {f:293.66,t:0,d:0.4},{f:369.99,t:0.4,d:0.3},{f:329.63,t:0.7,d:0.3},{f:293.66,t:1.0,d:0.4},
+    {f:392.00,t:1.5,d:0.2},{f:440.00,t:1.7,d:0.2},{f:493.88,t:1.9,d:0.3},
+    {f:523.25,t:2.3,d:0.4},{f:587.33,t:2.7,d:0.5}
+  ];
+  notes.forEach(n => playNote(n.f, n.d, 'sine', n.t));
+}
+
+function playStep() { playNote(150, 0.08, 'triangle', 0); }
+function playChat() { playNote(600, 0.1, 'sine', 0); }
+function playDoor() { playNote(200, 0.3, 'square', 0); }
+function purchaseChime() {
+  [523, 659, 784, 1047].forEach((f, i) => playNote(f, 0.15, 'sine', i * 0.1));
+}
+function playError() { playNote(150, 0.2, 'sawtooth', 0); }
+function playClick() { playNote(800, 0.05, 'sine', 0); }
+function playPlace() { playNote(300, 0.1, 'sine', 0); playNote(450, 0.1, 'sine', 0.1); }
+function playRemove() { playNote(400, 0.1, 'sine', 0); playNote(250, 0.15, 'sine', 0.1); }
+
+function setMusicVolume(val) {
+  const v = parseInt(val, 10) / 100;
+  musicGain.gain.value = v;
+}
+function setSFXVolume(val) {
+  const v = parseInt(val, 10) / 100;
+  sfxGain.gain.value = v;
+}
+
+function startAmbientMusic() {
+  if (musicPlaying) return;
+  musicPlaying = true;
+  const chords = [
+    [261.63, 329.63, 392.00],
+    [293.66, 349.23, 440.00],
+    [329.63, 392.00, 493.88],
+    [349.23, 440.00, 523.25]
+  ];
+  let chordIdx = 0;
+  function nextChord() {
+    if (!musicPlaying) return;
+    musicOscillators.forEach(o => { try { o.stop(); } catch(e){} });
+    musicOscillators = [];
+    const chord = chords[chordIdx % chords.length];
+    chord.forEach(f => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = f;
+      g.gain.value = 0.04;
+      osc.connect(g); g.connect(musicGain);
+      osc.start();
+      musicOscillators.push(osc);
+    });
+    chordIdx++;
+    setTimeout(nextChord, 3000);
+  }
+  nextChord();
+}
+function stopAmbientMusic() {
+  musicPlaying = false;
+  musicOscillators.forEach(o => { try { o.stop(); } catch(e){} });
+  musicOscillators = [];
+}
+
+// ======================= AUTH SYSTEM =======================
+function hashPassword(pwd) {
+  let h = 0;
+  for (let i = 0; i < pwd.length; i++) h = ((h << 5) - h) + pwd.charCodeAt(i);
+  return h.toString(36);
+}
+
+function getStarterInventory() {
+  return [
+    {id:'acc_hat_beanie', name:'Starlight Cap', type:'accessory', icon:'parts/acc_hat_beanie', equipped:true, credits:0, duckets:0},
+    {id:'shirt_tshirt', name:'Basic Shirt', type:'clothing', icon:'parts/shirt_tshirt', equipped:true, credits:0, duckets:0},
+    {id:'legs_pants', name:'Basic Pants', type:'clothing', icon:'parts/legs_pants', equipped:true, credits:0, duckets:0},
+    {id:'hair_short_brown', name:'Short Hair', type:'hair', icon:'parts/hair_short_brown', equipped:true, credits:0, duckets:0},
+    {id:'face_happy', name:'Happy Face', type:'face', icon:'parts/face_happy', equipped:true, credits:0, duckets:0},
+  ];
+}
+
+function register(username, password) {
+  const accounts = JSON.parse(localStorage.getItem('si_accounts') || '{}');
+  if (accounts[username]) return { success: false, error: 'Username taken' };
+  accounts[username] = {
+    password: hashPassword(password),
+    created: Date.now(),
+    credits: 1000,
+    duckets: 500,
+    inventory: getStarterInventory(),
+    room: null,
+    figure: 'hr-1-8B4513.ch-1-4169E1.lg-1-333333'
+  };
+  localStorage.setItem('si_accounts', JSON.stringify(accounts));
+  return { success: true };
+}
+
+function login(username, password) {
+  const accounts = JSON.parse(localStorage.getItem('si_accounts') || '{}');
+  if (!accounts[username] || accounts[username].password !== hashPassword(password)) {
+    return { success: false, error: 'Invalid credentials' };
+  }
+  const acc = accounts[username];
+  const session = {
+    name: username,
+    credits: acc.credits,
+    duckets: acc.duckets,
+    inventory: acc.inventory || getStarterInventory(),
+    room: acc.room || null,
+    figure: acc.figure || 'hr-1-8B4513.ch-1-4169E1.lg-1-333333'
+  };
+  localStorage.setItem('si_session', JSON.stringify(session));
+  return { success: true, session };
+}
+
+function saveSession(session) {
+  localStorage.setItem('si_session', JSON.stringify(session));
+  const accounts = JSON.parse(localStorage.getItem('si_accounts') || '{}');
+  if (accounts[session.name]) {
+    accounts[session.name].credits = session.credits;
+    accounts[session.name].duckets = session.duckets;
+    accounts[session.name].inventory = session.inventory;
+    accounts[session.name].room = session.room;
+    accounts[session.name].figure = session.figure;
+    localStorage.setItem('si_accounts', JSON.stringify(accounts));
+  }
+}
+
+function getSession() {
+  return JSON.parse(localStorage.getItem('si_session') || 'null');
+}
+
+function logout() {
+  localStorage.removeItem('si_session');
+  session = null;
+  stopAmbientMusic();
+  showScreen('title');
+  hideModal();
+  toggleSettings();
+}
+
+// ======================= CATALOG DATA =======================
+const CATALOG = [
+  {id:'furn_sofa', name:'Red Sofa', type:'furniture', icon:'furniture/sofa', category:'furniture', credits:150, duckets:0},
+  {id:'furn_table', name:'Table', type:'furniture', icon:'furniture/table', category:'furniture', credits:80, duckets:0},
+  {id:'furn_chair', name:'Chair', type:'furniture', icon:'furniture/chair', category:'furniture', credits:50, duckets:0},
+  {id:'furn_bed', name:'Bed', type:'furniture', icon:'furniture/bed', category:'furniture', credits:200, duckets:0},
+  {id:'furn_lamp', name:'Lamp', type:'furniture', icon:'furniture/lamp', category:'furniture', credits:60, duckets:0},
+  {id:'furn_plant', name:'Plant', type:'furniture', icon:'furniture/plant', category:'furniture', credits:40, duckets:0},
+  {id:'furn_tv', name:'TV', type:'furniture', icon:'furniture/tv', category:'furniture', credits:300, duckets:0},
+  {id:'furn_piano', name:'Piano', type:'furniture', icon:'furniture/piano', category:'furniture', credits:500, duckets:0},
+  {id:'furn_throne', name:'Golden Throne', type:'furniture', icon:'furniture/throne', category:'furniture', credits:1000, duckets:0},
+  {id:'furn_fountain', name:'Fountain', type:'furniture', icon:'furniture/fountain', category:'furniture', credits:400, duckets:0},
+  {id:'furn_tree', name:'Tree', type:'furniture', icon:'furniture/tree', category:'furniture', credits:120, duckets:0},
+  {id:'furn_fireplace', name:'Fireplace', type:'furniture', icon:'furniture/fireplace', category:'furniture', credits:350, duckets:0},
+  {id:'furn_bookshelf', name:'Bookshelf', type:'furniture', icon:'furniture/bookshelf', category:'furniture', credits:100, duckets:0},
+  {id:'furn_rug', name:'Rug', type:'furniture', icon:'furniture/rug', category:'furniture', credits:70, duckets:0},
+  {id:'furn_trophy', name:'Trophy', type:'furniture', icon:'furniture/trophy', category:'furniture', credits:250, duckets:0},
+  {id:'furn_barrel', name:'Barrel', type:'furniture', icon:'furniture/barrel', category:'furniture', credits:35, duckets:0},
+  {id:'furn_flower', name:'Flower', type:'furniture', icon:'furniture/flower', category:'furniture', credits:25, duckets:0},
+  {id:'furn_bench', name:'Bench', type:'furniture', icon:'furniture/bench', category:'furniture', credits:90, duckets:0},
+  {id:'furn_chest', name:'Chest', type:'furniture', icon:'furniture/chest', category:'furniture', credits:110, duckets:0},
+  {id:'furn_dresser', name:'Dresser', type:'furniture', icon:'furniture/dresser', category:'furniture', credits:180, duckets:0},
+  {id:'furn_stove', name:'Stove', type:'furniture', icon:'furniture/stove', category:'furniture', credits:220, duckets:0},
+  {id:'furn_gate', name:'Gate', type:'furniture', icon:'furniture/gate', category:'furniture', credits:150, duckets:0},
+  {id:'furn_door_wood', name:'Door', type:'furniture', icon:'furniture/door_wood', category:'furniture', credits:80, duckets:0},
+  {id:'furn_window', name:'Window', type:'furniture', icon:'furniture/window', category:'furniture', credits:60, duckets:0},
+  {id:'furn_pool_table', name:'Pool Table', type:'furniture', icon:'furniture/pool_table', category:'furniture', credits:450, duckets:0},
+  {id:'furn_jukebox', name:'Jukebox', type:'furniture', icon:'furniture/jukebox', category:'furniture', credits:380, duckets:0},
+  {id:'furn_arcade', name:'Arcade Machine', type:'furniture', icon:'furniture/arcade', category:'furniture', credits:600, duckets:0},
+  {id:'furn_poster', name:'Poster', type:'furniture', icon:'furniture/poster', category:'furniture', credits:30, duckets:0},
+  {id:'furn_wall_lamp', name:'Wall Lamp', type:'furniture', icon:'furniture/wall_lamp', category:'furniture', credits:55, duckets:0},
+  {id:'furn_pet_bed', name:'Pet Bed', type:'furniture', icon:'furniture/pet_bed', category:'furniture', credits:45, duckets:0},
+  {id:'furn_mirror', name:'Mirror', type:'furniture', icon:'furniture/mirror', category:'furniture', credits:75, duckets:0},
+  {id:'cloth_hoodie', name:'Hoodie', type:'clothing', icon:'parts/shirt_hoodie', category:'clothing', credits:100, duckets:0},
+  {id:'cloth_jacket', name:'Jacket', type:'clothing', icon:'parts/shirt_jacket', category:'clothing', credits:150, duckets:0},
+  {id:'cloth_dress', name:'Pink Dress', type:'clothing', icon:'parts/dress_pink', category:'clothing', credits:120, duckets:0},
+  {id:'cloth_shorts', name:'Shorts', type:'clothing', icon:'parts/legs_shorts', category:'clothing', credits:60, duckets:0},
+  {id:'acc_wizard', name:'Wizard Hat', type:'accessory', icon:'parts/acc_hat_wizard', category:'accessories', credits:200, duckets:0},
+  {id:'acc_glasses', name:'Round Glasses', type:'accessory', icon:'parts/acc_glasses_round', category:'accessories', credits:80, duckets:0},
+  {id:'acc_wings', name:'Angel Wings', type:'accessory', icon:'parts/acc_wings', category:'accessories', credits:500, duckets:0},
+  {id:'hair_long', name:'Long Hair', type:'hair', icon:'parts/hair_long_brown', category:'clothing', credits:50, duckets:0},
+  {id:'hair_spiky', name:'Spiky Hair', type:'hair', icon:'parts/hair_spiky_blonde', category:'clothing', credits:50, duckets:0},
+  {id:'hair_afro', name:'Afro Hair', type:'hair', icon:'parts/hair_afro', category:'clothing', credits:50, duckets:0},
+  {id:'hair_ponytail', name:'Ponytail', type:'hair', icon:'parts/hair_ponytail', category:'clothing', credits:50, duckets:0},
+  {id:'hair_emo', name:'Emo Hair', type:'hair', icon:'parts/hair_emo', category:'clothing', credits:50, duckets:0},
+  {id:'hair_mohawk', name:'Mohawk', type:'hair', icon:'parts/hair_mohawk', category:'clothing', credits:50, duckets:0},
+  {id:'face_cool', name:'Cool Face', type:'face', icon:'parts/face_cool', category:'clothing', credits:30, duckets:0},
+  {id:'face_surprised', name:'Surprised Face', type:'face', icon:'parts/face_surprised', category:'clothing', credits:30, duckets:0},
+  {id:'rare_crown', name:'Royal Crown', type:'accessory', icon:'parts/acc_hat_wizard', category:'rare', credits:5000, duckets:0, limited:true},
+];
+
+// ======================= ROOM DEFINITIONS =======================
+const PUBLIC_ROOMS = {
+  mainhall: {
+    name: 'Main Hall', w: 10, h: 10,
+    floor: 'floor_wood', wall: 'wall_wood', bg: 'bg_mainhall',
+    exits: { east: 'garden', north: 'library', south: 'tavern' },
+    furniture: [
+      {type:'rug',x:5,y:5,offX:0,offY:-10},{type:'sofa',x:3,y:3},{type:'sofa',x:7,y:3},
+      {type:'table',x:5,y:4},{type:'chair',x:4,y:4},{type:'chair',x:6,y:4},
+      {type:'lamp',x:2,y:2},{type:'lamp',x:8,y:2},{type:'plant',x:1,y:7},{type:'plant',x:8,y:7},
+      {type:'bookshelf',x:1,y:1},{type:'bookshelf',x:8,y:1},{type:'trophy',x:5,y:2},{type:'dresser',x:4,y:2},
+      {type:'fireplace',x:5,y:0},{type:'window',x:0,y:5},{type:'window',x:9,y:5}
+    ]
   },
-
-  unequip(itemId) {
-    const item = this.items.find(i => i.id === itemId);
-    if (item) item.equipped = false;
-    updateAvatarLook();
+  garden: {
+    name: 'Moon Garden', w: 12, h: 8,
+    floor: 'floor_grass', wall: 'wall_brick', bg: 'bg_garden',
+    exits: { west: 'mainhall' },
+    furniture: [
+      {type:'fountain',x:6,y:4},{type:'tree',x:2,y:2},{type:'tree',x:10,y:2},
+      {type:'tree',x:2,y:6},{type:'tree',x:10,y:6},{type:'flower',x:4,y:3},{type:'flower',x:8,y:3},
+      {type:'flower',x:4,y:5},{type:'flower',x:8,y:5},{type:'bench',x:5,y:4},{type:'bench',x:7,y:4},
+      {type:'lamp',x:1,y:4},{type:'lamp',x:11,y:4},{type:'gate',x:6,y:0}
+    ]
+  },
+  library: {
+    name: 'Arcane Library', w: 8, h: 10,
+    floor: 'floor_carpet', wall: 'wall_stone', bg: 'bg_library',
+    exits: { south: 'mainhall' },
+    furniture: [
+      {type:'bookshelf',x:1,y:1},{type:'bookshelf',x:1,y:3},{type:'bookshelf',x:1,y:5},
+      {type:'bookshelf',x:6,y:1},{type:'bookshelf',x:6,y:3},{type:'bookshelf',x:6,y:5},
+      {type:'table',x:4,y:5},{type:'chair',x:3,y:5},{type:'chair',x:5,y:5},
+      {type:'lamp',x:4,y:3},{type:'lamp',x:2,y:7},{type:'lamp',x:6,y:7},
+      {type:'rug',x:4,y:5},{type:'window',x:4,y:0}
+    ]
+  },
+  tavern: {
+    name: 'Dragon Tavern', w: 10, h: 6,
+    floor: 'floor_stone', wall: 'wall_wood', bg: 'bg_tavern',
+    exits: { north: 'mainhall' },
+    furniture: [
+      {type:'table',x:3,y:3},{type:'table',x:7,y:3},
+      {type:'chair',x:2,y:3},{type:'chair',x:4,y:3},{type:'chair',x:6,y:3},{type:'chair',x:8,y:3},
+      {type:'piano',x:1,y:1},{type:'stove',x:9,y:1},{type:'barrel',x:5,y:1},{type:'barrel',x:6,y:1},
+      {type:'lamp',x:3,y:1},{type:'lamp',x:7,y:1},{type:'rug',x:5,y:3},{type:'wall_lamp',x:0,y:3},{type:'wall_lamp',x:9,y:3}
+    ]
   }
 };
 
-// ---- Trade System ----
-const trade = {
-  active: false,
-  partner: null,
-  myOffers: [],
-  theirOffers: [],
-  myConfirmed: false,
-  theyConfirmed: false,
+// ======================= GAME STATE =======================
+let session = null;
+let currentRoom = null;
+let roomData = null;
+let player = { x: 5, y: 5, tx: 5, ty: 5, dir: 's', moving: false, walkFrame: 0, chat: '', chatTimer: 0 };
+let camX = 0, camY = 0, zoom = 1.0;
+let keys = {};
+let mouseX = 0, mouseY = 0;
+let hoverTile = null;
+let lastTime = 0;
+let walkTick = 0;
+let canvas, ctx;
+let gameRunning = false;
 
-  start(partnerName) {
-    if (this.active) return;
-    this.active = true;
-    this.partner = partnerName;
-    this.myOffers = [];
-    this.theirOffers = [];
-    this.myConfirmed = false;
-    this.theyConfirmed = false;
-    showTradePanel();
-  },
+// Room editor state
+let editorTool = 'place';
+let editorSelectedItem = null;
+let editorSelectedFurniture = null;
+let editorDragging = false;
+let editorDragOffset = {x:0,y:0};
+let editorCanvas, editorCtx;
+let editorFloorType = 'floor_wood';
+let editorWallType = 'wall_wood';
 
-  offerItem(itemId) {
-    if (this.myConfirmed) return;
-    const item = inventory.items.find(i => i.id === itemId);
-    if (item && !this.myOffers.includes(itemId)) {
-      this.myOffers.push(itemId);
-      renderTradePanel();
-    }
-  },
+// Multiplayer state
+let rtcPeer = null;
+let rtcChannel = null;
+let rtcRoomCode = '';
+let connectedPeers = [];
+let peerPositions = {};
+let peerChats = {};
+let signalingOutBox = null;
 
-  removeOffer(itemId) {
-    if (this.myConfirmed) return;
-    this.myOffers = this.myOffers.filter(id => id !== itemId);
-    renderTradePanel();
-  },
+// ======================= ISOMETRIC ENGINE =======================
+const TILE_W = 64;
+const TILE_H = 32;
 
-  confirm() {
-    if (this.myConfirmed) return;
-    this.myConfirmed = true;
-    setTimeout(() => {
-      if (!this.active) return;
-      this.theyConfirmed = true;
-      completeTrade();
-    }, 2000);
-    renderTradePanel();
-  },
-
-  cancel() {
-    if (this.myConfirmed && this.theyConfirmed) return;
-    this.active = false;
-    this.partner = null;
-    hideTradePanel();
-  }
-};
-
-// ---- Input State ----
-const keys = {};
-let isDragging = false;
-let dragStart = { x: 0, y: 0 };
-let dragCamStart = { x: 0, y: 0 };
-
-// ===================================================================
-// ISOMETRIC MATH
-// ===================================================================
-function tileToScreen(tx, ty, camX, camY, z) {
-  const cx = (canvas.width / 2) / z + camX;
-  const cy = (canvas.height / 3) / z + camY;
+function tileToScreen(tx, ty, cx, cy, zm) {
+  const centerX = (canvas.width / 2) / zm + cx;
+  const centerY = (canvas.height / 3) / zm + cy;
   return {
-    x: cx + (tx - ty) * (TILE_W / 2),
-    y: cy + (tx + ty) * (TILE_H / 2)
+    x: centerX + (tx - ty) * (TILE_W / 2),
+    y: centerY + (tx + ty) * (TILE_H / 2)
   };
 }
 
-function screenToTile(sx, sy, camX, camY, z) {
-  const cx = (canvas.width / 2) / z + camX;
-  const cy = (canvas.height / 3) / z + camY;
-  const dx = sx / z - cx;
-  const dy = sy / z - cy;
+function screenToTile(sx, sy, cx, cy, zm) {
+  const centerX = (canvas.width / 2) / zm + cx;
+  const centerY = (canvas.height / 3) / zm + cy;
+  const dx = sx / zm - centerX;
+  const dy = sy / zm - centerY;
   const tx = (dx / (TILE_W/2) + dy / (TILE_H/2)) / 2;
   const ty = (dy / (TILE_H/2) - dx / (TILE_W/2)) / 2;
   return { x: Math.floor(tx), y: Math.floor(ty) };
 }
 
-function getAssetPath(key) {
-  return ASSETS[key] || '';
+// ======================= AVATAR COMPOSITING =======================
+function renderAvatarComposite(canvasEl, options) {
+  const c = canvasEl.getContext('2d');
+  c.clearRect(0, 0, canvasEl.width, canvasEl.height);
+  const {
+    body = 'parts/body_base', legs = 'parts/legs_pants',
+    shirt = 'parts/shirt_tshirt', hair = 'parts/hair_short_brown',
+    face = 'parts/face_happy', accessory = null,
+    hairColor = '#8B4513', shirtColor = '#4169E1', skinColor = '#ffdbac'
+  } = options;
+  const w = canvasEl.width, h = canvasEl.height;
+  const cx = w / 2, cy = h / 2;
+
+  function drawPart(key, color, px, py, sc) {
+    const img = IMAGES[key];
+    if (!img) return;
+    const iw = img.width || 64, ih = img.height || 64;
+    const dw = iw * (sc || 1.2), dh = ih * (sc || 1.2);
+    c.save();
+    c.translate(px, py);
+    if (color) {
+      const tc = document.createElement('canvas');
+      tc.width = iw; tc.height = ih;
+      const tctx = tc.getContext('2d');
+      tctx.drawImage(img, 0, 0);
+      tctx.globalCompositeOperation = 'source-atop';
+      tctx.fillStyle = color;
+      tctx.fillRect(0, 0, iw, ih);
+      c.drawImage(tc, -dw/2, -dh/2, dw, dh);
+    } else {
+      c.drawImage(img, -dw/2, -dh/2, dw, dh);
+    }
+    c.restore();
+  }
+
+  if (accessory === 'wings') drawPart('parts/acc_wings', null, cx, cy + 10, 1.2);
+  drawPart(legs, null, cx, cy + 25, 1.2);
+  drawPart(body, skinColor, cx, cy + 5, 1.2);
+  drawPart(shirt, shirtColor, cx, cy + 5, 1.2);
+  drawPart(face, null, cx, cy - 20, 1.0);
+  if (hair !== 'parts/hair_bald') drawPart(hair, hairColor, cx, cy - 20, 1.0);
+  if (accessory === 'beanie') drawPart('parts/acc_hat_beanie', null, cx, cy - 30, 1.0);
+  if (accessory === 'wizard') drawPart('parts/acc_hat_wizard', null, cx, cy - 35, 1.0);
+  if (accessory === 'glasses') drawPart('parts/acc_glasses_round', null, cx, cy - 18, 1.0);
 }
 
-// ===================================================================
-// ASSET LOADING
-// ===================================================================
-function loadAssets() {
-  const entries = Object.entries(ASSETS);
-  totalAssets = entries.length;
+// Parse figure string: hr-1-8B4513.hd-1-1.ch-1-4169E1.lg-1-333333
+function figureToOptions(figureStr) {
+  const opts = {
+    body: 'parts/body_base', legs: 'parts/legs_pants',
+    shirt: 'parts/shirt_tshirt', hair: 'parts/hair_short_brown',
+    face: 'parts/face_happy', accessory: null,
+    hairColor: '#8B4513', shirtColor: '#4169E1', skinColor: '#ffdbac'
+  };
+  if (!figureStr) return opts;
+  const parts = figureStr.split('.');
+  parts.forEach(p => {
+    const [code, idx, color] = p.split('-');
+    const cval = color ? '#' + color : null;
+    if (code === 'hr') {
+      const hairs = ['hair_bald','hair_short_brown','hair_long_brown','hair_spiky_blonde','hair_afro','hair_ponytail','hair_emo','hair_mohawk'];
+      opts.hair = 'parts/' + (hairs[parseInt(idx,10)] || 'hair_short_brown');
+      if (cval) opts.hairColor = cval;
+    } else if (code === 'hd') {
+      const faces = ['face_happy','face_cool','face_surprised'];
+      opts.face = 'parts/' + (faces[parseInt(idx,10)] || 'face_happy');
+    } else if (code === 'ch') {
+      const shirts = ['shirt_tshirt','shirt_hoodie','shirt_jacket','dress_pink'];
+      opts.shirt = 'parts/' + (shirts[parseInt(idx,10)] || 'shirt_tshirt');
+      if (cval) opts.shirtColor = cval;
+    } else if (code === 'lg') {
+      const legs = ['legs_pants','legs_shorts'];
+      opts.legs = 'parts/' + (legs[parseInt(idx,10)] || 'legs_pants');
+    } else if (code === 'ac') {
+      const accs = [null,'beanie','wizard','glasses','wings'];
+      opts.accessory = accs[parseInt(idx,10)] || null;
+    }
+  });
+  return opts;
+}
 
-  if (totalAssets === 0) {
-    onAllLoaded();
+function optionsToFigure(opts) {
+  const hairIdx = ['hair_bald','hair_short_brown','hair_long_brown','hair_spiky_blonde','hair_afro','hair_ponytail','hair_emo','hair_mohawk']
+    .indexOf(opts.hair.replace('parts/',''));
+  const faceIdx = ['face_happy','face_cool','face_surprised'].indexOf(opts.face.replace('parts/',''));
+  const shirtIdx = ['shirt_tshirt','shirt_hoodie','shirt_jacket','dress_pink'].indexOf(opts.shirt.replace('parts/',''));
+  const legsIdx = ['legs_pants','legs_shorts'].indexOf(opts.legs.replace('parts/',''));
+  const accIdx = [null,'beanie','wizard','glasses','wings'].indexOf(opts.accessory);
+  const hc = opts.hairColor.replace('#','');
+  const sc = opts.shirtColor.replace('#','');
+  return `hr-${Math.max(0,hairIdx)}-${hc}.hd-${Math.max(0,faceIdx)}-1.ch-${Math.max(0,shirtIdx)}-${sc}.lg-${Math.max(0,legsIdx)}-1${accIdx > 0 ? '.ac-'+accIdx+'-1' : ''}`;
+}
+
+// ======================= CHARACTER CREATOR =======================
+let charOpts = {
+  body: 'parts/body_base', legs: 'parts/legs_pants',
+  shirt: 'parts/shirt_tshirt', hair: 'parts/hair_short_brown',
+  face: 'parts/face_happy', accessory: null,
+  hairColor: '#8B4513', shirtColor: '#4169E1', skinColor: '#ffdbac'
+};
+
+const HAIR_OPTIONS = [
+  {key:'parts/hair_bald', label:'Bald'},
+  {key:'parts/hair_short_brown', label:'Short'},
+  {key:'parts/hair_long_brown', label:'Long'},
+  {key:'parts/hair_spiky_blonde', label:'Spiky'},
+  {key:'parts/hair_afro', label:'Afro'},
+  {key:'parts/hair_ponytail', label:'Ponytail'},
+  {key:'parts/hair_emo', label:'Emo'},
+  {key:'parts/hair_mohawk', label:'Mohawk'}
+];
+const SHIRT_OPTIONS = [
+  {key:'parts/shirt_tshirt', label:'T-Shirt'},
+  {key:'parts/shirt_hoodie', label:'Hoodie'},
+  {key:'parts/shirt_jacket', label:'Jacket'},
+  {key:'parts/dress_pink', label:'Dress'}
+];
+const LEGS_OPTIONS = [
+  {key:'parts/legs_pants', label:'Pants'},
+  {key:'parts/legs_shorts', label:'Shorts'}
+];
+const FACE_OPTIONS = [
+  {key:'parts/face_happy', label:'Happy'},
+  {key:'parts/face_cool', label:'Cool'},
+  {key:'parts/face_surprised', label:'Surprised'}
+];
+const ACC_OPTIONS = [
+  {key:null, label:'None'},
+  {key:'beanie', label:'Beanie'},
+  {key:'wizard', label:'Wizard'},
+  {key:'glasses', label:'Glasses'},
+  {key:'wings', label:'Wings'}
+];
+const COLOR_SWATCHES = ['#8B4513','#FFD700','#FF0000','#000000','#FFFFFF','#4169E1','#228B22','#FF69B4','#FFA500','#800080','#00CED1','#A52A2A'];
+const SKIN_SWATCHES = ['#ffdbac','#f1c27d','#e0ac69','#8d5524','#c68642','#e0ac69','#ffcea3','#5e3a18'];
+
+function initCharacterScreen() {
+  const makeRow = (containerId, items, type, onClick) => {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = '';
+    items.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'char-opt' + (charOpts[type] === item.key ? ' selected' : '');
+      div.title = item.label;
+      if (item.key && item.key.startsWith('parts/')) {
+        const img = document.createElement('img');
+        img.src = ASSETS[item.key] || '';
+        img.alt = item.label;
+        div.appendChild(img);
+      } else if (type === 'accessory' && item.key) {
+        const label = document.createElement('span');
+        label.textContent = item.label;
+        label.style.fontSize = '10px'; label.style.color = '#aaa';
+        div.appendChild(label);
+      } else {
+        const label = document.createElement('span');
+        label.textContent = item.label;
+        label.style.fontSize = '10px'; label.style.color = '#aaa';
+        div.appendChild(label);
+      }
+      div.onclick = () => {
+        charOpts[type] = item.key;
+        refreshCharUI();
+        onClick && onClick(item.key);
+      };
+      el.appendChild(div);
+    });
+  };
+
+  makeRow('hairOpts', HAIR_OPTIONS, 'hair', () => {});
+  makeRow('shirtOpts', SHIRT_OPTIONS, 'shirt', () => {});
+  makeRow('legsOpts', LEGS_OPTIONS, 'legs', () => {});
+  makeRow('faceOpts', FACE_OPTIONS, 'face', () => {});
+  makeRow('accOpts', ACC_OPTIONS, 'accessory', () => {});
+
+  const makeColors = (containerId, colors, type) => {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = '';
+    colors.forEach(col => {
+      const sw = document.createElement('div');
+      sw.className = 'color-swatch' + (charOpts[type] === col ? ' selected' : '');
+      sw.style.backgroundColor = col;
+      sw.onclick = () => { charOpts[type] = col; refreshCharUI(); };
+      el.appendChild(sw);
+    });
+  };
+  makeColors('hairColors', COLOR_SWATCHES, 'hairColor');
+  makeColors('shirtColors', COLOR_SWATCHES, 'shirtColor');
+
+  const skinEl = document.getElementById('skinColors');
+  if (skinEl) {
+    skinEl.innerHTML = '';
+    SKIN_SWATCHES.forEach(col => {
+      const sw = document.createElement('div');
+      sw.className = 'color-swatch' + (charOpts.skinColor === col ? ' selected' : '');
+      sw.style.backgroundColor = col;
+      sw.onclick = () => { charOpts.skinColor = col; refreshCharUI(); };
+      skinEl.appendChild(sw);
+    });
+  }
+
+  const hcc = document.getElementById('customHairColor');
+  if (hcc) hcc.oninput = e => { charOpts.hairColor = e.target.value; refreshCharUI(); };
+  const scc = document.getElementById('customShirtColor');
+  if (scc) scc.oninput = e => { charOpts.shirtColor = e.target.value; refreshCharUI(); };
+
+  refreshCharUI();
+}
+
+function refreshCharUI() {
+  const preview = document.getElementById('charPreview');
+  if (preview) renderAvatarComposite(preview, charOpts);
+
+  // Update selection visuals
+  const updateSelected = (containerId, val, isPrefix) => {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    Array.from(el.children).forEach((child, i) => {
+      const opts = {hair:HAIR_OPTIONS, shirt:SHIRT_OPTIONS, legs:LEGS_OPTIONS, face:FACE_OPTIONS, accessory:ACC_OPTIONS}[containerId.replace(/Opts$/,'').replace('hair','hair').replace('shirt','shirt').replace('legs','legs').replace('face','face').replace('acc','accessory')];
+      let matches = false;
+      if (opts) {
+        const item = opts[i];
+        if (item) matches = (isPrefix ? (val && val.includes(item.key)) : (val === item.key));
+      }
+      child.classList.toggle('selected', matches);
+    });
+  };
+  updateSelected('hairOpts', charOpts.hair, true);
+  updateSelected('shirtOpts', charOpts.shirt, true);
+  updateSelected('legsOpts', charOpts.legs, true);
+  updateSelected('faceOpts', charOpts.face, true);
+  updateSelected('accOpts', charOpts.accessory, false);
+
+  // Color swatches
+  ['hairColors','shirtColors'].forEach((id, idx) => {
+    const type = idx === 0 ? 'hairColor' : 'shirtColor';
+    const el = document.getElementById(id);
+    if (el) {
+      Array.from(el.children).forEach(sw => {
+        sw.classList.toggle('selected', sw.style.backgroundColor === charOpts[type] || rgbToHex(sw.style.backgroundColor) === charOpts[type]);
+      });
+    }
+  });
+}
+
+function rgbToHex(rgb) {
+  if (!rgb || rgb.startsWith('#')) return rgb;
+  const m = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (!m) return rgb;
+  return '#' + [m[1],m[2],m[3]].map(x => parseInt(x).toString(16).padStart(2,'0')).join('');
+}
+
+function finishCharacter() {
+  const fig = optionsToFigure(charOpts);
+  if (session) {
+    session.figure = fig;
+    saveSession(session);
+  } else {
+    session = {
+      name: 'Guest' + Math.floor(Math.random()*10000),
+      credits: 1000, duckets: 500,
+      inventory: getStarterInventory(),
+      room: null, figure: fig
+    };
+    // Equip items matching creator choices
+    session.inventory.forEach(inv => {
+      if (inv.type === 'hair') inv.equipped = (inv.icon === charOpts.hair);
+      if (inv.type === 'clothing' && inv.icon.includes('shirt')) inv.equipped = (inv.icon === charOpts.shirt);
+      if (inv.type === 'clothing' && inv.icon.includes('legs')) inv.equipped = (inv.icon === charOpts.legs);
+      if (inv.type === 'face') inv.equipped = (inv.icon === charOpts.face);
+      if (inv.type === 'accessory') inv.equipped = (inv.icon === (charOpts.accessory === 'beanie' ? 'parts/acc_hat_beanie' : charOpts.accessory === 'wizard' ? 'parts/acc_hat_wizard' : charOpts.accessory === 'glasses' ? 'parts/acc_glasses_round' : charOpts.accessory === 'wings' ? 'parts/acc_wings' : ''));
+    });
+    localStorage.setItem('si_session', JSON.stringify(session));
+  }
+  enterGame('mainhall');
+}
+
+
+// ======================= ROOM LOADING =======================
+function loadRoom(roomId) {
+  if (PUBLIC_ROOMS[roomId]) {
+    const def = PUBLIC_ROOMS[roomId];
+    currentRoom = roomId;
+    roomData = {
+      id: roomId, name: def.name, w: def.w, h: def.h,
+      floor: def.floor, wall: def.wall, bg: def.bg,
+      exits: { ...def.exits },
+      furniture: def.furniture.map(f => ({ ...f })),
+      players: []
+    };
+    player.x = Math.floor(def.w / 2);
+    player.y = Math.floor(def.h / 2);
+    player.tx = player.x; player.ty = player.y;
+    player.moving = false;
+    camX = 0; camY = 0; zoom = 1.0;
+    updateExitArrows();
+    showRoomLabel(def.name);
+    playDoor();
     return;
   }
-
-  entries.forEach(([key, path]) => {
-    const img = new Image();
-    img.onload = () => {
-      IMAGES[key] = img;
-      loadedAssets++;
-      updateLoadingProgress();
-      if (loadedAssets >= totalAssets) onAllLoaded();
-    };
-    img.onerror = () => {
-      IMAGES[key] = null;
-      loadedAssets++;
-      updateLoadingProgress();
-      if (loadedAssets >= totalAssets) onAllLoaded();
-    };
-    img.src = path;
-  });
-}
-
-function updateLoadingProgress() {
-  const pct = Math.floor((loadedAssets / totalAssets) * 100);
-  document.getElementById('loadFill').style.width = pct + '%';
-  document.getElementById('loadText').textContent = 'Loading assets... ' + pct + '%';
-}
-
-function onAllLoaded() {
-  setTimeout(() => {
-    document.getElementById('loadingScreen').style.opacity = '0';
-    setTimeout(() => {
-      document.getElementById('loadingScreen').style.display = 'none';
-      showScreen('title');
-      playTitleJingle();
-    }, 500);
-  }, 800);
-}
-
-// ===================================================================
-// AUDIO SYSTEM (Web Audio API)
-// ===================================================================
-let audioCtx = null;
-
-function getAudioCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  return audioCtx;
-}
-
-function playTone(freq, duration, type, vol) {
-  if (!settings.sfx) return;
-  try {
-    const ctx = getAudioCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = type || 'sine';
-    osc.frequency.setValueAtTime(freq, ctx.currentTime);
-    gain.gain.setValueAtTime(vol || 0.1, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + duration);
-  } catch(e) {}
-}
-
-function playSfx(name) {
-  if (!settings.sfx) return;
-  switch(name) {
-    case 'step':
-      playTone(200 + Math.random() * 100, 0.06, 'triangle', 0.04);
-      break;
-    case 'door':
-      playTone(300, 0.15, 'square', 0.06);
-      setTimeout(() => playTone(450, 0.2, 'square', 0.05), 100);
-      break;
-    case 'chat':
-      playTone(800, 0.08, 'sine', 0.05);
-      break;
-    case 'blip':
-      playTone(1200, 0.05, 'sine', 0.04);
-      break;
-    case 'trade':
-      playTone(523, 0.1, 'sine', 0.06);
-      setTimeout(() => playTone(659, 0.1, 'sine', 0.06), 100);
-      setTimeout(() => playTone(784, 0.15, 'sine', 0.06), 200);
-      break;
-    case 'confirm':
-      playTone(784, 0.12, 'sine', 0.07);
-      setTimeout(() => playTone(1047, 0.2, 'sine', 0.07), 120);
-      break;
-    case 'error':
-      playTone(200, 0.2, 'sawtooth', 0.05);
-      break;
+  // My Room
+  if (roomId === 'myroom' && session && session.room) {
+    currentRoom = 'myroom';
+    roomData = JSON.parse(JSON.stringify(session.room));
+    player.x = Math.floor(roomData.w / 2);
+    player.y = Math.floor(roomData.h / 2);
+    player.tx = player.x; player.ty = player.y;
+    player.moving = false;
+    camX = 0; camY = 0; zoom = 1.0;
+    roomData.exits = roomData.exits || {};
+    updateExitArrows();
+    showRoomLabel(session.name + "'s Room");
+    playDoor();
+    return;
   }
-}
-
-function playTitleJingle() {
-  if (!settings.music) return;
-  const notes = [523, 587, 659, 784, 659, 784];
-  const delays = [0, 150, 300, 600, 900, 1200];
-  notes.forEach((freq, i) => {
-    setTimeout(() => playTone(freq, 0.25, 'sine', 0.05), delays[i]);
-  });
-}
-
-function playRoomAmbient() {
-  // Occasional ambient sounds
-  if (!settings.sfx || Math.random() > 0.01) return;
-  const room = ROOMS[currentRoom];
-  if (!room) return;
-  switch(currentRoom) {
-    case 'garden':
-      playTone(300 + Math.random() * 400, 0.5, 'sine', 0.015);
-      break;
-    case 'library':
-      playTone(150 + Math.random() * 200, 0.8, 'sine', 0.01);
-      break;
-    case 'tavern':
-      playTone(80 + Math.random() * 100, 0.3, 'triangle', 0.02);
-      break;
-    default:
-      playTone(200 + Math.random() * 300, 0.4, 'sine', 0.01);
-  }
-}
-
-// ===================================================================
-// SCREEN MANAGEMENT
-// ===================================================================
-function showScreen(screen) {
-  currentScreen = screen;
-  document.getElementById('loadingScreen').style.display = 'none';
-  document.getElementById('titleScreen').style.display = 'none';
-  document.getElementById('charScreen').style.display = 'none';
-  document.getElementById('gameScreen').style.display = 'none';
-
-  if (screen === 'title') {
-    document.getElementById('titleScreen').style.display = 'flex';
-  } else if (screen === 'character') {
-    document.getElementById('charScreen').style.display = 'flex';
-    initCharCreator();
-  } else if (screen === 'game') {
-    document.getElementById('gameScreen').style.display = 'block';
-    resizeCanvas();
-    centerCameraOnPlayer();
-  }
-}
-
-function startGuest() {
-  player.name = 'Guest' + Math.floor(Math.random() * 9999);
-  document.getElementById('charNameInput').value = player.name;
-  showScreen('character');
-}
-
-// ===================================================================
-// CHARACTER CREATOR
-// ===================================================================
-let charSelections = { hair: 'hair_short', outfit: 'shirt_blue', accessory: null };
-
-function initCharCreator() {
-  // Hair grid
-  const hairGrid = document.getElementById('hairGrid');
-  const hairs = [
-    {id:'hair_bald', icon:'hair/hair_bald.png'},
-    {id:'hair_short', icon:'hair/hair_short.png'},
-    {id:'hair_spiky', icon:'hair/hair_spiky.png'},
-    {id:'hair_long', icon:'hair/hair_long.png'},
-    {id:'hair_ponytail', icon:'hair/hair_ponytail.png'},
-    {id:'hair_afro', icon:'hair/hair_afro.png'},
-  ];
-  hairGrid.innerHTML = '';
-  hairs.forEach(h => {
-    const div = document.createElement('div');
-    div.className = 'char-opt' + (charSelections.hair === h.id ? ' selected' : '');
-    div.innerHTML = `<img src="${getAssetPath(h.icon)}" onerror="this.style.display='none'">`;
-    div.onclick = () => {
-      charSelections.hair = h.id;
-      initCharCreator();
-      updateCharPreview();
+  // Create default my room
+  if (roomId === 'myroom') {
+    currentRoom = 'myroom';
+    roomData = {
+      id: 'myroom', name: "My Room", w: 12, h: 8,
+      floor: 'floor_wood', wall: 'wall_wood', bg: 'bg_bedroom',
+      exits: { south: 'mainhall' },
+      furniture: [
+        {type:'bed',x:3,y:2},{type:'dresser',x:5,y:1},{type:'lamp',x:2,y:2},
+        {type:'rug',x:6,y:4},{type:'sofa',x:8,y:3},{type:'tv',x:9,y:1}
+      ]
     };
-    hairGrid.appendChild(div);
-  });
-
-  // Outfit grid
-  const outfitGrid = document.getElementById('outfitGrid');
-  const outfits = [
-    {id:'shirt_blue', icon:'clothes/shirt_blue.png'},
-    {id:'shirt_red', icon:'clothes/shirt_red.png'},
-    {id:'shirt_green', icon:'clothes/shirt_green.png'},
-    {id:'dress_pink', icon:'clothes/dress_pink.png'},
-  ];
-  outfitGrid.innerHTML = '';
-  outfits.forEach(o => {
-    const div = document.createElement('div');
-    div.className = 'char-opt' + (charSelections.outfit === o.id ? ' selected' : '');
-    div.innerHTML = `<img src="${getAssetPath(o.icon)}" onerror="this.style.display='none'">`;
-    div.onclick = () => {
-      charSelections.outfit = o.id;
-      initCharCreator();
-      updateCharPreview();
-    };
-    outfitGrid.appendChild(div);
-  });
-
-  // Accessory grid
-  const accGrid = document.getElementById('accGrid');
-  const accs = [
-    {id: null, label: 'None'},
-    {id:'acc_crown', icon:'items/acc_crown.png'},
-    {id:'acc_glasses', icon:'items/acc_glasses.png'},
-    {id:'acc_wings', icon:'items/acc_wings.png'},
-  ];
-  accGrid.innerHTML = '';
-  accs.forEach(a => {
-    const div = document.createElement('div');
-    div.className = 'char-opt' + (charSelections.accessory === a.id ? ' selected' : '');
-    if (a.label) {
-      div.innerHTML = `<span style="font-size:10px;color:#888;">${a.label}</span>`;
-    } else {
-      div.innerHTML = `<img src="${getAssetPath(a.icon)}" onerror="this.style.display='none'">`;
+    if (session) {
+      session.room = JSON.parse(JSON.stringify(roomData));
+      saveSession(session);
     }
-    div.onclick = () => {
-      charSelections.accessory = a.id;
-      initCharCreator();
-      updateCharPreview();
-    };
-    accGrid.appendChild(div);
-  });
-
-  updateCharPreview();
+    player.x = 6; player.y = 4;
+    player.tx = 6; player.ty = 4;
+    player.moving = false;
+    camX = 0; camY = 0; zoom = 1.0;
+    updateExitArrows();
+    showRoomLabel("My Room");
+    playDoor();
+    return;
+  }
 }
 
-function updateCharPreview() {
-  // Show idle_s avatar as preview
-  const img = document.getElementById('charPreviewImg');
-  const path = getAssetPath('avatar/idle_s');
-  if (img) { img.src = path; img.style.display = 'block'; }
+function showRoomLabel(name) {
+  const el = document.getElementById('roomLabel');
+  if (el) {
+    el.textContent = name;
+    el.style.opacity = '1';
+    setTimeout(() => { el.style.opacity = '0'; }, 2500);
+  }
 }
 
-function startGame() {
-  const name = document.getElementById('charNameInput').value.trim();
-  if (name) player.name = name.substring(0, 16);
-
-  // Apply character selections
-  player.hair = charSelections.hair;
-  player.outfit = charSelections.outfit;
-  player.accessory = charSelections.accessory;
-
-  // Sync inventory
-  inventory.items.forEach(it => {
-    it.equipped = false;
+function updateExitArrows() {
+  if (!roomData) return;
+  const dirs = ['north','south','east','west'];
+  dirs.forEach(d => {
+    const el = document.getElementById('exit' + d.charAt(0).toUpperCase() + d.slice(1));
+    if (el) el.style.display = (roomData.exits && roomData.exits[d]) ? 'flex' : 'none';
   });
-  if (player.outfit) {
-    const outfitItem = inventory.items.find(i => i.id === player.outfit);
-    if (outfitItem) outfitItem.equipped = true;
-  }
-  if (player.hair) {
-    const hairItem = inventory.items.find(i => i.id === player.hair);
-    if (hairItem) hairItem.equipped = true;
-  }
-  if (player.accessory) {
-    const accItem = inventory.items.find(i => i.id === player.accessory);
-    if (accItem) accItem.equipped = true;
-  }
+}
 
-  player.tx = 5; player.ty = 5;
-  player.x = 5; player.y = 5;
-  player.facing = 's';
-  player.moving = false;
-  player.sprite = 'avatar/idle_s';
+function goExit(dir) {
+  if (!roomData || !roomData.exits || !roomData.exits[dir]) return;
+  loadRoom(roomData.exits[dir]);
+  if (rtcChannel && rtcChannel.readyState === 'open') {
+    rtcChannel.send(JSON.stringify({type:'room', room:currentRoom}));
+  }
+}
 
+function enterGame(roomId) {
+  loadRoom(roomId || 'mainhall');
   showScreen('game');
-  spawnRoomPlayers(currentRoom);
-  addSystemMsg('Welcome to Starlight Inn, ' + player.name + '!');
-  addSystemMsg('Use arrow keys, WASD, or click tiles to move.');
-  addSystemMsg('Walk to exit tiles to change rooms.');
-  playSfx('door');
-  gameLoop();
+  startAmbientMusic();
+  resizeCanvas();
+  requestAnimationFrame(gameLoop);
+  gameRunning = true;
+  updateHUD();
 }
 
-// ===================================================================
-// AUTH (localStorage)
-// ===================================================================
-function doLogin() {
-  const user = document.getElementById('loginUser').value.trim();
-  const pass = document.getElementById('loginPass').value;
-  if (!user || !pass) { playSfx('error'); return; }
-  const saved = localStorage.getItem('si_user_' + user);
-  if (!saved) { alert('User not found'); playSfx('error'); return; }
-  let data;
-  try { data = JSON.parse(saved); } catch(e) { alert('Error loading account'); return; }
-  if (data.password !== pass) { alert('Wrong password'); playSfx('error'); return; }
-  player.name = data.displayName || user;
-  document.getElementById('charNameInput').value = player.name;
-  hideModal('login');
-  showScreen('character');
-}
-
-function doRegister() {
-  const user = document.getElementById('regUser').value.trim();
-  const display = document.getElementById('regDisplay').value.trim() || user;
-  const pass = document.getElementById('regPass').value;
-  if (!user || !pass) { alert('Fill all fields'); playSfx('error'); return; }
-  if (localStorage.getItem('si_user_' + user)) { alert('Username taken'); playSfx('error'); return; }
-  localStorage.setItem('si_user_' + user, JSON.stringify({ displayName: display, password: pass }));
-  player.name = display;
-  document.getElementById('charNameInput').value = player.name;
-  hideModal('register');
-  showScreen('character');
-  addSystemMsg('Account created! Welcome, ' + display + '.');
-}
-
-function showModal(id) {
-  document.getElementById(id + 'Modal').classList.add('active');
-}
-
-function hideModal(id) {
-  document.getElementById(id + 'Modal').classList.remove('active');
-}
-
-// ===================================================================
-// UI PANELS
-// ===================================================================
-let currentPanel = null;
-
-function togglePanel(type) {
-  const panel = document.getElementById('sidePanel');
-  if (currentPanel === type) { closeSidePanel(); return; }
-  currentPanel = type;
-  panel.style.display = 'block';
-  document.getElementById('playerList').style.display = 'none';
-
-  switch(type) {
-    case 'inventory':
-      document.getElementById('panelTitle').textContent = 'Inventory';
-      renderInventoryPanel();
-      break;
-    case 'friends':
-      document.getElementById('panelTitle').textContent = 'Friends';
-      renderFriendsPanel();
-      break;
-    case 'players':
-      panel.style.display = 'none';
-      document.getElementById('playerList').style.display = 'block';
-      renderPlayerList();
-      break;
-    case 'settings':
-      document.getElementById('panelTitle').textContent = 'Settings';
-      renderSettingsPanel();
-      break;
-    case 'help':
-      document.getElementById('panelTitle').textContent = 'Help';
-      renderHelpPanel();
-      break;
+// ======================= SCREEN MANAGEMENT =======================
+function showScreen(name) {
+  ['loadingScreen','titleScreen','characterScreen','gameScreen'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  if (name === 'title') {
+    const el = document.getElementById('titleScreen');
+    if (el) el.style.display = 'flex';
+  } else if (name === 'character') {
+    const el = document.getElementById('characterScreen');
+    if (el) {
+      el.style.display = 'flex';
+      initCharacterScreen();
+    }
+  } else if (name === 'game') {
+    const el = document.getElementById('gameScreen');
+    if (el) el.style.display = 'block';
+  } else if (name === 'loading') {
+    const el = document.getElementById('loadingScreen');
+    if (el) el.style.display = 'flex';
   }
 }
 
-function closeSidePanel() {
-  document.getElementById('sidePanel').style.display = 'none';
-  document.getElementById('playerList').style.display = 'none';
-  currentPanel = null;
+// ======================= RENDERING PIPELINE =======================
+function drawFloorTiles(ctx, rd, zm) {
+  const floorImg = IMAGES['tiles/' + rd.floor];
+  const wallImg = IMAGES['tiles/' + rd.wall];
+  for (let y = 0; y < rd.h; y++) {
+    for (let x = 0; x < rd.w; x++) {
+      const p = tileToScreen(x, y, camX, camY, zm);
+      if (floorImg) {
+        const fw = TILE_W * zm, fh = TILE_H * zm;
+        ctx.drawImage(floorImg, p.x - fw/2, p.y, fw, fh);
+      } else {
+        ctx.fillStyle = '#3a2a1a';
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y + TILE_H * zm / 2);
+        ctx.lineTo(p.x + TILE_W * zm / 2, p.y);
+        ctx.lineTo(p.x + TILE_W * zm, p.y + TILE_H * zm / 2);
+        ctx.lineTo(p.x + TILE_W * zm / 2, p.y + TILE_H * zm);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#5a4a2a'; ctx.lineWidth = 0.5; ctx.stroke();
+      }
+    }
+  }
+  // Walls on perimeter
+  if (wallImg) {
+    for (let x = 0; x < rd.w; x++) {
+      const pTop = tileToScreen(x, -0.5, camX, camY, zm);
+      ctx.drawImage(wallImg, pTop.x - TILE_W * zm / 2, pTop.y - TILE_H * zm, TILE_W * zm, TILE_H * zm * 2);
+    }
+    for (let y = 0; y < rd.h; y++) {
+      const pLeft = tileToScreen(-0.5, y, camX, camY, zm);
+      ctx.drawImage(wallImg, pLeft.x - TILE_W * zm / 2, pLeft.y - TILE_H * zm, TILE_W * zm, TILE_H * zm * 2);
+    }
+  }
 }
 
-function renderInventoryPanel() {
-  const body = document.getElementById('panelBody');
-  body.innerHTML = '<div class="inv-grid" id="invGrid"></div>';
-  const grid = document.getElementById('invGrid');
+function drawBackground(ctx, rd, zm) {
+  const bgImg = IMAGES['rooms/' + rd.bg];
+  if (bgImg) {
+    const sx = (canvas.width / 2) / zm + camX - bgImg.width * zm / 2;
+    const sy = (canvas.height / 3) / zm + camY - bgImg.height * zm / 3;
+    ctx.globalAlpha = 0.4;
+    ctx.drawImage(bgImg, sx, sy, bgImg.width * zm, bgImg.height * zm);
+    ctx.globalAlpha = 1.0;
+  }
+}
 
-  // Equipped items first
-  const sorted = [...inventory.items].sort((a, b) => {
-    if (a.equipped && !b.equipped) return -1;
-    if (!a.equipped && b.equipped) return 1;
-    return 0;
+function drawFurnitureItem(ctx, f, rd, zm) {
+  const pos = tileToScreen(f.x, f.y, camX, camY, zm);
+  const img = IMAGES['furniture/' + f.type];
+  if (!img) return;
+  const sc = 0.8 * zm;
+  const w = (img.width || 64) * sc;
+  const h = (img.height || 64) * sc;
+  const offX = (f.offX || 0) * zm;
+  const offY = (f.offY || 0) * zm;
+  const x = pos.x - w / 2 + offX;
+  const y = pos.y - h + TILE_H * zm + offY;
+  ctx.drawImage(img, x, y, w, h);
+  // Selection ring
+  if (editorSelectedFurniture && editorSelectedFurniture === f && currentRoom === 'myroom') {
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2;
+    ctx.strokeRect(x - 2, y - 2, w + 4, h + 4);
+  }
+}
+
+function drawAvatar(ctx, px, py, dir, opts, zm, isWalking, walkFrame) {
+  const pos = tileToScreen(px, py, camX, camY, zm);
+  // Use composite render to temp canvas then draw
+  const avc = document.createElement('canvas');
+  avc.width = 80; avc.height = 100;
+  renderAvatarComposite(avc, opts);
+  const sc = zm * 0.9;
+  const w = avc.width * sc;
+  const h = avc.height * sc;
+  const x = pos.x - w / 2;
+  const y = pos.y - h + TILE_H * zm * 0.8;
+
+  // Bobbing when walking
+  let bob = 0;
+  if (isWalking) {
+    bob = Math.sin(walkFrame * 0.5) * 3 * zm;
+  }
+
+  ctx.drawImage(avc, x, y + bob, w, h);
+
+  // Direction indicator (subtle shadow)
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  ctx.beginPath();
+  ctx.ellipse(pos.x, pos.y + TILE_H * zm * 0.4, 12 * zm, 6 * zm, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawChatBubble(ctx, msg, px, py, zm) {
+  if (!msg) return;
+  const pos = tileToScreen(px, py, camX, camY, zm);
+  const bubbleImg = IMAGES['ui/chat_bubble'];
+  const padX = 8 * zm, padY = 4 * zm;
+  ctx.font = 'bold ' + Math.round(12 * zm) + 'px sans-serif';
+  const tw = ctx.measureText(msg).width + padX * 2;
+  const th = 20 * zm;
+  const bx = pos.x - tw / 2;
+  const by = pos.y - 55 * zm - th;
+
+  if (bubbleImg) {
+    ctx.drawImage(bubbleImg, bx - 4 * zm, by - 2 * zm, tw + 8 * zm, th + 8 * zm);
+  } else {
+    ctx.fillStyle = 'rgba(15,15,30,0.9)';
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(bx, by, tw, th, 8 * zm);
+    ctx.fill(); ctx.stroke();
+    // Triangle
+    ctx.beginPath();
+    ctx.moveTo(pos.x - 6 * zm, by + th);
+    ctx.lineTo(pos.x + 6 * zm, by + th);
+    ctx.lineTo(pos.x, by + th + 6 * zm);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+  }
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(msg, pos.x, by + th / 2);
+}
+
+function drawHoverTile(ctx, zm) {
+  if (!hoverTile) return;
+  const p = tileToScreen(hoverTile.x, hoverTile.y, camX, camY, zm);
+  ctx.fillStyle = 'rgba(255,215,0,0.15)';
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y + TILE_H * zm / 2);
+  ctx.lineTo(p.x + TILE_W * zm / 2, p.y);
+  ctx.lineTo(p.x + TILE_W * zm, p.y + TILE_H * zm / 2);
+  ctx.lineTo(p.x + TILE_W * zm / 2, p.y + TILE_H * zm);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,215,0,0.5)'; ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+function renderFrame() {
+  if (!canvas || !ctx || !roomData) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background
+  ctx.fillStyle = '#0a0a1a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  drawBackground(ctx, roomData, zoom);
+
+  // Floor
+  drawFloorTiles(ctx, roomData, zoom);
+
+  // Collect renderables
+  const renderables = [];
+
+  // Furniture
+  roomData.furniture.forEach((f, i) => {
+    renderables.push({
+      type: 'furniture', key: f.x + f.y * roomData.w,
+      draw: () => drawFurnitureItem(ctx, f, roomData, zoom)
+    });
   });
 
-  sorted.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'inv-slot' + (item.equipped ? ' equipped' : '');
-    div.innerHTML = `<img src="${getAssetPath(item.icon)}" onerror="this.style.display='none'" title="${item.name}">`;
-    if (item.equipped) div.innerHTML += '<span class="equip-badge">&#10003;</span>';
-    div.title = item.name + (item.equipped ? ' (Equipped)' : ' - Click to equip');
-    div.onclick = () => {
-      if (item.equipped) inventory.unequip(item.id);
-      else inventory.equip(item.id);
-      renderInventoryPanel();
+  // Peer players
+  Object.entries(peerPositions).forEach(([id, pp]) => {
+    if (pp.room !== currentRoom) return;
+    renderables.push({
+      type: 'peer', key: pp.x + pp.y * roomData.w + 0.1,
+      draw: () => {
+        const popts = figureToOptions(pp.figure || 'hr-1-8B4513.hd-1-1.ch-1-4169E1.lg-1-1');
+        drawAvatar(ctx, pp.x, pp.y, pp.dir || 's', popts, zoom, pp.moving, pp.walkFrame || 0);
+        if (peerChats[id] && peerChats[id].timer > 0) {
+          drawChatBubble(ctx, peerChats[id].msg, pp.x, pp.y, zoom);
+        }
+      }
+    });
+  });
+
+  // Local player
+  renderables.push({
+    type: 'player', key: player.x + player.y * roomData.w + 0.2,
+    draw: () => {
+      const popts = figureToOptions(session ? session.figure : charOpts);
+      drawAvatar(ctx, player.x, player.y, player.dir, popts, zoom, player.moving, player.walkFrame);
+      if (player.chatTimer > 0) {
+        drawChatBubble(ctx, player.chat, player.x, player.y, zoom);
+      }
+    }
+  });
+
+  // Sort by key and draw
+  renderables.sort((a, b) => a.key - b.key);
+  renderables.forEach(r => r.draw());
+
+  // Hover tile
+  drawHoverTile(ctx, zoom);
+
+  // Minimap
+  drawMinimap();
+}
+
+function drawMinimap() {
+  const mc = document.getElementById('minimap');
+  if (!mc || mc.style.display === 'none') return;
+  const mctx = mc.getContext('2d');
+  mctx.clearRect(0, 0, mc.width, mc.height);
+  if (!roomData) return;
+  const mw = mc.width, mh = mc.height;
+  const cellW = mw / roomData.w;
+  const cellH = mh / roomData.h;
+  for (let y = 0; y < roomData.h; y++) {
+    for (let x = 0; x < roomData.w; x++) {
+      mctx.fillStyle = (x + y) % 2 === 0 ? '#3a2a1a' : '#4a3a2a';
+      mctx.fillRect(x * cellW, y * cellH, cellW, cellH);
+    }
+  }
+  // Furniture dots
+  roomData.furniture.forEach(f => {
+    mctx.fillStyle = '#FFD700';
+    mctx.fillRect(f.x * cellW + 2, f.y * cellH + 2, cellW - 4, cellH - 4);
+  });
+  // Player
+  mctx.fillStyle = '#00ff00';
+  mctx.beginPath();
+  mctx.arc(player.x * cellW + cellW/2, player.y * cellH + cellH/2, 3, 0, Math.PI*2);
+  mctx.fill();
+  // Peers
+  Object.values(peerPositions).forEach(pp => {
+    if (pp.room !== currentRoom) return;
+    mctx.fillStyle = '#00BFFF';
+    mctx.beginPath();
+    mctx.arc(pp.x * cellW + cellW/2, pp.y * cellH + cellH/2, 3, 0, Math.PI*2);
+    mctx.fill();
+  });
+}
+
+// ======================= GAME LOOP =======================
+function gameLoop(time) {
+  if (!gameRunning) return;
+  const dt = time - lastTime;
+  lastTime = time;
+
+  // Player movement
+  if (player.moving) {
+    walkTick += dt;
+    if (walkTick > 250) {
+      walkTick = 0;
+      player.walkFrame++;
+      playStep();
+      const dx = Math.sign(player.tx - player.x);
+      const dy = Math.sign(player.ty - player.y);
+      if (dx !== 0 || dy !== 0) {
+        player.x += dx;
+        player.y += dy;
+        player.dir = dx > 0 ? 'e' : dx < 0 ? 'w' : dy > 0 ? 's' : 'n';
+        if (player.x === player.tx && player.y === player.ty) {
+          player.moving = false;
+        }
+      } else {
+        player.moving = false;
+      }
+      // Send position to peers
+      if (rtcChannel && rtcChannel.readyState === 'open') {
+        rtcChannel.send(JSON.stringify({
+          type: 'pos', x: player.x, y: player.y,
+          dir: player.dir, room: currentRoom,
+          moving: player.moving, walkFrame: player.walkFrame,
+          figure: session ? session.figure : charOpts
+        }));
+      }
+    }
+  }
+
+  // Chat timer
+  if (player.chatTimer > 0) {
+    player.chatTimer -= dt;
+    if (player.chatTimer <= 0) player.chat = '';
+  }
+
+  // Peer chat timers
+  Object.values(peerChats).forEach(pc => { if (pc.timer > 0) pc.timer -= dt; });
+
+  // Camera follow player smoothly
+  const targetCamX = player.x * TILE_W * 0.5;
+  const targetCamY = player.y * TILE_H * 0.5;
+  camX += (targetCamX - camX) * 0.05;
+  camY += (targetCamY - camY) * 0.05;
+
+  renderFrame();
+  requestAnimationFrame(gameLoop);
+}
+
+// ======================= INPUT HANDLING =======================
+function setupInput() {
+  window.addEventListener('keydown', e => {
+    keys[e.key] = true;
+    if (e.key === 'Enter') {
+      const ci = document.getElementById('chatInput');
+      if (ci && document.activeElement !== ci) {
+        ci.focus();
+        e.preventDefault();
+      } else if (ci && document.activeElement === ci && ci.value.trim()) {
+        sendChat();
+        ci.blur();
+      }
+    }
+    if (e.key === 'Escape') {
+      closeAllPanels();
+    }
+    if (currentRoom === 'myroom') {
+      if (e.key.toLowerCase() === 'r' && editorSelectedFurniture) {
+        editorSelectedFurniture.rot = (editorSelectedFurniture.rot || 0) + 1;
+        playClick();
+      }
+      if ((e.key === 'Delete' || e.key === 'Backspace') && editorSelectedFurniture) {
+        const idx = roomData.furniture.indexOf(editorSelectedFurniture);
+        if (idx >= 0) {
+          const f = roomData.furniture.splice(idx, 1)[0];
+          // Return to inventory
+          const invItem = {
+            id: 'furn_' + f.type + '_' + Date.now(),
+            name: f.type.charAt(0).toUpperCase() + f.type.slice(1),
+            type: 'furniture', icon: 'furniture/' + f.type,
+            category: 'furniture', credits: 0, duckets: 0
+          };
+          if (session) {
+            session.inventory.push(invItem);
+            saveSession(session);
+            updateInventoryUI();
+          }
+          editorSelectedFurniture = null;
+          playRemove();
+        }
+      }
+    }
+  });
+  window.addEventListener('keyup', e => { keys[e.key] = false; });
+
+  canvas = document.getElementById('gameCanvas');
+  ctx = canvas.getContext('2d');
+
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
+    hoverTile = screenToTile(mouseX, mouseY, camX, camY, zoom);
+  });
+
+  canvas.addEventListener('mousedown', e => {
+    if (!roomData) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const t = screenToTile(mx, my, camX, camY, zoom);
+
+    if (currentRoom === 'myroom') {
+      handleEditorClick(t, mx, my);
+    } else {
+      // Walk to clicked tile
+      if (t.x >= 0 && t.y >= 0 && t.x < roomData.w && t.y < roomData.h) {
+        player.tx = Math.max(0, Math.min(roomData.w - 1, t.x));
+        player.ty = Math.max(0, Math.min(roomData.h - 1, t.y));
+        player.moving = true;
+      }
+    }
+  });
+
+  canvas.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    showContextMenu(e.clientX, e.clientY);
+  });
+
+  window.addEventListener('resize', resizeCanvas);
+}
+
+function resizeCanvas() {
+  const c = document.getElementById('gameCanvas');
+  if (c) {
+    c.width = window.innerWidth;
+    c.height = window.innerHeight;
+  }
+  const ec = document.getElementById('editorCanvas');
+  if (ec) {
+    ec.width = ec.parentElement.clientWidth || 540;
+    ec.height = ec.parentElement.clientHeight || 380;
+  }
+}
+
+function handleEditorClick(t, mx, my) {
+  if (editorTool === 'place' && editorSelectedItem) {
+    if (t.x >= 0 && t.y >= 0 && t.x < roomData.w && t.y < roomData.h) {
+      const furnType = editorSelectedItem.replace('furniture/', '');
+      roomData.furniture.push({type: furnType, x: t.x, y: t.y});
+      // Remove from inventory
+      if (session) {
+        const idx = session.inventory.findIndex(i => i.icon === editorSelectedItem);
+        if (idx >= 0) session.inventory.splice(idx, 1);
+        saveSession(session);
+        updateInventoryUI();
+        updateEditorInvGrid();
+      }
+      playPlace();
+    }
+  } else if (editorTool === 'move') {
+    // Select furniture under cursor
+    const clicked = findFurnitureAt(t.x, t.y);
+    if (clicked) {
+      editorSelectedFurniture = clicked;
+      editorDragging = true;
+      playClick();
+    }
+  } else if (editorTool === 'delete') {
+    const clicked = findFurnitureAt(t.x, t.y);
+    if (clicked) {
+      const idx = roomData.furniture.indexOf(clicked);
+      if (idx >= 0) {
+        const f = roomData.furniture.splice(idx, 1)[0];
+        if (session) {
+          session.inventory.push({
+            id: 'furn_' + f.type + '_' + Date.now(),
+            name: f.type.charAt(0).toUpperCase() + f.type.slice(1),
+            type: 'furniture', icon: 'furniture/' + f.type,
+            category: 'furniture', credits: 0, duckets: 0
+          });
+          saveSession(session);
+          updateInventoryUI();
+          updateEditorInvGrid();
+        }
+        editorSelectedFurniture = null;
+        playRemove();
+      }
+    }
+  } else if (editorTool === 'floor') {
+    roomData.floor = editorFloorType;
+    playClick();
+  } else if (editorTool === 'wall') {
+    roomData.wall = editorWallType;
+    playClick();
+  }
+}
+
+function findFurnitureAt(tx, ty) {
+  if (!roomData) return null;
+  // Check in reverse order (topmost first)
+  for (let i = roomData.furniture.length - 1; i >= 0; i--) {
+    const f = roomData.furniture[i];
+    if (f.x === tx && f.y === ty) return f;
+  }
+  return null;
+}
+
+function closeAllPanels() {
+  ['catalogPanel','inventoryPanel','roomEditorPanel','multiplayerPanel','tradePanel','settingsPanel','friendsPanel','roomNav'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  hideModal();
+}
+
+function showContextMenu(x, y) {
+  const cm = document.getElementById('contextMenu');
+  if (!cm) return;
+  cm.style.left = x + 'px';
+  cm.style.top = y + 'px';
+  cm.style.display = 'block';
+}
+function hideContextMenu() {
+  const cm = document.getElementById('contextMenu');
+  if (cm) cm.style.display = 'none';
+}
+function ctxWalkHere() {
+  if (hoverTile) {
+    player.tx = Math.max(0, Math.min(roomData.w - 1, hoverTile.x));
+    player.ty = Math.max(0, Math.min(roomData.h - 1, hoverTile.y));
+    player.moving = true;
+  }
+  hideContextMenu();
+}
+function ctxInteract() { hideContextMenu(); }
+function ctxTrade() { toggleTrade(); hideContextMenu(); }
+function ctxFriend() { hideContextMenu(); toast('Friend request sent!'); }
+function ctxCancel() { hideContextMenu(); }
+
+// ======================= TOAST =======================
+function toast(msg) {
+  const tc = document.getElementById('toastContainer');
+  if (!tc) return;
+  const div = document.createElement('div');
+  div.className = 'toast';
+  div.textContent = msg;
+  tc.appendChild(div);
+  setTimeout(() => { if (div.parentNode) div.parentNode.removeChild(div); }, 3000);
+}
+
+// ======================= HUD =======================
+function updateHUD() {
+  if (!session) return;
+  const nameEl = document.getElementById('hudUsername');
+  const credEl = document.getElementById('hudCredits');
+  const duckEl = document.getElementById('hudDuckets');
+  const catCred = document.getElementById('catCredits');
+  const catDuck = document.getElementById('catDuckets');
+  if (nameEl) nameEl.textContent = session.name;
+  if (credEl) credEl.textContent = session.credits;
+  if (duckEl) duckEl.textContent = session.duckets;
+  if (catCred) catCred.textContent = session.credits;
+  if (catDuck) catDuck.textContent = session.duckets;
+}
+
+function toggleRoomNav() {
+  const el = document.getElementById('roomNav');
+  if (!el) return;
+  const showing = el.style.display === 'block';
+  el.style.display = showing ? 'none' : 'block';
+  if (!showing) buildRoomNav();
+}
+
+function buildRoomNav() {
+  const el = document.getElementById('roomNavList');
+  if (!el) return;
+  el.innerHTML = '';
+  Object.entries(PUBLIC_ROOMS).forEach(([id, rd]) => {
+    const link = document.createElement('div');
+    link.className = 'room-link';
+    link.textContent = rd.name;
+    link.onclick = () => {
+      loadRoom(id);
+      toggleRoomNav();
     };
+    el.appendChild(link);
+  });
+  const myLink = document.createElement('div');
+  myLink.className = 'room-link';
+  myLink.textContent = "My Room";
+  myLink.onclick = () => { loadRoom('myroom'); toggleRoomNav(); };
+  el.appendChild(myLink);
+}
+
+function openFriends() {
+  const el = document.getElementById('friendsPanel');
+  if (!el) return;
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+  const list = document.getElementById('friendsList');
+  if (list) {
+    list.innerHTML = '';
+    Object.keys(peerPositions).forEach(id => {
+      const item = document.createElement('div');
+      item.className = 'friend-item';
+      item.innerHTML = '<span class="friend-online">&#9679;</span> Friend ' + id.slice(0,6);
+      list.appendChild(item);
+    });
+    if (Object.keys(peerPositions).length === 0) {
+      list.innerHTML = '<div class="friend-item" style="color:#555;">No friends online</div>';
+    }
+  }
+}
+
+// ======================= CATALOG =======================
+let catalogCategory = 'furniture';
+
+function toggleCatalog() {
+  const el = document.getElementById('catalogPanel');
+  if (!el) return;
+  const showing = el.style.display === 'flex';
+  closeAllPanels();
+  if (!showing) {
+    el.style.display = 'flex';
+    buildCatalogTabs();
+    buildCatalogGrid();
+    updateHUD();
+  }
+}
+
+function buildCatalogTabs() {
+  const el = document.getElementById('catalogTabs');
+  if (!el) return;
+  const cats = ['furniture','clothing','accessories','rare'];
+  el.innerHTML = '';
+  cats.forEach(cat => {
+    const tab = document.createElement('div');
+    tab.className = 'cat-tab' + (cat === catalogCategory ? ' active' : '');
+    tab.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+    tab.onclick = () => { catalogCategory = cat; buildCatalogTabs(); buildCatalogGrid(); };
+    el.appendChild(tab);
+  });
+}
+
+function buildCatalogGrid() {
+  const el = document.getElementById('catalogBody');
+  if (!el) return;
+  el.innerHTML = '<div class="catalog-grid" id="catalogGrid"></div>';
+  const grid = document.getElementById('catalogGrid');
+  const items = CATALOG.filter(i => i.category === catalogCategory);
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'cat-item';
+    div.innerHTML = `
+      <img src="${ASSETS[item.icon] || ''}" alt="${item.name}" onerror="this.style.display='none'">
+      <div class="name">${item.name}</div>
+      <div class="price">${item.credits > 0 ? item.credits + ' C' : ''}${item.duckets > 0 ? ' ' + item.duckets + ' D' : ''}</div>
+    `;
+    div.onclick = () => purchaseItem(item);
     grid.appendChild(div);
   });
 }
 
-function renderFriendsPanel() {
-  const body = document.getElementById('panelBody');
-  let html = '<ul class="friends-list">';
-  friends.forEach(f => {
-    html += `<li onclick="interactFriend('${f.name}')">
-      <span class="friend-status ${f.online ? 'online' : 'offline'}"></span>
-      <span class="friend-name">${f.name}</span>
-      ${f.online ? '<span class="friend-action">Trade</span>' : ''}
-    </li>`;
-  });
-  html += '</ul>';
-  body.innerHTML = html;
-}
-
-function renderPlayerList() {
-  const list = document.getElementById('playerList');
-  let html = '<div class="panel-header"><span>Players</span></div>';
-  html += '<div class="panel-body">';
-  // Local player
-  html += `<div class="player-list-item"><span class="pl-name" style="color:#FFD700;">${player.name} (You)</span></div>`;
-  // AI players
-  roomPlayers.forEach(p => {
-    html += `<div class="player-list-item" onclick="interactPlayer('${p.name}')">
-      <span class="pl-name">${p.name}</span>
-    </div>`;
-  });
-  html += '</div>';
-  list.innerHTML = html;
-}
-
-function renderSettingsPanel() {
-  const body = document.getElementById('panelBody');
-  body.innerHTML = `
-    <div class="settings-row">
-      <span>Sound Effects</span>
-      <div class="toggle-switch ${settings.sfx ? 'active' : ''}" onclick="toggleSetting('sfx')"></div>
-    </div>
-    <div class="settings-row">
-      <span>Music</span>
-      <div class="toggle-switch ${settings.music ? 'active' : ''}" onclick="toggleSetting('music')"></div>
-    </div>
-    <div class="settings-row">
-      <span>Show Name Tags</span>
-      <div class="toggle-switch ${settings.showNames ? 'active' : ''}" onclick="toggleSetting('showNames')"></div>
-    </div>
-    <div class="settings-row">
-      <span>Chat Bubbles</span>
-      <div class="toggle-switch ${settings.chatBubbles ? 'active' : ''}" onclick="toggleSetting('chatBubbles')"></div>
-    </div>
-    <div class="char-actions" style="margin-top:15px;">
-      <button class="btn btn-red btn-small" style="width:100%;" onclick="localStorage.clear();addSystemMsg('Data cleared.');">Clear Data</button>
-    </div>
-  `;
-}
-
-function renderHelpPanel() {
-  const body = document.getElementById('panelBody');
-  body.innerHTML = `
-    <div style="font-size:12px;line-height:1.7;">
-      <p style="color:var(--gold);margin-bottom:8px;"><strong>Controls</strong></p>
-      <p><strong>Move:</strong> Arrow Keys / WASD / Click tile</p>
-      <p><strong>Zoom:</strong> Mouse Wheel / +/- buttons</p>
-      <p><strong>Pan:</strong> Drag with mouse</p>
-      <p><strong>Chat:</strong> Press Enter, type, Enter to send</p>
-      <p><strong>Exit:</strong> Walk to edge tiles with arrows</p>
-      <p style="color:var(--gold);margin:12px 0 8px;"><strong>Rooms</strong></p>
-      <p>Main Hall - Central hub</p>
-      <p>Garden - East of Main Hall</p>
-      <p>Library - North of Main Hall</p>
-      <p>Tavern - South of Main Hall</p>
-      <p style="color:var(--gold);margin:12px 0 8px;"><strong>Tips</strong></p>
-      <p>Click other players to trade.</p>
-      <p>Use Inventory to equip items.</p>
-      <p>Mobile: use on-screen D-pad.</p>
-    </div>
-  `;
-}
-
-function toggleSetting(key) {
-  settings[key] = !settings[key];
-  renderSettingsPanel();
-}
-
-function interactFriend(name) {
-  trade.start(name);
-}
-
-function interactPlayer(name) {
-  trade.start(name);
-}
-
-// ===================================================================
-// TRADE PANEL UI
-// ===================================================================
-function showTradePanel() {
-  document.getElementById('tradePanel').style.display = 'block';
-  document.getElementById('tradePartnerName').textContent = trade.partner;
-  closeSidePanel();
-  renderTradePanel();
-  playSfx('trade');
-}
-
-function hideTradePanel() {
-  document.getElementById('tradePanel').style.display = 'none';
-}
-
-function renderTradePanel() {
-  if (!trade.active) return;
-
-  // My offers
-  const myGrid = document.getElementById('myOfferGrid');
-  myGrid.innerHTML = '';
-  if (trade.myOffers.length === 0) {
-    myGrid.innerHTML = '<div style="grid-column:1/-1;color:#666;font-size:11px;text-align:center;padding:8px;">Empty</div>';
-  }
-  trade.myOffers.forEach(id => {
-    const item = inventory.items.find(i => i.id === id);
-    if (!item) return;
-    const div = document.createElement('div');
-    div.className = 'offer-item';
-    div.innerHTML = `<img src="${getAssetPath(item.icon)}" onerror="this.style.display='none'" title="${item.name}">`;
-    div.title = item.name + ' - Click to remove';
-    if (!trade.myConfirmed) {
-      div.onclick = () => trade.removeOffer(id);
-    }
-    myGrid.appendChild(div);
-  });
-
-  // Add inventory items that can be offered
-  const offerable = inventory.items.filter(i => !trade.myOffers.includes(i.id) && !i.equipped);
-  offerable.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'offer-item';
-    div.style.opacity = '0.5';
-    div.innerHTML = `<img src="${getAssetPath(item.icon)}" onerror="this.style.display='none'" title="${item.name}">`;
-    div.title = item.name + ' - Click to offer';
-    div.onclick = () => trade.offerItem(item.id);
-    myGrid.appendChild(div);
-  });
-
-  // Their offers (simulated)
-  const theirGrid = document.getElementById('theirOfferGrid');
-  theirGrid.innerHTML = '';
-  if (trade.theirOffers.length === 0) {
-    theirGrid.innerHTML = '<div style="grid-column:1/-1;color:#666;font-size:11px;text-align:center;padding:8px;">Waiting...</div>';
-  }
-
-  // Trade status
-  const statusEl = document.getElementById('tradeStatus');
-  const confirmBtn = document.getElementById('tradeConfirmBtn');
-  if (trade.myConfirmed && trade.theyConfirmed) {
-    statusEl.textContent = 'Trade complete!';
-    statusEl.className = 'trade-status confirmed';
-    confirmBtn.style.display = 'none';
-  } else if (trade.myConfirmed) {
-    statusEl.textContent = 'Waiting for ' + trade.partner + '...';
-    statusEl.className = 'trade-status';
-    confirmBtn.style.display = 'inline-block';
-  } else {
-    statusEl.textContent = 'Offer items, then click CONFIRM';
-    statusEl.className = 'trade-status';
-    confirmBtn.style.display = 'inline-block';
-  }
-}
-
-function completeTrade() {
-  if (!trade.active) return;
-  trade.myOffers.forEach(id => {
-    const item = inventory.items.find(i => i.id === id);
-    if (item) addSystemMsg('Traded: ' + item.name);
-  });
-  addSystemMsg('Trade with ' + trade.partner + ' complete!');
-  playSfx('confirm');
-  setTimeout(() => { trade.active = false; hideTradePanel(); }, 1500);
-}
-
-// ===================================================================
-// AVATAR LOOK
-// ===================================================================
-function updateAvatarLook() {
-  // Avatar look is cosmetic - sprite stays as idle/walk
-  // This function syncs inventory selections to player state
-  const equippedHair = inventory.items.find(i => i.type === 'hair' && i.equipped);
-  const equippedOutfit = inventory.items.find(i => i.type === 'clothing' && i.equipped);
-  const equippedAcc = inventory.items.find(i => i.type === 'accessory' && i.equipped);
-  player.hair = equippedHair ? equippedHair.id : null;
-  player.outfit = equippedOutfit ? equippedOutfit.id : null;
-  player.accessory = equippedAcc ? equippedAcc.id : null;
-}
-
-// ===================================================================
-// AI PLAYERS
-// ===================================================================
-function spawnRoomPlayers(roomId) {
-  roomPlayers = [];
-  const room = ROOMS[roomId];
-  if (!room) return;
-
-  const names = AI_NAMES.filter(n => n !== player.name);
-  const count = Math.min(4, names.length);
-
-  for (let i = 0; i < count; i++) {
-    let tx, ty;
-    let attempts = 0;
-    do {
-      tx = Math.floor(Math.random() * room.w);
-      ty = Math.floor(Math.random() * room.h);
-      attempts++;
-    } while (attempts < 20 && (tx === player.tx && ty === player.ty));
-
-    roomPlayers.push({
-      name: names[i],
-      tx: tx, ty: ty,
-      x: tx, y: ty,
-      facing: ['n','s','e','w'][Math.floor(Math.random() * 4)],
-      moving: false,
-      walkFrame: 0,
-      walkTimer: 0,
-      targetTx: null, targetTy: null,
-      moveTimer: Math.random() * 3000,
-      chatTimer: Math.random() * 15000 + 10000,
-      sprite: 'avatar/idle_s'
-    });
-  }
-}
-
-function updateAIPlayers(dt) {
-  const room = ROOMS[currentRoom];
-  if (!room) return;
-
-  roomPlayers.forEach(p => {
-    // Random movement
-    p.moveTimer -= dt;
-    if (p.moveTimer <= 0 && !p.moving) {
-      p.moveTimer = Math.random() * 4000 + 2000;
-      const dirs = [[0,-1],[0,1],[-1,0],[1,0]];
-      const dir = dirs[Math.floor(Math.random() * dirs.length)];
-      const nx = p.tx + dir[0];
-      const ny = p.ty + dir[1];
-      if (nx >= 0 && nx < room.w && ny >= 0 && ny < room.h) {
-        p.targetTx = nx;
-        p.targetTy = ny;
-        p.moving = true;
-        if (dir[1] > 0) p.facing = 's';
-        else if (dir[1] < 0) p.facing = 'n';
-        else if (dir[0] > 0) p.facing = 'e';
-        else p.facing = 'w';
-      }
-    }
-
-    // Move toward target
-    if (p.moving && p.targetTx !== null && p.targetTy !== null) {
-      const dx = p.targetTx - p.x;
-      const dy = p.targetTy - p.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      const speed = 2.5 * dt / 16;
-      if (dist < speed) {
-        p.x = p.targetTx;
-        p.y = p.targetTy;
-        p.tx = Math.round(p.x);
-        p.ty = Math.round(p.y);
-        p.moving = false;
-        p.targetTx = null;
-        p.targetTy = null;
-        p.sprite = 'avatar/idle_' + p.facing;
-      } else {
-        p.x += (dx / dist) * speed;
-        p.y += (dy / dist) * speed;
-        p.walkTimer += dt;
-        p.sprite = 'avatar/walk' + (Math.floor(p.walkTimer / WALK_FRAME_TIME) % 2 + 1) + '_s';
-      }
-    }
-
-    // Random chat
-    p.chatTimer -= dt;
-    if (p.chatTimer <= 0) {
-      p.chatTimer = Math.random() * 15000 + 12000;
-      const msg = AI_CHAT[Math.floor(Math.random() * AI_CHAT.length)];
-      addChatBubble(p, msg);
-    }
-  });
-}
-
-// ===================================================================
-// CHAT SYSTEM
-// ===================================================================
-function handleChatKey(e) {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    sendChat();
-  }
-}
-
-function sendChat() {
-  const input = document.getElementById('chatInput');
-  const text = input.value.trim();
-  if (!text) return;
-  input.value = '';
-
-  // Slash commands
-  if (text.startsWith('/')) {
-    handleCommand(text);
+function purchaseItem(item) {
+  if (!session) { toast('Login required'); return; }
+  if (session.credits < item.credits || session.duckets < item.duckets) {
+    playError();
+    toast('Not enough currency!');
     return;
   }
-
-  addChatLog(player.name, text, 'msg-player');
-  addChatBubble(player, text);
-  playSfx('chat');
-}
-
-function handleCommand(cmd) {
-  const parts = cmd.split(' ');
-  switch(parts[0]) {
-    case '/help':
-      addSystemMsg('Commands: /help, /clear, /whisper <name> <msg>, /dance, /wave');
-      break;
-    case '/clear':
-      chatMessages = [];
-      document.getElementById('chatLog').innerHTML = '';
-      break;
-    case '/whisper':
-      if (parts.length >= 3) {
-        const target = parts[1];
-        const msg = parts.slice(2).join(' ');
-        addSystemMsg('To ' + target + ': ' + msg);
-      } else {
-        addSystemMsg('Usage: /whisper <name> <message>');
-      }
-      break;
-    case '/dance':
-      addSystemMsg(player.name + ' starts dancing!');
-      break;
-    case '/wave':
-      addSystemMsg(player.name + ' waves!');
-      break;
-    default:
-      addSystemMsg('Unknown command: ' + parts[0]);
-  }
-}
-
-function addChatLog(name, text, cls) {
-  const log = document.getElementById('chatLog');
-  const div = document.createElement('div');
-  div.className = cls;
-  div.innerHTML = `<strong>${name}:</strong> ${text}`;
-  log.appendChild(div);
-  log.scrollTop = log.scrollHeight;
-  // Limit history
-  while (log.children.length > 50) log.removeChild(log.firstChild);
-}
-
-function addSystemMsg(text) {
-  const log = document.getElementById('chatLog');
-  const div = document.createElement('div');
-  div.className = 'msg-system';
-  div.textContent = text;
-  log.appendChild(div);
-  log.scrollTop = log.scrollHeight;
-  while (log.children.length > 50) log.removeChild(log.firstChild);
-}
-
-function addChatBubble(who, text) {
-  if (!settings.chatBubbles) return;
-  const bubble = {
-    who: who,
-    text: text,
-    timer: 4000,
-    id: Date.now() + Math.random()
+  session.credits -= item.credits;
+  session.duckets -= item.duckets;
+  const invItem = {
+    id: item.id + '_' + Date.now(),
+    name: item.name, type: item.type, icon: item.icon,
+    category: item.category, credits: item.credits, duckets: item.duckets,
+    equipped: false
   };
-  chatBubbles.push(bubble);
+  session.inventory.push(invItem);
+  saveSession(session);
+  updateHUD();
+  purchaseChime();
+  toast('Purchased: ' + item.name);
 }
 
-function updateChatBubbles(dt) {
-  for (let i = chatBubbles.length - 1; i >= 0; i--) {
-    chatBubbles[i].timer -= dt;
-    if (chatBubbles[i].timer <= 0) {
-      chatBubbles.splice(i, 1);
-    }
+// ======================= INVENTORY =======================
+let invFilter = 'all';
+
+function toggleInventory() {
+  const el = document.getElementById('inventoryPanel');
+  if (!el) return;
+  const showing = el.style.display === 'flex';
+  closeAllPanels();
+  if (!showing) {
+    el.style.display = 'flex';
+    buildInvFilters();
+    updateInventoryUI();
   }
 }
 
-// ===================================================================
-// RENDERING
-// ===================================================================
-function drawFloorTile(ctx, tx, ty, floorType, room, z) {
-  const pos = tileToScreen(tx, ty, camera.x, camera.y, z);
-  const img = IMAGES['tiles/' + floorType];
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(pos.x, pos.y - TILE_H/2 * z);
-  ctx.lineTo(pos.x + TILE_W/2 * z, pos.y);
-  ctx.lineTo(pos.x, pos.y + TILE_H/2 * z);
-  ctx.lineTo(pos.x - TILE_W/2 * z, pos.y);
-  ctx.closePath();
-  ctx.clip();
-
-  if (img) {
-    ctx.drawImage(img, pos.x - TILE_W/2 * z, pos.y - TILE_H/2 * z, TILE_W * z, TILE_H * z);
-  } else {
-    ctx.fillStyle = '#5a4a3a';
-    ctx.fill();
-  }
-  ctx.restore();
-
-  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-  ctx.lineWidth = 0.5;
-  ctx.stroke();
-}
-
-function drawWallSegment(ctx, img, x, y, z, facing) {
-  const w = TILE_W * z;
-  const h = TILE_H * 2 * z;
-  if (img) {
-    ctx.drawImage(img, x - w/2, y - h, w, h);
-  } else {
-    ctx.fillStyle = '#3a3028';
-    ctx.fillRect(x - w/2, y - h, w, h);
-  }
-}
-
-function drawWalls(ctx, room, z) {
-  for (let x = 0; x < room.w; x++) {
-    for (let y = 0; y < room.h; y++) {
-      const pos = tileToScreen(x, y, camera.x, camera.y, z);
-      const wallImg = IMAGES['tiles/' + room.wall];
-
-      if (y === 0) {
-        drawWallSegment(ctx, wallImg, pos.x, pos.y - TILE_H/2 * z, z, 'n');
-      }
-      if (x === 0) {
-        drawWallSegment(ctx, wallImg, pos.x - TILE_W/2 * z, pos.y, z, 'w');
-      }
-    }
-  }
-}
-
-function drawFurniture(ctx, furn, screenX, screenY, z) {
-  const img = IMAGES['furniture/' + furn.type];
-  if (!img) return;
-
-  const baseW = TILE_W * 1.5 * z * FURN_SCALE;
-  const baseH = TILE_H * 2.5 * z * FURN_SCALE;
-  const x = screenX - baseW/2 + (furn.offX || 0) * z;
-  const y = screenY - baseH + TILE_H * z + (furn.offY || 0) * z;
-
-  ctx.drawImage(img, x, y, baseW, baseH);
-}
-
-function drawAvatar(ctx, who, screenX, screenY, z) {
-  const spriteKey = who.sprite || 'avatar/idle_s';
-  const img = IMAGES[spriteKey];
-  if (!img) return;
-
-  const w = AVATAR_W * z;
-  const h = AVATAR_H * z;
-  const x = screenX - w/2;
-  const y = screenY + AVATAR_OFFSET_Y * z;
-
-  ctx.drawImage(img, x, y, w, h);
-
-  // Name tag
-  if (settings.showNames) {
-    ctx.font = `bold ${Math.round(11 * z)}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillStyle = who.isLocal ? '#FFD700' : '#aaa';
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.strokeText(who.name, screenX, y - 5 * z);
-    ctx.fillText(who.name, screenX, y - 5 * z);
-  }
-}
-
-function drawExits(ctx, room, z) {
-  const exitPositions = [];
-  if (room.exits.east)  exitPositions.push({x: room.w-1, y: Math.floor(room.h/2), label: '\u2192 ' + ROOMS[room.exits.east.room].name});
-  if (room.exits.west)  exitPositions.push({x: 0, y: Math.floor(room.h/2), label: '\u2190 ' + ROOMS[room.exits.west.room].name});
-  if (room.exits.north) exitPositions.push({x: Math.floor(room.w/2), y: 0, label: '\u2191 ' + ROOMS[room.exits.north.room].name});
-  if (room.exits.south) exitPositions.push({x: Math.floor(room.w/2), y: room.h-1, label: '\u2193 ' + ROOMS[room.exits.south.room].name});
-
-  for (const ep of exitPositions) {
-    const pos = tileToScreen(ep.x, ep.y, camera.x, camera.y, z);
-    ctx.font = `bold ${Math.round(10 * z)}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#FFD700';
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.strokeText(ep.label, pos.x, pos.y + TILE_H * z);
-    ctx.fillText(ep.label, pos.x, pos.y + TILE_H * z);
-
-    // Exit glow
-    ctx.beginPath();
-    ctx.moveTo(pos.x, pos.y - TILE_H/2 * z);
-    ctx.lineTo(pos.x + TILE_W/2 * z, pos.y);
-    ctx.lineTo(pos.x, pos.y + TILE_H/2 * z);
-    ctx.lineTo(pos.x - TILE_W/2 * z, pos.y);
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(255, 215, 0, 0.12)';
-    ctx.fill();
-  }
-}
-
-function drawChatBubblesDOM(z) {
-  // Remove old bubbles
-  const oldBubbles = document.querySelectorAll('.chat-bubble');
-  oldBubbles.forEach(b => b.remove());
-
-  if (!settings.chatBubbles) return;
-
-  const room = ROOMS[currentRoom];
-  if (!room) return;
-
-  chatBubbles.forEach(b => {
-    const who = b.who;
-    if (!who) return;
-    const pos = tileToScreen(who.x, who.y, camera.x, camera.y, z);
-    const el = document.createElement('div');
-    el.className = 'chat-bubble';
-    el.textContent = b.text;
-    el.style.left = pos.x + 'px';
-    el.style.top = pos.y + 'px';
-    const gameScreen = document.getElementById('gameScreen');
-    if (gameScreen) gameScreen.appendChild(el);
+function buildInvFilters() {
+  const el = document.getElementById('invFilters');
+  if (!el) return;
+  const filters = ['all','clothing','accessories','furniture'];
+  el.innerHTML = '';
+  filters.forEach(f => {
+    const btn = document.createElement('div');
+    btn.className = 'inv-filter' + (f === invFilter ? ' active' : '');
+    btn.textContent = f.charAt(0).toUpperCase() + f.slice(1);
+    btn.onclick = () => { invFilter = f; buildInvFilters(); updateInventoryUI(); };
+    el.appendChild(btn);
   });
 }
 
-// ===================================================================
-// MAIN RENDER
-// ===================================================================
-function render() {
-  const room = ROOMS[currentRoom];
-  if (!room) return;
+function updateInventoryUI() {
+  const el = document.getElementById('inventoryBody');
+  if (!el || !session) return;
+  el.innerHTML = '<div class="inv-grid" id="invGrid"></div>';
+  const grid = document.getElementById('invGrid');
+  const items = invFilter === 'all' ? session.inventory : session.inventory.filter(i => {
+    if (invFilter === 'clothing') return i.type === 'clothing' || i.type === 'hair' || i.type === 'face';
+    if (invFilter === 'accessories') return i.type === 'accessory';
+    if (invFilter === 'furniture') return i.type === 'furniture';
+    return true;
+  });
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'inv-item';
+    const equipped = item.equipped ? '<div class="equipped">&#10003;</div>' : '';
+    div.innerHTML = `
+      ${equipped}
+      <img src="${ASSETS[item.icon] || ''}" alt="${item.name}" onerror="this.style.display='none'">
+      <div class="name">${item.name}</div>
+    `;
+    div.onclick = () => toggleEquip(item);
+    grid.appendChild(div);
+  });
+  if (items.length === 0) {
+    grid.innerHTML = '<div style="color:#555; font-size:13px; grid-column:1/-1; text-align:center;">No items</div>';
+  }
+}
 
-  // Background
-  ctx.fillStyle = room.bg || '#1a1520';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+function toggleEquip(item) {
+  if (!session) return;
+  if (item.type === 'furniture') {
+    editorSelectedItem = item.icon;
+    toast('Selected: ' + item.name + ' (go to Room Editor to place)');
+    playClick();
+    return;
+  }
+  if (item.equipped) {
+    item.equipped = false;
+  } else {
+    // Unequip same type
+    session.inventory.forEach(i => {
+      if (i !== item && i.type === item.type) i.equipped = false;
+    });
+    item.equipped = true;
+  }
+  // Rebuild figure
+  const newOpts = { ...charOpts };
+  session.inventory.forEach(i => {
+    if (!i.equipped) return;
+    if (i.type === 'hair') newOpts.hair = i.icon;
+    if (i.type === 'clothing' && i.icon.includes('shirt')) newOpts.shirt = i.icon;
+    if (i.type === 'clothing' && i.icon.includes('dress')) newOpts.shirt = i.icon;
+    if (i.type === 'clothing' && i.icon.includes('legs')) newOpts.legs = i.icon;
+    if (i.type === 'face') newOpts.face = i.icon;
+    if (i.type === 'accessory' && i.icon.includes('beanie')) newOpts.accessory = 'beanie';
+    if (i.type === 'accessory' && i.icon.includes('wizard')) newOpts.accessory = 'wizard';
+    if (i.type === 'accessory' && i.icon.includes('glasses')) newOpts.accessory = 'glasses';
+    if (i.type === 'accessory' && i.icon.includes('wings')) newOpts.accessory = 'wings';
+  });
+  session.figure = optionsToFigure(newOpts);
+  saveSession(session);
+  updateInventoryUI();
+  toast(item.equipped ? 'Equipped: ' + item.name : 'Unequipped: ' + item.name);
+  playClick();
+}
 
-  // Zoom transform
-  ctx.save();
-  ctx.scale(zoom, zoom);
+// ======================= ROOM EDITOR =======================
+function toggleRoomEditor() {
+  const el = document.getElementById('roomEditorPanel');
+  if (!el) return;
+  const showing = el.style.display === 'flex';
+  closeAllPanels();
+  if (!showing) {
+    if (currentRoom !== 'myroom') {
+      toast('Go to My Room first to edit!');
+      loadRoom('myroom');
+    }
+    el.style.display = 'flex';
+    updateEditorInvGrid();
+    resizeCanvas();
+    renderEditorFrame();
+  }
+}
 
-  // Walls (behind floor)
-  drawWalls(ctx, room, 1.0);
+function setEditorTool(tool) {
+  editorTool = tool;
+  playClick();
+  if (tool === 'floor') {
+    const floors = ['floor_wood','floor_carpet','floor_grass','floor_stone','floor_tile','floor_marble'];
+    let idx = floors.indexOf(editorFloorType);
+    editorFloorType = floors[(idx + 1) % floors.length];
+    toast('Floor: ' + editorFloorType.replace('floor_',''));
+  }
+  if (tool === 'wall') {
+    const walls = ['wall_wood','wall_brick','wall_stone'];
+    let idx = walls.indexOf(editorWallType);
+    editorWallType = walls[(idx + 1) % walls.length];
+    toast('Wall: ' + editorWallType.replace('wall_',''));
+  }
+}
 
-  // Sort everything by depth (painter's algorithm)
-  const renderList = [];
+function updateEditorInvGrid() {
+  const el = document.getElementById('editorInvGrid');
+  if (!el || !session) return;
+  el.innerHTML = '';
+  const furn = session.inventory.filter(i => i.type === 'furniture');
+  furn.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'inv-item';
+    div.style.width = '48px'; div.style.height = '48px'; div.style.padding = '2px';
+    div.innerHTML = `<img src="${ASSETS[item.icon] || ''}" style="width:32px;height:32px;" onerror="this.style.display='none'">`;
+    div.onclick = () => {
+      editorSelectedItem = item.icon;
+      editorTool = 'place';
+      playClick();
+      toast('Ready to place: ' + item.name);
+    };
+    el.appendChild(div);
+  });
+  if (furn.length === 0) {
+    el.innerHTML = '<div style="color:#555; font-size:11px;">No furniture</div>';
+  }
+}
 
-  // Floor tiles
-  for (let x = 0; x < room.w; x++) {
-    for (let y = 0; y < room.h; y++) {
-      renderList.push({ type: 'floor', x, y, depth: x + y });
+function saveRoomLayout() {
+  if (!session || !roomData || currentRoom !== 'myroom') return;
+  session.room = JSON.parse(JSON.stringify(roomData));
+  saveSession(session);
+  toast('Room saved!');
+  playPurchaseChime ? playPurchaseChime() : purchaseChime();
+}
+
+function renderEditorFrame() {
+  const ec = document.getElementById('editorCanvas');
+  if (!ec) return;
+  const ectx = ec.getContext('2d');
+  if (!roomData) return;
+  ectx.clearRect(0, 0, ec.width, ec.height);
+  ectx.fillStyle = '#0a0a1a';
+  ectx.fillRect(0, 0, ec.width, ec.height);
+
+  const ecamX = 0, ecamY = 0, ezm = Math.min(ec.width / (roomData.w * TILE_W), ec.height / (roomData.h * TILE_H)) * 1.5;
+  const ecx = ec.width / 2 / ezm + ecamX;
+  const ecy = ec.height / 3 / ezm + ecamY;
+
+  // Floor
+  for (let y = 0; y < roomData.h; y++) {
+    for (let x = 0; x < roomData.w; x++) {
+      const px = ecx + (x - y) * (TILE_W / 2);
+      const py = ecy + (x + y) * (TILE_H / 2);
+      const floorImg = IMAGES['tiles/' + roomData.floor];
+      if (floorImg) {
+        ectx.drawImage(floorImg, px - TILE_W * ezm / 2, py, TILE_W * ezm, TILE_H * ezm);
+      } else {
+        ectx.fillStyle = '#3a2a1a';
+        ectx.beginPath();
+        ectx.moveTo(px, py + TILE_H * ezm / 2);
+        ectx.lineTo(px + TILE_W * ezm / 2, py);
+        ectx.lineTo(px + TILE_W * ezm, py + TILE_H * ezm / 2);
+        ectx.lineTo(px + TILE_W * ezm / 2, py + TILE_H * ezm);
+        ectx.closePath();
+        ectx.fill();
+      }
     }
   }
 
   // Furniture
-  room.furniture.forEach(f => {
-    renderList.push({ type: 'furniture', furn: f, depth: f.x + f.y });
-  });
-
-  // Player
-  renderList.push({ type: 'player', who: player, depth: player.x + player.y + 0.5 });
-
-  // AI players
-  roomPlayers.forEach(p => {
-    renderList.push({ type: 'ai', who: p, depth: p.x + p.y + 0.5 });
-  });
-
-  // Exits
-  if (room.exits) {
-    const exitList = [];
-    if (room.exits.east) exitList.push({x: room.w-1, y: Math.floor(room.h/2), depth: room.w + Math.floor(room.h/2)});
-    if (room.exits.west) exitList.push({x: 0, y: Math.floor(room.h/2), depth: Math.floor(room.h/2)});
-    if (room.exits.north) exitList.push({x: Math.floor(room.w/2), y: 0, depth: Math.floor(room.w/2)});
-    if (room.exits.south) exitList.push({x: Math.floor(room.w/2), y: room.h-1, depth: Math.floor(room.w/2) + room.h - 1});
-    exitList.forEach(e => {
-      renderList.push({ type: 'exit', x: e.x, y: e.y, depth: e.depth + 0.3 });
-    });
-  }
-
-  // Sort by depth
-  renderList.sort((a, b) => a.depth - b.depth);
-
-  // Render
-  renderList.forEach(item => {
-    switch(item.type) {
-      case 'floor':
-        drawFloorTile(ctx, item.x, item.y, room.floor, room, 1.0);
-        break;
-      case 'furniture': {
-        const fpos = tileToScreen(item.furn.x, item.furn.y, camera.x, camera.y, 1.0);
-        drawFurniture(ctx, item.furn, fpos.x, fpos.y, 1.0);
-        break;
-      }
-      case 'player': {
-        const ppos = tileToScreen(player.x, player.y, camera.x, camera.y, 1.0);
-        drawAvatar(ctx, player, ppos.x, ppos.y, 1.0);
-        break;
-      }
-      case 'ai': {
-        const apos = tileToScreen(item.who.x, item.who.y, camera.x, camera.y, 1.0);
-        drawAvatar(ctx, item.who, apos.x, apos.y, 1.0);
-        break;
-      }
-      case 'exit': {
-        const epos = tileToScreen(item.x, item.y, camera.x, camera.y, 1.0);
-        break;
-      }
+  roomData.furniture.forEach(f => {
+    const px = ecx + (f.x - f.y) * (TILE_W / 2);
+    const py = ecy + (f.x + f.y) * (TILE_H / 2);
+    const img = IMAGES['furniture/' + f.type];
+    if (img) {
+      const sc = 0.5 * ezm;
+      const w = (img.width || 64) * sc;
+      const h = (img.height || 64) * sc;
+      ectx.drawImage(img, px - w / 2, py - h + TILE_H * ezm, w, h);
+    }
+    if (editorSelectedFurniture === f) {
+      ectx.strokeStyle = '#FFD700'; ectx.lineWidth = 2;
+      ectx.strokeRect(px - 16, py - 16, 32, 32);
     }
   });
 
-  ctx.restore();
-
-  // Draw exit labels (on top, in screen space)
-  drawExits(ctx, room, zoom);
-
-  // Update chat bubbles
-  drawChatBubblesDOM(zoom);
-}
-
-// ===================================================================
-// PLAYER MOVEMENT
-// ===================================================================
-function movePlayer(dx, dy) {
-  if (player.moving) return;
-  const room = ROOMS[currentRoom];
-  if (!room) return;
-
-  const nx = player.tx + dx;
-  const ny = player.ty + dy;
-
-  // Bounds check
-  if (nx < 0 || nx >= room.w || ny < 0 || ny >= room.h) {
-    // Check for exits
-    checkRoomTransition(player, room);
-    return;
-  }
-
-  // Set target
-  player.targetTx = nx;
-  player.targetTy = ny;
-  player.moving = true;
-
-  // Set facing
-  if (dy > 0) player.facing = 's';
-  else if (dy < 0) player.facing = 'n';
-  else if (dx > 0) player.facing = 'e';
-  else if (dx < 0) player.facing = 'w';
-}
-
-function updatePlayerMovement(dt) {
-  if (!player.moving || player.targetTx === null || player.targetTy === null) return;
-
-  const dx = player.targetTx - player.x;
-  const dy = player.targetTy - player.y;
-  const dist = Math.sqrt(dx * dx + dy * dy);
-  const speed = 3.5 * dt / 16;
-
-  if (dist < speed) {
-    player.x = player.targetTx;
-    player.y = player.targetTy;
-    player.tx = Math.round(player.x);
-    player.ty = Math.round(player.y);
-    player.moving = false;
-    player.targetTx = null;
-    player.targetTy = null;
-    player.sprite = 'avatar/idle_' + player.facing;
-
-    // Check for exit after arriving
-    checkRoomTransition(player, ROOMS[currentRoom]);
-  } else {
-    player.x += (dx / dist) * speed;
-    player.y += (dy / dist) * speed;
-    player.walkTimer += dt;
-    const frame = Math.floor(player.walkTimer / WALK_FRAME_TIME) % 2 + 1;
-    player.sprite = 'avatar/walk' + frame + '_s';
-  }
-}
-
-// ===================================================================
-// ROOM TRANSITIONS (MUST NOT FREEZE)
-// ===================================================================
-function checkRoomTransition(who, room) {
-  if (!room || !room.exits) return;
-
-  for (const [dir, exit] of Object.entries(room.exits)) {
-    let onExit = false;
-    if (dir === 'east'  && who.tx >= room.w - 1) onExit = true;
-    if (dir === 'west'  && who.tx <= 0) onExit = true;
-    if (dir === 'north' && who.ty <= 0) onExit = true;
-    if (dir === 'south' && who.ty >= room.h - 1) onExit = true;
-
-    if (onExit) {
-      transitionToRoom(exit.room, exit.x, exit.y);
-      return;
+  // Grid overlay
+  ectx.strokeStyle = 'rgba(255,215,0,0.1)'; ectx.lineWidth = 0.5;
+  for (let y = 0; y <= roomData.h; y++) {
+    for (let x = 0; x <= roomData.w; x++) {
+      const px = ecx + (x - y) * (TILE_W / 2);
+      const py = ecy + (x + y) * (TILE_H / 2);
+      ectx.beginPath();
+      ectx.moveTo(px, py);
+      ectx.lineTo(px + TILE_W * ezm / 2, py - TILE_H * ezm / 2);
+      ectx.stroke();
     }
   }
+
+  requestAnimationFrame(renderEditorFrame);
 }
 
-function transitionToRoom(roomId, startX, startY) {
-  currentRoom = roomId;
-  player.tx = startX;
-  player.ty = startY;
-  player.x = startX;
-  player.y = startY;
-  player.moving = false;
-  player.targetTx = null;
-  player.targetTy = null;
-  player.sprite = 'avatar/idle_' + player.facing;
-
-  spawnRoomPlayers(roomId);
-
-  const room = ROOMS[roomId];
-  document.getElementById('roomLabel').textContent = room ? room.name : roomId;
-  addSystemMsg('Entered ' + (room ? room.name : roomId));
-  playSfx('door');
-  centerCameraOnPlayer();
-}
-
-// ===================================================================
-// CAMERA
-// ===================================================================
-function centerCameraOnPlayer() {
-  const room = ROOMS[currentRoom];
-  if (!room) return;
-  const pos = tileToScreen(player.x, player.y, 0, 0, 1.0);
-  camera.x = player.x - room.w / 2;
-  camera.y = player.y - room.h / 2;
-}
-
-function updateCamera(dt) {
-  // Smooth follow
-  const targetX = player.x - ROOMS[currentRoom].w / 2;
-  const targetY = player.y - ROOMS[currentRoom].h / 2;
-  camera.x += (targetX - camera.x) * 0.03;
-  camera.y += (targetY - camera.y) * 0.03;
-}
-
-function adjustZoom(delta) {
-  zoom = Math.max(0.5, Math.min(2.5, zoom + delta));
-}
-
-function resetZoom() {
-  zoom = 1.0;
-}
-
-// ===================================================================
-// INPUT HANDLING
-// ===================================================================
-document.addEventListener('keydown', (e) => {
-  keys[e.key.toLowerCase()] = true;
-
-  if (currentScreen !== 'game') return;
-  if (document.activeElement === document.getElementById('chatInput')) return;
-
-  switch(e.key) {
-    case 'ArrowUp':    case 'w': case 'W': movePlayer(0, -1); break;
-    case 'ArrowDown':  case 's': case 'S': movePlayer(0, 1); break;
-    case 'ArrowLeft':  case 'a': case 'A': movePlayer(-1, 0); break;
-    case 'ArrowRight': case 'd': case 'D': movePlayer(1, 0); break;
-    case 'Enter':
-      document.getElementById('chatInput').focus();
-      break;
-    case 'Escape':
-      closeSidePanel();
-      hideTradePanel();
-      break;
-  }
-});
-
-document.addEventListener('keyup', (e) => {
-  keys[e.key.toLowerCase()] = false;
-});
-
-// Mouse wheel zoom
-canvas.addEventListener('wheel', (e) => {
-  e.preventDefault();
-  const delta = e.deltaY > 0 ? -0.08 : 0.08;
-  adjustZoom(delta);
-}, { passive: false });
-
-// Mouse drag pan + click to move
-let mouseDown = false;
-let mouseStartX = 0, mouseStartY = 0;
-
-canvas.addEventListener('mousedown', (e) => {
-  mouseDown = true;
-  mouseStartX = e.clientX;
-  mouseStartY = e.clientY;
-  dragCamStart = { x: camera.x, y: camera.y };
-});
-
-canvas.addEventListener('mousemove', (e) => {
-  if (mouseDown) {
-    const dx = e.clientX - mouseStartX;
-    const dy = e.clientY - mouseStartY;
-    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-      isDragging = true;
-    }
-    if (isDragging) {
-      camera.x = dragCamStart.x - dx / (TILE_W * zoom);
-      camera.y = dragCamStart.y - dy / (TILE_H * zoom);
-    }
-  }
-});
-
-canvas.addEventListener('mouseup', (e) => {
-  if (!isDragging && currentScreen === 'game') {
-    // Click to move
-    const rect = canvas.getBoundingClientRect();
+// Editor canvas click
+function setupEditorCanvas() {
+  const ec = document.getElementById('editorCanvas');
+  if (!ec) return;
+  ec.addEventListener('mousedown', e => {
+    const rect = ec.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
-    const tile = screenToTile(mx, my, camera.x, camera.y, zoom);
-    const room = ROOMS[currentRoom];
-    if (room && tile.x >= 0 && tile.x < room.w && tile.y >= 0 && tile.y < room.h) {
-      // Simple click-to-move: set target and walk toward it
-      const dx = tile.x - player.tx;
-      const dy = tile.y - player.ty;
-      if (Math.abs(dx) + Math.abs(dy) === 1) {
-        movePlayer(dx, dy);
+    const ezm = Math.min(ec.width / (roomData.w * TILE_W), ec.height / (roomData.h * TILE_H)) * 1.5;
+    const ecx = ec.width / 2 / ezm;
+    const ecy = ec.height / 3 / ezm;
+    const dx = mx / ezm - ecx;
+    const dy = my / ezm - ecy;
+    const tx = Math.floor((dx / (TILE_W/2) + dy / (TILE_H/2)) / 2);
+    const ty = Math.floor((dy / (TILE_H/2) - dx / (TILE_W/2)) / 2);
+    if (tx >= 0 && ty >= 0 && tx < roomData.w && ty < roomData.h) {
+      if (editorTool === 'place' && editorSelectedItem) {
+        const furnType = editorSelectedItem.replace('furniture/', '');
+        roomData.furniture.push({type: furnType, x: tx, y: ty});
+        if (session) {
+          const idx = session.inventory.findIndex(i => i.icon === editorSelectedItem);
+          if (idx >= 0) session.inventory.splice(idx, 1);
+          saveSession(session);
+          updateEditorInvGrid();
+        }
+        playPlace();
+      } else {
+        const clicked = findFurnitureAt(tx, ty);
+        if (clicked) {
+          editorSelectedFurniture = clicked;
+          playClick();
+        } else {
+          editorSelectedFurniture = null;
+        }
+      }
+    }
+  });
+}
+
+
+// ======================= MULTIPLAYER (WebRTC) =======================
+function toggleMultiplayer() {
+  const el = document.getElementById('multiplayerPanel');
+  if (!el) return;
+  const showing = el.style.display === 'flex';
+  closeAllPanels();
+  if (!showing) {
+    el.style.display = 'flex';
+    updatePeersList();
+  }
+}
+
+function createRoom() {
+  const code = 'STAR-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+  rtcRoomCode = code;
+  document.getElementById('mpCodeText').textContent = code;
+  document.getElementById('signalOutBox').style.display = 'block';
+  document.getElementById('signalInBox').style.display = 'block';
+  generateQR(code);
+  setupWebRTC(true);
+  toast('Room created: ' + code);
+}
+
+function joinRoomPrompt() {
+  const code = prompt('Enter room code:');
+  if (code) joinRoom(code);
+}
+
+function joinRoom(code) {
+  rtcRoomCode = code;
+  document.getElementById('mpCodeText').textContent = code;
+  document.getElementById('signalOutBox').style.display = 'block';
+  document.getElementById('signalInBox').style.display = 'block';
+  generateQR(code);
+  setupWebRTC(false);
+  toast('Joining room: ' + code);
+}
+
+function copyRoomCode() {
+  const text = rtcRoomCode;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => toast('Copied!'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    toast('Copied!');
+  }
+}
+
+function generateQR(code) {
+  const el = document.getElementById('mpQR');
+  if (!el) return;
+  el.innerHTML = '';
+  const size = 10;
+  const cell = 10;
+  const qr = document.createElement('canvas');
+  qr.width = size * cell; qr.height = size * cell;
+  const qctx = qr.getContext('2d');
+  qctx.fillStyle = '#fff'; qctx.fillRect(0, 0, qr.width, qr.height);
+  qctx.fillStyle = '#000';
+  const hash = code.split('').reduce((a,b)=>((a<<5)-a)+b.charCodeAt(0),0);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      if ((hash + x * y + x + y) % 3 === 0) {
+        qctx.fillRect(x * cell, y * cell, cell, cell);
       }
     }
   }
-  mouseDown = false;
-  isDragging = false;
-});
+  // Finder patterns
+  [[1,1],[1,size-4],[size-4,1]].forEach(([fx,fy]) => {
+    qctx.fillRect(fx*cell, fy*cell, 3*cell, 3*cell);
+    qctx.clearRect((fx+1)*cell, (fy+1)*cell, cell, cell);
+  });
+  el.appendChild(qr);
+}
 
-// Touch support
-let touchStart = { x: 0, y: 0 };
-let lastTouchDist = 0;
+function setupWebRTC(isHost) {
+  if (rtcPeer) { rtcPeer.close(); rtcPeer = null; }
+  rtcPeer = new RTCPeerConnection({
+    iceServers: [{urls:'stun:stun.l.google.com:19302'}]
+  });
 
-canvas.addEventListener('touchstart', (e) => {
-  if (e.touches.length === 1) {
-    touchStart.x = e.touches[0].clientX;
-    touchStart.y = e.touches[0].clientY;
-    dragCamStart = { x: camera.x, y: camera.y };
-  } else if (e.touches.length === 2) {
-    lastTouchDist = Math.hypot(
-      e.touches[0].clientX - e.touches[1].clientX,
-      e.touches[0].clientY - e.touches[1].clientY
-    );
-  }
-}, { passive: false });
-
-canvas.addEventListener('touchmove', (e) => {
-  e.preventDefault();
-  if (e.touches.length === 1) {
-    const dx = e.touches[0].clientX - touchStart.x;
-    const dy = e.touches[0].clientY - touchStart.y;
-    camera.x = dragCamStart.x - dx / (TILE_W * zoom);
-    camera.y = dragCamStart.y - dy / (TILE_H * zoom);
-  } else if (e.touches.length === 2) {
-    const dist = Math.hypot(
-      e.touches[0].clientX - e.touches[1].clientX,
-      e.touches[0].clientY - e.touches[1].clientY
-    );
-    if (lastTouchDist > 0) {
-      const delta = (dist - lastTouchDist) * 0.003;
-      adjustZoom(delta);
-    }
-    lastTouchDist = dist;
-  }
-}, { passive: false });
-
-// D-Pad touch support
-document.querySelectorAll('.dpad-btn').forEach(btn => {
-  const handlePress = (e) => {
-    e.preventDefault();
-    const dir = btn.dataset.dir;
-    switch(dir) {
-      case 'n': movePlayer(0, -1); break;
-      case 's': movePlayer(0, 1); break;
-      case 'w': movePlayer(-1, 0); break;
-      case 'e': movePlayer(1, 0); break;
+  rtcPeer.onicecandidate = e => {
+    if (e.candidate) {
+      const out = document.getElementById('signalOut');
+      if (out) out.value = JSON.stringify({ type: isHost ? 'offer' : 'answer', data: rtcPeer.localDescription });
     }
   };
-  btn.addEventListener('mousedown', handlePress);
-  btn.addEventListener('touchstart', handlePress, { passive: false });
+
+  if (isHost) {
+    rtcChannel = rtcPeer.createDataChannel('game', { ordered: true });
+    setupDataChannel(rtcChannel);
+    rtcPeer.createOffer().then(offer => {
+      rtcPeer.setLocalDescription(offer);
+      const out = document.getElementById('signalOut');
+      if (out) out.value = JSON.stringify({ type: 'offer', data: offer });
+    });
+  } else {
+    rtcPeer.ondatachannel = e => {
+      rtcChannel = e.channel;
+      setupDataChannel(rtcChannel);
+    };
+  }
+}
+
+function setupDataChannel(channel) {
+  channel.onopen = () => {
+    toast('Peer connected!');
+    channel.send(JSON.stringify({
+      type: 'hello', name: session ? session.name : 'Guest',
+      figure: session ? session.figure : optionsToFigure(charOpts)
+    }));
+    updatePeersList();
+  };
+  channel.onmessage = e => {
+    try {
+      const data = JSON.parse(e.data);
+      if (data.type === 'pos') {
+        peerPositions[data.id || 'peer1'] = {
+          x: data.x, y: data.y, dir: data.dir,
+          room: data.room, moving: data.moving,
+          walkFrame: data.walkFrame, figure: data.figure
+        };
+      }
+      if (data.type === 'chat') {
+        peerChats[data.id || 'peer1'] = { msg: data.msg, timer: 3000 };
+        playChat();
+      }
+      if (data.type === 'room') {
+        // Friend changed room
+        if (peerPositions[data.id || 'peer1']) {
+          peerPositions[data.id || 'peer1'].room = data.room;
+        }
+      }
+      if (data.type === 'hello') {
+        peerPositions[data.id || 'peer1'] = {
+          x: 5, y: 5, dir: 's',
+          room: currentRoom, moving: false,
+          walkFrame: 0, figure: data.figure,
+          name: data.name
+        };
+        updatePeersList();
+      }
+    } catch(err) {}
+  };
+  channel.onclose = () => {
+    toast('Peer disconnected');
+    delete peerPositions['peer1'];
+    updatePeersList();
+  };
+}
+
+function processSignal() {
+  const input = document.getElementById('signalIn');
+  if (!input || !input.value.trim()) return;
+  try {
+    const msg = JSON.parse(input.value.trim());
+    if (msg.type === 'offer' && rtcPeer) {
+      rtcPeer.setRemoteDescription(new RTCSessionDescription(msg.data)).then(() => {
+        rtcPeer.createAnswer().then(answer => {
+          rtcPeer.setLocalDescription(answer);
+          const out = document.getElementById('signalOut');
+          if (out) out.value = JSON.stringify({ type: 'answer', data: answer });
+        });
+      });
+    } else if (msg.type === 'answer' && rtcPeer) {
+      rtcPeer.setRemoteDescription(new RTCSessionDescription(msg.data));
+    }
+    input.value = '';
+    toast('Signal processed');
+  } catch(e) {
+    toast('Invalid signal data');
+  }
+}
+
+function updatePeersList() {
+  const el = document.getElementById('mpPeers');
+  if (!el) return;
+  el.innerHTML = '';
+  Object.entries(peerPositions).forEach(([id, pp]) => {
+    const div = document.createElement('div');
+    div.className = 'mp-peer';
+    const avc = document.createElement('canvas');
+    avc.width = 24; avc.height = 30;
+    renderAvatarComposite(avc, figureToOptions(pp.figure || ''));
+    div.appendChild(avc);
+    const name = document.createElement('span');
+    name.className = 'mp-peer-name';
+    name.textContent = pp.name || 'Friend ' + id.slice(0,6);
+    div.appendChild(name);
+    el.appendChild(div);
+  });
+  if (Object.keys(peerPositions).length === 0) {
+    el.innerHTML = '<div style="color:#555; font-size:12px;">No peers connected</div>';
+  }
+}
+
+// ======================= TRADE =======================
+let tradeActive = false;
+let tradeMyAccept = false;
+let tradePartnerAccept = false;
+
+function toggleTrade() {
+  const el = document.getElementById('tradePanel');
+  if (!el) return;
+  const showing = el.style.display === 'flex';
+  closeAllPanels();
+  if (!showing) {
+    el.style.display = 'flex';
+    buildTradeUI();
+  }
+}
+
+function buildTradeUI() {
+  const mySlots = document.getElementById('tradeMySlots');
+  const partnerSlots = document.getElementById('tradePartnerSlots');
+  if (!mySlots || !partnerSlots || !session) return;
+  mySlots.innerHTML = '';
+  partnerSlots.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'trade-slot';
+    mySlots.appendChild(slot);
+  }
+  for (let i = 0; i < 8; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'trade-slot';
+    partnerSlots.appendChild(slot);
+  }
+  // Fill my slots with inventory
+  const items = session.inventory.slice(0, 8);
+  items.forEach((item, i) => {
+    const slot = mySlots.children[i];
+    if (slot) {
+      const img = document.createElement('img');
+      img.src = ASSETS[item.icon] || '';
+      img.onerror = () => img.style.display = 'none';
+      slot.appendChild(img);
+    }
+  });
+}
+
+function toggleTradeAccept() {
+  tradeMyAccept = !tradeMyAccept;
+  const btn = document.getElementById('tradeMyAccept');
+  if (btn) {
+    btn.classList.toggle('locked', tradeMyAccept);
+    btn.textContent = tradeMyAccept ? 'LOCKED' : 'ACCEPT';
+  }
+}
+
+// ======================= SETTINGS =======================
+function toggleSettings() {
+  const el = document.getElementById('settingsPanel');
+  if (!el) return;
+  const showing = el.style.display === 'flex';
+  closeAllPanels();
+  if (!showing) el.style.display = 'flex';
+}
+
+function setZoom(val) { zoom = val; }
+function toggleMinimap() {
+  const cb = document.getElementById('showMinimap');
+  const mm = document.getElementById('minimap');
+  if (mm) mm.style.display = cb && cb.checked ? 'block' : 'none';
+}
+
+// ======================= MODALS =======================
+function showModal(type) {
+  const bd = document.getElementById('modalBackdrop');
+  const mc = document.getElementById('modalContent');
+  if (bd) bd.style.display = 'flex';
+  if (mc) mc.style.display = 'flex';
+  ['loginModal','registerModal','guestModal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const target = type === 'login' ? 'loginModal' : type === 'register' ? 'registerModal' : 'guestModal';
+  const el = document.getElementById(target);
+  if (el) el.style.display = 'block';
+}
+
+function hideModal() {
+  const bd = document.getElementById('modalBackdrop');
+  const mc = document.getElementById('modalContent');
+  if (bd) bd.style.display = 'none';
+  if (mc) mc.style.display = 'none';
+  ['loginModal','registerModal','guestModal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const errs = document.querySelectorAll('.error,.success');
+  errs.forEach(e => e.textContent = '');
+}
+
+function doLogin() {
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginError');
+  if (!user || !pass) { if (err) err.textContent = 'Fill all fields'; return; }
+  const res = login(user, pass);
+  if (res.success) {
+    session = res.session;
+    hideModal();
+    enterGame('mainhall');
+    toast('Welcome back, ' + user + '!');
+  } else {
+    if (err) err.textContent = res.error;
+  }
+}
+
+function doRegister() {
+  const user = document.getElementById('regUser').value.trim();
+  const pass = document.getElementById('regPass').value;
+  const err = document.getElementById('regError');
+  const suc = document.getElementById('regSuccess');
+  if (!user || !pass) { if (err) err.textContent = 'Fill all fields'; return; }
+  const res = register(user, pass);
+  if (res.success) {
+    if (suc) suc.textContent = 'Registered! You can now login.';
+    if (err) err.textContent = '';
+  } else {
+    if (err) err.textContent = res.error;
+    if (suc) suc.textContent = '';
+  }
+}
+
+function startGuest() {
+  showModal('guest');
+}
+
+function startGuestGo() {
+  const name = document.getElementById('guestName').value.trim();
+  session = {
+    name: name || 'Guest' + Math.floor(Math.random()*10000),
+    credits: 1000, duckets: 500,
+    inventory: getStarterInventory(),
+    room: null,
+    figure: 'hr-1-8B4513.hd-1-1.ch-1-4169E1.lg-1-333333'
+  };
+  localStorage.setItem('si_session', JSON.stringify(session));
+  hideModal();
+  enterGame('mainhall');
+  toast('Playing as ' + session.name);
+}
+
+// ======================= CHAT =======================
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  if (!input || !input.value.trim()) return;
+  const msg = input.value.trim();
+  player.chat = msg;
+  player.chatTimer = 4000;
+  input.value = '';
+  input.blur();
+  playChat();
+  if (rtcChannel && rtcChannel.readyState === 'open') {
+    rtcChannel.send(JSON.stringify({ type: 'chat', msg: msg }));
+  }
+}
+
+// ======================= TOUCH CONTROLS =======================
+let touchDir = null;
+function touchMove(dir) {
+  if (!roomData) return;
+  let dx = 0, dy = 0;
+  if (dir === 'up') dy = -1;
+  if (dir === 'down') dy = 1;
+  if (dir === 'left') dx = -1;
+  if (dir === 'right') dx = 1;
+  const nx = Math.max(0, Math.min(roomData.w - 1, player.x + dx));
+  const ny = Math.max(0, Math.min(roomData.h - 1, player.y + dy));
+  player.tx = nx; player.ty = ny; player.moving = true;
+}
+
+// ======================= INITIALIZATION =======================
+window.addEventListener('DOMContentLoaded', () => {
+  // Show loading
+  showScreen('loading');
+
+  // Check for existing session
+  const saved = getSession();
+  if (saved) session = saved;
+
+  // Load all assets
+  loadAllAssets(() => {
+    // Assets loaded
+    setTimeout(() => {
+      showScreen('title');
+      playTitleJingle();
+      setupInput();
+      setupEditorCanvas();
+
+      // Populate room nav
+      buildRoomNav();
+
+      // Chat input handler
+      const ci = document.getElementById('chatInput');
+      if (ci) {
+        ci.addEventListener('keydown', e => {
+          if (e.key === 'Enter') sendChat();
+        });
+      }
+    }, 300);
+  });
 });
 
-// ===================================================================
-// CANVAS RESIZE
-// ===================================================================
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeCanvas);
-
-// ===================================================================
-// GAME LOOP
-// ===================================================================
-let lastTime = 0;
-function gameLoop(timestamp) {
-  if (currentScreen !== 'game') return;
-
-  const dt = timestamp - lastTime;
-  lastTime = timestamp;
-
-  // Cap delta time to prevent huge jumps
-  const safeDt = Math.min(dt, 100);
-
-  // Update
-  updatePlayerMovement(safeDt);
-  updateAIPlayers(safeDt);
-  updateCamera(safeDt);
-  updateChatBubbles(safeDt);
-  playRoomAmbient();
-
-  // Render
-  render();
-
-  requestAnimationFrame(gameLoop);
-}
-
-// ===================================================================
-// TOAST NOTIFICATIONS
-// ===================================================================
-function showToast(text) {
-  const area = document.getElementById('toastArea');
-  if (!area) return;
-  const div = document.createElement('div');
-  div.className = 'toast';
-  div.textContent = text;
-  area.appendChild(div);
-  setTimeout(() => div.remove(), 3000);
-}
-
-// ===================================================================
-// INIT
-// ===================================================================
-function init() {
-  resizeCanvas();
-  loadAssets();
-}
-
-// Start
-init();
+// Handle page visibility for audio
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (audioCtx.state === 'running') audioCtx.suspend();
+  } else {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+});
 </script>
 </body>
 </html>
