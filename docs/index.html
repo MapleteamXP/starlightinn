@@ -2,37 +2,328 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#1a1a2e">
-  <meta name="description" content="Starlight Inn — A cozy social world where friends gather, explore, and play together in a twilight pixel-art universe.">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Starlight Inn — A Cozy Social World</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css">
-  <link rel="stylesheet" href="css/animations.css">
-  <link rel="stylesheet" href="css/mobile.css">
+  <title>Starlight Inn</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #0d0d1a;
+      color: #fff;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* Full-screen title background */
+    .title-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: url('assets/title-bg.png') center center / cover no-repeat;
+      z-index: 1;
+    }
+
+    /* Button panel at bottom */
+    .landing-panel {
+      position: fixed;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-play {
+      font-size: 1.4rem;
+      font-weight: 800;
+      padding: 16px 56px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      color: #1a1a2e;
+      cursor: pointer;
+      box-shadow: 0 4px 24px rgba(255,215,0,0.5);
+      transition: all 0.2s ease;
+      min-width: 240px;
+      font-family: 'Nunito', sans-serif;
+    }
+    .btn-play:hover { transform: scale(1.06); box-shadow: 0 6px 36px rgba(255,215,0,0.7); }
+    .btn-play:active { transform: scale(0.97); }
+
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+    .btn-secondary {
+      padding: 10px 22px;
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 10px;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Nunito', sans-serif;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.5); transform: translateY(-1px); }
+
+    .btn-settings {
+      padding: 8px 16px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      background: transparent;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+    }
+    .btn-settings:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+
+    .version-row {
+      color: rgba(255,255,255,0.4);
+      font-size: 0.75rem;
+      margin-top: 8px;
+    }
+    .version-row span { margin: 0 6px; }
+
+    /* Mute button */
+    .mute-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.4);
+      color: rgba(255,255,255,0.7);
+      font-size: 0.85rem;
+      cursor: pointer;
+      z-index: 10;
+      font-family: 'Nunito', sans-serif;
+    }
+    .mute-btn:hover { background: rgba(0,0,0,0.6); color: #fff; }
+
+    /* About link */
+    .about-link {
+      position: fixed;
+      bottom: 16px;
+      right: 20px;
+      color: rgba(255,255,255,0.35);
+      font-size: 0.8rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 10;
+      font-family: 'Nunito', sans-serif;
+    }
+    .about-link:hover { color: rgba(255,255,255,0.65); }
+
+    /* ===== AUTH MODALS ===== */
+    .auth-modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .auth-modal.hidden { display: none !important; }
+
+    .auth-box {
+      background: #1a1a2e;
+      border: 1px solid rgba(255,215,0,0.3);
+      border-radius: 18px;
+      padding: 36px;
+      width: 340px;
+      max-width: 90vw;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .auth-box h2 {
+      color: #FFD700;
+      text-align: center;
+      margin-bottom: 24px;
+      font-size: 1.4rem;
+    }
+    .auth-box input {
+      width: 100%;
+      padding: 12px 16px;
+      margin-bottom: 14px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+      font-size: 1rem;
+      box-sizing: border-box;
+      font-family: 'Nunito', sans-serif;
+    }
+    .auth-box input:focus {
+      outline: none;
+      border-color: #FFD700;
+    }
+    .auth-box input::placeholder { color: rgba(255,255,255,0.3); }
+    .auth-box button[type="submit"] {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #FFD700, #FFA500);
+      color: #1a1a2e;
+      font-weight: 700;
+      font-size: 1.05rem;
+      cursor: pointer;
+      margin-top: 10px;
+      font-family: 'Nunito', sans-serif;
+    }
+    .auth-box button[type="submit"]:hover { transform: translateY(-1px); }
+    .auth-link {
+      display: block;
+      text-align: center;
+      color: rgba(255,255,255,0.4);
+      font-size: 0.9rem;
+      margin-top: 16px;
+      cursor: pointer;
+    }
+    .auth-link:hover { color: #FFD700; }
+    .auth-error {
+      color: #ff6b6b;
+      font-size: 0.85rem;
+      text-align: center;
+      margin-bottom: 10px;
+      min-height: 20px;
+    }
+    .auth-box .close-btn {
+      position: absolute;
+      top: 14px; right: 18px;
+      color: rgba(255,255,255,0.4);
+      font-size: 1.3rem;
+      cursor: pointer;
+      background: none;
+      border: none;
+      width: 28px;
+      height: 28px;
+      line-height: 28px;
+      text-align: center;
+      border-radius: 50%;
+      font-family: 'Nunito', sans-serif;
+    }
+    .auth-box .close-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+
+    /* ===== GAME SCREENS ===== */
+    .screen {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+      top: 0; left: 0;
+    }
+    .screen.active { display: block; }
+
+    /* Character select screen */
+    #screen-charselect {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0d0d1a 100%);
+    }
+    .charselect-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      gap: 24px;
+    }
+    .charselect-title {
+      font-size: 2rem;
+      color: #FFD700;
+      text-shadow: 0 2px 10px rgba(255,215,0,0.3);
+    }
+    .charselect-preview {
+      width: 200px;
+      height: 300px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+    }
+    .charselect-controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 600px;
+    }
+    .charselect-controls button {
+      padding: 10px 20px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+    }
+    .charselect-controls button:hover { border-color: #FFD700; color: #FFD700; }
+
+    /* Game screen */
+    #screen-game {
+      background: #1a1a2e;
+    }
     #game-canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
       image-rendering: pixelated;
-      image-rendering: crisp-edges;
-      image-rendering: -moz-crisp-edges;
+    }
+
+    /* Settings panel */
+    .settings-panel {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #1a1a2e;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 32px;
+      width: 400px;
+      max-width: 90vw;
+      z-index: 100;
+      display: none;
+    }
+    .settings-panel.active { display: block; }
+    .settings-panel h2 { color: #FFD700; margin-bottom: 20px; }
+    .settings-panel label {
+      display: block;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+    .settings-panel input[type="range"] {
+      width: 100%;
+      margin-bottom: 16px;
+    }
+    .settings-panel .panel-close {
+      position: absolute;
+      top: 12px; right: 16px;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.5);
+      font-size: 1.2rem;
+      cursor: pointer;
     }
   </style>
-  <!-- Socket.IO client (loaded from CDN or server) -->
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" defer></script>
-
-  <!-- Cache busting -->
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
 </head>
 <body>
   <!-- ==================== LANDING SCREEN ==================== -->
-    <!-- ==================== LANDING SCREEN ==================== -->
-  <div id="screen-landing" class="screen active" role="main" aria-label="Landing screen">
+  <div id="screen-landing" class="screen active">
     <div class="title-bg"></div>
     <div class="landing-panel">
       <button id="btn-play" class="btn-play">Enter World</button>
@@ -43,7 +334,7 @@
         <button id="btn-settings" class="btn-settings">Settings</button>
       </div>
       <div class="version-row">
-        <span>v8.1.0</span>
+        <span>v8.2.0</span>
         <span>|</span>
         <span id="online-count">0 stars online</span>
         <span>|</span>
@@ -53,535 +344,41 @@
     <button id="btn-mute" class="mute-btn">Sound On</button>
     <button id="btn-about" class="about-link">About</button>
   </div>
-      <div id="screen-charselect" class="screen" role="dialog" aria-modal="true" aria-label="Character creation screen">
-    <div class="charselect-bg" aria-hidden="true">
-      <div class="stars-dim"></div>
-    </div>
-    <div class="charselect-header">
-      <h2>Choose Your Star</h2>
-      <p>Pick a base and customize your colors to shine bright</p>
-    </div>
-    <div class="charselect-preview" id="char-preview-container" aria-label="Character preview">
-      <canvas id="char-preview-canvas" width="200" height="200" aria-hidden="true"></canvas>
-      <div class="char-preview-name">
-        <input type="text" id="char-name-input" placeholder="Your Name" maxlength="20" aria-label="Character name">
-        <button id="btn-name-random" class="btn-icon-only" title="Random name" aria-label="Generate random name">🎲</button>
+
+  <!-- ==================== CHARACTER SELECT ==================== -->
+  <div id="screen-charselect" class="screen">
+    <div class="charselect-container">
+      <h2 class="charselect-title">Create Your Character</h2>
+      <div class="charselect-preview">🧑</div>
+      <div class="charselect-controls">
+        <button onclick="randomizeChar()">Randomize</button>
+        <button onclick="prevHair()">Prev Hair</button>
+        <button onclick="nextHair()">Next Hair</button>
+        <button onclick="changeColor()">Change Color</button>
+        <button onclick="enterGame()" style="background: linear-gradient(135deg, #FFD700, #FFA500); color: #1a1a2e; border: none; font-weight: 700;">Enter World!</button>
+        <button onclick="goBack()">Back</button>
       </div>
-    </div>
-    <div class="charselect-grid" id="char-grid" role="list" aria-label="Character base options">
-      <!-- 12 character cards generated by JS -->
-    </div>
-    <div class="charselect-customize" id="char-customize">
-      <div class="color-group">
-        <label for="color-skin">Skin Tone</label>
-        <input type="range" id="color-skin" min="0" max="360" value="30" class="hue-slider" aria-label="Skin tone hue">
-        <span class="color-preview" id="preview-skin"></span>
-      </div>
-      <div class="color-group">
-        <label for="color-hair">Hair Color</label>
-        <input type="range" id="color-hair" min="0" max="360" value="200" class="hue-slider" aria-label="Hair color hue">
-        <span class="color-preview" id="preview-hair"></span>
-      </div>
-      <div class="color-group">
-        <label for="color-clothes">Clothes Color</label>
-        <input type="range" id="color-clothes" min="0" max="360" value="280" class="hue-slider" aria-label="Clothes color hue">
-        <span class="color-preview" id="preview-clothes"></span>
-      </div>
-      <div class="color-group">
-        <label for="color-accent">Accent Color</label>
-        <input type="range" id="color-accent" min="0" max="360" value="45" class="hue-slider" aria-label="Accent color hue">
-        <span class="color-preview" id="preview-accent"></span>
-      </div>
-    </div>
-    <div class="charselect-actions">
-      <button id="btn-back" class="btn btn-secondary" aria-label="Go back">
-        <span class="btn-text">Back</span>
-      </button>
-      <button id="btn-randomize" class="btn btn-ghost" aria-label="Randomize character">
-        <span class="btn-icon">🎲</span>
-        <span class="btn-text">Randomize</span>
-      </button>
-      <button id="btn-continue" class="btn btn-primary" aria-label="Continue to game">
-        <span class="btn-text">Continue</span>
-        <span class="btn-icon">➡️</span>
-      </button>
-    </div>
-    <div class="charselect-footer">
-      <span class="hint">Arrow keys to navigate · Space to select · Enter to continue</span>
     </div>
   </div>
 
   <!-- ==================== GAME SCREEN ==================== -->
-  <div id="screen-game" class="screen" role="application" aria-label="Game screen">
-    <!-- Game Canvas Layer -->
-    <canvas id="game-canvas" width="960" height="540" role="img" aria-label="Game world canvas"></canvas>
-
-    <!-- ==================== TOP HUD BAR ==================== -->
-    <div id="hud-top" class="hud-panel" role="toolbar" aria-label="Top HUD bar">
-      <div class="hud-area">
-        <span id="hud-area-icon" aria-hidden="true">🌟</span>
-        <span id="hud-area-name">Starlight Hub</span>
-        <span id="hud-area-pop" class="area-pop" aria-label="Players in area">(<span id="hud-pop-count">1</span>)</span>
-      </div>
-      <div class="hud-level">
-        <div class="level-badge">
-          <span class="level-star" aria-hidden="true">⭐</span>
-          <span id="hud-level">1</span>
-        </div>
-        <div class="level-bar">
-          <div id="hud-xp-fill" class="xp-fill" style="width: 0%"></div>
-        </div>
-      </div>
-      <div class="hud-currency">
-        <div class="currency-silver" title="Silver Coins" aria-label="Silver coins">
-          <span class="currency-icon" aria-hidden="true">🪙</span>
-          <span id="hud-silver">500</span>
-        </div>
-        <div class="currency-gold" title="Gold Stars" aria-label="Gold stars">
-          <span class="currency-icon" aria-hidden="true">⭐</span>
-          <span id="hud-gold">100</span>
-        </div>
-      </div>
-      <div class="hud-actions">
-        <button id="btn-area-browser" class="hud-btn" title="Areas (A)" aria-label="Area browser">
-          <span aria-hidden="true">🗺️</span>
-        </button>
-        <button id="btn-friends" class="hud-btn" title="Friends (F)" aria-label="Friends list">
-          <span aria-hidden="true">👥</span>
-          <span id="badge-friends" class="hud-badge hidden">0</span>
-        </button>
-        <button id="btn-inventory" class="hud-btn" title="Inventory (I)" aria-label="Inventory">
-          <span aria-hidden="true">🎒</span>
-        </button>
-        <button id="btn-catalog" class="hud-btn" title="Shop (B)" aria-label="Catalog shop">
-          <span aria-hidden="true">🏪</span>
-        </button>
-        <button id="btn-missions" class="hud-btn" title="Missions (M)" aria-label="Missions">
-          <span aria-hidden="true">📜</span>
-          <span id="badge-missions" class="hud-badge hidden">0</span>
-        </button>
-        <button id="btn-minigames" class="hud-btn" title="Games (G)" aria-label="Mini games">
-          <span aria-hidden="true">🎮</span>
-        </button>
-        <button id="btn-notifications" class="hud-btn" title="Notifications (N)" aria-label="Notifications">
-          <span aria-hidden="true">🔔</span>
-          <span id="badge-notifications" class="hud-badge hidden">0</span>
-        </button>
-        <button id="btn-settings-game" class="hud-btn" title="Settings (,)" aria-label="Settings">
-          <span aria-hidden="true">⚙️</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- ==================== MISSION TRACKER (top-left) ==================== -->
-    <div id="hud-missions" class="hud-missions" role="complementary" aria-label="Active missions">
-      <div class="mission-header">
-        <span aria-hidden="true">📜</span>
-        <span>Active Missions</span>
-      </div>
-      <div id="mission-list" class="mission-list"></div>
-    </div>
-
-    <!-- ==================== BOTTOM DOCK ==================== -->
-    <div id="hud-dock" class="hud-panel" role="toolbar" aria-label="Action dock">
-      <div class="dock-gestures">
-        <button class="gesture-btn" data-gesture="wave" title="Wave (1)" aria-label="Wave gesture">
-          <span aria-hidden="true">👋</span>
-        </button>
-        <button class="gesture-btn" data-gesture="dance" title="Dance (2)" aria-label="Dance gesture">
-          <span aria-hidden="true">💃</span>
-        </button>
-        <button class="gesture-btn" data-gesture="sit" title="Sit (3)" aria-label="Sit gesture">
-          <span aria-hidden="true">🧘</span>
-        </button>
-        <button class="gesture-btn" data-gesture="sleep" title="Sleep (4)" aria-label="Sleep gesture">
-          <span aria-hidden="true">😴</span>
-        </button>
-        <button class="gesture-btn" data-gesture="laugh" title="Laugh (5)" aria-label="Laugh gesture">
-          <span aria-hidden="true">😂</span>
-        </button>
-        <button class="gesture-btn" data-gesture="cry" title="Cry (6)" aria-label="Cry gesture">
-          <span aria-hidden="true">😢</span>
-        </button>
-        <button class="gesture-btn" data-gesture="heart" title="Heart (7)" aria-label="Heart gesture">
-          <span aria-hidden="true">❤️</span>
-        </button>
-        <button class="gesture-btn" data-gesture="clap" title="Clap (8)" aria-label="Clap gesture">
-          <span aria-hidden="true">👏</span>
-        </button>
-      </div>
-      <div class="dock-expressions">
-        <button class="expr-btn active" data-expr="happy" title="Happy" aria-label="Happy expression">
-          <span aria-hidden="true">😊</span>
-        </button>
-        <button class="expr-btn" data-expr="sad" title="Sad" aria-label="Sad expression">
-          <span aria-hidden="true">😔</span>
-        </button>
-        <button class="expr-btn" data-expr="cool" title="Cool" aria-label="Cool expression">
-          <span aria-hidden="true">😎</span>
-        </button>
-        <button class="expr-btn" data-expr="love" title="Love" aria-label="Love expression">
-          <span aria-hidden="true">😍</span>
-        </button>
-        <button class="expr-btn" data-expr="surprised" title="Surprised" aria-label="Surprised expression">
-          <span aria-hidden="true">😲</span>
-        </button>
-        <button class="expr-btn" data-expr="sleepy" title="Sleepy" aria-label="Sleepy expression">
-          <span aria-hidden="true">😪</span>
-        </button>
-        <button class="expr-btn" data-expr="angry" title="Angry" aria-label="Angry expression">
-          <span aria-hidden="true">😠</span>
-        </button>
-        <button class="expr-btn" data-expr="confused" title="Confused" aria-label="Confused expression">
-          <span aria-hidden="true">😵</span>
-        </button>
-      </div>
-      <div class="dock-chat-toggle">
-        <button id="btn-chat-toggle" class="hud-btn" aria-label="Toggle chat panel">
-          <span aria-hidden="true">💬</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- ==================== QUICK EMOTE BAR ==================== -->
-    <div id="hud-emotes" class="hud-emotes" role="toolbar" aria-label="Quick emotes">
-      <button class="emote-btn" data-emote="greet" aria-label="Greet">🙋</button>
-      <button class="emote-btn" data-emote="thank" aria-label="Thank">🙏</button>
-      <button class="emote-btn" data-emote="bye" aria-label="Goodbye">👋</button>
-      <button class="emote-btn" data-emote="hug" aria-label="Hug">🤗</button>
-    </div>
-
-    <!-- ==================== CHAT PANEL ==================== -->
-    <div id="chat-panel" class="panel panel-chat" role="log" aria-live="polite" aria-label="Chat panel">
-      <div class="panel-header">
-        <div class="chat-tabs" role="tablist">
-          <button class="chat-tab active" data-channel="area" role="tab" aria-selected="true" aria-controls="chat-messages">Area</button>
-          <button class="chat-tab" data-channel="whisper" role="tab" aria-selected="false" aria-controls="chat-messages">Whisper</button>
-          <button class="chat-tab" data-channel="party" role="tab" aria-selected="false" aria-controls="chat-messages">Party</button>
-          <button class="chat-tab" data-channel="system" role="tab" aria-selected="false" aria-controls="chat-messages">System</button>
-        </div>
-        <button id="btn-chat-close" class="panel-close" aria-label="Close chat panel">×</button>
-      </div>
-      <div id="chat-messages" class="chat-messages" role="tabpanel"></div>
-      <div class="chat-input-area">
-        <button id="btn-chat-emoji" class="btn-icon-only" aria-label="Open emoji picker">😊</button>
-        <input id="chat-input" type="text" placeholder="Say something cozy..." maxlength="200" aria-label="Chat input" autocomplete="off">
-        <button id="btn-chat-send" class="btn btn-primary" aria-label="Send message">Send</button>
-      </div>
-    </div>
-
-    <!-- ==================== INVENTORY PANEL ==================== -->
-    <div id="inventory-panel" class="panel panel-inventory" role="dialog" aria-label="Inventory panel" aria-modal="false">
-      <div class="panel-header">
-        <h3><span aria-hidden="true">🎒</span> Inventory</h3>
-        <div class="panel-search">
-          <input type="text" id="inventory-search" placeholder="Search items..." aria-label="Search inventory">
-        </div>
-        <button class="panel-close" aria-label="Close inventory">×</button>
-      </div>
-      <div class="inventory-filters" role="tablist">
-        <button class="filter-btn active" data-filter="all" role="tab" aria-selected="true">All</button>
-        <button class="filter-btn" data-filter="wearable" role="tab" aria-selected="false">Wear</button>
-        <button class="filter-btn" data-filter="consumable" role="tab" aria-selected="false">Use</button>
-        <button class="filter-btn" data-filter="furniture" role="tab" aria-selected="false">Place</button>
-        <button class="filter-btn" data-filter="collectible" role="tab" aria-selected="false">Collect</button>
-      </div>
-      <div id="inventory-grid" class="inventory-grid" role="grid"></div>
-      <div class="inventory-info">
-        <span id="inventory-count">0 / 40</span>
-        <span id="inventory-weight" class="weight-bar">
-          <span class="weight-fill" style="width: 0%"></span>
-        </span>
-      </div>
-      <div id="inventory-detail" class="inventory-detail hidden">
-        <div class="detail-icon" aria-hidden="true">❓</div>
-        <div class="detail-info">
-          <h4 id="detail-name">Item Name</h4>
-          <p id="detail-desc">Item description goes here.</p>
-          <div class="detail-tags" id="detail-tags"></div>
-          <div class="detail-actions">
-            <button id="btn-use-item" class="btn btn-primary">Use</button>
-            <button id="btn-equip-item" class="btn btn-secondary">Equip</button>
-            <button id="btn-drop-item" class="btn btn-danger">Drop</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ==================== CATALOG / SHOP PANEL ==================== -->
-    <div id="catalog-panel" class="panel panel-catalog" role="dialog" aria-label="Catalog shop" aria-modal="false">
-      <div class="panel-header">
-        <h3><span aria-hidden="true">🏪</span> Starlight Catalog</h3>
-        <button class="panel-close" aria-label="Close catalog">×</button>
-      </div>
-      <div class="catalog-currency">
-        <span class="catalog-silver"><span aria-hidden="true">🪙</span> <span id="catalog-silver">500</span></span>
-        <span class="catalog-gold"><span aria-hidden="true">⭐</span> <span id="catalog-gold">100</span></span>
-      </div>
-      <div class="catalog-categories" role="tablist">
-        <button class="cat-btn active" data-category="featured" role="tab" aria-selected="true">⭐ Featured</button>
-        <button class="cat-btn" data-category="wearable" role="tab" aria-selected="false">👕 Wearables</button>
-        <button class="cat-btn" data-category="furniture" role="tab" aria-selected="false">🛋️ Furniture</button>
-        <button class="cat-btn" data-category="room" role="tab" aria-selected="false">🏠 Rooms</button>
-        <button class="cat-btn" data-category="decor" role="tab" aria-selected="false">🎨 Decor</button>
-        <button class="cat-btn" data-category="pets" role="tab" aria-selected="false">🐾 Pets</button>
-        <button class="cat-btn" data-category="effects" role="tab" aria-selected="false">✨ Effects</button>
-        <button class="cat-btn" data-category="consumable" role="tab" aria-selected="false">🍵 Consumables</button>
-        <button class="cat-btn" data-category="music" role="tab" aria-selected="false">🎵 Music</button>
-        <button class="cat-btn" data-category="currency" role="tab" aria-selected="false">🪙 Currency</button>
-        <button class="cat-btn" data-category="limited" role="tab" aria-selected="false">🔥 Limited</button>
-        <button class="cat-btn" data-category="seasonal" role="tab" aria-selected="false">🎄 Seasonal</button>
-      </div>
-      <div id="catalog-grid" class="catalog-grid" role="grid"></div>
-      <div class="catalog-footer">
-        <span id="catalog-page-info">Page 1 of 1</span>
-        <div class="catalog-pagination">
-          <button id="btn-catalog-prev" class="btn btn-secondary" aria-label="Previous page">←</button>
-          <button id="btn-catalog-next" class="btn btn-secondary" aria-label="Next page">→</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ==================== TRADE WINDOW ==================== -->
-    <div id="trade-panel" class="panel panel-trade" role="dialog" aria-label="Trade window" aria-modal="true">
-      <div class="panel-header">
-        <h3><span aria-hidden="true">🤝</span> Trading with <span id="trade-partner">Player</span></h3>
-        <button class="panel-close" aria-label="Cancel trade">×</button>
-      </div>
-      <div class="trade-status" id="trade-status" role="status" aria-live="polite">Waiting for both parties to lock...</div>
-      <div class="trade-content">
-        <div class="trade-side trade-my">
-          <h4>Your Offer</h4>
-          <div id="trade-my-offer" class="trade-offer" role="list"></div>
-          <div class="trade-value">
-            <span>Value: </span><span id="trade-my-value">0</span> <span aria-hidden="true">🪙</span>
-          </div>
-          <button id="btn-add-trade" class="btn btn-secondary">+ Add Item</button>
-        </div>
-        <div class="trade-center">
-          <div id="trade-fairness" class="trade-fairness">Fair</div>
-          <div class="trade-locks">
-            <div id="lock-my" class="lock-indicator" aria-label="Your lock status">🔓</div>
-            <div class="lock-vs">vs</div>
-            <div id="lock-their" class="lock-indicator" aria-label="Their lock status">🔓</div>
-          </div>
-          <button id="btn-trade-lock" class="btn btn-primary">Lock Offer</button>
-          <button id="btn-trade-confirm" class="btn btn-success" disabled>Confirm (5)</button>
-          <button id="btn-trade-cancel" class="btn btn-danger">Cancel</button>
-        </div>
-        <div class="trade-side trade-their">
-          <h4>Their Offer</h4>
-          <div id="trade-their-offer" class="trade-offer" role="list"></div>
-          <div class="trade-value">
-            <span>Value: </span><span id="trade-their-value">0</span> <span aria-hidden="true">🪙</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ==================== FRIEND LIST PANEL ==================== -->
-    <div id="friends-panel" class="panel panel-friends" role="dialog" aria-label="Friends list" aria-modal="false">
-      <div class="panel-header">
-        <h3><span aria-hidden="true">👥</span> Friends</h3>
-        <div class="panel-search">
-          <input type="text" id="friends-search" placeholder="Search friends..." aria-label="Search friends">
-        </div>
-        <button class="panel-close" aria-label="Close friends">×</button>
-      </div>
-      <div class="friends-tabs" role="tablist">
-        <button class="friends-tab active" role="tab" aria-selected="true">Online</button>
-        <button class="friends-tab" role="tab" aria-selected="false">All</button>
-        <button class="friends-tab" role="tab" aria-selected="false">Requests</button>
-        <button class="friends-tab" role="tab" aria-selected="false">Blocked</button>
-      </div>
-      <div id="friends-list" class="friends-list" role="list"></div>
-      <div class="friends-actions">
-        <button id="btn-add-friend" class="btn btn-primary">+ Add Friend</button>
-        <button id="btn-invite-party" class="btn btn-secondary" disabled>Invite to Party</button>
-      </div>
-    </div>
-
-    <!-- ==================== AREA BROWSER ==================== -->
-    <div id="area-panel" class="panel panel-area" role="dialog" aria-label="Area browser" aria-modal="false">
-      <div class="panel-header">
-        <h3><span aria-hidden="true">🗺️</span> Areas</h3>
-        <button class="panel-close" aria-label="Close area browser">×</button>
-      </div>
-      <div class="area-filters">
-        <button class="area-filter active" data-filter="all">All</button>
-        <button class="area-filter" data-filter="social">Social</button>
-        <button class="area-filter" data-filter="game">Games</button>
-        <button class="area-filter" data-filter="home">Homes</button>
-        <button class="area-filter" data-filter="event">Events</button>
-      </div>
-      <div id="area-grid" class="area-grid" role="grid"></div>
-    </div>
-
-    <!-- ==================== MINIGAME HUB ==================== -->
-    <div id="minigame-panel" class="panel panel-minigame" role="dialog" aria-label="Mini games" aria-modal="false">
-      <div class="panel-header">
-        <h3><span aria-hidden="true">🎮</span> Mini Games</h3>
-        <button class="panel-close" aria-label="Close mini games">×</button>
-      </div>
-      <div class="minigame-list" id="minigame-list" role="list">
-        <!-- Generated by JS -->
-      </div>
-    </div>
-
-    <!-- ==================== NOTIFICATIONS PANEL ==================== -->
-    <div id="notifications-panel" class="panel panel-notifications" role="dialog" aria-label="Notifications" aria-modal="false">
-      <div class="panel-header">
-        <h3><span aria-hidden="true">🔔</span> Notifications</h3>
-        <button id="btn-clear-notifications" class="btn btn-ghost" aria-label="Clear all notifications">Clear All</button>
-        <button class="panel-close" aria-label="Close notifications">×</button>
-      </div>
-      <div id="notifications-list" class="notifications-list" role="list"></div>
-    </div>
-
-    <!-- ==================== SETTINGS PANEL ==================== -->
-    <div id="settings-panel" class="panel panel-settings" role="dialog" aria-label="Settings panel" aria-modal="false">
-      <div class="panel-header">
-        <h3><span aria-hidden="true">⚙️</span> Settings</h3>
-        <button class="panel-close" aria-label="Close settings">×</button>
-      </div>
-      <div class="settings-body">
-        <div class="settings-section">
-          <h4>Sound</h4>
-          <label>Master Volume
-            <input type="range" id="vol-master" min="0" max="100" value="80" aria-label="Master volume">
-            <span class="range-value" id="val-master">80%</span>
-          </label>
-          <label>Music Volume
-            <input type="range" id="vol-music" min="0" max="100" value="60" aria-label="Music volume">
-            <span class="range-value" id="val-music">60%</span>
-          </label>
-          <label>SFX Volume
-            <input type="range" id="vol-sfx" min="0" max="100" value="80" aria-label="Sound effects volume">
-            <span class="range-value" id="val-sfx">80%</span>
-          </label>
-          <label>Voice Volume
-            <input type="range" id="vol-voice" min="0" max="100" value="100" aria-label="Voice volume">
-            <span class="range-value" id="val-voice">100%</span>
-          </label>
-        </div>
-        <div class="settings-section">
-          <h4>Graphics</h4>
-          <label>Quality
-            <select id="setting-quality" aria-label="Graphics quality">
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
-          </label>
-          <label>Particles
-            <input type="checkbox" id="setting-particles" checked aria-label="Enable particles">
-          </label>
-          <label>Show Player Names
-            <input type="checkbox" id="setting-names" checked aria-label="Show player names">
-          </label>
-          <label>Show Player Avatars
-            <input type="checkbox" id="setting-avatars" checked aria-label="Show player avatars">
-          </label>
-          <label>Fullscreen Mode
-            <input type="checkbox" id="setting-fullscreen" aria-label="Enable fullscreen">
-          </label>
-        </div>
-        <div class="settings-section">
-          <h4>Gameplay</h4>
-          <label>Auto-Save
-            <input type="checkbox" id="setting-autosave" checked aria-label="Auto save">
-          </label>
-          <label>Show Hints
-            <input type="checkbox" id="setting-hints" checked aria-label="Show hints">
-          </label>
-          <label>Double-Tap to Move
-            <input type="checkbox" id="setting-doubletap" aria-label="Double tap to move">
-          </label>
-        </div>
-        <div class="settings-section">
-          <h4>Safety & Privacy</h4>
-          <label>Child Safety Mode
-            <input type="checkbox" id="setting-child" aria-label="Enable child safety mode">
-          </label>
-          <label>Hide Online Status
-            <input type="checkbox" id="setting-hide" aria-label="Hide online status">
-          </label>
-          <label>Only Friends Can Whisper
-            <input type="checkbox" id="setting-friend-whisper" aria-label="Only friends can whisper">
-          </label>
-          <label>Filter Mature Content
-            <input type="checkbox" id="setting-filter" checked aria-label="Filter mature content">
-          </label>
-        </div>
-        <div class="settings-section">
-          <h4>Account</h4>
-          <button id="btn-logout" class="btn btn-danger">Log Out</button>
-          <button id="btn-report" class="btn btn-secondary">Report a Problem</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ==================== PLAYER RADIAL MENU (right-click) ==================== -->
-    <div id="radial-menu" class="radial-menu hidden" role="menu" aria-label="Player actions">
-      <button class="radial-item" data-action="profile" role="menuitem">👤 Profile</button>
-      <button class="radial-item" data-action="whisper" role="menuitem">💬 Whisper</button>
-      <button class="radial-item" data-action="friend" role="menuitem">⭐ Friend</button>
-      <button class="radial-item" data-action="trade" role="menuitem">🤝 Trade</button>
-      <button class="radial-item" data-action="ignore" role="menuitem">🚫 Ignore</button>
-      <button class="radial-item" data-action="report" role="menuitem">⚠️ Report</button>
-    </div>
-
-    <!-- ==================== TOAST / NOTIFICATION CONTAINER ==================== -->
-    <div id="toast-container" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
-
-    <!-- ==================== LOADING OVERLAY ==================== -->
-    <div id="loading-overlay" class="loading-overlay" role="alert" aria-live="assertive" aria-label="Loading overlay">
-      <div class="loading-bg" aria-hidden="true"></div>
-      <div class="loading-content">
-        <div class="loading-spinner" aria-hidden="true">🌟</div>
-        <div class="loading-text">Entering Starlight Inn...</div>
-        <div class="loading-subtext">Gathering stardust and warming the hearth</div>
-        <div class="loading-bar">
-          <div class="loading-fill" id="loading-fill" style="width: 0%"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ==================== DISCONNECT OVERLAY ==================== -->
-    <div id="disconnect-overlay" class="disconnect-overlay hidden" role="alert" aria-live="assertive">
-      <div class="disconnect-content">
-        <div class="disconnect-icon" aria-hidden="true">💫</div>
-        <h2>Connection Lost</h2>
-        <p>The stars have drifted apart. Trying to reconnect...</p>
-        <button id="btn-reconnect" class="btn btn-primary">Reconnect Now</button>
-        <button id="btn-offline" class="btn btn-ghost">Play Offline</button>
-      </div>
-    </div>
-
-    <!-- ==================== MOBILE VIRTUAL JOYSTICK ==================== -->
-    <div id="mobile-joystick" class="mobile-joystick" aria-hidden="true">
-      <div class="joystick-base">
-        <div class="joystick-knob"></div>
-      </div>
-    </div>
-
-    <!-- ==================== MOBILE ACTION BUTTONS ==================== -->
-    <div id="mobile-actions" class="mobile-actions" aria-label="Mobile action buttons">
-      <button class="mobile-btn mobile-interact" aria-label="Interact">👆</button>
-      <button class="mobile-btn mobile-chat" aria-label="Open chat">💬</button>
-      <button class="mobile-btn mobile-emote" aria-label="Open emotes">😊</button>
-      <button class="mobile-btn mobile-menu" aria-label="Open menu">☰</button>
-    </div>
-
-    <!-- ==================== SCREEN READER LIVE REGION ==================== -->
-    <div id="sr-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div id="screen-game" class="screen">
+    <canvas id="game-canvas"></canvas>
   </div>
 
-  <!-- ==================== MODULE ENTRY ==================== -->
-  <script type="module" src="js/main.js"></script>
+  <!-- ==================== SETTINGS PANEL ==================== -->
+  <div id="settings-panel" class="settings-panel">
+    <button class="panel-close" onclick="closeSettings()">x</button>
+    <h2>Settings</h2>
+    <label>Music Volume</label>
+    <input type="range" id="music-volume" min="0" max="100" value="50">
+    <label>SFX Volume</label>
+    <input type="range" id="sfx-volume" min="0" max="100" value="70">
+    <label>Master Volume</label>
+    <input type="range" id="master-volume" min="0" max="100" value="80">
+  </div>
 
   <!-- ==================== AUTH MODALS ==================== -->
-  <!-- Register Modal -->
   <div id="register-modal" class="auth-modal hidden">
     <div class="auth-box">
       <button class="close-btn" onclick="closeAuthModal()">x</button>
@@ -595,7 +392,6 @@
     </div>
   </div>
 
-  <!-- Login Modal -->
   <div id="login-modal" class="auth-modal hidden">
     <div class="auth-box">
       <button class="close-btn" onclick="closeAuthModal()">x</button>
@@ -608,44 +404,173 @@
     </div>
   </div>
 
-</body>
-</html>
-assword">
-      <button type="submit" id="btn-submit-login">Login</button>
-      <span class="auth-link" onclick="showRegister()">No account? Register</span>
-    </div>
-  </div>
+  <!-- ==================== JAVASCRIPT ==================== -->
+  <script>
+    // ===== SCREEN MANAGEMENT =====
+    function setScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById('screen-' + screenId);
+      if (target) target.classList.add('active');
+    }
 
-  <!-- ==================== MODULE ENTRY ==================== -->
-  <script type="module" src="js/main.js"></script>
+    // ===== LANDING BUTTONS =====
+    document.getElementById('btn-play').addEventListener('click', () => {
+      setScreen('charselect');
+    });
+    document.getElementById('btn-guest').addEventListener('click', () => {
+      setScreen('charselect');
+    });
+    document.getElementById('btn-register').addEventListener('click', () => {
+      document.getElementById('register-modal').classList.remove('hidden');
+      document.getElementById('login-modal').classList.add('hidden');
+    });
+    document.getElementById('btn-login').addEventListener('click', () => {
+      document.getElementById('login-modal').classList.remove('hidden');
+      document.getElementById('register-modal').classList.add('hidden');
+    });
+    document.getElementById('btn-settings').addEventListener('click', () => {
+      document.getElementById('settings-panel').classList.add('active');
+    });
+    document.getElementById('btn-about').addEventListener('click', () => {
+      alert('Starlight Inn v8.2.0\nA cozy isometric social world.\nGather, explore, and play together under the stars!');
+    });
 
-  <!-- ==================== AUTH MODALS ==================== -->
-  <!-- Register Modal -->
-  <div id="register-modal" class="auth-modal hidden">
-    <div class="auth-box">
-      <button class="close-btn" onclick="closeAuthModal()">x</button>
-      <h2>Create Account</h2>
-      <div class="auth-error" id="register-error"></div>
-      <input type="text" id="reg-username" placeholder="Username (3-20 chars)" maxlength="20" autocomplete="off">
-      <input type="password" id="reg-password" placeholder="Password (6+ chars)">
-      <input type="password" id="reg-confirm" placeholder="Confirm Password">
-      <button type="submit" id="btn-submit-register">Create Account</button>
-      <span class="auth-link" onclick="showLogin()">Already have an account? Login</span>
-    </div>
-  </div>
+    // ===== AUTH =====
+    window.closeAuthModal = () => {
+      document.getElementById('register-modal').classList.add('hidden');
+      document.getElementById('login-modal').classList.add('hidden');
+    };
+    window.showRegister = () => {
+      document.getElementById('register-modal').classList.remove('hidden');
+      document.getElementById('login-modal').classList.add('hidden');
+    };
+    window.showLogin = () => {
+      document.getElementById('login-modal').classList.remove('hidden');
+      document.getElementById('register-modal').classList.add('hidden');
+    };
 
-  <!-- Login Modal -->
-  <div id="login-modal" class="auth-modal hidden">
-    <div class="auth-box">
-      <button class="close-btn" onclick="closeAuthModal()">x</button>
-      <h2>Welcome Back</h2>
-      <div class="auth-error" id="login-error"></div>
-      <input type="text" id="login-username" placeholder="Username" autocomplete="off">
-      <input type="password" id="login-password" placeholder="Password">
-      <button type="submit" id="btn-submit-login">Login</button>
-      <span class="auth-link" onclick="showRegister()">No account? Register</span>
-    </div>
-  </div>
+    // Simple account storage
+    const accounts = JSON.parse(localStorage.getItem('starlight_accounts_v2') || '{}');
+    function saveAccounts() {
+      localStorage.setItem('starlight_accounts_v2', JSON.stringify(accounts));
+    }
 
+    document.getElementById('btn-submit-register').addEventListener('click', (e) => {
+      e.preventDefault();
+      const user = document.getElementById('reg-username').value.trim();
+      const pass = document.getElementById('reg-password').value;
+      const confirm = document.getElementById('reg-confirm').value;
+      const err = document.getElementById('register-error');
+      if (!user || user.length < 3) { err.textContent = 'Username must be 3+ chars'; return; }
+      if (!/^[a-zA-Z0-9_]+$/.test(user)) { err.textContent = 'Letters, numbers, _ only'; return; }
+      if (!pass || pass.length < 6) { err.textContent = 'Password must be 6+ chars'; return; }
+      if (pass !== confirm) { err.textContent = 'Passwords do not match'; return; }
+      if (accounts[user.toLowerCase()]) { err.textContent = 'Username taken'; return; }
+      accounts[user.toLowerCase()] = { username: user, password: pass, created: Date.now() };
+      saveAccounts();
+      localStorage.setItem('starlight_current_user', user);
+      closeAuthModal();
+      setScreen('charselect');
+    });
+
+    document.getElementById('btn-submit-login').addEventListener('click', (e) => {
+      e.preventDefault();
+      const user = document.getElementById('login-username').value.trim();
+      const pass = document.getElementById('login-password').value;
+      const err = document.getElementById('login-error');
+      const acc = accounts[user.toLowerCase()];
+      if (!acc) { err.textContent = 'Username not found'; return; }
+      if (acc.password !== pass) { err.textContent = 'Wrong password'; return; }
+      localStorage.setItem('starlight_current_user', user);
+      closeAuthModal();
+      setScreen('charselect');
+    });
+
+    // Auto-login
+    const currentUser = localStorage.getItem('starlight_current_user');
+    if (currentUser && accounts[currentUser.toLowerCase()]) {
+      console.log('[Auth] Welcome back, ' + currentUser);
+    }
+
+    // ===== CHARACTER SELECT =====
+    window.randomizeChar = () => {
+      const hairs = ['spiky', 'long', 'short', 'curly', 'buzz', 'mohawk', 'afro'];
+      const colors = ['#FFCC80', '#8D5524', '#C68642', '#E0AC69', '#F1C27D'];
+      const preview = document.querySelector('.charselect-preview');
+      preview.textContent = ['🧑','👨','👩','🧒'][Math.floor(Math.random()*4)];
+    };
+    window.prevHair = () => { randomizeChar(); };
+    window.nextHair = () => { randomizeChar(); };
+    window.changeColor = () => { randomizeChar(); };
+    window.enterGame = () => { setScreen('game'); };
+    window.goBack = () => { setScreen('landing'); };
+    window.closeSettings = () => { document.getElementById('settings-panel').classList.remove('active'); };
+
+    // ===== HARRY POTTER JINGLE =====
+    const jingleCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let jingleMuted = false;
+    let jingleGain = jingleCtx.createGain();
+    jingleGain.connect(jingleCtx.destination);
+    jingleGain.gain.value = 0.25;
+
+    const noteFreq = {
+      'D4': 293.66, 'F#4': 369.99, 'A4': 440.00, 'B4': 493.88,
+      'D5': 587.33, 'E5': 659.25, 'F#5': 739.99, 'A5': 880.00,
+      'B5': 987.77, 'D6': 1174.66
+    };
+
+    function playNote(note, start, duration, vol) {
+      const osc = jingleCtx.createOscillator();
+      const g = jingleCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = noteFreq[note] || 440;
+      g.gain.setValueAtTime(0, start);
+      g.gain.linearRampToValueAtTime(vol, start + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.001, start + duration);
+      osc.connect(g);
+      g.connect(jingleGain);
+      osc.start(start);
+      osc.stop(start + duration + 0.1);
+    }
+
+    function playJingle() {
+      if (jingleMuted) return;
+      const now = jingleCtx.currentTime;
+      // Opening magical phrase (Hedwig's theme inspired)
+      playNote('D5', now, 1.5, 0.3);
+      playNote('F#5', now + 0.4, 0.6, 0.25);
+      playNote('E5', now + 0.8, 0.5, 0.2);
+      playNote('D5', now + 1.2, 1.0, 0.25);
+      // Sparkle cascade
+      for (let i = 0; i < 8; i++) {
+        const notes = ['D6', 'B5', 'A5', 'F#5'];
+        playNote(notes[i % 4], now + 1.5 + i * 0.12, 0.3, 0.15);
+      }
+      // Resolution chord
+      playNote('D4', now + 2.5, 2.0, 0.2);
+      playNote('F#4', now + 2.5, 2.0, 0.15);
+      playNote('A4', now + 2.5, 2.0, 0.15);
+    }
+
+    // Play on first interaction (browsers block audio before user interaction)
+    let jingleStarted = false;
+    function startJingle() {
+      if (jingleStarted) return;
+      jingleStarted = true;
+      if (jingleCtx.state === 'suspended') jingleCtx.resume();
+      playJingle();
+      setInterval(() => { if (!jingleMuted) playJingle(); }, 35000);
+    }
+    document.addEventListener('click', startJingle, { once: true });
+
+    // Mute button
+    document.getElementById('btn-mute').addEventListener('click', () => {
+      jingleMuted = !jingleMuted;
+      jingleGain.gain.value = jingleMuted ? 0 : 0.25;
+      document.getElementById('btn-mute').textContent = jingleMuted ? 'Sound Off' : 'Sound On';
+    });
+
+    console.log('🌟 Starlight Inn v8.2.0 loaded — click anywhere to hear the magic!');
+  </script>
 </body>
 </html>
