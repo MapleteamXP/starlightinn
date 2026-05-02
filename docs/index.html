@@ -1041,13 +1041,19 @@ function updateCurrency(){
 }
 
 // ===== INIT =====
-window.addEventListener('DOMContentLoaded',()=>{
+function initApp(){
   updateCurrency();
   loadAllAssets();
   document.addEventListener('keydown',e=>{
     if(e.key==='Escape')document.querySelectorAll('.panel').forEach(el=>el.classList.remove('active'));
   });
-});
+}
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',initApp);
+}else{
+  initApp();
+}
 </script>
 </body>
 </html>
