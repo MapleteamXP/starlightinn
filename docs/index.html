@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
 <meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-<title>Starlight Inn</title>
+<meta http-equiv="Expires" content="-1">
+<meta name="cache-control" content="no-cache">
+<title>Starlight Inn v19.5</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;background:#0a0a1a;font-family:'Segoe UI',system-ui,sans-serif;color:#e0e0e0}
@@ -149,7 +150,7 @@ canvas{display:block}
       <button class="btn bg2" onclick="showAuth('login')">LOG IN</button>
       <button class="btn bb" onclick="showAuth('register')">REGISTER</button>
     </div>
-    <div class="ver">v19.4</div>
+    <div class="ver">v19.5</div>
   </div>
 </div>
 
@@ -225,7 +226,7 @@ canvas{display:block}
 <script>
 
 // ============ CONFIG ============
-const VER = '19.4';
+const VER = '19.5';
 const GH = 'https://mapleteamxp.github.io/starlightinn';
 const ASSET = (p) => GH+'/'+p+'?v='+VER;
 
@@ -790,7 +791,7 @@ function drawAvatar(e){
   const nx = ax - tw/2 - 4;
   const ny = ay - 50;
   CX.beginPath();
-  CX.roundRect(nx, ny, tw+8, 18, 4);
+  CX.rect(nx, ny, tw+8, 18);
   CX.fill();
   CX.fillStyle = e.isMe ? '#32CD32' : '#ccc';
   CX.fillText(nm, ax, ny + 13);
