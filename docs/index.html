@@ -2,301 +2,240 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="-1">
-<meta name="cache-control" content="no-cache">
-<title>Starlight Inn v19.6</title>
+<title>Starlight Inn</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:#0a0a1a;font-family:'Segoe UI',system-ui,sans-serif;color:#e0e0e0}
-canvas{display:block}
+body{font-family:'Segoe UI',sans-serif;background:#0a0a1a;color:#fff;overflow:hidden}
 
-/* Loading */
-#loading{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0a1a;z-index:9999;transition:opacity .6s}
-#loading.done{opacity:0;pointer-events:none}
-#loading h1{color:#9370DB;font-size:40px;letter-spacing:6px;margin-bottom:20px;text-shadow:0 0 30px rgba(147,112,219,.4)}
-#loading .bar{width:300px;height:10px;background:#1a1a2e;border-radius:5px;border:1px solid #333;overflow:hidden}
-#loading .fill{width:0%;height:100%;background:linear-gradient(90deg,#9370DB,#32CD32);transition:width .3s}
-#loading .txt{color:#666;margin-top:12px;font-size:13px}
+/* ===== LOADING ===== */
+#loading{position:fixed;inset:0;background:#0a0a1a;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999}
+#loading .logo{font-size:42px;font-weight:900;color:#ffd700;text-shadow:0 0 20px rgba(255,215,0,0.4);margin-bottom:30px;letter-spacing:4px}
+#loading .bar{width:300px;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden}
+#loading .fill{height:100%;background:#9370db;width:0%;transition:width .3s}
+#loading .txt{color:#aaa;margin-top:15px;font-size:13px}
 
-/* Title */
-#title{position:fixed;inset:0;display:none;z-index:5000}
-#title.on{display:block}
-#title .bg{position:absolute;inset:0}
-#title .bg img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
-#title .ov{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,10,26,.3),rgba(10,10,26,.95))}
-#title .content{position:absolute;bottom:12%;left:50%;transform:translateX(-50%);text-align:center;width:90%;max-width:400px}
-#title .logo{color:#9370DB;font-size:44px;font-weight:bold;letter-spacing:6px;text-shadow:0 0 40px rgba(147,112,219,.5);margin-bottom:6px}
-#title .sub{color:#32CD32;font-size:13px;letter-spacing:3px;margin-bottom:30px}
-#title .btn{display:block;width:100%;max-width:280px;margin:8px auto;padding:14px 24px;font-size:16px;font-weight:bold;border:none;border-radius:10px;cursor:pointer;letter-spacing:1px;transition:transform .15s}
-#title .btn:hover{transform:scale(1.04)}
-#title .bp{background:linear-gradient(135deg,#9370DB,#8A2BE2);color:#fff;box-shadow:0 4px 20px rgba(147,112,219,.3)}
-#title .bg2{background:linear-gradient(135deg,#32CD32,#228B22);color:#fff}
-#title .bb{background:linear-gradient(135deg,#4169E1,#1E90FF);color:#fff}
-#title .row{display:flex;gap:10px;justify-content:center}
-#title .row .btn{max-width:135px;font-size:14px;padding:10px}
-#title .ver{position:fixed;bottom:10px;right:14px;color:#333;font-size:11px}
+/* ===== TITLE SCREEN ===== */
+#title{position:fixed;inset:0;background:url(assets/title-bg-v20.png) center/cover no-repeat;display:none;flex-direction:column;align-items:center;z-index:100}
+#title .overlay{position:absolute;inset:0;background:rgba(10,10,30,0.25)}
+#title .content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;width:100%}
+#title h1{font-size:72px;font-weight:900;color:#ffd700;text-shadow:0 4px 0 #8b6914,0 0 40px rgba(255,215,0,0.3);letter-spacing:6px;margin-top:-120px;font-family:Georgia,serif}
+#title h2{font-size:16px;color:#c0c0c0;letter-spacing:8px;text-transform:uppercase;margin-top:10px;text-shadow:0 2px 4px rgba(0,0,0,0.5)}
+#title .btn-enter{background:#daa520;border:none;padding:16px 60px;font-size:20px;font-weight:700;color:#1a0a00;border-radius:8px;cursor:pointer;margin-top:50px;box-shadow:0 4px 0 #8b6914,0 8px 20px rgba(0,0,0,0.4);transition:all .15s}
+#title .btn-enter:hover{transform:translateY(-2px);box-shadow:0 6px 0 #8b6914,0 12px 30px rgba(0,0,0,0.5)}
+#title .btn-enter:active{transform:translateY(2px);box-shadow:0 2px 0 #8b6914}
+#title .row{display:flex;gap:15px;margin-top:25px}
+#title .btn-sm{background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.2);padding:10px 28px;font-size:14px;color:#fff;border-radius:6px;cursor:pointer;backdrop-filter:blur(8px);transition:all .2s}
+#title .btn-sm:hover{background:rgba(147,112,219,0.4);border-color:#9370db}
+#title .ver{position:absolute;bottom:15px;right:20px;color:rgba(255,255,255,0.3);font-size:11px}
+#title .welcome{position:absolute;top:20px;right:20px;color:#32cd32;font-size:13px;background:rgba(0,0,0,0.5);padding:6px 14px;border-radius:20px;display:none}
 
-/* Auth */
-#auth{position:fixed;inset:0;display:none;z-index:4500;background:rgba(10,10,26,.95);align-items:center;justify-content:center}
-#auth.on{display:flex}
-#auth .box{background:linear-gradient(180deg,#1a1a2e,#0f0f1a);border:2px solid #9370DB;border-radius:16px;padding:32px;width:360px;max-width:90vw}
-#auth .box h2{color:#9370DB;text-align:center;margin-bottom:20px;font-size:22px}
-#auth .box label{display:block;color:#888;font-size:12px;margin-top:10px;margin-bottom:4px}
-#auth .box input{width:100%;padding:12px;border:2px solid #333;border-radius:8px;background:#0a0a1a;color:#fff;font-size:15px;outline:none}
-#auth .box input:focus{border-color:#32CD32}
-#auth .box .err{color:#ff4444;font-size:13px;text-align:center;margin:8px 0;min-height:18px}
-#auth .box .abtn{width:100%;padding:14px;margin-top:14px;border:none;border-radius:10px;cursor:pointer;font-weight:bold;font-size:16px}
-#auth .box .ap{background:linear-gradient(135deg,#9370DB,#8A2BE2);color:#fff}
-#auth .box .ag{background:#333;color:#fff;margin-top:8px}
-#auth .box .swap{text-align:center;color:#888;font-size:13px;margin-top:14px;cursor:pointer}
-#auth .box .swap span{color:#32CD52;text-decoration:underline}
+/* ===== AUTH ===== */
+#auth{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:200}
+#auth .box{background:#1a1a2e;border:1px solid rgba(147,112,219,0.3);border-radius:12px;padding:40px;width:340px}
+#auth h3{color:#ffd700;font-size:22px;margin-bottom:25px;text-align:center}
+#auth input{width:100%;padding:12px 16px;margin-bottom:15px;background:#0f0f1a;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:14px}
+#auth input:focus{outline:none;border-color:#9370db}
+#auth .btn{width:100%;padding:14px;background:#9370db;border:none;border-radius:6px;color:#fff;font-weight:700;font-size:15px;cursor:pointer;margin-top:10px}
+#auth .btn:hover{background:#a855f7}
+#auth .swap{text-align:center;margin-top:18px;color:#aaa;font-size:13px}
+#auth .swap span{color:#9370db;cursor:pointer}
+#auth .swap span:hover{text-decoration:underline}
+#auth .err{color:#ff6b6b;font-size:12px;margin-top:-10px;margin-bottom:10px;text-align:center}
+#auth .close{position:absolute;top:20px;right:25px;color:#fff;font-size:24px;cursor:pointer;opacity:.5}
+#auth .close:hover{opacity:1}
 
-/* Character */
-#char{position:fixed;inset:0;display:none;z-index:4000;background:#0a0a1a;overflow-y:auto}
-#char.on{display:block}
-#char .head{text-align:center;padding:24px;border-bottom:1px solid #222;position:sticky;top:0;background:#0a0a1a;z-index:10}
-#char .head h1{color:#9370DB;font-size:28px}
-#char .head p{color:#888;font-size:13px;margin-top:4px}
-#char .body{max-width:900px;margin:0 auto;padding:24px;display:flex;gap:24px}
-#char .left{flex:1}
-#char .right{flex:0 4;align-self:flex-start;position:sticky;top:80px}
-#char .sec{background:rgba(255,255,255,.02);border:1px solid #222;border-radius:12px;padding:16px;margin-bottom:16px}
-#char .sec h3{color:#32CD32;font-size:12px;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
-#char .gend{display:flex;gap:8px}
-#char .gend button{flex:1;padding:10px;border:2px solid #333;border-radius:8px;background:transparent;color:#666;font-weight:bold;cursor:pointer}
-#char .gend button.on{border-color:#9370DB;color:#9370DB;background:rgba(147,112,219,.1)}
-#char .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
-#char .cell{cursor:pointer;border:3px solid #333;border-radius:10px;overflow:hidden;background:rgba(255,255,255,.03);aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;transition:all .15s}
-#char .cell:hover{border-color:#666;transform:translateY(-2px)}
-#char .cell.on{border-color:#32CD32;background:rgba(50,205,50,.08);box-shadow:0 0 15px rgba(50,205,50,.2)}
-#char .cell img{width:80%;height:80%;object-fit:contain;image-rendering:pixelated}
-#char .colors{display:flex;gap:8px;flex-wrap:wrap}
-#char .colors .dot{width:28px;height:28px;border-radius:50%;border:2px solid #333;cursor:pointer;transition:all .15s}
-#char .colors .dot:hover{transform:scale(1.15);border-color:#fff}
-#char .colors .dot.on{border-color:#32CD32;box-shadow:0 0 8px rgba(50,205,50,.4)}
-#char .preview{width:180px;height:260px;background:rgba(255,255,255,.03);border:3px solid #9370DB;border-radius:14px;display:flex;align-items:center;justify-content:center}
-#char .preview img{max-width:90%;max-height:90%;image-rendering:pixelated;object-fit:contain}
-#char .acts{display:flex;gap:10px;margin-top:16px;justify-content:center}
-#char .acts button{padding:12px 24px;border:none;border-radius:10px;cursor:pointer;font-weight:bold}
-#char .acts .sv{background:linear-gradient(135deg,#9370DB,#8A2BE2);color:#fff}
-#char .acts .bk{background:#333;color:#fff}
+/* ===== CHARACTER CREATOR ===== */
+#char{position:fixed;inset:0;background:#0a0a1a;display:none;z-index:150;flex-direction:column;align-items:center;padding-top:40px}
+#char h2{color:#ffd700;font-size:28px;margin-bottom:10px}
+#char .sub{color:#aaa;font-size:14px;margin-bottom:30px}
+#char .gend{display:flex;gap:10px;margin-bottom:25px}
+#char .gend button{padding:10px 30px;border:2px solid rgba(255,255,255,0.1);background:transparent;color:#fff;border-radius:8px;cursor:pointer;font-size:14px}
+#char .gend button.on{border-color:#9370db;background:rgba(147,112,219,0.2);color:#9370db;font-weight:700}
+#char .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;width:400px;margin-bottom:30px}
+#char .cell{border:2px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px;cursor:pointer;text-align:center;transition:all .2s;background:rgba(255,255,255,0.03)}
+#char .cell:hover{border-color:rgba(147,112,219,0.5);background:rgba(147,112,219,0.1)}
+#char .cell.on{border-color:#9370db;background:rgba(147,112,219,0.2)}
+#char .cell img{width:100%;height:auto;border-radius:6px}
+#char .cell .nm{color:#ccc;font-size:12px;margin-top:5px}
+#char .preview{width:120px;height:120px;border:2px solid rgba(147,112,219,0.3);border-radius:12px;margin-bottom:25px;display:flex;align-items:center;justify-content:center;background:rgba(147,112,219,0.05)}
+#char .preview img{max-width:90%;max-height:90%}
+#char .btn-save{padding:14px 50px;background:#32cd32;border:none;border-radius:8px;color:#fff;font-weight:700;font-size:16px;cursor:pointer}
+#char .btn-save:hover{background:#2eb82e}
+#char .back{position:absolute;top:20px;left:20px;color:#aaa;cursor:pointer;font-size:14px}
+#char .back:hover{color:#fff}
 
-/* Game */
-#game{position:fixed;inset:0;display:none;z-index:100}
-#game.on{display:block}
-#game canvas{position:absolute;inset:0}
+/* ===== GAME ===== */
+#game{position:fixed;inset:0;display:none;z-index:50}
+#gc{width:100%;height:100%;display:block;background:#0a0a1a}
 
 /* Top bar */
-#tbar{position:fixed;top:0;left:0;right:0;height:44px;background:rgba(10,10,20,.92);border-bottom:1px solid #333;display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:500}
-#tbar .grp{display:flex;align-items:center;gap:8px}
-#tbar button{padding:6px 14px;border:1px solid #444;border-radius:6px;background:rgba(255,255,255,.05);color:#ccc;font-size:11px;font-weight:bold;cursor:pointer}
-#tbar button:hover{border-color:#9370DB;color:#9370DB}
-#tbar .rname{color:#32CD32;font-weight:bold;font-size:14px}
-#tbar .cur{font-size:12px;font-weight:bold}
-#tbar .cg{color:#FFD700}
-#tbar .cm{color:#87CEEB}
-#tbar .cl{color:#9370DB}
+#topbar{position:fixed;top:0;left:0;right:0;height:44px;background:rgba(10,10,26,0.9);border-bottom:1px solid rgba(147,112,219,0.2);display:flex;align-items:center;justify-content:space-between;padding:0 15px;z-index:60}
+#topbar .left{display:flex;align-items:center;gap:12px}
+#topbar .room{font-weight:700;color:#ffd700;font-size:15px}
+#topbar .nav-btn{padding:6px 14px;background:rgba(147,112,219,0.2);border:1px solid rgba(147,112,219,0.3);color:#9370db;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600}
+#topbar .nav-btn:hover{background:rgba(147,112,219,0.3)}
+#topbar .right{display:flex;align-items:center;gap:15px}
+#topbar .stat{display:flex;align-items:center;gap:5px;font-size:13px}
+#topbar .stat .icon{font-size:14px}
+#topbar .stat .val{color:#ffd700;font-weight:700}
+
+/* Chat layer */
+#chatlyr{position:fixed;inset:0;pointer-events:none;z-index:55;overflow:hidden}
+#chatlyr .bubble{position:absolute;background:rgba(0,0,0,0.75);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:8px 12px;max-width:200px;pointer-events:none;font-size:13px;color:#fff;box-shadow:0 4px 15px rgba(0,0,0,0.3)}
+#chatlyr .bubble .name{color:#9370db;font-weight:700;font-size:11px;margin-bottom:3px}
+#chatlyr .bubble.me .name{color:#32cd32}
 
 /* Bottom bar */
-#bbar{position:fixed;bottom:0;left:0;right:0;height:48px;background:rgba(10,10,20,.95);border-top:1px solid #333;display:flex;align-items:center;padding:0 14px;gap:8px;z-index:500}
-#bbar input{flex:1;max-width:360px;padding:9px 16px;border:1px solid #444;border-radius:20px;background:#0a0a1a;color:#fff;font-size:13px;outline:none}
-#bbar input:focus{border-color:#9370DB}
-#bbar button{padding:8px 16px;border:1px solid #444;border-radius:6px;background:rgba(255,255,255,.05);color:#ccc;font-size:11px;cursor:pointer}
-#bbar button:hover{border-color:#32CD32;color:#32CD32}
+#btm{position:fixed;bottom:0;left:0;right:0;height:50px;background:rgba(10,10,26,0.9);border-top:1px solid rgba(147,112,219,0.2);display:flex;align-items:center;gap:10px;padding:0 15px;z-index:60}
+#btm input{flex:1;padding:10px 16px;background:#0f0f1a;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:14px}
+#btm input:focus{outline:none;border-color:#9370db}
+#btm .send{padding:10px 20px;background:#9370db;border:none;border-radius:6px;color:#fff;font-weight:700;cursor:pointer;font-size:13px}
+#btm .send:hover{background:#a855f7}
 
-/* Panels */
-.pan{position:fixed;background:rgba(10,10,20,.96);border:2px solid #9370DB;border-radius:14px;z-index:600;display:none;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.6)}
-.pan.on{display:flex}
-.pan .ph{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #333;background:rgba(147,112,219,.05)}
-.pan .ph h2{color:#9370DB;font-size:16px}
-.pan .ph .x{background:none;border:none;color:#9370DB;font-size:22px;cursor:pointer;width:30px}
-.pan .pb{padding:14px;overflow-y:auto;flex:1}
-
-/* Room cards */
-.rcard{background:rgba(255,255,255,.03);border:1px solid #333;border-radius:10px;padding:12px;cursor:pointer;transition:all .15s}
-.rcard:hover{border-color:#32CD32;background:rgba(50,205,50,.05);transform:scale(1.02)}
-.rcard .icon{font-size:36px;text-align:center;margin-bottom:6px}
-.rcard .nm{color:#32CD32;font-size:13px;font-weight:bold;text-align:center}
-.rcard .ds{color:#777;font-size:11px;text-align:center;margin-top:3px}
-
-/* Chat */
-.cmsg{position:absolute;background:rgba(0,0,0,.8);border:1px solid rgba(147,112,219,.4);border-radius:10px;padding:8px 12px;color:#fff;font-size:12px;max-width:200px;pointer-events:none;z-index:200;transform:translate(-50%,-100%);margin-top:-14px}
-.cmsg .cn{color:#9370DB;font-weight:bold;font-size:10px;margin-bottom:2px}
-
-/* Exits */
-@keyframes pulse{0%{opacity:.4}50%{opacity:.8}100%{opacity:.4}}
+/* Room Navigator Panel */
+#rnav{position:fixed;top:50px;left:15px;width:280px;max-height:400px;background:rgba(20,20,40,0.95);border:1px solid rgba(147,112,219,0.3);border-radius:12px;padding:15px;z-index:70;display:none;overflow-y:auto}
+#rnav.on{display:block}
+#rnav h4{color:#ffd700;font-size:16px;margin-bottom:12px}
+#rnav .rcard{display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;cursor:pointer;margin-bottom:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05)}
+#rnav .rcard:hover{background:rgba(147,112,219,0.15);border-color:rgba(147,112,219,0.3)}
+#rnav .rcard .icon{font-size:22px}
+#rnav .rcard .nm{font-weight:600;color:#fff;font-size:14px}
+#rnav .rcard .ds{color:#aaa;font-size:11px}
+#rnav .close{color:#aaa;cursor:pointer;font-size:16px;text-align:right;margin-bottom:10px}
+#rnav .close:hover{color:#fff}
 </style>
 </head>
 <body>
 
+<!-- Loading -->
 <div id="loading">
-  <h1>STARLIGHT INN</h1>
+  <div class="logo">STARLIGHT INN</div>
   <div class="bar"><div class="fill" id="lfill"></div></div>
-  <div class="txt" id="ltxt">Loading...</div>
+  <div class="txt" id="ltxt">Loading assets... 0%</div>
 </div>
 
+<!-- Title Screen -->
 <div id="title">
-  <div class="bg"><img src="assets/title-bg-v16.png?v=19" alt=""></div>
-  <div class="ov"></div>
+  <div class="overlay"></div>
   <div class="content">
-    <div class="logo">STARLIGHT INN</div>
-    <div class="sub">A COZY VIRTUAL WORLD</div>
-    <div id="welcome" style="color:#aaa;font-size:13px;margin-bottom:12px;display:none"></div>
-    <button class="btn bp" onclick="goPlay()">PLAY NOW</button>
+    <h1>STARLIGHT INN</h1>
+    <h2>A COZY VIRTUAL WORLD</h2>
+    <button class="btn-enter" onclick="goPlay()">Enter World</button>
     <div class="row">
-      <button class="btn bg2" onclick="showAuth('login')">LOG IN</button>
-      <button class="btn bb" onclick="showAuth('register')">REGISTER</button>
+      <button class="btn-sm" onclick="goPlay()">Play as Guest</button>
+      <button class="btn-sm" onclick="showAuth('register')">Register</button>
+      <button class="btn-sm" onclick="showAuth('login')">Login</button>
     </div>
-    <div class="ver">v19.6</div>
   </div>
+  <div class="welcome" id="welcome"></div>
+  <div class="ver">v20</div>
 </div>
 
+<!-- Auth Modal -->
 <div id="auth">
   <div class="box">
-    <h2 id="atitle">Welcome Back</h2>
-    <label>Username</label>
-    <input type="text" id="auser" placeholder="Your name" maxlength="16">
-    <label>Password</label>
-    <input type="password" id="apass" placeholder="Password" maxlength="32">
+    <div class="close" onclick="hide('auth');show('title')">&times;</div>
+    <h3 id="atitle">Welcome Back</h3>
+    <input type="text" id="auser" placeholder="Username" maxlength="16">
+    <input type="password" id="apass" placeholder="Password" maxlength="20">
     <div class="err" id="aerr"></div>
-    <button class="abtn ap" id="abtn" onclick="doAuth()">LOG IN</button>
-    <button class="abtn ag" onclick="backTitle()">BACK</button>
-    <div class="swap" id="aswap" onclick="swapAuth()">No account? <span>Register</span></div>
+    <button class="btn" id="abtn" onclick="doAuth()">LOG IN</button>
+    <div class="swap" id="aswap"><span onclick="swapAuth()">No account? Register</span></div>
   </div>
 </div>
 
+<!-- Character Creator -->
 <div id="char">
-  <div class="head"><h1>Create Your Character</h1><p>Choose your look</p></div>
-  <div class="body">
-    <div class="left">
-      <div class="sec">
-        <h3>Gender</h3>
-        <div class="gend">
-          <button class="on" data-g="boy" onclick="pickGender('boy')">BOY</button>
-          <button data-g="girl" onclick="pickGender('girl')">GIRL</button>
-        </div>
-      </div>
-      <div class="sec">
-        <h3>Choose Character</h3>
-        <div class="grid" id="cgrid"></div>
-      </div>
-    </div>
-    <div class="right">
-      <div class="preview" id="preview"><img id="pimg" src=""></div>
-      <div class="acts">
-        <button class="sv" onclick="saveChar()">SAVE & PLAY</button>
-        <button class="bk" onclick="backTitle()">BACK</button>
-      </div>
-    </div>
+  <div class="back" onclick="backTitle()">&larr; Back</div>
+  <h2>Choose Your Character</h2>
+  <div class="sub">Pick your look for the Starlight Inn</div>
+  <div class="gend">
+    <button class="on" data-g="boy" onclick="pickGender('boy')">BOY</button>
+    <button data-g="girl" onclick="pickGender('girl')">GIRL</button>
   </div>
+  <div class="preview"><img id="pimg" src=""></div>
+  <div class="grid" id="cgrid"></div>
+  <button class="btn-save" onclick="saveChar()">SAVE & PLAY</button>
 </div>
 
+<!-- Game -->
 <div id="game">
   <canvas id="gc"></canvas>
-  <div id="chatlyr" style="position:absolute;inset:0;pointer-events:none;z-index:150"></div>
-  <div id="pathlyr" style="position:absolute;inset:0;pointer-events:none;z-index:50"></div>
-
-  <div id="tbar">
-    <div class="grp">
-      <button onclick="togglePan('rooms')">NAVIGATOR</button>
-      <span class="rname" id="rnm">Grand Lobby</span>
+  <div id="topbar">
+    <div class="left">
+      <span class="room" id="rnm">Grand Lobby</span>
+      <button class="nav-btn" onclick="togglePan('rnav')">Navigator</button>
     </div>
-    <div class="grp">
-      <span class="cur cg">GOLD: <span id="cg">500</span></span>
-      <span class="cur cm">GEMS: <span id="cm">50</span></span>
-      <span class="cur cl">LVL: <span id="cl">1</span></span>
+    <div class="right">
+      <div class="stat"><span class="icon">👥</span><span id="pop">1</span></div>
+      <div class="stat"><span class="icon">🪙</span><span class="val" id="gold">500</span></div>
+      <div class="stat"><span class="icon">💎</span><span class="val" id="gems">50</span></div>
     </div>
   </div>
-
-  <div id="bbar">
-    <input type="text" id="ci" placeholder="Press Enter to chat..." onkeydown="if(event.key==='Enter'){doChat(this.value);this.value=''}">
-    <button onclick="togglePan('rooms')">ROOMS</button>
-    <button onclick="backTitle()">QUIT</button>
+  <div id="chatlyr"></div>
+  <div id="btm">
+    <input type="text" id="chat" placeholder="Press Enter to chat..." maxlength="100">
+    <button class="send" onclick="sendChat()">Send</button>
   </div>
-
-  <div id="rooms" class="pan" style="width:380px;height:480px;top:52px;left:10px">
-    <div class="ph"><h2>Room Navigator</h2><button class="x" onclick="closePan('rooms')">&times;</button></div>
-    <div class="pb"><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px" id="rlist"></div></div>
+  <div id="rnav">
+    <div class="close" onclick="closePan('rnav')">Close</div>
+    <h4>Room Navigator</h4>
+    <div id="rlist"></div>
   </div>
 </div>
 
 <script>
 
 // ============ CONFIG ============
-const VER = '19.6';
+const VER = '20';
 const GH = 'https://mapleteamxp.github.io/starlightinn';
 const ASSET = (p) => GH+'/'+p+'?v='+VER;
 
 const ROOMS = [
-  {id:'lobby',name:'Grand Lobby',icon:'🏛️',desc:'Main gathering hall',w:1200,h:800,walk:[100,1100,400,750],spawn:[600,600]},
-  {id:'tavern',name:'Moonlight Tavern',icon:'🍺',desc:'Food and drinks',w:1000,h:700,walk:[80,920,350,650],spawn:[500,520]},
-  {id:'garden',name:'Starlight Garden',icon:'🌸',desc:'Peaceful nature retreat',w:1100,h:750,walk:[100,1000,380,700],spawn:[550,550]},
-  {id:'library',name:'Ancient Library',icon:'📚',desc:'Quiet reading space',w:1000,h:700,walk:[80,920,350,650],spawn:[500,520]},
-  {id:'bedroom',name:'Cozy Bedroom',icon:'🛏️',desc:'Rest and relax',w:900,h:650,walk:[70,830,330,600],spawn:[450,480]},
-  {id:'beach',name:'Midnight Beach',icon:'🏖️',desc:'Ocean breeze at night',w:1100,h:750,walk:[100,1000,380,700],spawn:[550,550]},
-  {id:'rooftop',name:'Rooftop Lounge',icon:'🌃',desc:'City views above',w:1000,h:700,walk:[80,920,350,650],spawn:[500,520]},
-  {id:'arcade',name:'Pixel Arcade',icon:'🎮',desc:'Games and fun',w:1000,h:700,walk:[80,920,350,650],spawn:[500,520]},
-  {id:'spa',name:'Crystal Spa',icon:'💎',desc:'Relaxation and wellness',w:900,h:650,walk:[70,830,330,600],spawn:[450,480]},
-  {id:'market',name:'Night Market',icon:'🛒',desc:'Trade and shop',w:1100,h:750,walk:[100,1000,380,700],spawn:[550,550]},
-  {id:'event',name:'Event Hall',icon:'🎉',desc:'Special events',w:1200,h:800,walk:[100,1100,400,750],spawn:[600,600]},
-  {id:'winter',name:'Winter Cabin',icon:'❄️',desc:'Cozy snow retreat',w:1000,h:700,walk:[80,920,350,650],spawn:[500,520]}
+  {id:'lobby',name:'Grand Lobby',icon:'🏛️',desc:'Main gathering hall',tiles:[6,6],spawn:[3,3]},
+  {id:'tavern',name:'Moonlight Tavern',icon:'🍺',desc:'Cozy drinks and food',tiles:[6,5],spawn:[3,2]},
+  {id:'garden',name:'Starlight Garden',icon:'🌸',desc:'Enchanted courtyard',tiles:[7,7],spawn:[3,3]}
 ];
 
 const CHARS = [
-  {id:'boy_hoodie',name:'Hoodie Boy',g:'boy',src:'assets/sprites/avatars/char_boy_hoodie.png'},
-  {id:'girl_dress',name:'Dress Girl',g:'girl',src:'assets/sprites/avatars/char_girl_dress.png'},
-  {id:'boy_jacket',name:'Jacket Boy',g:'boy',src:'assets/sprites/avatars/char_boy_jacket.png'},
-  {id:'girl_maid',name:'Maid Girl',g:'girl',src:'assets/sprites/avatars/char_girl_maid.png'},
-  {id:'boy_tank',name:'Tank Boy',g:'boy',src:'assets/sprites/avatars/char_boy_tank.png'},
-  {id:'wizard',name:'Wizard',g:'boy',src:'assets/sprites/avatars/char_wizard.png'},
-  {id:'knight',name:'Knight',g:'boy',src:'assets/sprites/avatars/char_knight.png'},
-  {id:'catgirl',name:'Cat Girl',g:'girl',src:'assets/sprites/avatars/char_catgirl.png'},
-  {id:'innkeeper',name:'Innkeeper',g:'boy',src:'assets/sprites/avatars/char_innkeeper.png'},
-  {id:'vampire',name:'Vampire',g:'boy',src:'assets/sprites/avatars/char_vampire.png'},
-  {id:'lady',name:'Lady',g:'girl',src:'assets/sprites/avatars/v19/char_lady.png'},
-  {id:'steampunk',name:'Steampunk',g:'boy',src:'assets/sprites/avatars/v19/char_steampunk.png'},
-  {id:'goth',name:'Goth Girl',g:'girl',src:'assets/sprites/avatars/v19/char_goth.png'},
-  {id:'sporty',name:'Sporty Girl',g:'girl',src:'assets/sprites/avatars/v19/char_sporty.png'}
+  {id:'boy',name:'Hoodie Boy',g:'boy',src:'assets/sprites/avatars/v20/char_boy.png'},
+  {id:'girl',name:'Dress Girl',g:'girl',src:'assets/sprites/avatars/v20/char_girl.png'},
+  {id:'wizard',name:'Wizard',g:'boy',src:'assets/sprites/avatars/v20/char_wizard.png'},
+  {id:'knight',name:'Knight',g:'boy',src:'assets/sprites/avatars/v20/char_knight.png'},
+  {id:'cat',name:'Cat Person',g:'boy',src:'assets/sprites/avatars/v20/char_cat.png'},
+  {id:'innkeeper',name:'Innkeeper',g:'boy',src:'assets/sprites/avatars/v20/char_innkeeper.png'}
 ];
-
-const SKIN_COLORS = ['#FFDBAC','#F1C27D','#E0AC69','#8D5524','#C68642','#F5D0A9','#FFEBC4','#D2A679'];
-const HAIR_COLORS = ['#2C1608','#4A2511','#8B4513','#DAA520','#FFD700','#FF4500','#DC143C','#4B0082','#2F4F4F','#C0C0C0','#FFFFFF','#FF69B4'];
-const CLOTHES_COLORS = ['#9370DB','#32CD32','#4169E1','#DC143C','#FF8C00','#FFD700','#00CED1','#FF1493','#2F4F4F','#8B4513','#4A0080','#228B22'];
 
 // ============ GAME STATE ============
 let ST = {
   screen:'loading', room:null, me:null, users:[], chats:[],
-  gold:500, gems:50, lvl:1, xp:0,
+  gold:500, gems:50,
   cam:{x:0,y:0}, mx:0, my:0,
-  clicked:false, path:[], target:null,
   assets:{}, loaded:0, total:0,
-  account:null, char:null, gender:'boy',
-  selectedChar:0, selectedSkin:0, selectedHair:0, selectedClothes:0,
-  panels:{}, online:8, tick:0
+  account:null, char:null, gender:'boy', selectedChar:0,
+  panels:{}, tick:0
 };
 
 let CV, CX, W, H, LOOP;
+const TILE_W = 64;
+const TILE_H = 32;
 
 // ============ STORAGE ============
 function saveAcc(a){ localStorage.setItem('si_accounts', JSON.stringify(a||[])) }
 function loadAcc(){ try{return JSON.parse(localStorage.getItem('si_accounts')||'[]')}catch(e){return[]} }
 function saveSession(u,p){ localStorage.setItem('si_session', JSON.stringify({u,p,t:Date.now()})) }
 function loadSession(){ try{return JSON.parse(localStorage.getItem('si_session')||'null')}catch(e){return null} }
-function clearSession(){ localStorage.removeItem('si_session') }
 function saveCharData(c){ localStorage.setItem('si_char', JSON.stringify(c)) }
 function loadCharData(){ try{return JSON.parse(localStorage.getItem('si_char')||'null')}catch(e){return null} }
 
 // ============ ASSET LOADER ============
 function preload(){
   const imgs = [];
-  // Title bg
-  imgs.push(['titlebg', ASSET('assets/title-bg-v16.png')]);
-  // Room backgrounds
-  ROOMS.forEach(r => imgs.push(['room_'+r.id, ASSET('assets/sprites/rooms/v19/bg_'+r.id+'.png')]));
-  // Character sprites
+  imgs.push(['titlebg', ASSET('assets/title-bg-v20.png')]);
+  ROOMS.forEach(r => imgs.push(['room_'+r.id, ASSET('assets/sprites/rooms/v20/bg_'+r.id+'.png')]));
   CHARS.forEach(c => imgs.push(['char_'+c.id, ASSET(c.src)]));
 
   ST.total = imgs.length;
@@ -304,19 +243,19 @@ function preload(){
 
   imgs.forEach(([k,url]) => {
     const img = new Image();
+    img.crossOrigin = 'anonymous';
     img.onload = img.onerror = () => {
       done++;
       ST.assets[k] = img;
       updateLoad(done, ST.total);
-      if(done >= ST.total) setTimeout(initGame, 300);
+      if(done >= ST.total) setTimeout(initGame, 200);
     };
     img.src = url;
   });
 
-  // Safety timeout - proceed even if some assets fail
   setTimeout(() => {
-    if(ST.screen === 'loading'){ console.log('Force init after timeout'); initGame(); }
-  }, 8000);
+    if(ST.screen === 'loading') initGame();
+  }, 10000);
 }
 
 function updateLoad(done,total){
@@ -326,7 +265,6 @@ function updateLoad(done,total){
   if(f) f.style.width = pct+'%';
   if(t) t.textContent = 'Loading assets... '+pct+'%';
 }
-
 
 // ============ CHARACTER CREATOR ============
 function pickGender(g){
@@ -345,9 +283,13 @@ function renderCharGrid(){
     cell.className = 'cell' + (idx===ST.selectedChar?' on':'');
     cell.onclick = () => selectChar(idx);
     const img = document.createElement('img');
-    img.src = GH+'/'+c.src+'?v='+VER;
+    img.src = ASSET(c.src);
     img.alt = c.name;
     cell.appendChild(img);
+    const nm = document.createElement('div');
+    nm.className = 'nm';
+    nm.textContent = c.name;
+    cell.appendChild(nm);
     grid.appendChild(cell);
   });
 }
@@ -363,15 +305,15 @@ function updatePreview(){
   const ch = filtered[ST.selectedChar];
   if(!ch) return;
   const img = document.getElementById('pimg');
-  if(img) img.src = GH+'/'+ch.src+'?v='+VER;
+  if(img) img.src = ASSET(ch.src);
 }
 
 function saveChar(){
   const filtered = CHARS.filter(c => c.g === ST.gender);
   const ch = filtered[ST.selectedChar];
-  if(!ch){ showErr('Pick a character'); return; }
-  ST.char = { ...ch, skin: SKIN_COLORS[ST.selectedSkin], hair: HAIR_COLORS[ST.selectedHair], clothes: CLOTHES_COLORS[ST.selectedClothes] };
-  saveCharData(ST.char);
+  if(!ch){ alert('Pick a character'); return; }
+  ST.char = ch;
+  saveCharData(ch);
   enterGame();
 }
 
@@ -380,7 +322,6 @@ let authMode = 'login';
 
 function showAuth(mode){
   authMode = mode;
-  const auth = document.getElementById('auth');
   const title = document.getElementById('atitle');
   const btn = document.getElementById('abtn');
   const swap = document.getElementById('aswap');
@@ -389,14 +330,14 @@ function showAuth(mode){
   if(mode==='login'){
     if(title) title.textContent = 'Welcome Back';
     if(btn) btn.textContent = 'LOG IN';
-    if(swap) swap.innerHTML = 'No account? <span>Register</span>';
+    if(swap) swap.innerHTML = '<span onclick="swapAuth()">No account? Register</span>';
   } else {
     if(title) title.textContent = 'Join Starlight Inn';
     if(btn) btn.textContent = 'REGISTER';
-    if(swap) swap.innerHTML = 'Have an account? <span>Log In</span>';
+    if(swap) swap.innerHTML = '<span onclick="swapAuth()">Have an account? Log In</span>';
   }
-  if(auth) auth.classList.add('on');
-  hide('title'); hide('char');
+  hide('title');
+  show('auth');
 }
 
 function swapAuth(){ showAuth(authMode==='login'?'register':'login'); }
@@ -444,17 +385,12 @@ function goPlay(){
       else { show('char'); ST.screen='char'; renderCharGrid(); updatePreview(); return; }
     }
   }
-  hide('title'); show('char'); ST.screen='char';
+  hide('title'); hide('auth'); show('char'); ST.screen='char';
   renderCharGrid(); updatePreview();
 }
 
 function backTitle(){
   hide('auth'); hide('char'); show('title'); ST.screen='title';
-}
-
-function showErr(msg){
-  const e = document.getElementById('aerr');
-  if(e) e.textContent = msg;
 }
 
 // ============ INIT GAME ============
@@ -493,6 +429,13 @@ function setupInput(){
     W = window.innerWidth; H = window.innerHeight;
     if(CV){ CV.width=W; CV.height=H; }
   });
+
+  const chatInput = document.getElementById('chat');
+  if(chatInput){
+    chatInput.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter'){ e.preventDefault(); sendChat(); }
+    });
+  }
 }
 
 function buildRoomList(){
@@ -502,56 +445,55 @@ function buildRoomList(){
   ROOMS.forEach(r => {
     const card = document.createElement('div');
     card.className = 'rcard';
-    card.innerHTML = '<div class="icon">'+r.icon+'</div><div class="nm">'+r.name+'</div><div class="ds">'+r.desc+'</div>';
-    card.onclick = () => enterRoom(r.id);
+    card.innerHTML = '<div class="icon">'+r.icon+'</div><div><div class="nm">'+r.name+'</div><div class="ds">'+r.desc+'</div></div>';
+    card.onclick = () => { closePan('rnav'); enterRoom(r.id); };
     list.appendChild(card);
   });
 }
 
-// ============ ROOM SYSTEM ============
+// ============ ISOMETRIC ROOM SYSTEM ============
 function enterRoom(rid){
   const room = ROOMS.find(r=>r.id===rid);
   if(!room) return;
   ST.room = room;
   ST.chats = [];
-  const chatlyr = document.getElementById('chatlyr');
-  if(chatlyr) chatlyr.innerHTML = '';
+  document.getElementById('chatlyr').innerHTML = '';
 
   if(!ST.me){
     ST.me = {
-      x: room.spawn[0], y: room.spawn[1],
+      gx: room.spawn[0], gy: room.spawn[1],
       tx: room.spawn[0], ty: room.spawn[1],
-      vx:0, vy:0, speed:3,
-      frame:0, dir:2, walking:false,
+      speed: 0.12, walking: false,
       name: ST.account ? ST.account.u : 'Guest',
       char: ST.char || CHARS[0]
     };
   } else {
-    ST.me.x = room.spawn[0]; ST.me.y = room.spawn[1];
+    ST.me.gx = room.spawn[0]; ST.me.gy = room.spawn[1];
     ST.me.tx = room.spawn[0]; ST.me.ty = room.spawn[1];
-    ST.me.vx = 0; ST.me.vy = 0; ST.me.walking = false;
+    ST.me.walking = false;
   }
 
-  // Generate fake NPCs for atmosphere
+  // Generate NPCs
   ST.users = [];
-  const npcNames = ['Luna','Orion','Stella','Cosmo','Aurora','Nova','Celeste','Phoenix'];
-  const npcChars = CHARS.filter((c,i) => i < 8);
-  for(let i=0; i<ST.online-1; i++){
-    const nx = room.walk[0] + Math.random()*(room.walk[1]-room.walk[0]);
-    const ny = room.walk[2] + Math.random()*(room.walk[3]-room.walk[2]);
+  const npcNames = ['Luna','Orion','Stella','Cosmo','Aurora','Nova'];
+  const npcChars = CHARS.slice(0, 6);
+  for(let i=0; i<5; i++){
+    const ngx = Math.floor(Math.random()*room.tiles[0]);
+    const ngy = Math.floor(Math.random()*room.tiles[1]);
+    if(Math.abs(ngx-room.spawn[0])+Math.abs(ngy-room.spawn[1]) < 2) continue;
     ST.users.push({
-      x:nx, y:ny, tx:nx, ty:ny, vx:0, vy:0, speed:1.5+Math.random(),
-      frame:0, dir:Math.floor(Math.random()*4), walking:false,
-      name:npcNames[i%npcNames.length], char:npcChars[i%npcChars.length],
-      timer: Math.random()*200, targetX:nx, targetY:ny
+      gx:ngx, gy:ngy, tx:ngx, ty:ngy, speed:0.04+Math.random()*0.04,
+      walking:false, name:npcNames[i%npcNames.length],
+      char:npcChars[i%npcChars.length],
+      timer:Math.random()*200, targetX:ngx, targetY:ngy
     });
   }
 
   ST.screen = 'game';
   hide('loading'); hide('title'); hide('char'); hide('auth');
   show('game');
-  const rnm = document.getElementById('rnm');
-  if(rnm) rnm.textContent = room.name;
+  document.getElementById('rnm').textContent = room.name;
+  document.getElementById('pop').textContent = (ST.users.length + 1);
 
   startLoop();
 }
@@ -560,6 +502,21 @@ function enterGame(){
   enterRoom('lobby');
 }
 
+// ============ ISOMETRIC MATH ============
+function isoToScreen(gx, gy, cx, cy){
+  // Isometric projection: diamond tiles
+  const sx = cx + (gx - gy) * (TILE_W / 2);
+  const sy = cy + (gx + gy) * (TILE_H / 2);
+  return {x:sx, y:sy};
+}
+
+function screenToIso(sx, sy, cx, cy){
+  const dx = sx - cx;
+  const dy = sy - cy;
+  const gx = (dx / (TILE_W/2) + dy / (TILE_H/2)) / 2;
+  const gy = (dy / (TILE_H/2) - dx / (TILE_W/2)) / 2;
+  return {x:Math.round(gx), y:Math.round(gy)};
+}
 
 // ============ GAME LOOP ============
 function startLoop(){
@@ -582,127 +539,88 @@ function update(){
   // Update NPCs
   ST.users.forEach(u => {
     u.timer++;
-    // Random movement every so often
-    if(!u.walking && u.timer > 150 + Math.random()*200){
+    if(!u.walking && u.timer > 180 + Math.random()*250){
       u.timer = 0;
       const r = ST.room;
-      u.targetX = r.walk[0] + Math.random()*(r.walk[1]-r.walk[0]);
-      u.targetY = r.walk[2] + Math.random()*(r.walk[3]-r.walk[2]);
-      moveTo(u, u.targetX, u.targetY);
+      u.targetX = Math.floor(Math.random()*r.tiles[0]);
+      u.targetY = Math.floor(Math.random()*r.tiles[1]);
+      u.tx = u.targetX; u.ty = u.targetY;
+      u.walking = true;
     }
     updateEntity(u, false);
-
-    // Stop NPC when close to target
-    if(u.walking && Math.abs(u.x-u.tx)<5 && Math.abs(u.y-u.ty)<5){
-      u.walking = false; u.vx=0; u.vy=0;
-    }
   });
-
-  // Camera follow
-  if(ST.me){
-    const tx = ST.me.x - W/2;
-    const ty = ST.me.y - H/2;
-    ST.cam.x += (tx - ST.cam.x) * 0.08;
-    ST.cam.y += (ty - ST.cam.y) * 0.08;
-  }
 
   // Update chat bubbles
   updateChats();
 }
 
 function updateEntity(e, isMe){
-  if(!e) return;
-  if(e.walking){
-    const dx = e.tx - e.x;
-    const dy = e.ty - e.y;
-    const dist = Math.sqrt(dx*dx + dy*dy);
-    if(dist < e.speed){
-      e.x = e.tx; e.y = e.ty;
-      e.walking = false; e.vx=0; e.vy=0;
-      e.frame = 0;
-    } else {
-      e.vx = (dx/dist) * e.speed;
-      e.vy = (dy/dist) * e.speed;
-      e.x += e.vx; e.y += e.vy;
-      // Direction
-      if(Math.abs(dx) > Math.abs(dy)){
-        e.dir = dx > 0 ? 2 : 0;
-      } else {
-        e.dir = dy > 0 ? 3 : 1;
-      }
-      // Animation frame
-      if(ST.tick % 8 === 0) e.frame = (e.frame + 1) % 4;
-    }
+  if(!e || !e.walking) return;
+  const dx = e.tx - e.gx;
+  const dy = e.ty - e.gy;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+  if(dist < e.speed){
+    e.gx = e.tx; e.gy = e.ty;
+    e.walking = false;
+  } else {
+    e.gx += (dx/dist) * e.speed;
+    e.gy += (dy/dist) * e.speed;
   }
 }
 
-function moveTo(e, x, y){
-  if(!e || !ST.room) return;
-  // Clamp to walkable area
-  const w = ST.room.walk;
-  x = Math.max(w[0], Math.min(w[1], x));
-  y = Math.max(w[2], Math.min(w[3], y));
-  e.tx = x; e.ty = y;
-  e.walking = true;
+// Clamp to room bounds
+function clampGrid(gx, gy){
+  if(!ST.room) return {x:gx,y:gy};
+  return {
+    x: Math.max(0, Math.min(ST.room.tiles[0]-1, gx)),
+    y: Math.max(0, Math.min(ST.room.tiles[1]-1, gy))
+  };
 }
 
-// ============ RENDER ============
+// ============ RENDERING ============
 function render(){
   if(!CX) return;
-  // Clear
   CX.fillStyle = '#0a0a1a';
   CX.fillRect(0, 0, W, H);
 
   if(!ST.room) return;
 
-  CX.save();
-  CX.translate(-ST.cam.x, -ST.cam.y);
-
-  // Draw room background
   const bgKey = 'room_'+ST.room.id;
   const bg = ST.assets[bgKey];
+
+  // Room center point - align with isometric origin
+  let roomCX = W/2;
+  let roomCY = H/2;
+
   if(bg && bg.width > 0){
-    // Center the background in the room
-    const bx = (ST.room.w - bg.width) / 2;
-    const by = (ST.room.h - bg.height) / 2;
+    // Center the background
+    const bx = (W - bg.width) / 2;
+    const by = (H - bg.height) / 2 + 50;
     CX.drawImage(bg, bx, by);
-  } else {
-    // Fallback gradient background
-    const grd = CX.createLinearGradient(0, 0, 0, ST.room.h);
-    grd.addColorStop(0, '#1a0a2e');
-    grd.addColorStop(1, '#0a1a0a');
-    CX.fillStyle = grd;
-    CX.fillRect(0, 0, ST.room.w, ST.room.h);
-    // Grid pattern
-    CX.strokeStyle = 'rgba(147,112,219,0.1)';
-    CX.lineWidth = 1;
-    for(let x=0; x<ST.room.w; x+=50){ CX.beginPath(); CX.moveTo(x,0); CX.lineTo(x,ST.room.h); CX.stroke(); }
-    for(let y=0; y<ST.room.h; y+=50){ CX.beginPath(); CX.moveTo(0,y); CX.lineTo(ST.room.w,y); CX.stroke(); }
+
+    // The isometric origin is the center of the floor in the background
+    roomCX = W/2;
+    roomCY = H/2 + 20;
   }
 
-  // Draw walkable area debug (subtle)
-  // CX.strokeStyle = 'rgba(50,205,50,0.15)';
-  // CX.strokeRect(ST.room.walk[0], ST.room.walk[2], ST.room.walk[1]-ST.room.walk[0], ST.room.walk[3]-ST.room.walk[2]);
-
-  // Collect all entities for z-sort
+  // Collect entities for z-sort (back to front: smaller gx+gy first)
   const entities = [];
   if(ST.me) entities.push({...ST.me, isMe:true});
   ST.users.forEach(u => entities.push({...u, isMe:false}));
-
-  // Sort by Y for depth
-  entities.sort((a,b) => a.y - b.y);
+  entities.sort((a,b) => (a.gx + a.gy) - (b.gx + b.gy));
 
   // Draw entities
-  entities.forEach(e => drawAvatar(e));
+  entities.forEach(e => drawAvatar(e, roomCX, roomCY));
 
-  // Draw click target
+  // Draw click indicator
   if(ST.target){
     const age = Date.now() - ST.target.t;
-    if(age < 1000){
-      const alpha = 1 - age/1000;
+    if(age < 800){
+      const alpha = 1 - age/800;
+      const pos = isoToScreen(ST.target.gx, ST.target.gy, roomCX, roomCY);
       CX.beginPath();
-      CX.arc(ST.target.x, ST.target.y, 8 + age/50, 0, Math.PI*2);
-      CX.strokeStyle = 'rgba(147,112,219,'+alpha+')';
+      CX.arc(pos.x, pos.y, 10 + age/40, 0, Math.PI*2);
+      CX.strokeStyle = 'rgba(255,215,0,'+alpha+')';
       CX.lineWidth = 2;
       CX.stroke();
     } else {
@@ -710,86 +628,66 @@ function render(){
     }
   }
 
-  CX.restore();
+  // Debug: draw tile grid (subtle)
+  // drawGrid(roomCX, roomCY);
 }
 
-function drawAvatar(e){
+function drawAvatar(e, cx, cy){
   const charKey = 'char_'+e.char.id;
   const sprite = ST.assets[charKey];
+  const pos = isoToScreen(e.gx, e.gy, cx, cy);
 
-  const ax = e.x;
-  const ay = e.y;
-  const sw = 64; // sprite width
-  const sh = 96; // sprite height
-
-  if(sprite && sprite.width > 0){
-    // Draw sprite
-    const flip = e.dir === 0;
-    CX.save();
-    CX.translate(ax, ay);
-    if(flip){ CX.scale(-1, 1); }
-
-    // Walking bob animation
-    let bobY = 0;
-    if(e.walking){
-      bobY = Math.sin(ST.tick * 0.3) * 2;
-    }
-
-    // Shadow
-    CX.fillStyle = 'rgba(0,0,0,0.3)';
-    CX.beginPath();
-    CX.ellipse(0, 4, 20, 6, 0, 0, Math.PI*2);
-    CX.fill();
-
-    // Draw sprite centered above shadow
-    const dw = sw * 1.5;
-    const dh = sh * 1.5;
-    CX.drawImage(sprite, -dw/2, -dh + bobY, dw, dh);
-
-    CX.restore();
-  } else {
-    // Fallback: draw chibi-style body with head
-    CX.save();
-    CX.translate(ax, ay);
-    // Shadow
-    CX.fillStyle = 'rgba(0,0,0,0.3)';
-    CX.beginPath();
-    CX.ellipse(0, 4, 18, 5, 0, 0, Math.PI*2);
-    CX.fill();
-    // Body
-    CX.fillStyle = e.isMe ? '#32CD32' : '#9370DB';
-    CX.beginPath();
-    CX.ellipse(0, -8, 14, 18, 0, 0, Math.PI*2);
-    CX.fill();
-    // Head
-    CX.fillStyle = e.isMe ? '#4ADE4A' : '#A855F7';
-    CX.beginPath();
-    CX.arc(0, -28, 12, 0, Math.PI*2);
-    CX.fill();
-    // Eyes
-    CX.fillStyle = '#fff';
-    CX.beginPath(); CX.arc(-4, -30, 3, 0, Math.PI*2); CX.fill();
-    CX.beginPath(); CX.arc(4, -30, 3, 0, Math.PI*2); CX.fill();
-    CX.fillStyle = '#222';
-    CX.beginPath(); CX.arc(-4, -30, 1.5, 0, Math.PI*2); CX.fill();
-    CX.beginPath(); CX.arc(4, -30, 1.5, 0, Math.PI*2); CX.fill();
-    // Smile
-    CX.strokeStyle = '#fff';
-    CX.lineWidth = 1.5;
-    CX.beginPath();
-    CX.arc(0, -26, 5, 0.2, Math.PI-0.2);
-    CX.stroke();
-    CX.restore();
+  // Walking bob
+  let bobY = 0;
+  if(e.walking){
+    bobY = Math.sin(ST.tick * 0.25) * 3;
   }
 
-  // Name tag (always drawn)
-  CX.fillStyle = 'rgba(0,0,0,0.6)';
+  const ax = pos.x;
+  const ay = pos.y - 20 + bobY; // lift slightly above floor
+
+  // Shadow (diamond shaped, on the floor)
+  CX.fillStyle = 'rgba(0,0,0,0.25)';
+  CX.beginPath();
+  CX.ellipse(ax, pos.y + 5, 18, 8, 0, 0, Math.PI*2);
+  CX.fill();
+
+  if(sprite && sprite.width > 0){
+    // Draw sprite centered
+    const scale = 0.8;
+    const dw = sprite.width * scale;
+    const dh = sprite.height * scale;
+    CX.save();
+    // Flip if facing left
+    if(e.walking && e.tx < e.gx){
+      CX.translate(ax, 0);
+      CX.scale(-1, 1);
+      CX.drawImage(sprite, -dw/2, ay - dh + 20, dw, dh);
+    } else {
+      CX.drawImage(sprite, ax - dw/2, ay - dh + 20, dw, dh);
+    }
+    CX.restore();
+  } else {
+    // Fallback: simple chibi
+    CX.fillStyle = e.isMe ? '#32CD32' : '#9370DB';
+    CX.beginPath();
+    CX.arc(ax, ay - 10, 14, 0, Math.PI*2);
+    CX.fill();
+    CX.fillStyle = '#fff';
+    CX.beginPath();
+    CX.arc(ax-4, ay-14, 3, 0, Math.PI*2);
+    CX.arc(ax+4, ay-14, 3, 0, Math.PI*2);
+    CX.fill();
+  }
+
+  // Name tag
+  const nm = e.isMe ? e.name + ' (You)' : e.name;
   CX.font = 'bold 11px sans-serif';
   CX.textAlign = 'center';
-  const nm = e.isMe ? e.name + ' (You)' : e.name;
   const tw = CX.measureText(nm).width;
   const nx = ax - tw/2 - 4;
   const ny = ay - 50;
+  CX.fillStyle = 'rgba(0,0,0,0.6)';
   CX.beginPath();
   CX.rect(nx, ny, tw+8, 18);
   CX.fill();
@@ -797,23 +695,48 @@ function drawAvatar(e){
   CX.fillText(nm, ax, ny + 13);
 }
 
+function drawGrid(cx, cy){
+  if(!ST.room) return;
+  CX.strokeStyle = 'rgba(147,112,219,0.15)';
+  CX.lineWidth = 1;
+  for(let gx=0; gx<ST.room.tiles[0]; gx++){
+    for(let gy=0; gy<ST.room.tiles[1]; gy++){
+      const p = isoToScreen(gx, gy, cx, cy);
+      // Draw diamond tile
+      CX.beginPath();
+      CX.moveTo(p.x, p.y - TILE_H/2);
+      CX.lineTo(p.x + TILE_W/2, p.y);
+      CX.lineTo(p.x, p.y + TILE_H/2);
+      CX.lineTo(p.x - TILE_W/2, p.y);
+      CX.closePath();
+      CX.stroke();
+    }
+  }
+}
+
 // ============ INPUT ============
 function onClick(ev){
   if(ST.screen !== 'game' || !ST.room) return;
   const rect = CV.getBoundingClientRect();
-  const wx = ev.clientX - rect.left + ST.cam.x;
-  const wy = ev.clientY - rect.top + ST.cam.y;
+  const sx = ev.clientX - rect.left;
+  const sy = ev.clientY - rect.top;
 
-  ST.target = {x:wx, y:wy, t:Date.now()};
-  moveTo(ST.me, wx, wy);
+  const roomCX = W/2;
+  const roomCY = H/2 + 20;
+  const tile = screenToIso(sx, sy, roomCX, roomCY);
+  const clamped = clampGrid(tile.x, tile.y);
 
-  // Check if clicked on an NPC (chat interaction)
-  let clickedNPC = false;
+  ST.target = {gx:clamped.x, gy:clamped.y, t:Date.now()};
+  ST.me.tx = clamped.x;
+  ST.me.ty = clamped.y;
+  ST.me.walking = true;
+
+  // Check NPC click
   ST.users.forEach(u => {
-    const dx = wx - u.x; const dy = wy - u.y;
-    if(Math.sqrt(dx*dx+dy*dy) < 30){
-      clickedNPC = true;
-      const msgs = ['Hello!','Nice night!','Welcome!','Hey there!','✨'];
+    const up = isoToScreen(u.gx, u.gy, roomCX, roomCY);
+    const dx = sx - up.x; const dy = sy - up.y;
+    if(Math.sqrt(dx*dx+dy*dy) < 40){
+      const msgs = ['Hello!','Nice night!','Welcome to the inn!','Hey there!','✨'];
       addChat(u.name, msgs[Math.floor(Math.random()*msgs.length)], false);
     }
   });
@@ -823,42 +746,46 @@ function onTouch(ev){
   ev.preventDefault();
   if(ev.touches.length > 0){
     const t = ev.touches[0];
+    const rect = CV.getBoundingClientRect();
     onClick({clientX:t.clientX, clientY:t.clientY});
   }
 }
 
 function onKey(ev){
-  if(ST.screen !== 'game') return;
-  // ESC closes panels
-  if(ev.key === 'Escape'){
+  if(ST.screen === 'game' && ev.key === 'Escape'){
     closeAllPanels();
   }
-  // Arrow keys for movement
-  if(!ST.room) return;
-  const spd = 6;
+  if(ST.screen !== 'game' || !ST.room) return;
+
+  // Arrow keys for isometric movement
   let dx = 0, dy = 0;
-  if(ev.key==='ArrowUp' || ev.key==='w') dy = -spd;
-  if(ev.key==='ArrowDown' || ev.key==='s') dy = spd;
-  if(ev.key==='ArrowLeft' || ev.key==='a') dx = -spd;
-  if(ev.key==='ArrowRight' || ev.key==='d') dx = spd;
+  if(ev.key==='ArrowUp' || ev.key==='w'){ dx=1; dy=-1; }
+  if(ev.key==='ArrowDown' || ev.key==='s'){ dx=-1; dy=1; }
+  if(ev.key==='ArrowLeft' || ev.key==='a'){ dx=-1; dy=-1; }
+  if(ev.key==='ArrowRight' || ev.key==='d'){ dx=1; dy=1; }
   if(dx!==0 || dy!==0){
     ev.preventDefault();
-    moveTo(ST.me, ST.me.x + dx*10, ST.me.y + dy*10);
+    const ng = clampGrid(ST.me.gx + dx, ST.me.gy + dy);
+    ST.me.tx = ng.x; ST.me.ty = ng.y;
+    ST.me.walking = true;
   }
 }
 
-
 // ============ CHAT ============
-function doChat(txt){
-  if(!txt.trim() || ST.screen !== 'game') return;
-  addChat(ST.me.name, txt.trim(), true);
+function sendChat(){
+  const inp = document.getElementById('chat');
+  const txt = inp.value.trim();
+  if(!txt || ST.screen !== 'game') return;
+  addChat(ST.me.name, txt, true);
+  inp.value = '';
+  inp.blur();
 
-  // NPCs might respond
-  if(Math.random() > 0.6){
+  // NPC response
+  if(Math.random() > 0.5){
     setTimeout(() => {
       const u = ST.users[Math.floor(Math.random()*ST.users.length)];
       if(u){
-        const responses = ['Nice!','Haha','Cool','I agree','Interesting!','Tell me more','👍','Wow!'];
+        const responses = ['Nice!','Haha','Cool','I agree','Interesting!','👍','Wow!'];
         addChat(u.name, responses[Math.floor(Math.random()*responses.length)], false);
       }
     }, 500 + Math.random()*1500);
@@ -870,47 +797,39 @@ function addChat(name, text, isMe){
   if(!chatlyr) return;
 
   const bubble = document.createElement('div');
-  bubble.className = 'cmsg';
-  bubble.innerHTML = '<div class="cn">'+name+'</div>'+escapeHtml(text);
+  bubble.className = 'bubble' + (isMe?' me':'');
+  bubble.innerHTML = '<div class="name">'+name+'</div>'+escapeHtml(text);
   chatlyr.appendChild(bubble);
 
-  const chat = {el:bubble, t:Date.now(), life:5000};
+  const chat = {el:bubble, t:Date.now(), life:6000, name:name};
   ST.chats.push(chat);
-
-  // Position the bubble
-  updateChatPosition(chat, name);
+  updateChatPos(chat);
 }
 
-function updateChatPosition(chat, name){
+function updateChatPos(chat){
   let target = null;
-  if(ST.me && ST.me.name === name) target = ST.me;
-  if(!target) target = ST.users.find(u => u.name === name);
+  if(ST.me && ST.me.name === chat.name) target = ST.me;
+  if(!target) target = ST.users.find(u => u.name === chat.name);
+  if(!target || !ST.room) return;
 
-  if(target && chat.el){
-    const sx = target.x - ST.cam.x;
-    const sy = target.y - ST.cam.y - 55;
-    chat.el.style.left = sx + 'px';
-    chat.el.style.top = sy + 'px';
-    chat.el.style.transform = 'translate(-50%,-100%)';
-  }
+  const roomCX = W/2;
+  const roomCY = H/2 + 20;
+  const pos = isoToScreen(target.gx, target.gy, roomCX, roomCY);
+
+  chat.el.style.left = pos.x + 'px';
+  chat.el.style.top = (pos.y - 55) + 'px';
+  chat.el.style.transform = 'translate(-50%,-100%)';
 }
 
 function updateChats(){
   const now = Date.now();
   for(let i = ST.chats.length-1; i>=0; i--){
     const c = ST.chats[i];
+    updateChatPos(c);
     const age = now - c.t;
-
-    // Update position
-    const name = c.el.querySelector('.cn')?.textContent;
-    if(name) updateChatPosition(c, name);
-
-    // Fade out
     if(age > c.life - 1000){
       c.el.style.opacity = (c.life - age) / 1000;
     }
-
-    // Remove
     if(age > c.life){
       c.el.remove();
       ST.chats.splice(i, 1);
@@ -928,9 +847,7 @@ function escapeHtml(t){
 function togglePan(id){
   const pan = document.getElementById(id);
   if(!pan) return;
-  const isOn = pan.classList.contains('on');
-  closeAllPanels();
-  if(!isOn) pan.classList.add('on');
+  pan.classList.toggle('on');
 }
 
 function closePan(id){
@@ -939,25 +856,25 @@ function closePan(id){
 }
 
 function closeAllPanels(){
-  document.querySelectorAll('.pan').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('#rnav').forEach(p => p.classList.remove('on'));
 }
 
 function hide(id){ const e=document.getElementById(id); if(e) e.style.display='none'; }
 function show(id){ const e=document.getElementById(id); if(e) e.style.display='block'; }
+if(document.getElementById('title')) document.getElementById('title').style.display='none';
+if(document.getElementById('auth')) document.getElementById('auth').style.display='none';
+if(document.getElementById('char')) document.getElementById('char').style.display='none';
+if(document.getElementById('game')) document.getElementById('game').style.display='none';
 
-// ============ INITIALIZE ============
+// ============ BOOT ============
 function boot(){
   preload();
 }
 
-// Start immediately
 document.addEventListener('DOMContentLoaded', boot);
-
-// Fallback: if already loaded, boot now
 if(document.readyState === 'complete' || document.readyState === 'interactive'){
   setTimeout(boot, 1);
 }
-
 </script>
 </body>
 </html>
