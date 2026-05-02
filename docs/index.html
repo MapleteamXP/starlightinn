@@ -149,7 +149,7 @@ canvas{display:block}
       <button class="btn bg2" onclick="showAuth('login')">LOG IN</button>
       <button class="btn bb" onclick="showAuth('register')">REGISTER</button>
     </div>
-    <div class="ver">v19.3</div>
+    <div class="ver">v19.4</div>
   </div>
 </div>
 
@@ -225,8 +225,8 @@ canvas{display:block}
 <script>
 
 // ============ CONFIG ============
-const VER = '19.3';
-const GH = 'https://raw.githubusercontent.com/MapleteamXP/starlightinn/main';
+const VER = '19.4';
+const GH = 'https://mapleteamxp.github.io/starlightinn';
 const ASSET = (p) => GH+'/'+p+'?v='+VER;
 
 const ROOMS = [
@@ -747,15 +747,38 @@ function drawAvatar(e){
 
     CX.restore();
   } else {
-    // Fallback: draw colored circle with name
+    // Fallback: draw chibi-style body with head
+    CX.save();
+    CX.translate(ax, ay);
+    // Shadow
+    CX.fillStyle = 'rgba(0,0,0,0.3)';
+    CX.beginPath();
+    CX.ellipse(0, 4, 18, 5, 0, 0, Math.PI*2);
+    CX.fill();
+    // Body
     CX.fillStyle = e.isMe ? '#32CD32' : '#9370DB';
     CX.beginPath();
-    CX.arc(ax, ay, 16, 0, Math.PI*2);
+    CX.ellipse(0, -8, 14, 18, 0, 0, Math.PI*2);
     CX.fill();
+    // Head
+    CX.fillStyle = e.isMe ? '#4ADE4A' : '#A855F7';
+    CX.beginPath();
+    CX.arc(0, -28, 12, 0, Math.PI*2);
+    CX.fill();
+    // Eyes
     CX.fillStyle = '#fff';
-    CX.font = '10px sans-serif';
-    CX.textAlign = 'center';
-    CX.fillText(e.name, ax, ay - 22);
+    CX.beginPath(); CX.arc(-4, -30, 3, 0, Math.PI*2); CX.fill();
+    CX.beginPath(); CX.arc(4, -30, 3, 0, Math.PI*2); CX.fill();
+    CX.fillStyle = '#222';
+    CX.beginPath(); CX.arc(-4, -30, 1.5, 0, Math.PI*2); CX.fill();
+    CX.beginPath(); CX.arc(4, -30, 1.5, 0, Math.PI*2); CX.fill();
+    // Smile
+    CX.strokeStyle = '#fff';
+    CX.lineWidth = 1.5;
+    CX.beginPath();
+    CX.arc(0, -26, 5, 0.2, Math.PI-0.2);
+    CX.stroke();
+    CX.restore();
   }
 
   // Name tag (always drawn)
