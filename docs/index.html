@@ -190,7 +190,7 @@ body{font-family:'Segoe UI',sans-serif;background:#0a0a1a;color:#fff;overflow:hi
 <script>
 
 // ============ CONFIG ============
-const VER = '20';
+const VER = '20.1';
 const GH = 'https://mapleteamxp.github.io/starlightinn';
 const ASSET = (p) => GH+'/'+p+'?v='+VER;
 
@@ -593,14 +593,22 @@ function render(){
   let roomCY = H/2;
 
   if(bg && bg.width > 0){
-    // Center the background
-    const bx = (W - bg.width) / 2;
-    const by = (H - bg.height) / 2 + 50;
-    CX.drawImage(bg, bx, by);
-
-    // The isometric origin is the center of the floor in the background
+    // Scale background to fill screen while maintaining aspect ratio
+    const scale = Math.max(W / bg.width, H / bg.height) * 1.1;
+    const dw = bg.width * scale;
+    const dh = bg.height * scale;
+    const bx = (W - dw) / 2;
+    const by = (H - dh) / 2;
+    CX.drawImage(bg, bx, by, dw, dh);
     roomCX = W/2;
-    roomCY = H/2 + 20;
+    roomCY = H/2 + 30;
+  } else {
+    // Fallback gradient
+    const grd = CX.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H));
+    grd.addColorStop(0, '#1a1a3e');
+    grd.addColorStop(1, '#0a0a1a');
+    CX.fillStyle = grd;
+    CX.fillRect(0, 0, W, H);
   }
 
   // Collect entities for z-sort (back to front: smaller gx+gy first)
@@ -654,7 +662,7 @@ function drawAvatar(e, cx, cy){
 
   if(sprite && sprite.width > 0){
     // Draw sprite centered
-    const scale = 0.8;
+    const scale = 0.07;
     const dw = sprite.width * scale;
     const dh = sprite.height * scale;
     CX.save();
