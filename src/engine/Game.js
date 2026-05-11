@@ -33,6 +33,7 @@ import { StatsSystem } from '../social/Stats.js';
 import { EventSystem } from '../world/Events.js';
 import { ChallengeSystem } from '../economy/Challenges.js';
 import { TutorialSystem } from '../ui/Tutorial.js';
+import { ProgressionSystem } from '../economy/Progression.js';
 import { PetSystem } from '../world/Pet.js';
 
 class Particle {
@@ -70,7 +71,9 @@ export class Game {
     this.settings = { showMinimap: true, showNames: true, showChat: true, npcCount: 3, camSpeed: 5, sound: false, safeMode: false };
     this.ownedThemes = ['classic'];
     this.currentTheme = 'classic';
+    this.likedRooms = new Set();
     this.loadThemes();
+    this.loadLikedRooms();
     this.chatColor = '#fffde7';
     this.lastTime = 0;
     this.hoverTile = null;
@@ -105,6 +108,7 @@ export class Game {
     this.eventSystem = new EventSystem(this);
     this.challengeSystem = new ChallengeSystem(this);
     this.tutorialSystem = new TutorialSystem();
+    this.progressionSystem = new ProgressionSystem(this);
     this.photoMode = false;
 
     this.setupInput();
@@ -116,6 +120,7 @@ export class Game {
     this.spawnNPCs(this.settings.npcCount);
     this.achievementSystem.visitRoom(ROOM_TEMPLATES[0].id);
     this.challengeSystem.track('visit');
+    this.progressionSystem.addXP(10);
     this.applyThemeToMyRoom();
 
     // Check daily rewards
@@ -139,6 +144,8 @@ export class Game {
     setTimeout(() => {
       if (this.tutorialSystem.shouldShow()) {
         this.tutorialSystem.show(this.uiManager);
+      } else {
+        this.showSeasonalGreeting();
       }
     }, 1500);
   }
@@ -258,6 +265,7 @@ export class Game {
         this.soundManager.play('place');
         this.achievementSystem.track('place');
         this.challengeSystem.track('place');
+        this.progressionSystem.addXP(15);
         this.statsSystem.inc('furniturePlaced');
       } else {
         this.uiManager.showNotification('Cannot place there!', 'error');
@@ -354,6 +362,7 @@ export class Game {
         this.soundManager.play('buy');
         this.statsSystem.inc('treasureChestsFound');
         this.challengeSystem.track('treasure');
+    this.progressionSystem.addXP(25);
         this.treasures = this.treasures.filter(t => t !== treasure);
         this.achievementSystem.track('walk');
         return;
@@ -361,17 +370,21 @@ export class Game {
       // Check NPC click
       const npc = this.room.avatars.find(a => a.isNPC && Math.round(a.x) === tx && Math.round(a.y) === ty);
       if (npc) {
-        this.uiManager.showNPCProfile(npc, () => {
-          this.player.moveTo(tx, ty, this.room);
-          this.achievementSystem.track('walk');
-          this.statsSystem.inc('stepsWalked');
-        });
+        this.uiManager.showNPCProfile(npc,
+          () => {
+            this.player.moveTo(tx, ty, this.room);
+            this.achievementSystem.track('walk');
+            this.statsSystem.inc('stepsWalked');
+          },
+          npc => this.openNPCTrade(npc)
+        );
         return;
       }
       if (this.room.isWalkable(tx, ty)) {
         this.player.moveTo(tx, ty, this.room);
         this.achievementSystem.track('walk');
         this.challengeSystem.track('walk');
+        this.progressionSystem.addXP(5);
         this.statsSystem.inc('stepsWalked');
         this.spawnParticles(tx, ty, 'rgba(244,208,63,0.6)', 5);
       }
@@ -470,6 +483,7 @@ export class Game {
     this.soundManager.play('chat');
     this.achievementSystem.track('chat');
     this.challengeSystem.track('chat');
+    this.progressionSystem.addXP(5);
     };
     document.getElementById('chatSend')?.addEventListener('click', sendChat);
     document.getElementById('chatInput')?.addEventListener('keydown', e => {
@@ -520,6 +534,7 @@ export class Game {
     document.getElementById('settingSound')?.addEventListener('change', e => { this.settings.sound = e.target.checked; });
     document.getElementById('settingSound')?.addEventListener('change', e => { this.settings.sound = e.target.checked; this.soundManager.setEnabled(e.target.checked); this.uiManager.showNotification(e.target.checked ? 'Sound enabled' : 'Sound muted'); });
     document.getElementById('settingSafeMode')?.addEventListener('change', e => { this.settings.safeMode = e.target.checked; this.uiManager.showNotification(e.target.checked ? 'Safe Mode enabled' : 'Safe Mode disabled'); });
+    document.getElementById('btnLikeRoom')?.addEventListener('click', () => this.toggleLikeRoom());
     document.getElementById('btnExportSave')?.addEventListener('click', () => this.exportSave());
     document.getElementById('btnImportSave')?.addEventListener('click', () => document.getElementById('importFileInput')?.click());
     document.getElementById('importFileInput')?.addEventListener('change', e => this.importSave(e));
@@ -531,6 +546,7 @@ export class Game {
     this.renderInventory();
     this.renderMinigamePanel();
     this.uiManager.updateCurrency(this.currencySystem.get());
+    this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
     this.uiManager.updateToolButtons(this.selectedTool);
   }
 
@@ -565,6 +581,31 @@ export class Game {
     } else {
       els.forEach(el => { if (el) el.style.opacity = '1'; });
     }
+  }
+
+  loadLikedRooms() {
+    try {
+      const data = JSON.parse(localStorage.getItem('starlight_liked_rooms'));
+      if (data && Array.isArray(data)) this.likedRooms = new Set(data);
+    } catch (e) {}
+  }
+
+  saveLikedRooms() {
+    try { localStorage.setItem('starlight_liked_rooms', JSON.stringify(Array.from(this.likedRooms))); } catch (e) {}
+  }
+
+  toggleLikeRoom() {
+    if (!this.room) return;
+    const id = this.room.id;
+    if (this.likedRooms.has(id)) {
+      this.likedRooms.delete(id);
+      this.uiManager.showNotification(`Unliked ${this.room.name}`);
+    } else {
+      this.likedRooms.add(id);
+      this.uiManager.showNotification(`Liked ${this.room.name}! ❤️`, 'success');
+      this.soundManager.play('click');
+    }
+    this.saveLikedRooms();
   }
 
   loadThemes() {
@@ -615,6 +656,7 @@ export class Game {
           this.applyThemeToMyRoom();
           this.uiManager.showNotification(`Purchased ${theme.name}!`, 'success');
           this.uiManager.updateCurrency(this.currencySystem.get());
+    this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
           this.renderNavigator();
           this.achievementSystem.track('buy');
         } else {
@@ -639,11 +681,13 @@ export class Game {
         if (this.currencySystem.spend(item.price)) {
           this.inventorySystem.add(item.id, 1);
           this.uiManager.updateCurrency(this.currencySystem.get());
+    this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
           this.uiManager.showNotification(`Purchased ${item.name}!`);
           this.soundManager.play('buy');
           this.achievementSystem.track('buy');
           this.statsSystem.inc('furnitureBought');
         this.challengeSystem.track('buy');
+        this.progressionSystem.addXP(10);
           this.statsSystem.inc('totalCoinsSpent', item.price);
           this.renderCatalog();
         } else {
@@ -711,6 +755,7 @@ export class Game {
       this.uiManager.showNotification('Look saved!');
       this.achievementSystem.track('customize');
     this.challengeSystem.track('customize');
+    this.progressionSystem.addXP(10);
     }, () => {
       const rand = arr => arr[Math.floor(Math.random() * arr.length)];
       this.customize.skinColor = rand(['#F5CBA7','#E0AC69','#8D5524','#C68642','#FFDBAC','#AA7C58']);
@@ -880,6 +925,45 @@ export class Game {
     this.uiManager.renderStats(this.statsSystem.getStats());
   }
 
+  showSeasonalGreeting() {
+    const month = new Date().getMonth();
+    const greetings = {
+      0: '❄️ Happy New Year from Starlight Inn!',
+      1: '💝 Valentine\'s season is here!',
+      2: '🌸 Spring has arrived!',
+      3: '🌷 Enjoy the blooming flowers!',
+      4: '🌞 Summer is coming!',
+      5: '🏖️ Summer vibes at the beach!',
+      6: '🎆 Happy 4th of July!',
+      7: '🌻 Late summer days!',
+      8: '🍂 Fall is in the air!',
+      9: '🎃 Spooky season at Starlight Inn!',
+      10: '🦃 Thanksgiving time!',
+      11: '🎄 Happy Holidays from Starlight Inn!',
+    };
+    const greeting = greetings[month];
+    if (greeting) this.uiManager.showNotification(greeting, 'info');
+  }
+
+  openNPCTrade(npc) {
+    const items = FURNITURE_CATALOG.filter(i => i.price < 400).sort(() => Math.random() - 0.5).slice(0, 4);
+    this.uiManager.showNPCTrade(npc, items, item => {
+      if (this.currencySystem.spend(item.price)) {
+        this.inventorySystem.add(item.id, 1);
+        this.uiManager.showNotification(`Bought ${item.name} from ${npc.name}!`, 'success');
+        this.soundManager.play('buy');
+        this.achievementSystem.track('buy');
+        this.challengeSystem.track('buy');
+        this.progressionSystem.addXP(10);
+        this.uiManager.updateCurrency(this.currencySystem.get());
+        this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
+      } else {
+        this.uiManager.showNotification('Not enough StarCoins!', 'error');
+        this.soundManager.play('error');
+      }
+    });
+  }
+
   renderChallengesPanel() {
     this.uiManager.renderChallenges(this.challengeSystem.getList());
   }
@@ -937,6 +1021,7 @@ export class Game {
           this.uiManager.showNotification(`Day ${reward.day} reward: ★${reward.coins}${reward.item ? ' + ' + reward.item : ''}!`, 'success');
           this.renderInventory();
           this.uiManager.updateCurrency(this.currencySystem.get());
+    this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
         }
       });
     }
@@ -1354,6 +1439,7 @@ export class Game {
     this.minigame.start();
     this.achievementSystem.track('minigame');
     this.challengeSystem.track('win');
+    this.progressionSystem.addXP(50);
     this.statsSystem.inc('minigamesPlayed');
   }
 

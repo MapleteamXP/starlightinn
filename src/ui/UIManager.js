@@ -145,6 +145,34 @@ export class UIManager {
     }, 3000);
   }
 
+  showNPCTrade(npc, items, onBuy) {
+    const existing = document.getElementById('npcTrade');
+    if (existing) existing.remove();
+    const div = document.createElement('div');
+    div.id = 'npcTrade';
+    div.className = 'npc-profile';
+    div.style.maxWidth = '260px';
+    let html = `<div class="npc-profile-header"><span style="font-size:24px;">💼</span><div><div style="font-weight:700;font-size:14px;">${npc.name}'s Shop</div><div style="font-size:11px;color:var(--habbo-text-dim);">Limited time offers!</div></div><button class="npc-profile-close">&times;</button></div>`;
+    html += `<div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">`;
+    items.forEach(item => {
+      html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px;background:rgba(0,0,0,0.15);border-radius:6px;">
+        <span style="font-size:12px;">${item.icon} ${item.name}</span>
+        <button class="trade-buy" data-id="${item.id}" style="padding:4px 10px;background:var(--habbo-accent);color:var(--habbo-dark);border:none;border-radius:5px;font-weight:700;font-size:11px;cursor:pointer;">★${item.price}</button>
+      </div>`;
+    });
+    html += `</div>`;
+    div.innerHTML = html;
+    document.body.appendChild(div);
+    div.querySelector('.npc-profile-close').addEventListener('click', () => div.remove());
+    div.querySelectorAll('.trade-buy').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = items.find(i => i.id === btn.dataset.id);
+        if (item) onBuy && onBuy(item);
+      });
+    });
+    setTimeout(() => { if (div.parentNode) div.remove(); }, 15000);
+  }
+
   renderGallery() {
     const grid = document.getElementById('galleryGrid');
     if (!grid) return;
@@ -347,6 +375,11 @@ export class UIManager {
     if (el) el.textContent = amount.toLocaleString();
   }
 
+  updateLevelDisplay(prog) {
+    const el = document.getElementById('levelDisplay');
+    if (el) el.textContent = `Lv. ${prog.level} ${prog.title}`;
+  }
+
   updateToolButtons(selectedTool) {
     document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
     const map = { walk: 'toolWalk', place: 'toolPlace', pick: 'toolPick' };
@@ -438,7 +471,7 @@ export class UIManager {
     document.getElementById('petRelease')?.addEventListener('click', () => onAdopt && onAdopt(null));
   }
 
-  showNPCProfile(npc, onWalk) {
+  showNPCProfile(npc, onWalk, onTrade) {
     const existing = document.getElementById('npcProfile');
     if (existing) existing.remove();
     const div = document.createElement('div');
@@ -456,6 +489,7 @@ export class UIManager {
       <div style="display:flex;gap:8px;margin-top:10px;">
         <button class="npc-action" id="npcWalk">Walk Here</button>
         <button class="npc-action" id="npcWave">Wave</button>
+        <button class="npc-action" id="npcTrade">Trade</button>
       </div>
     `;
     document.body.appendChild(div);
@@ -465,7 +499,8 @@ export class UIManager {
       npc.say('Hey there! 👋', '#fffde7', 'normal');
       div.remove();
     });
-    setTimeout(() => { if (div.parentNode) div.remove(); }, 6000);
+    div.querySelector('#npcTrade').addEventListener('click', () => { div.remove(); onTrade && onTrade(npc); });
+    setTimeout(() => { if (div.parentNode) div.remove(); }, 8000);
   }
 
   renderChallenges(challenges) {

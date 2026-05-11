@@ -15,7 +15,10 @@ function createUI() {
     <div id="topBar">
       <div id="logo">&#10022; STARLIGHT INN</div>
       <div id="topBarRight">
-        <div class="currency-badge" id="currencyDisplay">1,000</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+          <div class="currency-badge" id="currencyDisplay">1,000</div>
+          <div style="font-size:10px;color:var(--habbo-text-dim);font-weight:700;" id="levelDisplay">Lv. 1 Newcomer</div>
+        </div>
         <button class="top-btn" id="btnNavigator">&#127757; Navigator</button>
         <button class="top-btn" id="btnCatalog">&#128722; Catalog</button>
         <button class="top-btn" id="btnInventory">&#127890; Inventory</button>
@@ -36,6 +39,7 @@ function createUI() {
     <div id="roomInfo">
       <h2 id="roomName">Lobby</h2>
       <p id="roomDesc">Welcome to Starlight Inn!</p>
+      <button id="btnLikeRoom" style="margin-top:6px;padding:4px 12px;background:rgba(0,0,0,0.3);border:1px solid var(--habbo-panel-border);border-radius:12px;color:white;font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s;">❤️ Like Room</button>
     </div>
     <div id="minimap"><canvas id="minimapCanvas" width="140" height="140"></canvas></div>
     <div id="chatBar">

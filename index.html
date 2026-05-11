@@ -3350,6 +3350,35 @@ var StarlightEngine = (() => {
             setTimeout(() => notif.remove(), 300);
           }, 3e3);
         }
+        showNPCTrade(npc, items, onBuy) {
+          const existing = document.getElementById("npcTrade");
+          if (existing) existing.remove();
+          const div = document.createElement("div");
+          div.id = "npcTrade";
+          div.className = "npc-profile";
+          div.style.maxWidth = "260px";
+          let html = `<div class="npc-profile-header"><span style="font-size:24px;">\u{1F4BC}</span><div><div style="font-weight:700;font-size:14px;">${npc.name}'s Shop</div><div style="font-size:11px;color:var(--habbo-text-dim);">Limited time offers!</div></div><button class="npc-profile-close">&times;</button></div>`;
+          html += `<div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">`;
+          items.forEach((item) => {
+            html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px;background:rgba(0,0,0,0.15);border-radius:6px;">
+        <span style="font-size:12px;">${item.icon} ${item.name}</span>
+        <button class="trade-buy" data-id="${item.id}" style="padding:4px 10px;background:var(--habbo-accent);color:var(--habbo-dark);border:none;border-radius:5px;font-weight:700;font-size:11px;cursor:pointer;">\u2605${item.price}</button>
+      </div>`;
+          });
+          html += `</div>`;
+          div.innerHTML = html;
+          document.body.appendChild(div);
+          div.querySelector(".npc-profile-close").addEventListener("click", () => div.remove());
+          div.querySelectorAll(".trade-buy").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const item = items.find((i) => i.id === btn.dataset.id);
+              if (item) onBuy && onBuy(item);
+            });
+          });
+          setTimeout(() => {
+            if (div.parentNode) div.remove();
+          }, 15e3);
+        }
         renderGallery() {
           const grid = document.getElementById("galleryGrid");
           if (!grid) return;
@@ -3541,6 +3570,10 @@ var StarlightEngine = (() => {
           const el = document.getElementById("currencyDisplay");
           if (el) el.textContent = amount.toLocaleString();
         }
+        updateLevelDisplay(prog) {
+          const el = document.getElementById("levelDisplay");
+          if (el) el.textContent = `Lv. ${prog.level} ${prog.title}`;
+        }
         updateToolButtons(selectedTool) {
           document.querySelectorAll(".tool-btn").forEach((btn) => btn.classList.remove("active"));
           const map = { walk: "toolWalk", place: "toolPlace", pick: "toolPick" };
@@ -3628,7 +3661,7 @@ var StarlightEngine = (() => {
           document.getElementById("petRest")?.addEventListener("click", onRest);
           document.getElementById("petRelease")?.addEventListener("click", () => onAdopt && onAdopt(null));
         }
-        showNPCProfile(npc, onWalk) {
+        showNPCProfile(npc, onWalk, onTrade) {
           const existing = document.getElementById("npcProfile");
           if (existing) existing.remove();
           const div = document.createElement("div");
@@ -3646,6 +3679,7 @@ var StarlightEngine = (() => {
       <div style="display:flex;gap:8px;margin-top:10px;">
         <button class="npc-action" id="npcWalk">Walk Here</button>
         <button class="npc-action" id="npcWave">Wave</button>
+        <button class="npc-action" id="npcTrade">Trade</button>
       </div>
     `;
           document.body.appendChild(div);
@@ -3658,9 +3692,13 @@ var StarlightEngine = (() => {
             npc.say("Hey there! \u{1F44B}", "#fffde7", "normal");
             div.remove();
           });
+          div.querySelector("#npcTrade").addEventListener("click", () => {
+            div.remove();
+            onTrade && onTrade(npc);
+          });
           setTimeout(() => {
             if (div.parentNode) div.remove();
-          }, 6e3);
+          }, 8e3);
         }
         renderChallenges(challenges) {
           const list = document.getElementById("challengeList");
@@ -5171,6 +5209,88 @@ var StarlightEngine = (() => {
     }
   });
 
+  // src/economy/Progression.js
+  var LEVELS, ProgressionSystem;
+  var init_Progression = __esm({
+    "src/economy/Progression.js"() {
+      LEVELS = [
+        { level: 1, xp: 0, title: "Newcomer" },
+        { level: 2, xp: 100, title: "Visitor" },
+        { level: 3, xp: 300, title: "Regular" },
+        { level: 4, xp: 600, title: "Resident" },
+        { level: 5, xp: 1e3, title: "Socialite" },
+        { level: 6, xp: 1500, title: "Decorator" },
+        { level: 7, xp: 2100, title: "Gamer" },
+        { level: 8, xp: 2800, title: "Collector" },
+        { level: 9, xp: 3600, title: "Influencer" },
+        { level: 10, xp: 4500, title: "VIP" },
+        { level: 11, xp: 5500, title: "Elite" },
+        { level: 12, xp: 6600, title: "Legend" },
+        { level: 13, xp: 7800, title: "Master" },
+        { level: 14, xp: 9100, title: "Grandmaster" },
+        { level: 15, xp: 10500, title: "Starlight Champion" }
+      ];
+      ProgressionSystem = class {
+        constructor(game) {
+          this.game = game;
+          this.xp = 0;
+          this.level = 1;
+          this.title = "Newcomer";
+          this.load();
+        }
+        load() {
+          try {
+            const data = JSON.parse(localStorage.getItem("starlight_progression"));
+            if (data) {
+              this.xp = data.xp || 0;
+              this.level = data.level || 1;
+              this.title = data.title || "Newcomer";
+            }
+          } catch (e) {
+          }
+          this._recalc();
+        }
+        save() {
+          try {
+            localStorage.setItem("starlight_progression", JSON.stringify({ xp: this.xp, level: this.level, title: this.title }));
+          } catch (e) {
+          }
+        }
+        _recalc() {
+          for (let i = LEVELS.length - 1; i >= 0; i--) {
+            if (this.xp >= LEVELS[i].xp) {
+              const newLevel = LEVELS[i].level;
+              if (newLevel > this.level) {
+                this.level = newLevel;
+                this.title = LEVELS[i].title;
+                this.game.uiManager.showNotification(`Level Up! You are now Level ${this.level} \u2014 ${this.title}! +\u2605${this.level * 50}`, "success");
+                this.game.currencySystem.add(this.level * 50);
+                this.game.soundManager.play("win");
+              }
+              break;
+            }
+          }
+        }
+        addXP(amount) {
+          this.xp += amount;
+          this._recalc();
+          this.save();
+        }
+        getNextLevelXP() {
+          const next = LEVELS.find((l) => l.level === this.level + 1);
+          return next ? next.xp : LEVELS[LEVELS.length - 1].xp;
+        }
+        getProgress() {
+          const currentLevel = LEVELS.find((l) => l.level === this.level) || LEVELS[0];
+          const nextLevel = LEVELS.find((l) => l.level === this.level + 1);
+          const needed = nextLevel ? nextLevel.xp - currentLevel.xp : 1;
+          const have = this.xp - currentLevel.xp;
+          return { level: this.level, title: this.title, xp: this.xp, have, needed, percent: nextLevel ? Math.min(100, Math.floor(have / needed * 100)) : 100 };
+        }
+      };
+    }
+  });
+
   // src/world/Pet.js
   var PET_TYPES, PET_EMOJIS, PET_NAMES, PetSystem;
   var init_Pet = __esm({
@@ -5300,6 +5420,7 @@ var StarlightEngine = (() => {
       init_Events();
       init_Challenges();
       init_Tutorial();
+      init_Progression();
       init_Pet();
       Particle = class {
         constructor(x, y, color, life, vx, vy) {
@@ -5342,7 +5463,9 @@ var StarlightEngine = (() => {
           this.settings = { showMinimap: true, showNames: true, showChat: true, npcCount: 3, camSpeed: 5, sound: false, safeMode: false };
           this.ownedThemes = ["classic"];
           this.currentTheme = "classic";
+          this.likedRooms = /* @__PURE__ */ new Set();
           this.loadThemes();
+          this.loadLikedRooms();
           this.chatColor = "#fffde7";
           this.lastTime = 0;
           this.hoverTile = null;
@@ -5375,6 +5498,7 @@ var StarlightEngine = (() => {
           this.eventSystem = new EventSystem(this);
           this.challengeSystem = new ChallengeSystem(this);
           this.tutorialSystem = new TutorialSystem();
+          this.progressionSystem = new ProgressionSystem(this);
           this.photoMode = false;
           this.setupInput();
           this.setupUI();
@@ -5384,6 +5508,7 @@ var StarlightEngine = (() => {
           this.spawnNPCs(this.settings.npcCount);
           this.achievementSystem.visitRoom(ROOM_TEMPLATES[0].id);
           this.challengeSystem.track("visit");
+          this.progressionSystem.addXP(10);
           this.applyThemeToMyRoom();
           setTimeout(() => this.checkDailyRewards(), 1200);
           const inv = this.inventorySystem.getAll();
@@ -5400,6 +5525,8 @@ var StarlightEngine = (() => {
           setTimeout(() => {
             if (this.tutorialSystem.shouldShow()) {
               this.tutorialSystem.show(this.uiManager);
+            } else {
+              this.showSeasonalGreeting();
             }
           }, 1500);
         }
@@ -5517,6 +5644,7 @@ var StarlightEngine = (() => {
               this.soundManager.play("place");
               this.achievementSystem.track("place");
               this.challengeSystem.track("place");
+              this.progressionSystem.addXP(15);
               this.statsSystem.inc("furniturePlaced");
             } else {
               this.uiManager.showNotification("Cannot place there!", "error");
@@ -5650,23 +5778,29 @@ var StarlightEngine = (() => {
               this.soundManager.play("buy");
               this.statsSystem.inc("treasureChestsFound");
               this.challengeSystem.track("treasure");
+              this.progressionSystem.addXP(25);
               this.treasures = this.treasures.filter((t) => t !== treasure);
               this.achievementSystem.track("walk");
               return;
             }
             const npc = this.room.avatars.find((a) => a.isNPC && Math.round(a.x) === tx && Math.round(a.y) === ty);
             if (npc) {
-              this.uiManager.showNPCProfile(npc, () => {
-                this.player.moveTo(tx, ty, this.room);
-                this.achievementSystem.track("walk");
-                this.statsSystem.inc("stepsWalked");
-              });
+              this.uiManager.showNPCProfile(
+                npc,
+                () => {
+                  this.player.moveTo(tx, ty, this.room);
+                  this.achievementSystem.track("walk");
+                  this.statsSystem.inc("stepsWalked");
+                },
+                (npc2) => this.openNPCTrade(npc2)
+              );
               return;
             }
             if (this.room.isWalkable(tx, ty)) {
               this.player.moveTo(tx, ty, this.room);
               this.achievementSystem.track("walk");
               this.challengeSystem.track("walk");
+              this.progressionSystem.addXP(5);
               this.statsSystem.inc("stepsWalked");
               this.spawnParticles(tx, ty, "rgba(244,208,63,0.6)", 5);
             }
@@ -5817,6 +5951,7 @@ var StarlightEngine = (() => {
             this.soundManager.play("chat");
             this.achievementSystem.track("chat");
             this.challengeSystem.track("chat");
+            this.progressionSystem.addXP(5);
           };
           document.getElementById("chatSend")?.addEventListener("click", sendChat);
           document.getElementById("chatInput")?.addEventListener("keydown", (e) => {
@@ -5890,6 +6025,7 @@ var StarlightEngine = (() => {
             this.settings.safeMode = e.target.checked;
             this.uiManager.showNotification(e.target.checked ? "Safe Mode enabled" : "Safe Mode disabled");
           });
+          document.getElementById("btnLikeRoom")?.addEventListener("click", () => this.toggleLikeRoom());
           document.getElementById("btnExportSave")?.addEventListener("click", () => this.exportSave());
           document.getElementById("btnImportSave")?.addEventListener("click", () => document.getElementById("importFileInput")?.click());
           document.getElementById("importFileInput")?.addEventListener("change", (e) => this.importSave(e));
@@ -5899,6 +6035,7 @@ var StarlightEngine = (() => {
           this.renderInventory();
           this.renderMinigamePanel();
           this.uiManager.updateCurrency(this.currencySystem.get());
+          this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
           this.uiManager.updateToolButtons(this.selectedTool);
         }
         setTool(tool) {
@@ -5947,6 +6084,32 @@ var StarlightEngine = (() => {
               if (el) el.style.opacity = "1";
             });
           }
+        }
+        loadLikedRooms() {
+          try {
+            const data = JSON.parse(localStorage.getItem("starlight_liked_rooms"));
+            if (data && Array.isArray(data)) this.likedRooms = new Set(data);
+          } catch (e) {
+          }
+        }
+        saveLikedRooms() {
+          try {
+            localStorage.setItem("starlight_liked_rooms", JSON.stringify(Array.from(this.likedRooms)));
+          } catch (e) {
+          }
+        }
+        toggleLikeRoom() {
+          if (!this.room) return;
+          const id = this.room.id;
+          if (this.likedRooms.has(id)) {
+            this.likedRooms.delete(id);
+            this.uiManager.showNotification(`Unliked ${this.room.name}`);
+          } else {
+            this.likedRooms.add(id);
+            this.uiManager.showNotification(`Liked ${this.room.name}! \u2764\uFE0F`, "success");
+            this.soundManager.play("click");
+          }
+          this.saveLikedRooms();
         }
         loadThemes() {
           try {
@@ -5999,6 +6162,7 @@ var StarlightEngine = (() => {
                 this.applyThemeToMyRoom();
                 this.uiManager.showNotification(`Purchased ${theme.name}!`, "success");
                 this.uiManager.updateCurrency(this.currencySystem.get());
+                this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
                 this.renderNavigator();
                 this.achievementSystem.track("buy");
               } else {
@@ -6026,11 +6190,13 @@ var StarlightEngine = (() => {
               if (this.currencySystem.spend(item.price)) {
                 this.inventorySystem.add(item.id, 1);
                 this.uiManager.updateCurrency(this.currencySystem.get());
+                this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
                 this.uiManager.showNotification(`Purchased ${item.name}!`);
                 this.soundManager.play("buy");
                 this.achievementSystem.track("buy");
                 this.statsSystem.inc("furnitureBought");
                 this.challengeSystem.track("buy");
+                this.progressionSystem.addXP(10);
                 this.statsSystem.inc("totalCoinsSpent", item.price);
                 this.renderCatalog();
               } else {
@@ -6102,6 +6268,7 @@ var StarlightEngine = (() => {
             this.uiManager.showNotification("Look saved!");
             this.achievementSystem.track("customize");
             this.challengeSystem.track("customize");
+            this.progressionSystem.addXP(10);
           }, () => {
             const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
             this.customize.skinColor = rand(["#F5CBA7", "#E0AC69", "#8D5524", "#C68642", "#FFDBAC", "#AA7C58"]);
@@ -6298,6 +6465,43 @@ var StarlightEngine = (() => {
         renderStatsPanel() {
           this.uiManager.renderStats(this.statsSystem.getStats());
         }
+        showSeasonalGreeting() {
+          const month = (/* @__PURE__ */ new Date()).getMonth();
+          const greetings = {
+            0: "\u2744\uFE0F Happy New Year from Starlight Inn!",
+            1: "\u{1F49D} Valentine's season is here!",
+            2: "\u{1F338} Spring has arrived!",
+            3: "\u{1F337} Enjoy the blooming flowers!",
+            4: "\u{1F31E} Summer is coming!",
+            5: "\u{1F3D6}\uFE0F Summer vibes at the beach!",
+            6: "\u{1F386} Happy 4th of July!",
+            7: "\u{1F33B} Late summer days!",
+            8: "\u{1F342} Fall is in the air!",
+            9: "\u{1F383} Spooky season at Starlight Inn!",
+            10: "\u{1F983} Thanksgiving time!",
+            11: "\u{1F384} Happy Holidays from Starlight Inn!"
+          };
+          const greeting = greetings[month];
+          if (greeting) this.uiManager.showNotification(greeting, "info");
+        }
+        openNPCTrade(npc) {
+          const items = FURNITURE_CATALOG.filter((i) => i.price < 400).sort(() => Math.random() - 0.5).slice(0, 4);
+          this.uiManager.showNPCTrade(npc, items, (item) => {
+            if (this.currencySystem.spend(item.price)) {
+              this.inventorySystem.add(item.id, 1);
+              this.uiManager.showNotification(`Bought ${item.name} from ${npc.name}!`, "success");
+              this.soundManager.play("buy");
+              this.achievementSystem.track("buy");
+              this.challengeSystem.track("buy");
+              this.progressionSystem.addXP(10);
+              this.uiManager.updateCurrency(this.currencySystem.get());
+              this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
+            } else {
+              this.uiManager.showNotification("Not enough StarCoins!", "error");
+              this.soundManager.play("error");
+            }
+          });
+        }
         renderChallengesPanel() {
           this.uiManager.renderChallenges(this.challengeSystem.getList());
         }
@@ -6351,6 +6555,7 @@ var StarlightEngine = (() => {
                 this.uiManager.showNotification(`Day ${reward.day} reward: \u2605${reward.coins}${reward.item ? " + " + reward.item : ""}!`, "success");
                 this.renderInventory();
                 this.uiManager.updateCurrency(this.currencySystem.get());
+                this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
               }
             });
           }
@@ -6797,6 +7002,7 @@ var StarlightEngine = (() => {
           this.minigame.start();
           this.achievementSystem.track("minigame");
           this.challengeSystem.track("win");
+          this.progressionSystem.addXP(50);
           this.statsSystem.inc("minigamesPlayed");
         }
         endMinigame() {
@@ -6824,7 +7030,10 @@ var StarlightEngine = (() => {
     <div id="topBar">
       <div id="logo">&#10022; STARLIGHT INN</div>
       <div id="topBarRight">
-        <div class="currency-badge" id="currencyDisplay">1,000</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+          <div class="currency-badge" id="currencyDisplay">1,000</div>
+          <div style="font-size:10px;color:var(--habbo-text-dim);font-weight:700;" id="levelDisplay">Lv. 1 Newcomer</div>
+        </div>
         <button class="top-btn" id="btnNavigator">&#127757; Navigator</button>
         <button class="top-btn" id="btnCatalog">&#128722; Catalog</button>
         <button class="top-btn" id="btnInventory">&#127890; Inventory</button>
@@ -6845,6 +7054,7 @@ var StarlightEngine = (() => {
     <div id="roomInfo">
       <h2 id="roomName">Lobby</h2>
       <p id="roomDesc">Welcome to Starlight Inn!</p>
+      <button id="btnLikeRoom" style="margin-top:6px;padding:4px 12px;background:rgba(0,0,0,0.3);border:1px solid var(--habbo-panel-border);border-radius:12px;color:white;font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s;">\u2764\uFE0F Like Room</button>
     </div>
     <div id="minimap"><canvas id="minimapCanvas" width="140" height="140"></canvas></div>
     <div id="chatBar">
