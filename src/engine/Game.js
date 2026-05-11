@@ -35,6 +35,7 @@ import { ChallengeSystem } from '../economy/Challenges.js';
 import { TutorialSystem } from '../ui/Tutorial.js';
 import { ProgressionSystem } from '../economy/Progression.js';
 import { PetSystem } from '../world/Pet.js';
+import { InboxSystem } from '../social/Inbox.js';
 
 class Particle {
   constructor(x, y, color, life, vx, vy) {
@@ -68,7 +69,7 @@ export class Game {
     this.room = null;
     this.player = null;
     this.particles = [];
-    this.settings = { showMinimap: true, showNames: true, showChat: true, npcCount: 3, camSpeed: 5, sound: false, safeMode: false };
+    this.settings = { showMinimap: true, showNames: true, showChat: true, npcCount: 3, camSpeed: 5, sound: false, safeMode: false, showWeather: true, myRoomPrivate: false };
     this.ownedThemes = ['classic'];
     this.currentTheme = 'classic';
     this.likedRooms = new Set();
@@ -80,6 +81,7 @@ export class Game {
     this.loadLikedRooms();
     this.loadRoomSize();
     this.loadMyRoomName();
+    this.loadSettings();
     this.chatColor = '#fffde7';
     this.lastTime = 0;
     this.hoverTile = null;
@@ -107,6 +109,7 @@ export class Game {
     this.dailyRewards = new DailyRewardSystem(this);
     this.friendSystem = new FriendSystem(this);
     this.petSystem = new PetSystem(this);
+    this.inboxSystem = new InboxSystem(this);
     this.achievementSystem = new AchievementSystem(this);
     this.leaderboardSystem = new LeaderboardSystem();
     this.craftingSystem = new CraftingSystem(this.inventorySystem);
@@ -357,6 +360,9 @@ export class Game {
 
   handleClick(sx, sy) {
     if (this.minigame) return;
+    const now = Date.now();
+    const isDoubleClick = this._lastClick && (now - this._lastClick.time < 350) && dist(sx, sy, this._lastClick.x, this._lastClick.y) < 15;
+    this._lastClick = { time: now, x: sx, y: sy };
     const worldX = sx - this.camera.x, worldY = sy - this.camera.y;
     const iso = screenToIso(worldX, worldY + TILE_H / 2);
     const tx = Math.floor(iso.x), ty = Math.floor(iso.y);
@@ -379,6 +385,7 @@ export class Game {
       // Check NPC click
       const npc = this.room.avatars.find(a => a.isNPC && Math.round(a.x) === tx && Math.round(a.y) === ty);
       if (npc) {
+        this.inboxSystem.maybeReceiveRandom();
         this.uiManager.showNPCProfile(npc,
           () => {
             this.player.moveTo(tx, ty, this.room);
@@ -396,6 +403,9 @@ export class Game {
         this.progressionSystem.addXP(5);
         this.statsSystem.inc('stepsWalked');
         this.spawnParticles(tx, ty, 'rgba(244,208,63,0.6)', 5);
+        if (isDoubleClick) {
+          this.uiManager.showNotification('Double-click walk!', 'info');
+        }
       }
     } else if (this.selectedTool === 'place' && this.selectedInventoryItem) {
       if (this.room.placeFurniture(this.selectedInventoryItem, tx, ty)) {
@@ -442,6 +452,7 @@ export class Game {
     document.getElementById('btnShortcuts')?.addEventListener('click', () => { this.uiManager.togglePanel('shortcutsPanel'); this.renderShortcutsPanel(); });
     document.getElementById('btnChallenges')?.addEventListener('click', () => { this.uiManager.togglePanel('challengesPanel'); this.renderChallengesPanel(); });
     document.getElementById('btnNotifications')?.addEventListener('click', () => { this.uiManager.togglePanel('notificationsPanel'); this.uiManager.renderNotificationHistory(); });
+    document.getElementById('btnInbox')?.addEventListener('click', () => { this.uiManager.togglePanel('inboxPanel'); this.renderInboxPanel(); });
 
     document.getElementById('hairStyleSelect')?.addEventListener('change', e => { this.customize.hairStyle = e.target.value; this.renderCustomizePanel(); });
     document.getElementById('hatSelect')?.addEventListener('change', e => { this.customize.hatType = e.target.value; this.renderCustomizePanel(); });
@@ -544,12 +555,15 @@ export class Game {
     document.getElementById('settingSound')?.addEventListener('change', e => { this.settings.sound = e.target.checked; this.soundManager.setEnabled(e.target.checked); this.uiManager.showNotification(e.target.checked ? 'Sound enabled' : 'Sound muted'); });
     document.getElementById('settingVolume')?.addEventListener('input', e => { const vol = parseInt(e.target.value) / 100; this.soundManager.setVolume(vol); });
     document.getElementById('settingSafeMode')?.addEventListener('change', e => { this.settings.safeMode = e.target.checked; this.uiManager.showNotification(e.target.checked ? 'Safe Mode enabled' : 'Safe Mode disabled'); });
+    document.getElementById('settingWeather')?.addEventListener('change', e => { this.settings.showWeather = e.target.checked; this.saveSettings(); this.uiManager.showNotification(e.target.checked ? 'Weather effects on' : 'Weather effects off'); });
     document.getElementById('btnLikeRoom')?.addEventListener('click', () => this.toggleLikeRoom());
     document.getElementById('btnExportSave')?.addEventListener('click', () => this.exportSave());
     document.getElementById('btnImportSave')?.addEventListener('click', () => document.getElementById('importFileInput')?.click());
     document.getElementById('importFileInput')?.addEventListener('change', e => this.importSave(e));
 
     document.getElementById('minimap')?.classList.toggle('open', this.settings.showMinimap);
+    const weatherCb = document.getElementById('settingWeather');
+    if (weatherCb) weatherCb.checked = this.settings.showWeather;
 
     this.renderNavigator();
     this.renderCatalog();
@@ -624,6 +638,20 @@ export class Game {
 
   saveMyRoomName() {
     try { localStorage.setItem('starlight_room_name', JSON.stringify({ name: this.myRoomName })); } catch (e) {}
+  }
+
+  loadSettings() {
+    try {
+      const data = JSON.parse(localStorage.getItem('starlight_settings'));
+      if (data) {
+        this.settings.showWeather = data.showWeather !== false;
+        this.settings.myRoomPrivate = data.myRoomPrivate === true;
+      }
+    } catch (e) {}
+  }
+
+  saveSettings() {
+    try { localStorage.setItem('starlight_settings', JSON.stringify({ showWeather: this.settings.showWeather, myRoomPrivate: this.settings.myRoomPrivate })); } catch (e) {}
   }
 
   trackRecentRoom(room) {
@@ -706,6 +734,11 @@ export class Game {
       if (myRoom) myRoom.name = name;
       this.uiManager.showNotification(`Room renamed to ${name}!`, 'success');
       this.renderNavigator();
+    }, this.settings.myRoomPrivate, isPrivate => {
+      this.settings.myRoomPrivate = isPrivate;
+      this.saveSettings();
+      this.uiManager.showNotification(isPrivate ? 'My Room is now private 🔒' : 'My Room is now public 🌐');
+      this.renderNavigator();
     });
     this.uiManager.renderExpansions(ROOM_EXPANSIONS, this.myRoomSize, this.currencySystem.get(), expansion => {
       if (this.currencySystem.spend(expansion.price)) {
@@ -787,6 +820,25 @@ export class Game {
         this.uiManager.showNotification(`Sold ${type} for ★${sellPrice}`, 'success');
         this.soundManager.play('buy');
         this.renderInventory();
+      },
+      () => {
+        const items = Object.entries(this.inventorySystem.getAll());
+        let total = 0;
+        items.forEach(([type, count]) => {
+          const item = FURNITURE_CATALOG.find(i => i.id === type);
+          const sellPrice = item ? Math.floor(item.price * 0.5) : 10;
+          total += sellPrice * count;
+          this.inventorySystem.remove(type, count);
+        });
+        if (total > 0) {
+          this.currencySystem.add(total);
+          this.uiManager.showNotification(`Sold everything for ★${total}!`, 'success');
+          this.soundManager.play('buy');
+          this.selectedInventoryItem = null;
+          this.selectedTool = 'walk';
+          this.uiManager.updateToolButtons(this.selectedTool);
+        }
+        this.renderInventory();
       }
     );
   }
@@ -860,7 +912,9 @@ export class Game {
       daily: { streak: this.dailyRewards.streak, lastClaim: this.dailyRewards.lastClaim },
       leaderboard: this.leaderboardSystem.scores,
       myroom: localStorage.getItem('starlight_myroom'),
-      version: '2.1'
+      inbox: { messages: this.inboxSystem.messages, unreadCount: this.inboxSystem.unreadCount },
+      settings: { showWeather: this.settings.showWeather, myRoomPrivate: this.settings.myRoomPrivate },
+      version: '2.2'
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -889,6 +943,8 @@ export class Game {
         if (data.daily) { this.dailyRewards.streak = data.daily.streak || 0; this.dailyRewards.lastClaim = data.daily.lastClaim || 0; this.dailyRewards.save(); }
         if (data.leaderboard) { this.leaderboardSystem.scores = data.leaderboard; this.leaderboardSystem.save(); }
         if (data.myroom) { localStorage.setItem('starlight_myroom', data.myroom); }
+        if (data.inbox) { this.inboxSystem.messages = data.inbox.messages || []; this.inboxSystem.unreadCount = data.inbox.unreadCount || 0; this.inboxSystem.save(); }
+        if (data.settings) { this.settings.showWeather = data.settings.showWeather !== false; this.settings.myRoomPrivate = data.settings.myRoomPrivate === true; this.saveSettings(); }
         this.uiManager.showNotification('Save imported! Reloading...', 'success');
         setTimeout(() => location.reload(), 1200);
       } catch (err) {
@@ -909,6 +965,8 @@ export class Game {
     this.friendSystem.save();
     this.petSystem.save();
     this.leaderboardSystem.save();
+    this.saveSettings();
+    this.inboxSystem.save();
   }
 
   saveMyRoom() {
@@ -999,6 +1057,19 @@ export class Game {
 
   renderStatsPanel() {
     this.uiManager.renderStats(this.statsSystem.getStats());
+  }
+
+  renderInboxPanel() {
+    this.uiManager.renderInbox(this.inboxSystem.getAll(),
+      id => { this.inboxSystem.read(id); this.renderInboxPanel(); },
+      id => { this.inboxSystem.delete(id); this.renderInboxPanel(); }
+    );
+    // Update badge
+    const btn = document.getElementById('btnInbox');
+    if (btn) {
+      const count = this.inboxSystem.getUnreadCount();
+      btn.innerHTML = `&#128231; Mail${count > 0 ? ` <span style="background:var(--habbo-danger);color:white;border-radius:8px;padding:1px 5px;font-size:9px;margin-left:2px;">${count}</span>` : ''}`;
+    }
   }
 
   showSeasonalGreeting() {
@@ -1369,7 +1440,7 @@ export class Game {
     }
 
     // Weather effects
-    if (rid === 'garden' || rid === 'forest') {
+    if (this.settings.showWeather && (rid === 'garden' || rid === 'forest')) {
       ctx.strokeStyle = 'rgba(180,210,255,0.35)';
       ctx.lineWidth = 1;
       for (let i = 0; i < 40; i++) {
@@ -1380,7 +1451,7 @@ export class Game {
         ctx.lineTo(rx - 3, ry + 12);
         ctx.stroke();
       }
-    } else if (rid === 'spa' || rid === 'cinema') {
+    } else if (this.settings.showWeather && (rid === 'spa' || rid === 'cinema')) {
       ctx.fillStyle = 'rgba(255,255,255,0.06)';
       for (let i = 0; i < 20; i++) {
         const rx = ((time / 40 + i * 213) % (this.width + 80)) - 40;
@@ -1389,7 +1460,7 @@ export class Game {
         ctx.arc(rx, ry, 2 + Math.sin(time / 400 + i) * 1, 0, Math.PI * 2);
         ctx.fill();
       }
-    } else if (rid === 'beach') {
+    } else if (this.settings.showWeather && rid === 'beach') {
       ctx.fillStyle = 'rgba(255,250,200,0.08)';
       for (let i = 0; i < 15; i++) {
         const rx = ((time / 50 + i * 301) % (this.width + 60)) - 30;

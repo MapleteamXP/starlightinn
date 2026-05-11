@@ -29,6 +29,10 @@ export class UIManager {
     `);
     // Inventory
     this._ensurePanel('inventoryPanel', 'My Inventory', `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:11px;color:var(--habbo-text-dim);">Click to select, right-click to sell one</span>
+        <button id="btnSellAll" style="padding:4px 10px;background:var(--habbo-danger);color:white;border:none;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;">Sell All</button>
+      </div>
       <div class="inv-grid" id="inventoryGrid"></div>
       <div style="margin-top:10px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Click an item to select it, then click a tile to place.</div>
     `);
@@ -42,6 +46,7 @@ export class UIManager {
       <div class="setting-row"><label>Sound Effects</label><input type="checkbox" id="settingSound"></div>
       <div class="setting-row"><label>Sound Volume</label><input type="range" id="settingVolume" min="0" max="100" value="50"></div>
       <div class="setting-row"><label>Safe Mode</label><input type="checkbox" id="settingSafeMode"></div>
+      <div class="setting-row"><label>Weather Effects</label><input type="checkbox" id="settingWeather" checked></div>
       <div class="setting-row"><label>Export Save</label><button id="btnExportSave" style="padding:4px 10px;background:var(--habbo-light);color:white;border:1px solid var(--habbo-panel-border);border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;">Download</button></div>
       <div class="setting-row"><label>Import Save</label><button id="btnImportSave" style="padding:4px 10px;background:var(--habbo-light);color:white;border:1px solid var(--habbo-panel-border);border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;">Upload</button></div>
       <input type="file" id="importFileInput" style="display:none;" accept=".json">
@@ -87,6 +92,7 @@ export class UIManager {
     this._ensurePanel('challengesPanel', 'Daily Challenges', `<div class="challenge-list" id="challengeList"></div>`);
     // Notifications
     this._ensurePanel('notificationsPanel', 'Notification History', `<div class="notif-history" id="notifHistory"></div>`);
+    this._ensurePanel('inboxPanel', 'Mailbox', `<div class="inbox-list" id="inboxList"></div>`);
     // Gallery
     this._ensurePanel('galleryPanel', 'Screenshot Gallery', `<div class="gallery-grid" id="galleryGrid"></div>`);
     // Chat color popover
@@ -274,7 +280,7 @@ export class UIManager {
     });
   }
 
-  renderNavigator(rooms, recent, onSelect, onRenameMyRoom) {
+  renderNavigator(rooms, recent, onSelect, onRenameMyRoom, myRoomPrivate, onTogglePrivacy) {
     const publicList = document.getElementById('publicRoomList');
     if (!publicList) return;
     publicList.innerHTML = '';
@@ -291,12 +297,19 @@ export class UIManager {
     userList.innerHTML = '';
     const myRoomDiv = document.createElement('div');
     myRoomDiv.className = 'room-item';
-    myRoomDiv.innerHTML = `<div class="room-name">My Room</div><div class="room-desc">Your personal customizable space</div><div class="room-meta">Owner: You</div>`;
+    myRoomDiv.innerHTML = `<div class="room-name">My Room ${myRoomPrivate ? '🔒' : '🌐'}</div><div class="room-desc">Your personal customizable space</div><div class="room-meta">${myRoomPrivate ? 'Private' : 'Public'} · Owner: You</div>`;
     myRoomDiv.addEventListener('click', () => {
       const userTemplate = { id: 'myroom', name: 'My Room', description: 'Your personal space at Starlight Inn', width: 10, height: 10, floor: 'wood', wall: '#8B4513', map: Array.from({length:10},()=>Array(10).fill(1)), furniture: [] };
       onSelect && onSelect(userTemplate);
     });
     userList.appendChild(myRoomDiv);
+    if (onTogglePrivacy) {
+      const privDiv = document.createElement('div');
+      privDiv.style.cssText = 'margin-top:6px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--habbo-text-dim);';
+      privDiv.innerHTML = `<input type="checkbox" id="myRoomPrivacy" ${myRoomPrivate ? 'checked' : ''} style="cursor:pointer;"><label for="myRoomPrivacy" style="cursor:pointer;">Make My Room private</label>`;
+      userList.appendChild(privDiv);
+      document.getElementById('myRoomPrivacy')?.addEventListener('change', e => { onTogglePrivacy(e.target.checked); });
+    }
     if (onRenameMyRoom) {
       const renameDiv = document.createElement('div');
       renameDiv.style.cssText = 'margin-top:8px;display:flex;gap:6px;';
@@ -352,7 +365,7 @@ export class UIManager {
     });
   }
 
-  renderInventory(inventory, selected, onSelect, onSell) {
+  renderInventory(inventory, selected, onSelect, onSell, onSellAll) {
     const grid = document.getElementById('inventoryGrid');
     if (!grid) return;
     grid.innerHTML = '';
@@ -375,6 +388,17 @@ export class UIManager {
       }
       grid.appendChild(div);
     });
+    const sellAllBtn = document.getElementById('btnSellAll');
+    if (sellAllBtn) {
+      const newBtn = sellAllBtn.cloneNode(true);
+      sellAllBtn.parentNode.replaceChild(newBtn, sellAllBtn);
+      newBtn.addEventListener('click', () => {
+        if (items.length === 0) return;
+        if (confirm(`Sell ALL ${items.length} item types for half value?`)) {
+          onSellAll && onSellAll();
+        }
+      });
+    }
   }
 
   renderCustomizePanel(customize, onChange, onSave, onRandom) {
@@ -617,6 +641,42 @@ export class UIManager {
       div.className = 'stat-row';
       div.innerHTML = `<span class="stat-label">${s.label}</span><span class="stat-value">${s.value}</span>`;
       list.appendChild(div);
+    });
+  }
+
+  renderInbox(messages, onRead, onDelete) {
+    const list = document.getElementById('inboxList');
+    if (!list) return;
+    list.innerHTML = '';
+    if (messages.length === 0) {
+      list.innerHTML = '<div style="text-align:center;color:var(--habbo-text-dim);padding:20px;font-size:13px;">Your mailbox is empty.</div>';
+      return;
+    }
+    messages.forEach(m => {
+      const div = document.createElement('div');
+      div.className = 'room-item';
+      div.style.cssText = `opacity:${m.read ? 0.7 : 1};border-left:3px solid ${m.read ? 'var(--habbo-panel-border)' : 'var(--habbo-accent)'};`;
+      const dateStr = new Date(m.time).toLocaleDateString();
+      div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="room-name" style="font-size:13px;">${m.read ? '' : '<span style="color:var(--habbo-accent);">\u25CF </span>'}${m.subject}</div>
+          <div style="font-size:10px;color:var(--habbo-text-dim);">${dateStr}</div>
+        </div>
+        <div class="room-desc" style="font-size:11px;">From: ${m.from}</div>
+        <div style="font-size:12px;color:var(--habbo-text-dim);margin-top:4px;">${m.body}</div>
+        ${m.reward && !m.rewardClaimed ? `<div style="margin-top:6px;color:var(--habbo-success);font-size:11px;font-weight:700;">Reward: \u2605${m.reward} — click to claim</div>` : ''}
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <button class="inbox-read-btn" data-id="${m.id}" style="padding:3px 10px;background:var(--habbo-light);color:white;border:none;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit;">${m.read ? 'Read' : 'Open'}</button>
+          <button class="inbox-del-btn" data-id="${m.id}" style="padding:3px 10px;background:var(--habbo-danger);color:white;border:none;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit;">Delete</button>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+    list.querySelectorAll('.inbox-read-btn').forEach(btn => {
+      btn.addEventListener('click', () => onRead && onRead(parseFloat(btn.dataset.id)));
+    });
+    list.querySelectorAll('.inbox-del-btn').forEach(btn => {
+      btn.addEventListener('click', () => onDelete && onDelete(parseFloat(btn.dataset.id)));
     });
   }
 
