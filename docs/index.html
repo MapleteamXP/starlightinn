@@ -204,6 +204,14 @@ body {
 /* Theme List */
 .theme-list { display: flex; flex-direction: column; gap: 6px; }
 
+/* Crafting */
+.craft-item { background: rgba(0,0,0,0.15); border-radius: 8px; padding: 10px; margin-bottom: 6px; }
+.craft-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.craft-name { font-weight: 700; font-size: 13px; }
+.craft-ing { font-size: 11px; color: var(--habbo-text-dim); }
+.craft-btn { background: var(--habbo-accent); color: var(--habbo-dark); border: none; padding: 5px 14px; border-radius: 6px; font-weight: 700; font-size: 11px; cursor: pointer; }
+.craft-btn:disabled { background: rgba(255,255,255,0.1); color: var(--habbo-text-dim); cursor: not-allowed; }
+
 /* Achievements */
 .achieve-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(0,0,0,0.15); border-radius: 8px; margin-bottom: 6px; opacity: 0.55; }
 .achieve-item.unlocked { opacity: 1; background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); }
@@ -2945,7 +2953,29 @@ var StarlightEngine = (() => {
           return this.npcs;
         }
         update(dt, room) {
-          this.npcs.forEach((npc) => npc.update(dt, room));
+          this.npcs.forEach((npc) => {
+            npc.update(dt, room);
+            if (!npc.isWalking && !npc.isSitting && Math.random() < 1e-3) {
+              const seat = this._findNearbySeat(npc, room);
+              if (seat) npc.moveTo(seat.x, seat.y, room);
+            }
+            if (!npc.isWalking && !npc.isSitting && npc.path.length === 0 && Math.random() < 5e-4) {
+              const nearSeat = room.furniture.find((f) => ["chair", "sofa", "bench", "bed"].includes(f.type) && Math.abs(f.x - npc.x) < 1.5 && Math.abs(f.y - npc.y) < 1.5);
+              if (nearSeat) {
+                npc.isSitting = true;
+                npc.sitTimer = randInt(5, 15);
+              }
+            }
+            if (npc.isSitting) {
+              npc.sitTimer -= dt;
+              if (npc.sitTimer <= 0) {
+                npc.isSitting = false;
+              }
+              if (!npc.isWalking && Math.random() < 3e-4) {
+                npc.isDancing = !npc.isDancing;
+              }
+            }
+          });
           if (this.game.settings.safeMode) return;
           const player = this.game.player;
           if (!player) return;
@@ -2958,6 +2988,18 @@ var StarlightEngine = (() => {
               npc.say(randChoice(greetings), "#fffde7", "normal");
             }
           });
+        }
+        _findNearbySeat(npc, room) {
+          const seats = room.furniture.filter((f) => ["chair", "sofa", "bench", "bed"].includes(f.type));
+          if (seats.length === 0) return null;
+          const available = seats.filter((s) => !room.avatars.some((a) => a !== npc && Math.round(a.x) === s.x && Math.round(a.y) === s.y));
+          if (available.length === 0) return null;
+          available.sort((a, b) => {
+            const da = Math.abs(a.x - npc.x) + Math.abs(a.y - npc.y);
+            const db = Math.abs(b.x - npc.x) + Math.abs(b.y - npc.y);
+            return da - db;
+          });
+          return available[0];
         }
       };
     }
@@ -3130,6 +3172,8 @@ var StarlightEngine = (() => {
           this._ensurePanel("petPanel", "My Pet", `<div id="petContent"></div>`);
           this._ensurePanel("dailyRewardPanel", "Daily Rewards", `<div id="dailyRewardContent"></div>`);
           this._ensurePanel("achievementsPanel", "Achievements", `<div class="achieve-list" id="achieveList"></div>`);
+          this._ensurePanel("leaderboardPanel", "High Scores", `<div id="leaderboardContent"></div>`);
+          this._ensurePanel("craftingPanel", "Crafting Workshop", `<div class="craft-list" id="craftList"></div>`);
           if (!document.getElementById("chatColorPopover")) {
             const popover = document.createElement("div");
             popover.className = "chat-color-popover";
@@ -3395,6 +3439,51 @@ var StarlightEngine = (() => {
           document.getElementById("petRest")?.addEventListener("click", onRest);
           document.getElementById("petRelease")?.addEventListener("click", () => onAdopt && onAdopt(null));
         }
+        renderCrafting(recipes, onCraft) {
+          const list = document.getElementById("craftList");
+          if (!list) return;
+          list.innerHTML = "";
+          recipes.forEach((r) => {
+            const div = document.createElement("div");
+            div.className = "craft-item";
+            const ingText = Object.entries(r.ingredients).map(([k, v]) => `${v}x ${k}`).join(" + ");
+            div.innerHTML = `
+        <div class="craft-row">
+          <span class="craft-name">${r.name}</span>
+          <button class="craft-btn" data-id="${r.id}" ${r.canCraft ? "" : "disabled"}>Craft</button>
+        </div>
+        <div class="craft-ing">${ingText} \u2192 ${r.outputCount}x ${r.output}</div>
+      `;
+            list.appendChild(div);
+          });
+          list.querySelectorAll(".craft-btn").forEach((btn) => {
+            btn.addEventListener("click", () => onCraft && onCraft(btn.dataset.id));
+          });
+        }
+        renderLeaderboard(games, getScores) {
+          const content = document.getElementById("leaderboardContent");
+          if (!content) return;
+          let html = "";
+          games.forEach((g) => {
+            const scores = getScores(g.id);
+            html += `<div style="margin-bottom:16px;"><div style="font-weight:700;font-size:14px;color:var(--habbo-accent);margin-bottom:6px;">${g.name}</div>`;
+            if (scores.length === 0) {
+              html += `<div style="font-size:12px;color:var(--habbo-text-dim);">No scores yet. Play to set a record!</div>`;
+            } else {
+              html += `<div style="display:flex;flex-direction:column;gap:4px;">`;
+              scores.forEach((s, i) => {
+                const medal = i === 0 ? "\u{1F947}" : i === 1 ? "\u{1F948}" : i === 2 ? "\u{1F949}" : `${i + 1}.`;
+                html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:rgba(0,0,0,0.15);border-radius:6px;font-size:12px;">
+            <span>${medal} Score: <b>${s.score}</b></span>
+            <span style="color:var(--habbo-text-dim);">${new Date(s.date).toLocaleDateString()}</span>
+          </div>`;
+              });
+              html += `</div>`;
+            }
+            html += `</div>`;
+          });
+          content.innerHTML = html;
+        }
         renderAchievements(list) {
           const container = document.getElementById("achieveList");
           if (!container) return;
@@ -3565,6 +3654,8 @@ var StarlightEngine = (() => {
           window.removeEventListener("keydown", this._keydown);
           this.result = won ? "win" : "lose";
           this.game.soundManager.play(won ? "win" : "error");
+          const score = won ? this.maxCombo * 50 + Math.floor(this.playerHealth) * 10 : this.maxCombo * 30;
+          this.game.leaderboardSystem.submit("ringuppercut", score, { combo: this.maxCombo, health: Math.floor(this.playerHealth), won });
           super.end(won);
         }
         attemptAttack() {
@@ -3801,6 +3892,8 @@ var StarlightEngine = (() => {
               this.score += 100;
               this.game.soundManager.play("buy");
               if (this.matched >= this.cards.length / 2) {
+                const score = this.matched * 100 - this.moves * 5 + Math.floor(this.duration - this.timer) * 10;
+                this.game.leaderboardSystem.submit("memorymatch", Math.max(0, score), { moves: this.moves, time: Math.floor(this.timer) });
                 this.end(true);
               }
             } else {
@@ -3963,6 +4056,8 @@ var StarlightEngine = (() => {
                 this.game.soundManager.play("click");
                 if (this._checkSolved()) {
                   this.solved = true;
+                  const score = 2e3 - this.moves * 10 + Math.floor(this.duration - this.timer) * 20;
+                  this.game.leaderboardSystem.submit("tilepuzzle", Math.max(0, score), { moves: this.moves, time: Math.floor(this.timer) });
                   this.end(true);
                 }
               } else {
@@ -4333,6 +4428,45 @@ var StarlightEngine = (() => {
     }
   });
 
+  // src/economy/Crafting.js
+  var CRAFTING_RECIPES, CraftingSystem;
+  var init_Crafting = __esm({
+    "src/economy/Crafting.js"() {
+      CRAFTING_RECIPES = [
+        { id: "lamp", name: "Golden Lamp", ingredients: { chair: 1, plant: 1 }, output: "lamp", outputCount: 1 },
+        { id: "bookshelf", name: "Bookshelf", ingredients: { chair: 2, table: 1 }, output: "bookshelf", outputCount: 1 },
+        { id: "rug", name: "Persian Rug", ingredients: { plant: 2, lamp: 1 }, output: "rug", outputCount: 1 },
+        { id: "tv", name: "Retro TV", ingredients: { lamp: 1, mirror: 1 }, output: "tv", outputCount: 1 },
+        { id: "fountain", name: "Water Fountain", ingredients: { plant: 3, lamp: 2 }, output: "fountain", outputCount: 1 },
+        { id: "dragon", name: "Toy Dragon", ingredients: { statue: 1, trophy: 1 }, output: "dragon", outputCount: 1 },
+        { id: "arcade", name: "Arcade Machine", ingredients: { tv: 1, jukebox: 1 }, output: "arcade", outputCount: 1 },
+        { id: "fireplace", name: "Stone Fireplace", ingredients: { barrel: 2, bench: 1 }, output: "fireplace", outputCount: 1 }
+      ];
+      CraftingSystem = class {
+        constructor(inventorySystem) {
+          this.inventorySystem = inventorySystem;
+        }
+        canCraft(recipe) {
+          for (const [ing, count] of Object.entries(recipe.ingredients)) {
+            if (this.inventorySystem.getCount(ing) < count) return false;
+          }
+          return true;
+        }
+        craft(recipe) {
+          if (!this.canCraft(recipe)) return false;
+          for (const [ing, count] of Object.entries(recipe.ingredients)) {
+            this.inventorySystem.remove(ing, count);
+          }
+          this.inventorySystem.add(recipe.output, recipe.outputCount);
+          return true;
+        }
+        getAvailableRecipes() {
+          return CRAFTING_RECIPES.map((r) => ({ ...r, canCraft: this.canCraft(r) }));
+        }
+      };
+    }
+  });
+
   // src/social/Friends.js
   var BOT_NAMES, BOT_STATUSES, FriendSystem;
   var init_Friends = __esm({
@@ -4408,6 +4542,48 @@ var StarlightEngine = (() => {
             localStorage.setItem("starlight_friends", JSON.stringify(this.friends));
           } catch (e) {
           }
+        }
+      };
+    }
+  });
+
+  // src/social/Leaderboard.js
+  var LeaderboardSystem;
+  var init_Leaderboard = __esm({
+    "src/social/Leaderboard.js"() {
+      LeaderboardSystem = class {
+        constructor() {
+          this.scores = {};
+          this.load();
+        }
+        load() {
+          try {
+            const data = JSON.parse(localStorage.getItem("starlight_leaderboards"));
+            if (data) this.scores = data;
+          } catch (e) {
+          }
+        }
+        save() {
+          try {
+            localStorage.setItem("starlight_leaderboards", JSON.stringify(this.scores));
+          } catch (e) {
+          }
+        }
+        submit(gameId, score, stats = {}) {
+          if (!this.scores[gameId]) this.scores[gameId] = [];
+          const entry = { score, stats, date: Date.now(), id: Math.random().toString(36).slice(2, 8) };
+          this.scores[gameId].push(entry);
+          this.scores[gameId].sort((a, b) => b.score - a.score);
+          if (this.scores[gameId].length > 10) this.scores[gameId] = this.scores[gameId].slice(0, 10);
+          this.save();
+          return entry;
+        }
+        getTop(gameId, limit = 5) {
+          return (this.scores[gameId] || []).slice(0, limit);
+        }
+        getPersonalBest(gameId) {
+          const list = this.scores[gameId] || [];
+          return list.length > 0 ? list[0] : null;
         }
       };
     }
@@ -4535,7 +4711,9 @@ var StarlightEngine = (() => {
       init_SoundManager();
       init_DailyRewards();
       init_Achievements();
+      init_Crafting();
       init_Friends();
+      init_Leaderboard();
       init_Pet();
       Particle = class {
         constructor(x, y, color, life, vx, vy) {
@@ -4602,6 +4780,9 @@ var StarlightEngine = (() => {
           this.friendSystem = new FriendSystem(this);
           this.petSystem = new PetSystem(this);
           this.achievementSystem = new AchievementSystem(this);
+          this.leaderboardSystem = new LeaderboardSystem();
+          this.craftingSystem = new CraftingSystem(this.inventorySystem);
+          this.photoMode = false;
           this.setupInput();
           this.setupUI();
           this.loadRoom(ROOM_TEMPLATES[0], false);
@@ -4797,8 +4978,15 @@ var StarlightEngine = (() => {
               case "m":
                 this.toggleMinimap();
                 break;
+              case "p":
+                this.togglePhotoMode();
+                break;
               case "escape":
-                this.uiManager.closeAllPanels();
+                if (this.photoMode) {
+                  this.togglePhotoMode();
+                } else {
+                  this.uiManager.closeAllPanels();
+                }
                 break;
             }
             if (["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"].includes(e.key.toLowerCase())) {
@@ -4892,6 +5080,14 @@ var StarlightEngine = (() => {
           document.getElementById("btnAchievements")?.addEventListener("click", () => {
             this.uiManager.togglePanel("achievementsPanel");
             this.renderAchievementsPanel();
+          });
+          document.getElementById("btnLeaderboard")?.addEventListener("click", () => {
+            this.uiManager.togglePanel("leaderboardPanel");
+            this.renderLeaderboardPanel();
+          });
+          document.getElementById("btnCrafting")?.addEventListener("click", () => {
+            this.uiManager.togglePanel("craftingPanel");
+            this.renderCraftingPanel();
           });
           document.getElementById("hairStyleSelect")?.addEventListener("change", (e) => {
             this.customize.hairStyle = e.target.value;
@@ -5056,6 +5252,27 @@ var StarlightEngine = (() => {
           document.getElementById("minimap")?.classList.toggle("open", this.settings.showMinimap);
           const cb = document.getElementById("settingMinimap");
           if (cb) cb.checked = this.settings.showMinimap;
+        }
+        togglePhotoMode() {
+          this.photoMode = !this.photoMode;
+          const ui = document.getElementById("uiOverlay");
+          const bars = document.getElementById("topBar");
+          const toolbar = document.getElementById("toolbar");
+          const chat = document.getElementById("chatBar");
+          const roomInfo = document.getElementById("roomInfo");
+          const notif = document.getElementById("notificationArea");
+          const els = [bars, toolbar, chat, roomInfo, notif];
+          if (this.photoMode) {
+            this.uiManager.closeAllPanels();
+            els.forEach((el) => {
+              if (el) el.style.opacity = "0";
+            });
+            this.uiManager.showNotification("Photo Mode \u2014 Press P or ESC to exit", "info");
+          } else {
+            els.forEach((el) => {
+              if (el) el.style.opacity = "1";
+            });
+          }
         }
         loadThemes() {
           try {
@@ -5269,6 +5486,29 @@ var StarlightEngine = (() => {
         }
         renderAchievementsPanel() {
           this.uiManager.renderAchievements(this.achievementSystem.getList());
+        }
+        renderLeaderboardPanel() {
+          const games = [
+            { id: "ringuppercut", name: "Ring Uppercut" },
+            { id: "memorymatch", name: "Memory Match" },
+            { id: "tilepuzzle", name: "Tile Puzzle" }
+          ];
+          this.uiManager.renderLeaderboard(games, (id) => this.leaderboardSystem.getTop(id));
+        }
+        renderCraftingPanel() {
+          this.uiManager.renderCrafting(this.craftingSystem.getAvailableRecipes(), (id) => {
+            const recipe = CRAFTING_RECIPES.find((r) => r.id === id);
+            if (recipe && this.craftingSystem.craft(recipe)) {
+              this.uiManager.showNotification(`Crafted ${recipe.name}!`, "success");
+              this.soundManager.play("buy");
+              this.renderCraftingPanel();
+              this.renderInventory();
+              this.achievementSystem.track("place");
+            } else {
+              this.uiManager.showNotification("Missing ingredients!", "error");
+              this.soundManager.play("error");
+            }
+          });
         }
         renderMinigamePanel() {
           const games = [
@@ -5702,6 +5942,8 @@ var StarlightEngine = (() => {
         <button class="top-btn" id="btnFriends">&#128101; Friends</button>
         <button class="top-btn" id="btnPet">&#128054; Pet</button>
         <button class="top-btn" id="btnAchievements">&#127942; Goals</button>
+        <button class="top-btn" id="btnLeaderboard">&#128200; Scores</button>
+        <button class="top-btn" id="btnCrafting">&#128295; Craft</button>
       </div>
     </div>
     <div id="roomInfo">

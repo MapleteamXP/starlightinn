@@ -26,7 +26,9 @@ import { TilePuzzle } from '../minigames/TilePuzzle.js';
 import { SoundManager } from '../audio/SoundManager.js';
 import { DailyRewardSystem } from '../economy/DailyRewards.js';
 import { AchievementSystem } from '../economy/Achievements.js';
+import { CraftingSystem, CRAFTING_RECIPES } from '../economy/Crafting.js';
 import { FriendSystem } from '../social/Friends.js';
+import { LeaderboardSystem } from '../social/Leaderboard.js';
 import { PetSystem } from '../world/Pet.js';
 
 class Particle {
@@ -90,6 +92,9 @@ export class Game {
     this.friendSystem = new FriendSystem(this);
     this.petSystem = new PetSystem(this);
     this.achievementSystem = new AchievementSystem(this);
+    this.leaderboardSystem = new LeaderboardSystem();
+    this.craftingSystem = new CraftingSystem(this.inventorySystem);
+    this.photoMode = false;
 
     this.setupInput();
     this.setupUI();
@@ -277,7 +282,11 @@ export class Game {
         case 'd': this.player.isDancing = !this.player.isDancing; this.uiManager.showNotification(this.player.isDancing ? 'Dancing!' : 'Stopped dancing'); break;
         case 'r': this.placementRotation = (this.placementRotation + 1) % 4; this.uiManager.showNotification(`Rotation: ${this.placementRotation * 90}°`); break;
         case 'm': this.toggleMinimap(); break;
-        case 'escape': this.uiManager.closeAllPanels(); break;
+        case 'p': this.togglePhotoMode(); break;
+        case 'escape':
+          if (this.photoMode) { this.togglePhotoMode(); }
+          else { this.uiManager.closeAllPanels(); }
+          break;
       }
       if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(e.key.toLowerCase())) {
         e.preventDefault(); this.handleMovementKey(e.key);
@@ -351,6 +360,8 @@ export class Game {
     document.getElementById('btnFriends')?.addEventListener('click', () => { this.uiManager.togglePanel('friendsPanel'); this.renderFriendsPanel(); });
     document.getElementById('btnPet')?.addEventListener('click', () => { this.uiManager.togglePanel('petPanel'); this.renderPetPanel(); });
     document.getElementById('btnAchievements')?.addEventListener('click', () => { this.uiManager.togglePanel('achievementsPanel'); this.renderAchievementsPanel(); });
+    document.getElementById('btnLeaderboard')?.addEventListener('click', () => { this.uiManager.togglePanel('leaderboardPanel'); this.renderLeaderboardPanel(); });
+    document.getElementById('btnCrafting')?.addEventListener('click', () => { this.uiManager.togglePanel('craftingPanel'); this.renderCraftingPanel(); });
 
     document.getElementById('hairStyleSelect')?.addEventListener('change', e => { this.customize.hairStyle = e.target.value; this.renderCustomizePanel(); });
     document.getElementById('hatSelect')?.addEventListener('change', e => { this.customize.hatType = e.target.value; this.renderCustomizePanel(); });
@@ -463,6 +474,23 @@ export class Game {
 
   setTool(tool) { this.selectedTool = tool; this.uiManager.updateToolButtons(this.selectedTool); }
   toggleMinimap() { this.settings.showMinimap = !this.settings.showMinimap; document.getElementById('minimap')?.classList.toggle('open', this.settings.showMinimap); const cb = document.getElementById('settingMinimap'); if (cb) cb.checked = this.settings.showMinimap; }
+  togglePhotoMode() {
+    this.photoMode = !this.photoMode;
+    const ui = document.getElementById('uiOverlay');
+    const bars = document.getElementById('topBar');
+    const toolbar = document.getElementById('toolbar');
+    const chat = document.getElementById('chatBar');
+    const roomInfo = document.getElementById('roomInfo');
+    const notif = document.getElementById('notificationArea');
+    const els = [bars, toolbar, chat, roomInfo, notif];
+    if (this.photoMode) {
+      this.uiManager.closeAllPanels();
+      els.forEach(el => { if (el) el.style.opacity = '0'; });
+      this.uiManager.showNotification('Photo Mode — Press P or ESC to exit', 'info');
+    } else {
+      els.forEach(el => { if (el) el.style.opacity = '1'; });
+    }
+  }
 
   loadThemes() {
     try {
@@ -678,6 +706,31 @@ export class Game {
 
   renderAchievementsPanel() {
     this.uiManager.renderAchievements(this.achievementSystem.getList());
+  }
+
+  renderLeaderboardPanel() {
+    const games = [
+      { id: 'ringuppercut', name: 'Ring Uppercut' },
+      { id: 'memorymatch', name: 'Memory Match' },
+      { id: 'tilepuzzle', name: 'Tile Puzzle' }
+    ];
+    this.uiManager.renderLeaderboard(games, id => this.leaderboardSystem.getTop(id));
+  }
+
+  renderCraftingPanel() {
+    this.uiManager.renderCrafting(this.craftingSystem.getAvailableRecipes(), id => {
+      const recipe = CRAFTING_RECIPES.find(r => r.id === id);
+      if (recipe && this.craftingSystem.craft(recipe)) {
+        this.uiManager.showNotification(`Crafted ${recipe.name}!`, 'success');
+        this.soundManager.play('buy');
+        this.renderCraftingPanel();
+        this.renderInventory();
+        this.achievementSystem.track('place');
+      } else {
+        this.uiManager.showNotification('Missing ingredients!', 'error');
+        this.soundManager.play('error');
+      }
+    });
   }
 
   renderMinigamePanel() {

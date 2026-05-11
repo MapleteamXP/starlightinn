@@ -65,6 +65,10 @@ export class UIManager {
     this._ensurePanel('dailyRewardPanel', 'Daily Rewards', `<div id="dailyRewardContent"></div>`);
     // Achievements
     this._ensurePanel('achievementsPanel', 'Achievements', `<div class="achieve-list" id="achieveList"></div>`);
+    // Leaderboard
+    this._ensurePanel('leaderboardPanel', 'High Scores', `<div id="leaderboardContent"></div>`);
+    // Crafting
+    this._ensurePanel('craftingPanel', 'Crafting Workshop', `<div class="craft-list" id="craftList"></div>`);
     // Chat color popover
     if (!document.getElementById('chatColorPopover')) {
       const popover = document.createElement('div');
@@ -352,6 +356,53 @@ export class UIManager {
     document.getElementById('petPlay')?.addEventListener('click', onPlay);
     document.getElementById('petRest')?.addEventListener('click', onRest);
     document.getElementById('petRelease')?.addEventListener('click', () => onAdopt && onAdopt(null));
+  }
+
+  renderCrafting(recipes, onCraft) {
+    const list = document.getElementById('craftList');
+    if (!list) return;
+    list.innerHTML = '';
+    recipes.forEach(r => {
+      const div = document.createElement('div');
+      div.className = 'craft-item';
+      const ingText = Object.entries(r.ingredients).map(([k, v]) => `${v}x ${k}`).join(' + ');
+      div.innerHTML = `
+        <div class="craft-row">
+          <span class="craft-name">${r.name}</span>
+          <button class="craft-btn" data-id="${r.id}" ${r.canCraft ? '' : 'disabled'}>Craft</button>
+        </div>
+        <div class="craft-ing">${ingText} → ${r.outputCount}x ${r.output}</div>
+      `;
+      list.appendChild(div);
+    });
+    list.querySelectorAll('.craft-btn').forEach(btn => {
+      btn.addEventListener('click', () => onCraft && onCraft(btn.dataset.id));
+    });
+  }
+
+  renderLeaderboard(games, getScores) {
+    const content = document.getElementById('leaderboardContent');
+    if (!content) return;
+    let html = '';
+    games.forEach(g => {
+      const scores = getScores(g.id);
+      html += `<div style="margin-bottom:16px;"><div style="font-weight:700;font-size:14px;color:var(--habbo-accent);margin-bottom:6px;">${g.name}</div>`;
+      if (scores.length === 0) {
+        html += `<div style="font-size:12px;color:var(--habbo-text-dim);">No scores yet. Play to set a record!</div>`;
+      } else {
+        html += `<div style="display:flex;flex-direction:column;gap:4px;">`;
+        scores.forEach((s, i) => {
+          const medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : `${i + 1}.`));
+          html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:rgba(0,0,0,0.15);border-radius:6px;font-size:12px;">
+            <span>${medal} Score: <b>${s.score}</b></span>
+            <span style="color:var(--habbo-text-dim);">${new Date(s.date).toLocaleDateString()}</span>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+      html += `</div>`;
+    });
+    content.innerHTML = html;
   }
 
   renderAchievements(list) {

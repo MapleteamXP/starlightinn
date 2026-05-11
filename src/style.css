@@ -196,6 +196,14 @@ body {
 /* Theme List */
 .theme-list { display: flex; flex-direction: column; gap: 6px; }
 
+/* Crafting */
+.craft-item { background: rgba(0,0,0,0.15); border-radius: 8px; padding: 10px; margin-bottom: 6px; }
+.craft-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.craft-name { font-weight: 700; font-size: 13px; }
+.craft-ing { font-size: 11px; color: var(--habbo-text-dim); }
+.craft-btn { background: var(--habbo-accent); color: var(--habbo-dark); border: none; padding: 5px 14px; border-radius: 6px; font-weight: 700; font-size: 11px; cursor: pointer; }
+.craft-btn:disabled { background: rgba(255,255,255,0.1); color: var(--habbo-text-dim); cursor: not-allowed; }
+
 /* Achievements */
 .achieve-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(0,0,0,0.15); border-radius: 8px; margin-bottom: 6px; opacity: 0.55; }
 .achieve-item.unlocked { opacity: 1; background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); }

@@ -49,7 +49,23 @@ export class NPCManager {
   }
 
   update(dt, room) {
-    this.npcs.forEach(npc => npc.update(dt, room));
+    this.npcs.forEach(npc => {
+      npc.update(dt, room);
+      // NPC furniture interaction
+      if (!npc.isWalking && !npc.isSitting && Math.random() < 0.001) {
+        const seat = this._findNearbySeat(npc, room);
+        if (seat) npc.moveTo(seat.x, seat.y, room);
+      }
+      if (!npc.isWalking && !npc.isSitting && npc.path.length === 0 && Math.random() < 0.0005) {
+        const nearSeat = room.furniture.find(f => ['chair','sofa','bench','bed'].includes(f.type) && Math.abs(f.x - npc.x) < 1.5 && Math.abs(f.y - npc.y) < 1.5);
+        if (nearSeat) { npc.isSitting = true; npc.sitTimer = randInt(5, 15); }
+      }
+      if (npc.isSitting) {
+        npc.sitTimer -= dt;
+        if (npc.sitTimer <= 0) { npc.isSitting = false; }
+        if (!npc.isWalking && Math.random() < 0.0003) { npc.isDancing = !npc.isDancing; }
+      }
+    });
 
     // Proximity greetings
     if (this.game.settings.safeMode) return;
@@ -64,5 +80,18 @@ export class NPCManager {
         npc.say(randChoice(greetings), '#fffde7', 'normal');
       }
     });
+  }
+
+  _findNearbySeat(npc, room) {
+    const seats = room.furniture.filter(f => ['chair','sofa','bench','bed'].includes(f.type));
+    if (seats.length === 0) return null;
+    const available = seats.filter(s => !room.avatars.some(a => a !== npc && Math.round(a.x) === s.x && Math.round(a.y) === s.y));
+    if (available.length === 0) return null;
+    available.sort((a, b) => {
+      const da = Math.abs(a.x - npc.x) + Math.abs(a.y - npc.y);
+      const db = Math.abs(b.x - npc.x) + Math.abs(b.y - npc.y);
+      return da - db;
+    });
+    return available[0];
   }
 }

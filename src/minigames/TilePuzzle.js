@@ -84,6 +84,8 @@ export class TilePuzzle extends BaseMinigame {
           this.game.soundManager.play('click');
           if (this._checkSolved()) {
             this.solved = true;
+            const score = 2000 - this.moves * 10 + Math.floor((this.duration - this.timer)) * 20;
+            this.game.leaderboardSystem.submit('tilepuzzle', Math.max(0, score), { moves: this.moves, time: Math.floor(this.timer) });
             this.end(true);
           }
         } else {

@@ -90,6 +90,8 @@ export class MemoryMatch extends BaseMinigame {
         this.score += 100;
         this.game.soundManager.play('buy');
         if (this.matched >= this.cards.length / 2) {
+          const score = this.matched * 100 - this.moves * 5 + Math.floor((this.duration - this.timer)) * 10;
+          this.game.leaderboardSystem.submit('memorymatch', Math.max(0, score), { moves: this.moves, time: Math.floor(this.timer) });
           this.end(true);
         }
       } else {
