@@ -45,6 +45,7 @@ export class RingUppercut extends BaseMinigame {
   end(won) {
     window.removeEventListener('keydown', this._keydown);
     this.result = won ? 'win' : 'lose';
+    this.game.soundManager.play(won ? 'win' : 'error');
     super.end(won);
   }
 
@@ -56,12 +57,14 @@ export class RingUppercut extends BaseMinigame {
       this.opponentHealth -= damage;
       this.combo++;
       if (this.combo > this.maxCombo) this.maxCombo = this.combo;
+      this.game.soundManager.play('punch');
       if (this.opponentHealth <= 0) {
         this.opponentHealth = 0;
         this.end(true);
       }
     } else {
       this.combo = 0;
+      this.game.soundManager.play('error');
     }
     this.canAttack = false;
     this.attackCooldown = 0.4;
@@ -85,6 +88,7 @@ export class RingUppercut extends BaseMinigame {
       this.opponentAttackTimer = 0;
       const dmg = 5 + Math.floor(Math.random() * 8);
       this.playerHealth -= dmg;
+      this.game.soundManager.play('punch');
       if (this.playerHealth <= 0) {
         this.playerHealth = 0;
         this.end(false);

@@ -11,6 +11,7 @@ import {
   createAvatarCanvas, clearAvatarCache, createSceneryCanvas
 } from '../assets/Generator.js';
 import { FURNITURE_CATALOG, ROOM_TEMPLATES } from '../world/Data.js';
+import { Furniture } from '../world/Furniture.js';
 import { Avatar } from '../world/Avatar.js';
 import { Room } from '../world/Room.js';
 import { ChatManager } from '../social/Chat.js';
@@ -20,6 +21,7 @@ import { InventorySystem } from '../economy/Inventory.js';
 import { UIManager } from '../ui/UIManager.js';
 import { ContentFilter } from '../security/Filter.js';
 import { RingUppercut } from '../minigames/RingUppercut.js';
+import { SoundManager } from '../audio/SoundManager.js';
 
 class Particle {
   constructor(x, y, color, life, vx, vy) {
@@ -72,6 +74,7 @@ export class Game {
     this.npcManager = new NPCManager(this);
     this.uiManager = new UIManager(this);
     this.contentFilter = new ContentFilter();
+    this.soundManager = new SoundManager(this.settings.sound);
 
     this.minigame = null;
 
@@ -83,17 +86,17 @@ export class Game {
     this.applyAvatarToPlayer();
     this.spawnNPCs(this.settings.npcCount);
 
-    this.inventorySystem.add('chair', 2);
-    this.inventorySystem.add('plant', 3);
-    this.inventorySystem.add('lamp', 1);
-    this.inventorySystem.add('table', 1);
-    this.inventorySystem.add('rug', 1);
+    // Starter inventory only if empty
+    const inv = this.inventorySystem.getAll();
+    if (Object.keys(inv).length === 0) {
+      this.inventorySystem.add('chair', 2);
+      this.inventorySystem.add('plant', 3);
+      this.inventorySystem.add('lamp', 1);
+      this.inventorySystem.add('table', 1);
+      this.inventorySystem.add('rug', 1);
+    }
 
-    setTimeout(() => {
-      const loading = document.getElementById('loadingScreen');
-      if (loading) loading.classList.add('hidden');
-    }, 800);
-
+    this.hasRendered = false;
     requestAnimationFrame(t => this.loop(t));
   }
 
@@ -137,6 +140,8 @@ export class Game {
     if (roomName) roomName.textContent = this.room.name;
     if (roomDesc) roomDesc.textContent = this.room.description;
 
+    if (this.room.id === 'myroom') this.loadMyRoom();
+
     const center = isoToScreen(this.room.width / 2, this.room.height / 2);
     this.targetCamera = { x: this.width / 2 - center.x, y: this.height / 2 - center.y + 90 };
     this.camera = { ...this.targetCamera };
@@ -163,6 +168,7 @@ export class Game {
       p.size = 2 + Math.random() * 2;
       this.particles.push(p);
     }
+    this.soundManager.play('step');
   }
 
   setupInput() {
@@ -179,8 +185,10 @@ export class Game {
         this.inventorySystem.remove(type, 1);
         this.spawnParticles(tx, ty, '#2ecc71', 10);
         this.uiManager.showNotification(`Placed ${type}!`);
+        this.soundManager.play('place');
       } else {
         this.uiManager.showNotification('Cannot place there!', 'error');
+        this.soundManager.play('error');
       }
       this.dragHighlight = null;
     });
@@ -190,7 +198,10 @@ export class Game {
       this.mouse.x = e.clientX; this.mouse.y = e.clientY;
       if (this.isDragging) {
         const dx = e.clientX - this.dragStart.x, dy = e.clientY - this.dragStart.y;
-        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) { this.camera.x += dx; this.camera.y += dy; this.dragStart = { x: e.clientX, y: e.clientY }; }
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+          this.camera.x += dx; this.camera.y += dy;
+          this.dragStart = { x: e.clientX, y: e.clientY };
+        }
       }
     });
     this.canvas.addEventListener('mouseup', e => {
@@ -259,6 +270,7 @@ export class Game {
         this.inventorySystem.remove(this.selectedInventoryItem, 1);
         this.spawnParticles(tx, ty, '#2ecc71', 10);
         this.uiManager.showNotification(`Placed ${this.selectedInventoryItem}!`);
+        if (this.room.id === 'myroom') this.saveMyRoom();
         if (!this.inventorySystem.has(this.selectedInventoryItem)) {
           this.selectedInventoryItem = null;
           this.selectedTool = 'walk';
@@ -266,6 +278,7 @@ export class Game {
         }
       } else {
         this.uiManager.showNotification('Cannot place there!', 'error');
+        this.soundManager.play('error');
       }
     } else if (this.selectedTool === 'pick') {
       const removed = this.room.removeFurnitureAt(tx, ty);
@@ -273,6 +286,8 @@ export class Game {
         this.inventorySystem.add(removed, 1);
         this.spawnParticles(tx, ty, '#e74c3c', 8);
         this.uiManager.showNotification(`Picked up ${removed}`);
+        this.soundManager.play('place');
+        if (this.room.id === 'myroom') this.saveMyRoom();
       }
     }
   }
@@ -333,6 +348,7 @@ export class Game {
       input.blur();
       this.chatManager.updateTypingIndicator(false);
       this.chatManager.send(text);
+    this.soundManager.play('chat');
     };
     document.getElementById('chatSend')?.addEventListener('click', sendChat);
     document.getElementById('chatInput')?.addEventListener('keydown', e => {
@@ -361,6 +377,13 @@ export class Game {
         colorPopover.classList.remove('open');
       });
     });
+
+    // Global button click sounds (delegate for dynamic elements)
+    document.addEventListener('click', e => {
+      if (e.target.closest('button, .top-btn, .tool-btn, .room-item, .catalog-item, .inv-item, .color-swatch')) {
+        this.soundManager.play('click');
+      }
+    });
     document.addEventListener('click', e => {
       if (colorPopover && !colorPopover.contains(e.target) && e.target !== colorBtn) colorPopover.classList.remove('open');
     });
@@ -374,6 +397,7 @@ export class Game {
     });
     document.getElementById('settingCamSpeed')?.addEventListener('input', e => { this.settings.camSpeed = parseInt(e.target.value); });
     document.getElementById('settingSound')?.addEventListener('change', e => { this.settings.sound = e.target.checked; });
+    document.getElementById('settingSound')?.addEventListener('change', e => { this.settings.sound = e.target.checked; this.soundManager.setEnabled(e.target.checked); this.uiManager.showNotification(e.target.checked ? 'Sound enabled' : 'Sound muted'); });
     document.getElementById('settingSafeMode')?.addEventListener('change', e => { this.settings.safeMode = e.target.checked; this.uiManager.showNotification(e.target.checked ? 'Safe Mode enabled' : 'Safe Mode disabled'); });
 
     document.getElementById('minimap')?.classList.toggle('open', this.settings.showMinimap);
@@ -403,8 +427,10 @@ export class Game {
         this.inventorySystem.add(item.id, 1);
         this.uiManager.updateCurrency(this.currencySystem.get());
         this.uiManager.showNotification(`Purchased ${item.name}!`);
+        this.soundManager.play('buy');
       } else {
         this.uiManager.showNotification('Not enough StarCoins!', 'error');
+        this.soundManager.play('error');
       }
     });
   }
@@ -427,7 +453,7 @@ export class Game {
   }
 
   saveAvatarToStorage() {
-    localStorage.setItem('starlight_avatar', JSON.stringify(this.customize));
+    try { localStorage.setItem('starlight_avatar', JSON.stringify(this.customize)); } catch (e) {}
   }
 
   applyAvatarToPlayer() {
@@ -473,6 +499,29 @@ export class Game {
     });
   }
 
+  saveMyRoom() {
+    if (!this.room || this.room.id !== 'myroom') return;
+    try {
+      const data = {
+        furniture: this.room.furniture.map(f => ({ type: f.type, x: f.x, y: f.y, z: f.z })),
+        floor: this.room.floorType,
+        wall: this.room.wallColor
+      };
+      localStorage.setItem('starlight_myroom', JSON.stringify(data));
+    } catch (e) {}
+  }
+
+  loadMyRoom() {
+    try {
+      const data = JSON.parse(localStorage.getItem('starlight_myroom'));
+      if (data && this.room && this.room.id === 'myroom') {
+        this.room.furniture = (data.furniture || []).map(f => new Furniture(f.type, f.x, f.y, f.z));
+        if (data.floor) this.room.floorType = data.floor;
+        if (data.wall) this.room.wallColor = data.wall;
+      }
+    } catch (e) {}
+  }
+
   renderMinigamePanel() {
     const games = [
       { name: 'Ring Uppercut', desc: 'Time your punches in the boxing ring!', reward: '200-500', class: RingUppercut }
@@ -497,6 +546,11 @@ export class Game {
     const dt = Math.min((timestamp - this.lastTime) / 1000, 0.1);
     this.lastTime = timestamp;
     this.update(dt);
+    if (!this.hasRendered) {
+      this.hasRendered = true;
+      const loading = document.getElementById('loadingScreen');
+      if (loading) loading.classList.add('hidden');
+    }
     this.render();
     this.chatManager.renderBubbles();
     requestAnimationFrame(t => this.loop(t));
@@ -519,6 +573,20 @@ export class Game {
       this.targetCamera = { x: this.width / 2 - psp.x, y: this.height / 2 - psp.y + 90 };
       this.camera.x = lerp(this.camera.x, this.targetCamera.x, camSpeed);
       this.camera.y = lerp(this.camera.y, this.targetCamera.y, camSpeed);
+    }
+    // Clamp camera to room bounds
+    if (this.room) {
+      const pad = 80;
+      const leftX = isoToScreen(0, this.room.height).x;
+      const rightX = isoToScreen(this.room.width, 0).x;
+      const topY = isoToScreen(0, 0).y - WALL_H;
+      const bottomY = isoToScreen(this.room.width, this.room.height).y;
+      const minX = pad - rightX;
+      const maxX = this.width - pad - leftX;
+      const minY = pad - bottomY;
+      const maxY = this.height - pad - topY;
+      this.camera.x = clamp(this.camera.x, minX, maxX);
+      this.camera.y = clamp(this.camera.y, minY, maxY);
     }
     if (this.room) {
       this.room.avatars.forEach(a => a.update(dt, this.room));
@@ -704,6 +772,20 @@ export class Game {
       } else { ctx.drawImage(img, sp.x - img.width / 2, sp.y); }
     }
     ctx.restore();
+    // Walking leg animation (drawn over cached static legs)
+    if (avatar.isWalking && !avatar.isSitting) {
+      const legY = sp.y + 42;
+      const swing = [ -4, 0, 4, 0 ][avatar.animFrame % 4];
+      ctx.strokeStyle = avatar.pantsColor; ctx.lineWidth = 4; ctx.lineCap = 'round';
+      // Left leg
+      ctx.beginPath(); ctx.moveTo(sp.x - 4, legY); ctx.lineTo(sp.x - 5 - swing, legY + 16 + Math.abs(swing) * 0.3); ctx.stroke();
+      // Right leg
+      ctx.beginPath(); ctx.moveTo(sp.x + 4, legY); ctx.lineTo(sp.x + 5 + swing, legY + 16 + Math.abs(swing) * 0.3); ctx.stroke();
+      // Shoes
+      ctx.fillStyle = avatar.shoeColor || '#333';
+      ctx.beginPath(); ctx.ellipse(sp.x - 5 - swing, legY + 17 + Math.abs(swing) * 0.3, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(sp.x + 5 + swing, legY + 17 + Math.abs(swing) * 0.3, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
+    }
     if (avatar.isWaving) {
       ctx.strokeStyle = avatar.skinColor; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
       const waveAngle = Math.sin(avatar.waveTimer * 8) * 0.8;

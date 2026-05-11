@@ -5,16 +5,19 @@
 export class InventorySystem {
   constructor() {
     this.items = {};
+    this.load();
   }
 
   add(type, count = 1) {
     this.items[type] = (this.items[type] || 0) + count;
+    this.save();
   }
 
   remove(type, count = 1) {
     if (!this.items[type]) return false;
     this.items[type] -= count;
     if (this.items[type] <= 0) delete this.items[type];
+    this.save();
     return true;
   }
 
@@ -28,6 +31,17 @@ export class InventorySystem {
 
   getAll() {
     return { ...this.items };
+  }
+
+  load() {
+    try {
+      const data = localStorage.getItem('starlight_inventory');
+      if (data) this.items = JSON.parse(data);
+    } catch (e) {}
+  }
+
+  save() {
+    try { localStorage.setItem('starlight_inventory', JSON.stringify(this.items)); } catch (e) {}
   }
 
   renderGrid(container, onSelect) {

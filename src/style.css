@@ -175,10 +175,31 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: var(--habbo-panel-border); }
 
 @media (max-width: 768px) {
-  #toolbar { gap: 2px; padding: 0 4px; }
+  #topBar { height: 40px; padding: 0 8px; }
+  #logo { font-size: 16px; }
+  .top-btn { padding: 4px 8px; font-size: 10px; }
+  #toolbar { gap: 2px; padding: 0 4px; height: 52px; }
   .tool-btn { width: 42px; height: 42px; font-size: 9px; }
   .tool-btn .icon { font-size: 16px; }
-  #chatInput { width: 200px; }
-  #inventoryPanel { width: 340px; }
+  #chatBar { bottom: 56px; padding: 6px 8px; }
+  #chatInput { width: 160px; padding: 8px 10px; font-size: 13px; }
+  #chatSend { padding: 8px 12px; }
+  .panel { min-width: auto; width: calc(100vw - 24px) !important; left: 12px !important; right: 12px !important; transform: none !important; top: 52px !important; max-height: 70vh; }
+  #inventoryPanel { bottom: 60px; top: auto !important; width: calc(100vw - 24px) !important; }
   .inv-grid { grid-template-columns: repeat(5, 1fr); }
+  #customizePanel { width: calc(100vw - 24px) !important; }
+  .chat-bubble { font-size: 12px; max-width: 180px; }
+  #roomInfo { top: 48px; padding: 6px 14px; }
+  #roomInfo h2 { font-size: 14px; }
+}
+
+@media (max-width: 480px) {
+  #topBarRight .top-btn span { display: none; }
+  .top-btn { padding: 4px 6px; }
+  .currency-badge { padding: 3px 8px; font-size: 12px; }
+  #toolbar { border-radius: 10px 10px 0 0; }
+  .tool-btn { width: 36px; height: 36px; font-size: 8px; }
+  .tool-btn .icon { font-size: 14px; }
+  #chatInput { width: 120px; }
+  #navigatorPanel, #catalogPanel, #chatPanel { width: calc(100vw - 16px) !important; left: 8px !important; right: 8px !important; }
 }
