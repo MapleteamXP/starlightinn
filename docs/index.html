@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -7,31 +7,72 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --habbo-teal: #0e7c8a; --habbo-dark: #073a42; --habbo-light: #1a9aaa;
-      --habbo-accent: #f4d03f; --habbo-bg: #0a3d44; --habbo-panel: #0e5a63;
-      --habbo-panel-border: #178a99; --habbo-text: #ffffff; --habbo-text-dim: #a0d8e0;
-      --habbo-danger: #e74c3c; --habbo-success: #2ecc71;
+      --habbo-teal: #0e7c8a;
+      --habbo-dark: #073a42;
+      --habbo-light: #1a9aaa;
+      --habbo-accent: #f4d03f;
+      --habbo-bg: #0a3d44;
+      --habbo-panel: #0e5a63;
+      --habbo-panel-border: #178a99;
+      --habbo-text: #ffffff;
+      --habbo-text-dim: #a0d8e0;
+      --habbo-danger: #e74c3c;
+      --habbo-success: #2ecc71;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Nunito', sans-serif; background: var(--habbo-bg); color: var(--habbo-text); overflow: hidden; width: 100vw; height: 100vh; user-select: none; }
+    body {
+      font-family: 'Nunito', sans-serif; background: var(--habbo-bg); color: var(--habbo-text);
+      overflow: hidden; width: 100vw; height: 100vh; user-select: none;
+    }
     #gameCanvas { display: block; width: 100vw; height: 100vh; cursor: crosshair; }
     .ui-overlay { position: absolute; pointer-events: none; top: 0; left: 0; right: 0; bottom: 0; }
     .ui-overlay > * { pointer-events: auto; }
-    #topBar { position: absolute; top: 0; left: 0; right: 0; height: 48px; background: linear-gradient(180deg, var(--habbo-panel) 0%, var(--habbo-dark) 100%); border-bottom: 3px solid var(--habbo-accent); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 100; }
+    #topBar {
+      position: absolute; top: 0; left: 0; right: 0; height: 48px;
+      background: linear-gradient(180deg, var(--habbo-panel) 0%, var(--habbo-dark) 100%);
+      border-bottom: 3px solid var(--habbo-accent); display: flex;
+      align-items: center; justify-content: space-between; padding: 0 16px; z-index: 100;
+    }
     #logo { font-size: 20px; font-weight: 800; color: var(--habbo-accent); text-shadow: 2px 2px 0 var(--habbo-dark); letter-spacing: 1px; }
     #topBarRight { display: flex; align-items: center; gap: 12px; }
-    .currency-badge { background: var(--habbo-accent); color: var(--habbo-dark); padding: 4px 12px; border-radius: 16px; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+    .currency-badge {
+      background: var(--habbo-accent); color: var(--habbo-dark); padding: 4px 12px;
+      border-radius: 16px; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 6px;
+    }
     .currency-badge::before { content: "\2605"; font-size: 16px; }
-    .top-btn { background: var(--habbo-light); border: 2px solid var(--habbo-panel-border); color: white; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 600; font-size: 13px; transition: all 0.15s; }
+    .top-btn {
+      background: var(--habbo-light); border: 2px solid var(--habbo-panel-border); color: white;
+      padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: inherit;
+      font-weight: 600; font-size: 13px; transition: all 0.15s;
+    }
     .top-btn:hover { background: var(--habbo-accent); color: var(--habbo-dark); transform: translateY(-1px); }
-    #toolbar { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); height: 64px; background: linear-gradient(0deg, var(--habbo-panel) 0%, var(--habbo-dark) 100%); border: 3px solid var(--habbo-panel-border); border-bottom: none; border-radius: 16px 16px 0 0; display: flex; align-items: center; padding: 0 12px; gap: 6px; z-index: 100; box-shadow: 0 -4px 20px rgba(0,0,0,0.4); }
-    .tool-btn { width: 52px; height: 52px; background: var(--habbo-light); border: 2px solid var(--habbo-panel-border); border-radius: 10px; color: white; cursor: pointer; font-family: inherit; font-size: 11px; font-weight: 700; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: all 0.15s; position: relative; }
+    #toolbar {
+      position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); height: 64px;
+      background: linear-gradient(0deg, var(--habbo-panel) 0%, var(--habbo-dark) 100%);
+      border: 3px solid var(--habbo-panel-border); border-bottom: none;
+      border-radius: 16px 16px 0 0; display: flex; align-items: center;
+      padding: 0 12px; gap: 6px; z-index: 100; box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+    }
+    .tool-btn {
+      width: 52px; height: 52px; background: var(--habbo-light); border: 2px solid var(--habbo-panel-border);
+      border-radius: 10px; color: white; cursor: pointer; font-family: inherit; font-size: 11px;
+      font-weight: 700; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 2px; transition: all 0.15s; position: relative;
+    }
     .tool-btn .icon { font-size: 20px; }
     .tool-btn:hover { background: var(--habbo-accent); color: var(--habbo-dark); transform: translateY(-4px); }
     .tool-btn.active { background: var(--habbo-accent); color: var(--habbo-dark); box-shadow: 0 0 10px rgba(244,208,63,0.5); }
-    .panel { position: absolute; background: var(--habbo-panel); border: 3px solid var(--habbo-panel-border); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 200; display: none; flex-direction: column; overflow: hidden; min-width: 280px; }
+    .panel {
+      position: absolute; background: var(--habbo-panel); border: 3px solid var(--habbo-panel-border);
+      border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 200;
+      display: none; flex-direction: column; overflow: hidden; min-width: 280px;
+    }
     .panel.open { display: flex; }
-    .panel-header { background: linear-gradient(180deg, var(--habbo-light) 0%, var(--habbo-teal) 100%); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--habbo-accent); }
+    .panel-header {
+      background: linear-gradient(180deg, var(--habbo-light) 0%, var(--habbo-teal) 100%);
+      padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 2px solid var(--habbo-accent);
+    }
     .panel-title { font-weight: 700; font-size: 15px; }
     .panel-close { background: var(--habbo-danger); border: none; color: white; width: 24px; height: 24px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 14px; line-height: 1; }
     .panel-body { padding: 12px; overflow-y: auto; max-height: 60vh; }
@@ -94,24 +135,77 @@
       #inventoryPanel { width: 340px; }
       .inv-grid { grid-template-columns: repeat(5, 1fr); }
     }
+    /* Tooltip */
+    .tooltip { position: absolute; background: var(--habbo-dark); border: 1px solid var(--habbo-panel-border); padding: 6px 10px; border-radius: 6px; font-size: 12px; pointer-events: none; z-index: 500; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    /* Achievement Toast */
+    .achievement {
+      position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: linear-gradient(90deg, var(--habbo-accent), #f39c12); color: var(--habbo-dark);
+      padding: 10px 20px; border-radius: 24px; font-weight: 800; font-size: 14px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4); opacity: 0; pointer-events: none;
+      animation: achieveIn 0.4s forwards; z-index: 400;
+    }
+    @keyframes achieveIn { to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    /* Tutorial overlay */
+    #tutorialOverlay {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6); z-index: 500; display: none;
+      align-items: center; justify-content: center; pointer-events: auto;
+    }
+    #tutorialOverlay.open { display: flex; }
+    .tutorial-card {
+      background: var(--habbo-panel); border: 3px solid var(--habbo-accent);
+      border-radius: 16px; padding: 24px; max-width: 420px; text-align: center;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    }
+    .tutorial-card h3 { color: var(--habbo-accent); font-size: 20px; margin-bottom: 12px; }
+    .tutorial-card p { font-size: 14px; color: var(--habbo-text-dim); line-height: 1.6; margin-bottom: 16px; }
+    .tutorial-btn {
+      background: var(--habbo-accent); color: var(--habbo-dark); border: none;
+      padding: 10px 24px; border-radius: 8px; font-family: inherit; font-weight: 700;
+      font-size: 14px; cursor: pointer;
+    }
+    /* Day/Night overlay */
+    #dayNightOverlay {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;
+      z-index: 80; transition: background 2s;
+    }
+    /* Help modal */
+    .help-grid { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 13px; text-align: left; }
+    .help-key { background: var(--habbo-dark); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--habbo-panel-border); font-family: monospace; color: var(--habbo-accent); }
+#customizePanel { top: 60px; right: 50%; transform: translateX(50%); width: 380px; }
+.customize-preview { text-align: center; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 10px; margin-bottom: 12px; }
+.customize-preview canvas { width: 80px; height: 110px; image-rendering: pixelated; }
+.customize-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.customize-row label { font-size: 12px; font-weight: 600; }
+.customize-row input[type="color"] { width: 36px; height: 24px; border: none; border-radius: 4px; cursor: pointer; }
+.customize-row select { background: var(--habbo-dark); color: white; border: 1px solid var(--habbo-panel-border); border-radius: 4px; padding: 4px 8px; font-family: inherit; font-size: 12px; min-width: 120px; }
+.color-presets { display: flex; gap: 4px; }
+.color-swatch { width: 18px; height: 18px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; }
+.color-swatch:hover, .color-swatch.active { border-color: var(--habbo-accent); transform: scale(1.15); }
+.customize-actions { display: flex; gap: 8px; margin-top: 12px; }
+.customize-actions button { flex: 1; padding: 8px; border-radius: 6px; font-family: inherit; font-weight: 700; cursor: pointer; border: none; }
+.btn-save { background: var(--habbo-accent); color: var(--habbo-dark); }
+.btn-random { background: var(--habbo-light); color: white; border: 1px solid var(--habbo-panel-border); }
   </style>
 </head>
 <body>
   <div id="loadingScreen">
-    <h1>✦ STARLIGHT INN</h1>
+    <h1>âœ¦ STARLIGHT INN</h1>
     <div class="loader"></div>
     <p>Loading your virtual world...</p>
   </div>
   <canvas id="gameCanvas"></canvas>
   <div class="ui-overlay">
     <div id="topBar">
-      <div id="logo">✦ STARLIGHT INN</div>
+      <div id="logo">âœ¦ STARLIGHT INN</div>
       <div id="topBarRight">
         <div class="currency-badge" id="currencyDisplay">1,000</div>
-        <button class="top-btn" id="btnNavigator">🌍 Navigator</button>
-        <button class="top-btn" id="btnCatalog">🛒 Catalog</button>
-        <button class="top-btn" id="btnInventory">🎒 Inventory</button>
-        <button class="top-btn" id="btnSettings">⚙️ Settings</button>
+        <button class="top-btn" id="btnNavigator">ðŸŒ Navigator</button>
+        <button class="top-btn" id="btnCatalog">ðŸ›’ Catalog</button>
+        <button class="top-btn" id="btnInventory">ðŸŽ’ Inventory</button>
+        <button class="top-btn" id="btnSettings">âš™ï¸ Settings</button>
+        <button class="top-btn" id="btnCustomize">ðŸ‘¤ Me</button>
       </div>
     </div>
     <div id="roomInfo">
@@ -120,7 +214,7 @@
     </div>
     <div id="minimap"><canvas id="minimapCanvas" width="140" height="140"></canvas></div>
     <div class="panel" id="navigatorPanel">
-      <div class="panel-header"><span class="panel-title">🌍 Room Navigator</span><button class="panel-close" data-panel="navigatorPanel">×</button></div>
+      <div class="panel-header"><span class="panel-title">ðŸŒ Room Navigator</span><button class="panel-close" data-panel="navigatorPanel">Ã—</button></div>
       <div class="panel-body">
         <div style="margin-bottom:8px;font-size:12px;color:var(--habbo-text-dim);">Public Rooms</div>
         <div class="room-list" id="publicRoomList"></div>
@@ -129,18 +223,18 @@
       </div>
     </div>
     <div class="panel" id="catalogPanel">
-      <div class="panel-header"><span class="panel-title">🛒 Furniture Catalog</span><button class="panel-close" data-panel="catalogPanel">×</button></div>
+      <div class="panel-header"><span class="panel-title">ðŸ›’ Furniture Catalog</span><button class="panel-close" data-panel="catalogPanel">Ã—</button></div>
       <div class="panel-body"><div class="catalog-grid" id="catalogGrid"></div></div>
     </div>
     <div class="panel" id="inventoryPanel">
-      <div class="panel-header"><span class="panel-title">🎒 My Inventory</span><button class="panel-close" data-panel="inventoryPanel">×</button></div>
+      <div class="panel-header"><span class="panel-title">ðŸŽ’ My Inventory</span><button class="panel-close" data-panel="inventoryPanel">Ã—</button></div>
       <div class="panel-body">
         <div class="inv-grid" id="inventoryGrid"></div>
         <div style="margin-top:10px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Click an item to select it, then click a tile to place.</div>
       </div>
     </div>
     <div class="panel" id="settingsPanel">
-      <div class="panel-header"><span class="panel-title">⚙️ Settings</span><button class="panel-close" data-panel="settingsPanel">×</button></div>
+      <div class="panel-header"><span class="panel-title">âš™ï¸ Settings</span><button class="panel-close" data-panel="settingsPanel">Ã—</button></div>
       <div class="panel-body">
         <div class="setting-row"><label>Show Minimap</label><input type="checkbox" id="settingMinimap" checked></div>
         <div class="setting-row"><label>Show Names</label><input type="checkbox" id="settingNames" checked></div>
@@ -148,7 +242,22 @@
         <div class="setting-row"><label>NPC Count</label><select id="settingNPCs"><option value="0">None</option><option value="3" selected>3</option><option value="5">5</option><option value="8">8</option></select></div>
         <div class="setting-row"><label>Camera Speed</label><input type="range" id="settingCamSpeed" min="1" max="10" value="5"></div>
         <div class="setting-row"><label>Sound Effects</label><input type="checkbox" id="settingSound"></div>
-        <div style="margin-top:12px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Starlight Inn v1.0<br>Built with HTML5 Canvas</div>
+        <div style="margin-top:12px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Starlight Inn v1.2<br>Built with HTML5 Canvas</div>
+      </div>
+    </div>
+    <div class="panel" id="customizePanel">
+      <div class="panel-header"><span class="panel-title">ðŸ‘¤ Customize Avatar</span><button class="panel-close" data-panel="customizePanel">Ã—</button></div>
+      <div class="panel-body">
+        <div class="customize-preview"><canvas id="previewCanvas" width="88" height="128"></canvas></div>
+        <div class="customize-row"><label>Skin</label><div class="color-presets" id="skinPresets"></div></div>
+        <div class="customize-row"><label>Hair Color</label><div class="color-presets" id="hairPresets"></div></div>
+        <div class="customize-row"><label>Hair Style</label><select id="hairStyleSelect"><option value="short">Short</option><option value="spiky">Spiky</option><option value="long">Long</option><option value="mohawk">Mohawk</option><option value="bald">Bald</option><option value="curly">Curly</option><option value="bob">Bob</option></select></div>
+        <div class="customize-row"><label>Shirt</label><div class="color-presets" id="shirtPresets"></div></div>
+        <div class="customize-row"><label>Pants</label><div class="color-presets" id="pantsPresets"></div></div>
+        <div class="customize-row"><label>Shoes</label><div class="color-presets" id="shoePresets"></div></div>
+        <div class="customize-row"><label>Hat</label><select id="hatSelect"><option value="none">None</option><option value="cap">Cap</option><option value="beanie">Beanie</option><option value="crown">Crown</option><option value="wizard">Wizard Hat</option></select></div>
+        <div class="customize-row"><label>Glasses</label><select id="glassesSelect"><option value="none">None</option><option value="shades">Shades</option><option value="round">Round</option></select></div>
+        <div class="customize-actions"><button class="btn-random" id="btnRandomLook">ðŸŽ² Random</button><button class="btn-save" id="btnSaveLook">âœ“ Save Look</button></div>
       </div>
     </div>
     <div id="chatBar">
@@ -156,14 +265,14 @@
       <button id="chatSend">Send</button>
     </div>
     <div id="toolbar">
-      <button class="tool-btn" id="toolChat" title="Chat (Enter)"><span class="icon">💬</span><span>Chat</span></button>
-      <button class="tool-btn" id="toolWalk" title="Walk (Click tiles)"><span class="icon">🚶</span><span>Walk</span></button>
-      <button class="tool-btn" id="toolPlace" title="Place Furniture"><span class="icon">📦</span><span>Place</span></button>
-      <button class="tool-btn" id="toolPick" title="Pick Up"><span class="icon">✋</span><span>Pick</span></button>
-      <button class="tool-btn" id="toolRotate" title="Rotate (R)"><span class="icon">🔄</span><span>Rotate</span></button>
-      <button class="tool-btn" id="toolDance" title="Dance (D)"><span class="icon">💃</span><span>Dance</span></button>
-      <button class="tool-btn" id="toolWave" title="Wave (W)"><span class="icon">👋</span><span>Wave</span></button>
-      <button class="tool-btn" id="toolMinimap" title="Toggle Map (M)"><span class="icon">🗺️</span><span>Map</span></button>
+      <button class="tool-btn" id="toolChat" title="Chat (Enter)"><span class="icon">ðŸ’¬</span><span>Chat</span></button>
+      <button class="tool-btn" id="toolWalk" title="Walk (Click tiles)"><span class="icon">ðŸš¶</span><span>Walk</span></button>
+      <button class="tool-btn" id="toolPlace" title="Place Furniture"><span class="icon">ðŸ“¦</span><span>Place</span></button>
+      <button class="tool-btn" id="toolPick" title="Pick Up"><span class="icon">âœ‹</span><span>Pick</span></button>
+      <button class="tool-btn" id="toolRotate" title="Rotate (R)"><span class="icon">ðŸ”„</span><span>Rotate</span></button>
+      <button class="tool-btn" id="toolDance" title="Dance (D)"><span class="icon">ðŸ’ƒ</span><span>Dance</span></button>
+      <button class="tool-btn" id="toolWave" title="Wave (W)"><span class="icon">ðŸ‘‹</span><span>Wave</span></button>
+      <button class="tool-btn" id="toolMinimap" title="Toggle Map (M)"><span class="icon">ðŸ—ºï¸</span><span>Map</span></button>
     </div>
     <div id="notificationArea"></div>
   </div>
@@ -211,36 +320,52 @@ function roundRect(ctx, x, y, w, h, r) {
 // --- Asset Cache ---
 const Assets = { avatars: {}, furniture: {}, tiles: {} };
 
-function createAvatarCanvas(skinColor, hairColor, hairStyle, shirtColor, pantsColor, shoeColor) {
+function createAvatarCanvas(skinColor, hairColor, hairStyle, shirtColor, pantsColor, shoeColor, hatType, glassesType) {
   const c = document.createElement('canvas');
   c.width = 44; c.height = 64;
   const ctx = c.getContext('2d');
   const cx = 22, cy = 20;
+
+  // Legs
   ctx.strokeStyle = pantsColor; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.moveTo(cx - 4, 42); ctx.lineTo(cx - 5, 58); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(cx + 4, 42); ctx.lineTo(cx + 5, 58); ctx.stroke();
+
+  // Shoes
   ctx.fillStyle = shoeColor || '#333';
   ctx.beginPath(); ctx.ellipse(cx - 5, 59, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.ellipse(cx + 5, 59, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Body
   ctx.fillStyle = shirtColor;
   ctx.beginPath();
   ctx.moveTo(cx - 10, 32); ctx.lineTo(cx + 10, 32);
   ctx.lineTo(cx + 8, 46); ctx.lineTo(cx - 8, 46);
   ctx.closePath(); ctx.fill();
   ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 1; ctx.stroke();
+
+  // Arms
   ctx.strokeStyle = skinColor; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.moveTo(cx - 10, 34); ctx.lineTo(cx - 14, 44); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(cx + 10, 34); ctx.lineTo(cx + 14, 44); ctx.stroke();
+
+  // Head
   ctx.fillStyle = skinColor;
   ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI * 2); ctx.fill();
+
+  // Eyes
   ctx.fillStyle = '#222';
   ctx.beginPath(); ctx.arc(cx - 5, cy + 1, 2.5, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(cx + 5, cy + 1, 2.5, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = '#fff';
   ctx.beginPath(); ctx.arc(cx - 4, cy, 1, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(cx + 6, cy, 1, 0, Math.PI * 2); ctx.fill();
+
+  // Mouth
   ctx.strokeStyle = '#a04040'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.arc(cx, cy + 7, 4, 0.2, Math.PI - 0.2); ctx.stroke();
+
+  // Hair
   ctx.fillStyle = hairColor;
   if (hairStyle === 'spiky') {
     ctx.beginPath();
@@ -261,10 +386,60 @@ function createAvatarCanvas(skinColor, hairColor, hairStyle, shirtColor, pantsCo
   } else if (hairStyle === 'bald') {
     ctx.fillStyle = 'rgba(255,255,255,0.2)';
     ctx.beginPath(); ctx.arc(cx - 4, cy - 8, 4, 0, Math.PI * 2); ctx.fill();
+  } else if (hairStyle === 'curly') {
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI + Math.PI;
+      const rx = cx + Math.cos(angle) * 14;
+      const ry = cy - 4 + Math.sin(angle) * 10;
+      ctx.beginPath(); ctx.arc(rx, ry, 5, 0, Math.PI * 2); ctx.fill();
+    }
+  } else if (hairStyle === 'bob') {
+    ctx.beginPath(); ctx.arc(cx, cy - 2, 17, Math.PI, 0);
+    ctx.lineTo(cx + 17, cy + 8); ctx.lineTo(cx - 17, cy + 8); ctx.closePath(); ctx.fill();
   } else {
     ctx.beginPath(); ctx.arc(cx, cy - 4, 16, Math.PI, 0);
     ctx.lineTo(cx + 16, cy + 2); ctx.lineTo(cx - 16, cy + 2); ctx.closePath(); ctx.fill();
   }
+
+  // Hat
+  if (hatType === 'cap') {
+    ctx.fillStyle = shirtColor;
+    ctx.beginPath(); ctx.arc(cx, cy - 6, 16, Math.PI, 0); ctx.lineTo(cx + 20, cy + 2); ctx.lineTo(cx - 20, cy + 2); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillRect(cx - 18, cy + 2, 36, 3);
+  } else if (hatType === 'beanie') {
+    ctx.fillStyle = shirtColor;
+    ctx.beginPath(); ctx.arc(cx, cy - 8, 16, Math.PI, 0); ctx.lineTo(cx + 16, cy + 4); ctx.lineTo(cx - 16, cy + 4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.beginPath(); ctx.ellipse(cx, cy - 2, 16, 3, 0, 0, Math.PI * 2); ctx.fill();
+  } else if (hatType === 'crown') {
+    ctx.fillStyle = '#f4d03f';
+    ctx.beginPath(); ctx.moveTo(cx - 14, cy - 2); ctx.lineTo(cx - 10, cy - 14); ctx.lineTo(cx - 4, cy - 6); ctx.lineTo(cx, cy - 16); ctx.lineTo(cx + 4, cy - 6); ctx.lineTo(cx + 10, cy - 14); ctx.lineTo(cx + 14, cy - 2); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#f39c12';
+    ctx.fillRect(cx - 14, cy - 2, 28, 4);
+  } else if (hatType === 'wizard') {
+    ctx.fillStyle = '#4B0082';
+    ctx.beginPath(); ctx.moveTo(cx - 14, cy + 2); ctx.lineTo(cx, cy - 28); ctx.lineTo(cx + 14, cy + 2); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath(); ctx.arc(cx, cy - 28, 3, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Glasses
+  if (glassesType === 'shades') {
+    ctx.fillStyle = '#222';
+    ctx.beginPath(); ctx.rect(cx - 11, cy - 2, 10, 6); ctx.fill();
+    ctx.beginPath(); ctx.rect(cx + 1, cy - 2, 10, 6); ctx.fill();
+    ctx.strokeStyle = '#222'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(cx - 11, cy + 1); ctx.lineTo(cx - 15, cy - 1); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx + 11, cy + 1); ctx.lineTo(cx + 15, cy - 1); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - 1, cy + 1); ctx.lineTo(cx + 1, cy + 1); ctx.stroke();
+  } else if (glassesType === 'round') {
+    ctx.strokeStyle = '#5D4037'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx - 5, cy + 1, 5, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx + 5, cy + 1, 5, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, cy + 1); ctx.lineTo(cx, cy + 1); ctx.stroke();
+  }
+
   ctx.strokeStyle = 'rgba(0,0,0,0.08)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI * 2); ctx.stroke();
   return c;
@@ -274,6 +449,7 @@ function createFurnitureCanvas(type) {
   const c = document.createElement('canvas');
   c.width = 80; c.height = 80;
   const ctx = c.getContext('2d');
+
   if (type === 'chair') {
     ctx.fillStyle = '#8B4513';
     ctx.beginPath(); ctx.moveTo(20, 40); ctx.lineTo(40, 30); ctx.lineTo(60, 40); ctx.lineTo(40, 50); ctx.closePath(); ctx.fill();
@@ -419,6 +595,7 @@ function getTilePattern(type) {
   ctx.lineTo(TILE_W + 1, TILE_H / 2 + 1);
   ctx.lineTo(TILE_W / 2 + 1, TILE_H + 1);
   ctx.closePath(); ctx.fill();
+
   if (type === 'wood') {
     ctx.strokeStyle = 'rgba(139,105,20,0.25)'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(TILE_W / 2, 4); ctx.lineTo(TILE_W / 2, TILE_H - 2); ctx.stroke();
@@ -465,25 +642,25 @@ function getFurnitureAsset(type) {
 function getAvatarAsset(key) {
   if (!Assets.avatars[key]) {
     const parts = key.split('|');
-    Assets.avatars[key] = createAvatarCanvas(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]);
+    Assets.avatars[key] = createAvatarCanvas(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6] || 'none', parts[7] || 'none');
   }
   return Assets.avatars[key];
 }
 
 const FURNITURE_CATALOG = [
-  { id: 'chair', name: 'Wooden Chair', price: 50, icon: '🪑', footprint: [1, 1], stackable: false, desc: 'A simple wooden chair.' },
-  { id: 'table', name: 'Dining Table', price: 120, icon: '🪵', footprint: [2, 1], stackable: false, desc: 'Perfect for meals.' },
-  { id: 'lamp', name: 'Golden Lamp', price: 80, icon: '🚔', footprint: [1, 1], stackable: true, desc: 'Light up your room.' },
-  { id: 'bed', name: 'Cozy Bed', price: 200, icon: '🛏️', footprint: [2, 2], stackable: false, desc: 'Sleep in comfort.' },
-  { id: 'plant', name: 'Potted Plant', price: 40, icon: '🪴', footprint: [1, 1], stackable: true, desc: 'Bring nature indoors.' },
-  { id: 'tv', name: 'Retro TV', price: 300, icon: '📺', footprint: [1, 1], stackable: false, desc: 'Watch classic shows.' },
-  { id: 'rug', name: 'Persian Rug', price: 150, icon: '🧶', footprint: [2, 2], stackable: false, desc: 'Adds warmth to floors.' },
-  { id: 'sofa', name: 'Velvet Sofa', price: 250, icon: '🛋️', footprint: [2, 1], stackable: false, desc: 'Luxurious seating.' },
-  { id: 'fridge', name: 'Cool Fridge', price: 180, icon: '🧊', footprint: [1, 1], stackable: false, desc: 'Keep food fresh.' },
-  { id: 'bookshelf', name: 'Bookshelf', price: 160, icon: '📚', footprint: [1, 1], stackable: false, desc: 'Store your books.' },
-  { id: 'fountain', name: 'Water Fountain', price: 500, icon: '⛲', footprint: [2, 2], stackable: false, desc: 'Relaxing water feature.' },
-  { id: 'piano', name: 'Grand Piano', price: 800, icon: '🎹', footprint: [2, 1], stackable: false, desc: 'Make beautiful music.' },
-  { id: 'dragon', name: 'Toy Dragon', price: 1000, icon: '🐉', footprint: [1, 1], stackable: true, desc: 'A rare collectible!' }
+  { id: 'chair', name: 'Wooden Chair', price: 50, icon: '\uD83E\uDE91', footprint: [1, 1], stackable: false, desc: 'A simple wooden chair.' },
+  { id: 'table', name: 'Dining Table', price: 120, icon: '\uD83E\uDEB5', footprint: [2, 1], stackable: false, desc: 'Perfect for meals.' },
+  { id: 'lamp', name: 'Golden Lamp', price: 80, icon: '\uD83D\uDE94', footprint: [1, 1], stackable: true, desc: 'Light up your room.' },
+  { id: 'bed', name: 'Cozy Bed', price: 200, icon: '\uD83D\uDECF\uFE0F', footprint: [2, 2], stackable: false, desc: 'Sleep in comfort.' },
+  { id: 'plant', name: 'Potted Plant', price: 40, icon: '\uD83E\uDEB4', footprint: [1, 1], stackable: true, desc: 'Bring nature indoors.' },
+  { id: 'tv', name: 'Retro TV', price: 300, icon: '\uD83D\uDCFA', footprint: [1, 1], stackable: false, desc: 'Watch classic shows.' },
+  { id: 'rug', name: 'Persian Rug', price: 150, icon: '\uD83E\uDDF6', footprint: [2, 2], stackable: false, desc: 'Adds warmth to floors.' },
+  { id: 'sofa', name: 'Velvet Sofa', price: 250, icon: '\uD83D\uDECB\uFE0F', footprint: [2, 1], stackable: false, desc: 'Luxurious seating.' },
+  { id: 'fridge', name: 'Cool Fridge', price: 180, icon: '\uD83E\uDDCA', footprint: [1, 1], stackable: false, desc: 'Keep food fresh.' },
+  { id: 'bookshelf', name: 'Bookshelf', price: 160, icon: '\uD83D\uDCDA', footprint: [1, 1], stackable: false, desc: 'Store your books.' },
+  { id: 'fountain', name: 'Water Fountain', price: 500, icon: '\u26F2', footprint: [2, 2], stackable: false, desc: 'Relaxing water feature.' },
+  { id: 'piano', name: 'Grand Piano', price: 800, icon: '\uD83C\uDFB9', footprint: [2, 1], stackable: false, desc: 'Make beautiful music.' },
+  { id: 'dragon', name: 'Toy Dragon', price: 1000, icon: '\uD83D\uDC09', footprint: [1, 1], stackable: true, desc: 'A rare collectible!' }
 ];
 
 const ROOM_TEMPLATES = [
@@ -591,6 +768,134 @@ const ROOM_TEMPLATES = [
       { type: 'lamp', x: 12, y: 10, z: 0 }, { type: 'tv', x: 6, y: 2, z: 0 },
       { type: 'piano', x: 9, y: 9, z: 0 }
     ]
+  },
+  {
+    id: 'pool', name: 'Swimming Pool', description: 'Take a swim and relax by the water.',
+    width: 14, height: 10, floor: 'tile', wall: '#2980B9',
+    map: [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,1,1],
+      [1,1,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,1,1],
+      [1,1,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    furniture: [
+      { type: 'plant', x: 2, y: 2, z: 0 }, { type: 'plant', x: 11, y: 2, z: 0 },
+      { type: 'plant', x: 2, y: 7, z: 0 }, { type: 'plant', x: 11, y: 7, z: 0 },
+      { type: 'fountain', x: 6, y: 4, z: 0 }, { type: 'chair', x: 1, y: 1, z: 0 }
+    ]
+  },
+  {
+    id: 'restaurant', name: 'Restaurant', description: 'Fine dining with friends at the Inn.',
+    width: 14, height: 12, floor: 'darkwood', wall: '#7B241C',
+    map: [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    furniture: [
+      { type: 'table', x: 3, y: 3, z: 0 }, { type: 'chair', x: 2, y: 3, z: 0 }, { type: 'chair', x: 4, y: 3, z: 0 },
+      { type: 'table', x: 8, y: 3, z: 0 }, { type: 'chair', x: 7, y: 3, z: 0 }, { type: 'chair', x: 9, y: 3, z: 0 },
+      { type: 'table', x: 5, y: 7, z: 0 }, { type: 'chair', x: 4, y: 7, z: 0 }, { type: 'chair', x: 6, y: 7, z: 0 },
+      { type: 'lamp', x: 1, y: 1, z: 0 }, { type: 'lamp', x: 12, y: 10, z: 0 },
+      { type: 'plant', x: 1, y: 10, z: 0 }, { type: 'plant', x: 12, y: 1, z: 0 }
+    ]
+  },
+  {
+    id: 'library', name: 'Library', description: 'Quiet reading and study space.',
+    width: 12, height: 12, floor: 'wood', wall: '#5D4037',
+    map: [
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    furniture: [
+      { type: 'bookshelf', x: 1, y: 1, z: 0 }, { type: 'bookshelf', x: 2, y: 1, z: 0 },
+      { type: 'bookshelf', x: 1, y: 10, z: 0 }, { type: 'bookshelf', x: 2, y: 10, z: 0 },
+      { type: 'bookshelf', x: 9, y: 1, z: 0 }, { type: 'bookshelf', x: 10, y: 1, z: 0 },
+      { type: 'bookshelf', x: 9, y: 10, z: 0 }, { type: 'bookshelf', x: 10, y: 10, z: 0 },
+      { type: 'chair', x: 5, y: 5, z: 0 }, { type: 'table', x: 6, y: 5, z: 0 },
+      { type: 'lamp', x: 5, y: 6, z: 0 }
+    ]
+  },
+  {
+    id: 'spa', name: 'Spa & Wellness', description: 'Relax and rejuvenate your senses.',
+    width: 12, height: 10, floor: 'marble', wall: '#1ABC9C',
+    map: [
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    furniture: [
+      { type: 'plant', x: 1, y: 1, z: 0 }, { type: 'plant', x: 10, y: 8, z: 0 },
+      { type: 'plant', x: 5, y: 4, z: 0 }, { type: 'plant', x: 6, y: 5, z: 0 },
+      { type: 'fountain', x: 5, y: 4, z: 0 }, { type: 'sofa', x: 2, y: 2, z: 0 },
+      { type: 'sofa', x: 8, y: 7, z: 0 }, { type: 'lamp', x: 1, y: 8, z: 0 }
+    ]
+  },
+  {
+    id: 'cinema', name: 'Cinema', description: 'Watch movies on the big screen.',
+    width: 16, height: 10, floor: 'carpet', wall: '#2C3E50',
+    map: [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    furniture: [
+      { type: 'sofa', x: 2, y: 2, z: 0 }, { type: 'sofa', x: 5, y: 2, z: 0 }, { type: 'sofa', x: 8, y: 2, z: 0 },
+      { type: 'sofa', x: 2, y: 5, z: 0 }, { type: 'sofa', x: 5, y: 5, z: 0 }, { type: 'sofa', x: 8, y: 5, z: 0 },
+      { type: 'tv', x: 13, y: 4, z: 0 }, { type: 'lamp', x: 1, y: 1, z: 0 }, { type: 'lamp', x: 14, y: 8, z: 0 }
+    ]
+  },
+  {
+    id: 'garden', name: 'Garden', description: 'A peaceful outdoor garden retreat.',
+    width: 14, height: 14, floor: 'grass', wall: '#27AE60',
+    map: [
+      [0,0,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,0],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [0,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,1,1,1,1,0,0]
+    ],
+    furniture: [
+      { type: 'plant', x: 2, y: 2, z: 0 }, { type: 'plant', x: 11, y: 11, z: 0 },
+      { type: 'plant', x: 5, y: 8, z: 0 }, { type: 'plant', x: 8, y: 4, z: 0 },
+      { type: 'plant', x: 3, y: 10, z: 0 }, { type: 'plant', x: 10, y: 3, z: 0 },
+      { type: 'fountain', x: 6, y: 6, z: 0 }, { type: 'chair', x: 6, y: 9, z: 0 },
+      { type: 'chair', x: 9, y: 6, z: 0 }, { type: 'lamp', x: 1, y: 1, z: 0 }
+    ]
+  },
+  {
+    id: 'arcade', name: 'Arcade', description: 'Classic games and fun for everyone.',
+    width: 12, height: 12, floor: 'checkered', wall: '#8E44AD',
+    map: [
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    furniture: [
+      { type: 'tv', x: 2, y: 2, z: 0 }, { type: 'tv', x: 5, y: 2, z: 0 },
+      { type: 'tv', x: 8, y: 2, z: 0 }, { type: 'table', x: 3, y: 6, z: 0 },
+      { type: 'table', x: 7, y: 6, z: 0 }, { type: 'chair', x: 2, y: 6, z: 0 },
+      { type: 'chair', x: 4, y: 6, z: 0 }, { type: 'chair', x: 6, y: 6, z: 0 },
+      { type: 'chair', x: 8, y: 6, z: 0 }, { type: 'sofa', x: 2, y: 9, z: 0 },
+      { type: 'lamp', x: 1, y: 1, z: 0 }, { type: 'lamp', x: 10, y: 10, z: 0 }
+    ]
   }
 ];
 
@@ -656,6 +961,8 @@ class Avatar {
     this.shirtColor = opts.shirtColor || '#3498DB';
     this.pantsColor = opts.pantsColor || '#2C3E50';
     this.shoeColor = opts.shoeColor || '#555555';
+    this.hatType = opts.hatType || 'none';
+    this.glassesType = opts.glassesType || 'none';
     this.facing = opts.facing || 'se';
     this.animFrame = 0; this.animTimer = 0;
     this.isWalking = false; this.isDancing = opts.isDancing || false;
@@ -666,13 +973,14 @@ class Avatar {
     this.waveTimer = 0;
   }
   get assetKey() {
-    return [this.skinColor, this.hairColor, this.hairStyle, this.shirtColor, this.pantsColor, this.shoeColor].join('|');
+    return [this.skinColor, this.hairColor, this.hairStyle, this.shirtColor, this.pantsColor, this.shoeColor, this.hatType, this.glassesType].join('|');
   }
   update(dt, room) {
     this.animTimer += dt;
     if (this.animTimer > 0.12) { this.animTimer = 0; this.animFrame = (this.animFrame + 1) % 4; }
     if (this.chatTimer > 0) { this.chatTimer -= dt; if (this.chatTimer <= 0) this.chatBubble = null; }
     if (this.isWaving) { this.waveTimer += dt; if (this.waveTimer > 1.5) { this.isWaving = false; this.waveTimer = 0; } }
+
     if (this.path.length > 0 && this.pathIndex < this.path.length) {
       this.isWalking = true;
       const target = this.path[this.pathIndex];
@@ -688,6 +996,7 @@ class Avatar {
         else this.facing = dy > 0 ? 'se' : 'nw';
       }
     } else { this.isWalking = false; }
+
     if (this.isNPC) {
       this.npcTimer -= dt;
       if (this.npcTimer <= 0 && !this.isWalking) {
@@ -845,7 +1154,10 @@ class Game {
     this.lastTime = 0; this.hoverTile = null;
     this.mouse = { x: 0, y: 0 }; this.isDragging = false; this.dragStart = { x: 0, y: 0 }; this.keys = {};
     this.setupInput(); this.setupUI();
+    this.customize = { skinColor: '#F5CBA7', hairColor: '#5D4037', hairStyle: 'short', shirtColor: '#3498DB', pantsColor: '#2C3E50', shoeColor: '#555555', hatType: 'none', glassesType: 'none' };
     this.loadRoom(ROOM_TEMPLATES[0]);
+    this.loadAvatarFromStorage();
+    this.applyAvatarToPlayer();
     this.spawnNPCs(this.settings.npcCount);
     this.addToInventory('chair', 2); this.addToInventory('plant', 3);
     this.addToInventory('lamp', 1); this.addToInventory('table', 1); this.addToInventory('rug', 1);
@@ -864,9 +1176,11 @@ class Game {
       this.player.x = Math.floor(this.room.width / 2); this.player.y = Math.floor(this.room.height / 2);
       this.player.path = []; this.player.isWalking = false; this.player.isDancing = false;
     } else {
+      const c = this.customize;
       this.player = new Avatar('You', Math.floor(this.room.width / 2), Math.floor(this.room.height / 2), {
-        skinColor: '#F5CBA7', hairColor: '#5D4037', hairStyle: 'short',
-        shirtColor: '#3498DB', pantsColor: '#2C3E50', shoeColor: '#555'
+        skinColor: c.skinColor, hairColor: c.hairColor, hairStyle: c.hairStyle,
+        shirtColor: c.shirtColor, pantsColor: c.pantsColor, shoeColor: c.shoeColor,
+        hatType: c.hatType, glassesType: c.glassesType
       });
     }
     this.room.avatars.push(this.player);
@@ -884,7 +1198,9 @@ class Game {
     const skins = ['#F5CBA7','#E0AC69','#8D5524','#C68642','#FFDBAC','#AA7C58'];
     const hairs = ['#5D4037','#E67E22','#F1C40F','#2C3E50','#8E44AD','#E74C3C','#D5DBDB'];
     const shirts = ['#E74C3C','#2ECC71','#9B59B6','#1ABC9C','#E67E22','#3498DB','#F39C12'];
-    const styles = ['short','long','spiky','mohawk','bald'];
+    const styles = ['short','long','spiky','mohawk','bald','curly','bob'];
+    const hats = ['none','none','none','cap','beanie','crown','wizard'];
+    const glasses = ['none','none','none','shades','round'];
     for (let i = 0; i < count; i++) {
       let nx, ny, attempts = 0;
       do {
@@ -893,6 +1209,7 @@ class Game {
       const npc = new Avatar(randChoice(names), nx, ny, {
         skinColor: randChoice(skins), hairColor: randChoice(hairs), hairStyle: randChoice(styles),
         shirtColor: randChoice(shirts), pantsColor: '#2C3E50', shoeColor: '#444',
+        hatType: randChoice(hats), glassesType: randChoice(glasses),
         isNPC: true, speed: 0.06 + Math.random() * 0.04
       });
       this.npcs.push(npc);
@@ -910,7 +1227,6 @@ class Game {
       this.particles.push(new Particle(sp.x + this.camera.x, sp.y + this.camera.y - 20, color, 1.0 + Math.random() * 0.5));
     }
   }
-
   setupInput() {
     this.canvas.addEventListener('mousedown', e => { this.isDragging = true; this.dragStart = { x: e.clientX, y: e.clientY }; });
     this.canvas.addEventListener('mousemove', e => {
@@ -935,7 +1251,7 @@ class Game {
         case 'enter': document.getElementById('chatInput').focus(); break;
         case 'w': this.player.isWaving = true; this.player.waveTimer = 0; this.player.say('Hey!'); break;
         case 'd': this.player.isDancing = !this.player.isDancing; this.showNotification(this.player.isDancing ? 'Dancing!' : 'Stopped dancing'); break;
-        case 'r': this.placementRotation = (this.placementRotation + 1) % 4; this.showNotification(`Rotation: ${this.placementRotation * 90}°`); break;
+        case 'r': this.placementRotation = (this.placementRotation + 1) % 4; this.showNotification(`Rotation: ${this.placementRotation * 90}Â°`); break;
         case 'm': this.toggleMinimap(); break;
         case 'escape': this.closeAllPanels(); break;
       }
@@ -976,12 +1292,28 @@ class Game {
       if (removed) { this.addToInventory(removed, 1); this.spawnParticles(tx, ty, '#e74c3c', 8); this.showNotification(`Picked up ${removed}`); }
     }
   }
-
   setupUI() {
     document.getElementById('btnNavigator').addEventListener('click', () => this.togglePanel('navigatorPanel'));
     document.getElementById('btnCatalog').addEventListener('click', () => this.togglePanel('catalogPanel'));
     document.getElementById('btnInventory').addEventListener('click', () => this.togglePanel('inventoryPanel'));
     document.getElementById('btnSettings').addEventListener('click', () => this.togglePanel('settingsPanel'));
+    document.getElementById('btnCustomize').addEventListener('click', () => { this.togglePanel('customizePanel'); this.renderCustomizePanel(); });
+    document.getElementById('hairStyleSelect').addEventListener('change', e => { this.customize.hairStyle = e.target.value; this.renderCustomizePanel(); });
+    document.getElementById('hatSelect').addEventListener('change', e => { this.customize.hatType = e.target.value; this.renderCustomizePanel(); });
+    document.getElementById('glassesSelect').addEventListener('change', e => { this.customize.glassesType = e.target.value; this.renderCustomizePanel(); });
+    document.getElementById('btnSaveLook').addEventListener('click', () => { this.applyAvatarToPlayer(); this.saveAvatarToStorage(); this.showNotification('Look saved!'); });
+    document.getElementById('btnRandomLook').addEventListener('click', () => {
+      const rand = arr => arr[Math.floor(Math.random()*arr.length)];
+      this.customize.skinColor = rand(['#F5CBA7','#E0AC69','#8D5524','#C68642','#FFDBAC','#AA7C58']);
+      this.customize.hairColor = rand(['#090806','#2C1608','#71635A','#B7A69E','#D6C4C2','#B55239','#A52A2A','#DC143C','#4B0082','#228B22']);
+      this.customize.hairStyle = rand(['short','spiky','long','mohawk','bald','curly','bob']);
+      this.customize.shirtColor = rand(['#E74C3C','#3498DB','#2ECC71','#F1C40F','#9B59B6','#E67E22','#1ABC9C','#34495E']);
+      this.customize.pantsColor = rand(['#2C3E50','#34495E','#1ABC9C','#8E44AD','#D35400','#7F8C8D']);
+      this.customize.shoeColor = rand(['#555555','#333333','#8B4513','#000000']);
+      this.customize.hatType = rand(['none','none','none','cap','beanie','crown','wizard']);
+      this.customize.glassesType = rand(['none','none','none','shades','round']);
+      this.renderCustomizePanel();
+    });
     document.querySelectorAll('.panel-close').forEach(btn => {
       btn.addEventListener('click', () => { document.getElementById(btn.dataset.panel).classList.remove('open'); });
     });
@@ -992,7 +1324,7 @@ class Game {
       this.setTool('place'); this.togglePanel('inventoryPanel');
     });
     document.getElementById('toolPick').addEventListener('click', () => this.setTool('pick'));
-    document.getElementById('toolRotate').addEventListener('click', () => { this.placementRotation = (this.placementRotation + 1) % 4; this.showNotification(`Rotation: ${this.placementRotation * 90}°`); });
+    document.getElementById('toolRotate').addEventListener('click', () => { this.placementRotation = (this.placementRotation + 1) % 4; this.showNotification(`Rotation: ${this.placementRotation * 90}Â°`); });
     document.getElementById('toolDance').addEventListener('click', () => { this.player.isDancing = !this.player.isDancing; this.showNotification(this.player.isDancing ? 'Dancing!' : 'Stopped dancing'); });
     document.getElementById('toolWave').addEventListener('click', () => { this.player.isWaving = true; this.player.waveTimer = 0; this.player.say('Hey!'); });
     document.getElementById('toolMinimap').addEventListener('click', () => this.toggleMinimap());
@@ -1073,7 +1405,7 @@ class Game {
       const div = document.createElement('div'); div.className = 'inv-item';
       div.innerHTML = `<div>${cat ? cat.icon : '\uD83D\uDCE6'}</div><div class="inv-count">x${count}</div>`;
       if (this.selectedInventoryItem === type) { div.style.borderColor = 'var(--habbo-accent)'; div.style.background = 'rgba(244,208,63,0.25)'; }
-      div.addEventListener('click', () => { this.selectedInventoryItem = type; this.selectedTool = 'place'; this.updateToolButtons(); this.renderInventory(); this.showNotification(`Selected ${cat?.name || type} — click a tile to place`); });
+      div.addEventListener('click', () => { this.selectedInventoryItem = type; this.selectedTool = 'place'; this.updateToolButtons(); this.renderInventory(); this.showNotification(`Selected ${cat?.name || type} â€” click a tile to place`); });
       grid.appendChild(div);
     });
   }
@@ -1084,6 +1416,56 @@ class Game {
     notif.style.borderLeftColor = type === 'error' ? 'var(--habbo-danger)' : (type === 'success' ? 'var(--habbo-success)' : 'var(--habbo-accent)');
     notif.textContent = text; area.appendChild(notif);
     setTimeout(() => { notif.style.opacity = '0'; notif.style.transform = 'translateX(30px)'; setTimeout(() => notif.remove(), 300); }, 3000);
+  }
+  loadAvatarFromStorage() {
+    try {
+      const data = JSON.parse(localStorage.getItem('starlight_avatar'));
+      if (data) Object.assign(this.customize, data);
+    } catch(e) {}
+  }
+  saveAvatarToStorage() {
+    localStorage.setItem('starlight_avatar', JSON.stringify(this.customize));
+  }
+  applyAvatarToPlayer() {
+    if (!this.player) return;
+    const c = this.customize;
+    this.player.skinColor = c.skinColor; this.player.hairColor = c.hairColor; this.player.hairStyle = c.hairStyle;
+    this.player.shirtColor = c.shirtColor; this.player.pantsColor = c.pantsColor; this.player.shoeColor = c.shoeColor;
+    this.player.hatType = c.hatType; this.player.glassesType = c.glassesType;
+    // Clear avatar cache for player
+    const oldKey = this.player.assetKey;
+    delete Assets.avatars[oldKey];
+  }
+  renderCustomizePanel() {
+    const c = this.customize;
+    // Update selects
+    document.getElementById('hairStyleSelect').value = c.hairStyle;
+    document.getElementById('hatSelect').value = c.hatType;
+    document.getElementById('glassesSelect').value = c.glassesType;
+    this.renderColorPresets('skinPresets', ['#F5CBA7','#E0AC69','#8D5524','#C68642','#FFDBAC','#AA7C58','#F1C27D','#E8C39E'], c.skinColor, 'skinColor');
+    this.renderColorPresets('hairPresets', ['#090806','#2C1608','#71635A','#B7A69E','#D6C4C2','#B55239','#A52A2A','#DC143C','#4B0082','#228B22','#F1C40F','#D5DBDB'], c.hairColor, 'hairColor');
+    this.renderColorPresets('shirtPresets', ['#E74C3C','#3498DB','#2ECC71','#F1C40F','#9B59B6','#E67E22','#1ABC9C','#34495E','#FF6B6B','#4ECDC4','#FFFFFF','#111111'], c.shirtColor, 'shirtColor');
+    this.renderColorPresets('pantsPresets', ['#2C3E50','#34495E','#1ABC9C','#8E44AD','#D35400','#7F8C8D','#2980B9','#27AE60','#C0392B','#000000'], c.pantsColor, 'pantsColor');
+    this.renderColorPresets('shoePresets', ['#555555','#333333','#8B4513','#000000','#FFFFFF','#C0392B'], c.shoeColor, 'shoeColor');
+    this.renderCustomizePreview();
+  }
+  renderColorPresets(containerId, colors, current, key) {
+    const container = document.getElementById(containerId); if (!container) return;
+    container.innerHTML = '';
+    colors.forEach(color => {
+      const swatch = document.createElement('div'); swatch.className = 'color-swatch' + (color === current ? ' active' : '');
+      swatch.style.backgroundColor = color;
+      swatch.addEventListener('click', () => { this.customize[key] = color; this.renderCustomizePanel(); });
+      container.appendChild(swatch);
+    });
+  }
+  renderCustomizePreview() {
+    const canvas = document.getElementById('previewCanvas'); if (!canvas) return;
+    const c = this.customize;
+    const img = createAvatarCanvas(c.skinColor, c.hairColor, c.hairStyle, c.shirtColor, c.pantsColor, c.shoeColor, c.hatType, c.glassesType);
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 22, 20, 44, 64);
   }
 
   loop(timestamp) {
@@ -1114,6 +1496,7 @@ class Game {
     ctx.clearRect(0, 0, this.width, this.height);
     if (!this.room) return;
     ctx.save(); ctx.translate(this.camera.x, this.camera.y);
+    // Draw tiles and walls
     for (let y = 0; y < this.room.height; y++) {
       for (let x = 0; x < this.room.width; x++) {
         const tile = this.room.map[y]?.[x];
@@ -1134,6 +1517,7 @@ class Game {
         }
       }
     }
+    // Z-sorted renderables
     const renderList = [];
     this.room.furniture.forEach(f => { renderList.push({ type: 'furniture', obj: f, zIndex: this.getZIndex(f.x, f.y, f.z + 0.5) }); });
     this.room.avatars.forEach(a => { renderList.push({ type: 'avatar', obj: a, zIndex: this.getZIndex(a.x, a.y, a.z + 1) }); });
@@ -1142,6 +1526,7 @@ class Game {
       if (item.type === 'furniture') this.drawFurniture(ctx, item.obj);
       else if (item.type === 'avatar') this.drawAvatar(ctx, item.obj);
     });
+    // Hover highlight
     if (this.hoverTile && this.hoverTile.x >= 0 && this.hoverTile.y >= 0 &&
         this.hoverTile.x < this.room.width && this.hoverTile.y < this.room.height &&
         this.room.map[this.hoverTile.y]?.[this.hoverTile.x]) {
