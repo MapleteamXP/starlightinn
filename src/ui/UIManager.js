@@ -274,7 +274,7 @@ export class UIManager {
     });
   }
 
-  renderNavigator(rooms, onSelect) {
+  renderNavigator(rooms, recent, onSelect, onRenameMyRoom) {
     const publicList = document.getElementById('publicRoomList');
     if (!publicList) return;
     publicList.innerHTML = '';
@@ -297,6 +297,32 @@ export class UIManager {
       onSelect && onSelect(userTemplate);
     });
     userList.appendChild(myRoomDiv);
+    if (onRenameMyRoom) {
+      const renameDiv = document.createElement('div');
+      renameDiv.style.cssText = 'margin-top:8px;display:flex;gap:6px;';
+      renameDiv.innerHTML = `<input type="text" id="myRoomNameInput" placeholder="Rename My Room..." maxlength="20" style="flex:1;padding:6px 8px;border:1px solid var(--habbo-panel-border);border-radius:6px;background:var(--habbo-dark);color:white;font-family:inherit;font-size:12px;"><button id="myRoomRenameBtn" style="padding:6px 12px;background:var(--habbo-light);color:white;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;">Rename</button>`;
+      userList.appendChild(renameDiv);
+      document.getElementById('myRoomRenameBtn')?.addEventListener('click', () => {
+        const input = document.getElementById('myRoomNameInput');
+        if (input && input.value.trim()) { onRenameMyRoom(input.value.trim()); input.value = ''; }
+      });
+    }
+    if (recent && recent.length > 0) {
+      const recentDiv = document.createElement('div');
+      recentDiv.style.cssText = 'margin-top:12px;font-size:12px;color:var(--habbo-text-dim);';
+      recentDiv.textContent = 'Recently Visited';
+      userList.appendChild(recentDiv);
+      recent.forEach(r => {
+        const div = document.createElement('div');
+        div.className = 'room-item';
+        div.innerHTML = `<div class="room-name">${r.name}</div><div class="room-meta">${new Date(r.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>`;
+        div.addEventListener('click', () => {
+          const room = rooms.find(x => x.id === r.id);
+          if (room) onSelect && onSelect(room);
+        });
+        userList.appendChild(div);
+      });
+    }
   }
 
   renderCatalog(items, categories, activeCategory, currency, onBuy, onCategory) {
@@ -461,7 +487,7 @@ export class UIManager {
     });
   }
 
-  renderPetPanel(petSystem, onAdopt, onFeed, onPlay, onRest) {
+  renderPetPanel(petSystem, onAdopt, onFeed, onPlay, onRest, onRename) {
     const content = document.getElementById('petContent');
     if (!content) return;
     const pet = petSystem.pet;
@@ -498,11 +524,19 @@ export class UIManager {
           <button id="petPlay" class="pet-action">🎾 Play</button>
           <button id="petRest" class="pet-action">💤 Rest</button>
         </div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <input id="petRenameInput" type="text" placeholder="New name..." maxlength="12" style="flex:1;padding:6px 8px;border:1px solid var(--habbo-panel-border);border-radius:6px;background:var(--habbo-dark);color:white;font-family:inherit;font-size:12px;">
+          <button id="petRename" style="padding:6px 12px;background:var(--habbo-light);color:white;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;">Rename</button>
+        </div>
         <button id="petRelease" style="margin-top:10px;background:transparent;border:1px solid var(--habbo-danger);color:var(--habbo-danger);padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;">Release Pet</button>
       </div>`;
     document.getElementById('petFeed')?.addEventListener('click', onFeed);
     document.getElementById('petPlay')?.addEventListener('click', onPlay);
     document.getElementById('petRest')?.addEventListener('click', onRest);
+    document.getElementById('petRename')?.addEventListener('click', () => {
+      const input = document.getElementById('petRenameInput');
+      if (input && input.value.trim() && onRename) { onRename(input.value.trim()); input.value = ''; }
+    });
     document.getElementById('petRelease')?.addEventListener('click', () => onAdopt && onAdopt(null));
   }
 
@@ -608,12 +642,15 @@ export class UIManager {
     });
   }
 
-  renderLeaderboard(games, getScores) {
+  renderLeaderboard(games, getScores, filter, onFilter) {
     const content = document.getElementById('leaderboardContent');
     if (!content) return;
-    let html = '';
+    let html = `<div style="display:flex;gap:6px;margin-bottom:12px;">
+      <button class="lb-tab${filter === 'all' ? ' active' : ''}" data-filter="all">All Time</button>
+      <button class="lb-tab${filter === 'today' ? ' active' : ''}" data-filter="today">Today</button>
+    </div>`;
     games.forEach(g => {
-      const scores = getScores(g.id);
+      const scores = getScores(g.id, filter);
       html += `<div style="margin-bottom:16px;"><div style="font-weight:700;font-size:14px;color:var(--habbo-accent);margin-bottom:6px;">${g.name}</div>`;
       if (scores.length === 0) {
         html += `<div style="font-size:12px;color:var(--habbo-text-dim);">No scores yet. Play to set a record!</div>`;
@@ -631,6 +668,9 @@ export class UIManager {
       html += `</div>`;
     });
     content.innerHTML = html;
+    content.querySelectorAll('.lb-tab').forEach(btn => {
+      btn.addEventListener('click', () => onFilter && onFilter(btn.dataset.filter));
+    });
   }
 
   renderAchievements(list) {

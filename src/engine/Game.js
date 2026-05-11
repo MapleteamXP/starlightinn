@@ -73,9 +73,13 @@ export class Game {
     this.currentTheme = 'classic';
     this.likedRooms = new Set();
     this.myRoomSize = 10;
+    this.myRoomName = 'My Room';
+    this.recentRooms = [];
+    this.lastInputTime = Date.now();
     this.loadThemes();
     this.loadLikedRooms();
     this.loadRoomSize();
+    this.loadMyRoomName();
     this.chatColor = '#fffde7';
     this.lastTime = 0;
     this.hoverTile = null;
@@ -116,6 +120,8 @@ export class Game {
     this.setupInput();
     this.setupUI();
 
+    const myRoom = ROOM_TEMPLATES.find(r => r.id === 'myroom');
+    if (myRoom) myRoom.name = this.myRoomName;
     this.loadRoom(ROOM_TEMPLATES[0], false);
     this.loadAvatarFromStorage();
     this.applyAvatarToPlayer();
@@ -276,7 +282,7 @@ export class Game {
       this.dragHighlight = null;
     });
 
-    this.canvas.addEventListener('mousedown', e => { this.isDragging = true; this.dragStart = { x: e.clientX, y: e.clientY }; });
+    this.canvas.addEventListener('mousedown', e => { this.lastInputTime = Date.now(); this.isDragging = true; this.dragStart = { x: e.clientX, y: e.clientY }; });
     this.canvas.addEventListener('mousemove', e => {
       this.mouse.x = e.clientX; this.mouse.y = e.clientY;
       if (this.isDragging) {
@@ -297,6 +303,7 @@ export class Game {
     this.canvas.addEventListener('wheel', e => { e.preventDefault(); }, { passive: false });
 
     window.addEventListener('keydown', e => {
+      this.lastInputTime = Date.now();
       this.keys[e.key.toLowerCase()] = true;
       if (e.target.tagName === 'INPUT') return;
 
@@ -608,6 +615,23 @@ export class Game {
     try { localStorage.setItem('starlight_room_size', JSON.stringify({ size: this.myRoomSize })); } catch (e) {}
   }
 
+  loadMyRoomName() {
+    try {
+      const data = JSON.parse(localStorage.getItem('starlight_room_name'));
+      if (data) this.myRoomName = data.name || 'My Room';
+    } catch (e) {}
+  }
+
+  saveMyRoomName() {
+    try { localStorage.setItem('starlight_room_name', JSON.stringify({ name: this.myRoomName })); } catch (e) {}
+  }
+
+  trackRecentRoom(room) {
+    this.recentRooms = this.recentRooms.filter(r => r.id !== room.id);
+    this.recentRooms.unshift({ id: room.id, name: room.name, time: Date.now() });
+    if (this.recentRooms.length > 5) this.recentRooms.pop();
+  }
+
   expandMyRoom(size) {
     this.myRoomSize = size;
     this.saveRoomSize();
@@ -668,12 +692,20 @@ export class Game {
   }
 
   renderNavigator() {
-    this.uiManager.renderNavigator(ROOM_TEMPLATES, room => {
+    this.uiManager.renderNavigator(ROOM_TEMPLATES, this.recentRooms, room => {
       this.loadRoom(room);
+      this.trackRecentRoom(room);
       this.achievementSystem.visitRoom(room.id);
       this.statsSystem.inc('roomsVisited');
       this.uiManager.showNotification(`Entered ${room.name}`);
       this.uiManager.closeAllPanels();
+    }, name => {
+      this.myRoomName = name;
+      this.saveMyRoomName();
+      const myRoom = ROOM_TEMPLATES.find(r => r.id === 'myroom');
+      if (myRoom) myRoom.name = name;
+      this.uiManager.showNotification(`Room renamed to ${name}!`, 'success');
+      this.renderNavigator();
     });
     this.uiManager.renderExpansions(ROOM_EXPANSIONS, this.myRoomSize, this.currencySystem.get(), expansion => {
       if (this.currencySystem.spend(expansion.price)) {
@@ -943,6 +975,11 @@ export class Game {
           this.uiManager.showNotification('Pet is resting...', 'info');
           this.renderPetPanel();
         }
+      },
+      name => {
+        this.petSystem.rename(name);
+        this.uiManager.showNotification('Pet renamed!', 'success');
+        this.renderPetPanel();
       }
     );
   }
@@ -951,13 +988,13 @@ export class Game {
     this.uiManager.renderAchievements(this.achievementSystem.getList());
   }
 
-  renderLeaderboardPanel() {
+  renderLeaderboardPanel(filter = 'all') {
     const games = [
       { id: 'ringuppercut', name: 'Ring Uppercut' },
       { id: 'memorymatch', name: 'Memory Match' },
       { id: 'tilepuzzle', name: 'Tile Puzzle' }
     ];
-    this.uiManager.renderLeaderboard(games, id => this.leaderboardSystem.getTop(id));
+    this.uiManager.renderLeaderboard(games, (id, f) => this.leaderboardSystem.getTop(id, 5, f || filter), filter, newFilter => this.renderLeaderboardPanel(newFilter));
   }
 
   renderStatsPanel() {
@@ -1130,6 +1167,10 @@ export class Game {
       this.statsSystem.tick(dt);
       this.eventSystem.update(dt);
       this.challengeSystem._refreshIfNeeded();
+      // AFK detection
+      const afkTime = (Date.now() - this.lastInputTime) / 1000;
+      if (afkTime > 60 && !this.player.isAFK) { this.player.isAFK = true; }
+      else if (afkTime < 60 && this.player.isAFK) { this.player.isAFK = false; }
       // Treasure spawning
       const treasureInterval = this.eventSystem ? this.eventSystem.getTreasureInterval() : 45;
       this.treasureTimer += dt;
@@ -1454,6 +1495,11 @@ export class Game {
           ctx.fillStyle = 'var(--habbo-accent)';
           ctx.fillText(badge.icon, sp.x + 36, sp.y - 8);
         }
+      }
+      if (avatar.isAFK) {
+        ctx.fillStyle = 'var(--habbo-danger)';
+        ctx.font = 'bold 8px Nunito, sans-serif';
+        ctx.fillText('AFK', sp.x, sp.y - 22);
       }
     }
   }

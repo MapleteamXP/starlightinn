@@ -224,6 +224,8 @@ body {
 .notif-history-item { display: flex; align-items: center; gap: 8px; padding: 8px; background: rgba(0,0,0,0.15); border-radius: 6px; font-size: 12px; }
 
 .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.lb-tab { padding: 5px 12px; background: rgba(0,0,0,0.2); border: 1px solid var(--habbo-panel-border); border-radius: 6px; color: white; font-family: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+.lb-tab.active { background: var(--habbo-accent); color: var(--habbo-dark); border-color: var(--habbo-accent); }
 .gallery-item { background: rgba(0,0,0,0.2); border-radius: 8px; padding: 6px; }
 
 /* NPC Profile */
@@ -3497,7 +3499,7 @@ var StarlightEngine = (() => {
             list.appendChild(div);
           });
         }
-        renderNavigator(rooms, onSelect) {
+        renderNavigator(rooms, recent, onSelect, onRenameMyRoom) {
           const publicList = document.getElementById("publicRoomList");
           if (!publicList) return;
           publicList.innerHTML = "";
@@ -3520,6 +3522,35 @@ var StarlightEngine = (() => {
             onSelect && onSelect(userTemplate);
           });
           userList.appendChild(myRoomDiv);
+          if (onRenameMyRoom) {
+            const renameDiv = document.createElement("div");
+            renameDiv.style.cssText = "margin-top:8px;display:flex;gap:6px;";
+            renameDiv.innerHTML = `<input type="text" id="myRoomNameInput" placeholder="Rename My Room..." maxlength="20" style="flex:1;padding:6px 8px;border:1px solid var(--habbo-panel-border);border-radius:6px;background:var(--habbo-dark);color:white;font-family:inherit;font-size:12px;"><button id="myRoomRenameBtn" style="padding:6px 12px;background:var(--habbo-light);color:white;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;">Rename</button>`;
+            userList.appendChild(renameDiv);
+            document.getElementById("myRoomRenameBtn")?.addEventListener("click", () => {
+              const input = document.getElementById("myRoomNameInput");
+              if (input && input.value.trim()) {
+                onRenameMyRoom(input.value.trim());
+                input.value = "";
+              }
+            });
+          }
+          if (recent && recent.length > 0) {
+            const recentDiv = document.createElement("div");
+            recentDiv.style.cssText = "margin-top:12px;font-size:12px;color:var(--habbo-text-dim);";
+            recentDiv.textContent = "Recently Visited";
+            userList.appendChild(recentDiv);
+            recent.forEach((r) => {
+              const div = document.createElement("div");
+              div.className = "room-item";
+              div.innerHTML = `<div class="room-name">${r.name}</div><div class="room-meta">${new Date(r.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>`;
+              div.addEventListener("click", () => {
+                const room = rooms.find((x) => x.id === r.id);
+                if (room) onSelect && onSelect(room);
+              });
+              userList.appendChild(div);
+            });
+          }
         }
         renderCatalog(items, categories, activeCategory, currency, onBuy, onCategory) {
           const tabs = document.getElementById("catalogTabs");
@@ -3671,7 +3702,7 @@ var StarlightEngine = (() => {
             list.appendChild(div);
           });
         }
-        renderPetPanel(petSystem, onAdopt, onFeed, onPlay, onRest) {
+        renderPetPanel(petSystem, onAdopt, onFeed, onPlay, onRest, onRename) {
           const content = document.getElementById("petContent");
           if (!content) return;
           const pet = petSystem.pet;
@@ -3708,11 +3739,22 @@ var StarlightEngine = (() => {
           <button id="petPlay" class="pet-action">\u{1F3BE} Play</button>
           <button id="petRest" class="pet-action">\u{1F4A4} Rest</button>
         </div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <input id="petRenameInput" type="text" placeholder="New name..." maxlength="12" style="flex:1;padding:6px 8px;border:1px solid var(--habbo-panel-border);border-radius:6px;background:var(--habbo-dark);color:white;font-family:inherit;font-size:12px;">
+          <button id="petRename" style="padding:6px 12px;background:var(--habbo-light);color:white;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;">Rename</button>
+        </div>
         <button id="petRelease" style="margin-top:10px;background:transparent;border:1px solid var(--habbo-danger);color:var(--habbo-danger);padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;">Release Pet</button>
       </div>`;
           document.getElementById("petFeed")?.addEventListener("click", onFeed);
           document.getElementById("petPlay")?.addEventListener("click", onPlay);
           document.getElementById("petRest")?.addEventListener("click", onRest);
+          document.getElementById("petRename")?.addEventListener("click", () => {
+            const input = document.getElementById("petRenameInput");
+            if (input && input.value.trim() && onRename) {
+              onRename(input.value.trim());
+              input.value = "";
+            }
+          });
           document.getElementById("petRelease")?.addEventListener("click", () => onAdopt && onAdopt(null));
         }
         showNPCProfile(npc, onWalk, onTrade) {
@@ -3820,12 +3862,15 @@ var StarlightEngine = (() => {
             btn.addEventListener("click", () => onCraft && onCraft(btn.dataset.id));
           });
         }
-        renderLeaderboard(games, getScores) {
+        renderLeaderboard(games, getScores, filter, onFilter) {
           const content = document.getElementById("leaderboardContent");
           if (!content) return;
-          let html = "";
+          let html = `<div style="display:flex;gap:6px;margin-bottom:12px;">
+      <button class="lb-tab${filter === "all" ? " active" : ""}" data-filter="all">All Time</button>
+      <button class="lb-tab${filter === "today" ? " active" : ""}" data-filter="today">Today</button>
+    </div>`;
           games.forEach((g) => {
-            const scores = getScores(g.id);
+            const scores = getScores(g.id, filter);
             html += `<div style="margin-bottom:16px;"><div style="font-weight:700;font-size:14px;color:var(--habbo-accent);margin-bottom:6px;">${g.name}</div>`;
             if (scores.length === 0) {
               html += `<div style="font-size:12px;color:var(--habbo-text-dim);">No scores yet. Play to set a record!</div>`;
@@ -3843,6 +3888,9 @@ var StarlightEngine = (() => {
             html += `</div>`;
           });
           content.innerHTML = html;
+          content.querySelectorAll(".lb-tab").forEach((btn) => {
+            btn.addEventListener("click", () => onFilter && onFilter(btn.dataset.filter));
+          });
         }
         renderAchievements(list) {
           const container = document.getElementById("achieveList");
@@ -4945,8 +4993,14 @@ var StarlightEngine = (() => {
           this.save();
           return entry;
         }
-        getTop(gameId, limit = 5) {
-          return (this.scores[gameId] || []).slice(0, limit);
+        getTop(gameId, limit = 5, filter = "all") {
+          let list = this.scores[gameId] || [];
+          if (filter === "today") {
+            const startOfDay = /* @__PURE__ */ new Date();
+            startOfDay.setHours(0, 0, 0, 0);
+            list = list.filter((s) => s.date >= startOfDay.getTime());
+          }
+          return list.slice(0, limit);
         }
         getPersonalBest(gameId) {
           const list = this.scores[gameId] || [];
@@ -5394,6 +5448,12 @@ var StarlightEngine = (() => {
           this.pet = null;
           localStorage.removeItem("starlight_pet");
         }
+        rename(newName) {
+          if (!this.pet || !newName.trim()) return false;
+          this.pet.name = newName.trim().slice(0, 12);
+          this.save();
+          return true;
+        }
         feed() {
           if (!this.pet) return false;
           this.pet.hunger = Math.min(100, this.pet.hunger + 30);
@@ -5542,9 +5602,13 @@ var StarlightEngine = (() => {
           this.currentTheme = "classic";
           this.likedRooms = /* @__PURE__ */ new Set();
           this.myRoomSize = 10;
+          this.myRoomName = "My Room";
+          this.recentRooms = [];
+          this.lastInputTime = Date.now();
           this.loadThemes();
           this.loadLikedRooms();
           this.loadRoomSize();
+          this.loadMyRoomName();
           this.chatColor = "#fffde7";
           this.lastTime = 0;
           this.hoverTile = null;
@@ -5581,6 +5645,8 @@ var StarlightEngine = (() => {
           this.photoMode = false;
           this.setupInput();
           this.setupUI();
+          const myRoom = ROOM_TEMPLATES.find((r) => r.id === "myroom");
+          if (myRoom) myRoom.name = this.myRoomName;
           this.loadRoom(ROOM_TEMPLATES[0], false);
           this.loadAvatarFromStorage();
           this.applyAvatarToPlayer();
@@ -5732,6 +5798,7 @@ var StarlightEngine = (() => {
             this.dragHighlight = null;
           });
           this.canvas.addEventListener("mousedown", (e) => {
+            this.lastInputTime = Date.now();
             this.isDragging = true;
             this.dragStart = { x: e.clientX, y: e.clientY };
           });
@@ -5758,6 +5825,7 @@ var StarlightEngine = (() => {
             e.preventDefault();
           }, { passive: false });
           window.addEventListener("keydown", (e) => {
+            this.lastInputTime = Date.now();
             this.keys[e.key.toLowerCase()] = true;
             if (e.target.tagName === "INPUT") return;
             if (this.minigame && this.minigame.state === "playing") {
@@ -6194,6 +6262,24 @@ var StarlightEngine = (() => {
           } catch (e) {
           }
         }
+        loadMyRoomName() {
+          try {
+            const data = JSON.parse(localStorage.getItem("starlight_room_name"));
+            if (data) this.myRoomName = data.name || "My Room";
+          } catch (e) {
+          }
+        }
+        saveMyRoomName() {
+          try {
+            localStorage.setItem("starlight_room_name", JSON.stringify({ name: this.myRoomName }));
+          } catch (e) {
+          }
+        }
+        trackRecentRoom(room) {
+          this.recentRooms = this.recentRooms.filter((r) => r.id !== room.id);
+          this.recentRooms.unshift({ id: room.id, name: room.name, time: Date.now() });
+          if (this.recentRooms.length > 5) this.recentRooms.pop();
+        }
         expandMyRoom(size) {
           this.myRoomSize = size;
           this.saveRoomSize();
@@ -6251,12 +6337,20 @@ var StarlightEngine = (() => {
           }
         }
         renderNavigator() {
-          this.uiManager.renderNavigator(ROOM_TEMPLATES, (room) => {
+          this.uiManager.renderNavigator(ROOM_TEMPLATES, this.recentRooms, (room) => {
             this.loadRoom(room);
+            this.trackRecentRoom(room);
             this.achievementSystem.visitRoom(room.id);
             this.statsSystem.inc("roomsVisited");
             this.uiManager.showNotification(`Entered ${room.name}`);
             this.uiManager.closeAllPanels();
+          }, (name) => {
+            this.myRoomName = name;
+            this.saveMyRoomName();
+            const myRoom = ROOM_TEMPLATES.find((r) => r.id === "myroom");
+            if (myRoom) myRoom.name = name;
+            this.uiManager.showNotification(`Room renamed to ${name}!`, "success");
+            this.renderNavigator();
           });
           this.uiManager.renderExpansions(ROOM_EXPANSIONS, this.myRoomSize, this.currencySystem.get(), (expansion) => {
             if (this.currencySystem.spend(expansion.price)) {
@@ -6568,19 +6662,24 @@ var StarlightEngine = (() => {
                 this.uiManager.showNotification("Pet is resting...", "info");
                 this.renderPetPanel();
               }
+            },
+            (name) => {
+              this.petSystem.rename(name);
+              this.uiManager.showNotification("Pet renamed!", "success");
+              this.renderPetPanel();
             }
           );
         }
         renderAchievementsPanel() {
           this.uiManager.renderAchievements(this.achievementSystem.getList());
         }
-        renderLeaderboardPanel() {
+        renderLeaderboardPanel(filter = "all") {
           const games = [
             { id: "ringuppercut", name: "Ring Uppercut" },
             { id: "memorymatch", name: "Memory Match" },
             { id: "tilepuzzle", name: "Tile Puzzle" }
           ];
-          this.uiManager.renderLeaderboard(games, (id) => this.leaderboardSystem.getTop(id));
+          this.uiManager.renderLeaderboard(games, (id, f) => this.leaderboardSystem.getTop(id, 5, f || filter), filter, (newFilter) => this.renderLeaderboardPanel(newFilter));
         }
         renderStatsPanel() {
           this.uiManager.renderStats(this.statsSystem.getStats());
@@ -6740,6 +6839,12 @@ var StarlightEngine = (() => {
             this.statsSystem.tick(dt);
             this.eventSystem.update(dt);
             this.challengeSystem._refreshIfNeeded();
+            const afkTime = (Date.now() - this.lastInputTime) / 1e3;
+            if (afkTime > 60 && !this.player.isAFK) {
+              this.player.isAFK = true;
+            } else if (afkTime < 60 && this.player.isAFK) {
+              this.player.isAFK = false;
+            }
             const treasureInterval = this.eventSystem ? this.eventSystem.getTreasureInterval() : 45;
             this.treasureTimer += dt;
             if (this.treasureTimer > treasureInterval && this.treasures.length < 3) {
@@ -7090,6 +7195,11 @@ var StarlightEngine = (() => {
                 ctx.fillStyle = "var(--habbo-accent)";
                 ctx.fillText(badge.icon, sp.x + 36, sp.y - 8);
               }
+            }
+            if (avatar.isAFK) {
+              ctx.fillStyle = "var(--habbo-danger)";
+              ctx.font = "bold 8px Nunito, sans-serif";
+              ctx.fillText("AFK", sp.x, sp.y - 22);
             }
           }
         }

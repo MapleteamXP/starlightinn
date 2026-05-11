@@ -46,6 +46,13 @@ export class PetSystem {
     localStorage.removeItem('starlight_pet');
   }
 
+  rename(newName) {
+    if (!this.pet || !newName.trim()) return false;
+    this.pet.name = newName.trim().slice(0, 12);
+    this.save();
+    return true;
+  }
+
   feed() {
     if (!this.pet) return false;
     this.pet.hunger = Math.min(100, this.pet.hunger + 30);

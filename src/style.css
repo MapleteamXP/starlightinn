@@ -216,6 +216,8 @@ body {
 .notif-history-item { display: flex; align-items: center; gap: 8px; padding: 8px; background: rgba(0,0,0,0.15); border-radius: 6px; font-size: 12px; }
 
 .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.lb-tab { padding: 5px 12px; background: rgba(0,0,0,0.2); border: 1px solid var(--habbo-panel-border); border-radius: 6px; color: white; font-family: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+.lb-tab.active { background: var(--habbo-accent); color: var(--habbo-dark); border-color: var(--habbo-accent); }
 .gallery-item { background: rgba(0,0,0,0.2); border-radius: 8px; padding: 6px; }
 
 /* NPC Profile */

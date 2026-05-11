@@ -29,8 +29,13 @@ export class LeaderboardSystem {
     return entry;
   }
 
-  getTop(gameId, limit = 5) {
-    return (this.scores[gameId] || []).slice(0, limit);
+  getTop(gameId, limit = 5, filter = 'all') {
+    let list = this.scores[gameId] || [];
+    if (filter === 'today') {
+      const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
+      list = list.filter(s => s.date >= startOfDay.getTime());
+    }
+    return list.slice(0, limit);
   }
 
   getPersonalBest(gameId) {
