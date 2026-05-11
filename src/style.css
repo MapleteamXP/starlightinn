@@ -85,6 +85,10 @@ body {
 .room-item .room-meta { font-size: 11px; color: var(--habbo-accent); margin-top: 4px; }
 
 #catalogPanel { top: 60px; right: 12px; width: 360px; }
+.catalog-tabs { display: flex; gap: 4px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 4px; }
+.catalog-tab { padding: 5px 10px; background: rgba(0,0,0,0.2); border: 1px solid var(--habbo-panel-border); border-radius: 6px; color: white; font-family: inherit; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+.catalog-tab.active { background: var(--habbo-accent); color: var(--habbo-dark); border-color: var(--habbo-accent); }
+.catalog-tab:hover:not(.active) { background: var(--habbo-light); }
 .catalog-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .catalog-item { background: rgba(0,0,0,0.2); border: 2px solid var(--habbo-panel-border); border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; transition: all 0.15s; }
 .catalog-item:hover { border-color: var(--habbo-accent); transform: scale(1.05); }
@@ -195,6 +199,11 @@ body {
 
 /* Theme List */
 .theme-list { display: flex; flex-direction: column; gap: 6px; }
+
+/* Stats */
+.stat-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 13px; }
+.stat-label { color: var(--habbo-text-dim); }
+.stat-value { font-weight: 700; color: var(--habbo-accent); }
 
 /* Crafting */
 .craft-item { background: rgba(0,0,0,0.15); border-radius: 8px; padding: 10px; margin-bottom: 6px; }

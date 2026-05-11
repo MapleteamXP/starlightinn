@@ -27,6 +27,7 @@ function createUI() {
         <button class="top-btn" id="btnAchievements">&#127942; Goals</button>
         <button class="top-btn" id="btnLeaderboard">&#128200; Scores</button>
         <button class="top-btn" id="btnCrafting">&#128295; Craft</button>
+        <button class="top-btn" id="btnStats">&#128202; Stats</button>
       </div>
     </div>
     <div id="roomInfo">

@@ -20,7 +20,10 @@ export class UIManager {
       <div class="theme-list" id="themeList"></div>
     `);
     // Catalog
-    this._ensurePanel('catalogPanel', 'Furniture Catalog', `<div class="catalog-grid" id="catalogGrid"></div>`);
+    this._ensurePanel('catalogPanel', 'Furniture Catalog', `
+      <div class="catalog-tabs" id="catalogTabs"></div>
+      <div class="catalog-grid" id="catalogGrid"></div>
+    `);
     // Inventory
     this._ensurePanel('inventoryPanel', 'My Inventory', `
       <div class="inv-grid" id="inventoryGrid"></div>
@@ -72,6 +75,8 @@ export class UIManager {
     this._ensurePanel('leaderboardPanel', 'High Scores', `<div id="leaderboardContent"></div>`);
     // Crafting
     this._ensurePanel('craftingPanel', 'Crafting Workshop', `<div class="craft-list" id="craftList"></div>`);
+    // Stats
+    this._ensurePanel('statsPanel', 'Player Stats', `<div class="stats-list" id="statsList"></div>`);
     // Chat color popover
     if (!document.getElementById('chatColorPopover')) {
       const popover = document.createElement('div');
@@ -176,7 +181,18 @@ export class UIManager {
     userList.appendChild(myRoomDiv);
   }
 
-  renderCatalog(items, currency, onBuy) {
+  renderCatalog(items, categories, activeCategory, currency, onBuy, onCategory) {
+    const tabs = document.getElementById('catalogTabs');
+    if (tabs) {
+      tabs.innerHTML = '';
+      categories.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'catalog-tab' + (cat.id === activeCategory ? ' active' : '');
+        btn.textContent = `${cat.icon} ${cat.name}`;
+        btn.addEventListener('click', () => onCategory && onCategory(cat.id));
+        tabs.appendChild(btn);
+      });
+    }
     const grid = document.getElementById('catalogGrid');
     if (!grid) return;
     grid.innerHTML = '';
@@ -359,6 +375,18 @@ export class UIManager {
     document.getElementById('petPlay')?.addEventListener('click', onPlay);
     document.getElementById('petRest')?.addEventListener('click', onRest);
     document.getElementById('petRelease')?.addEventListener('click', () => onAdopt && onAdopt(null));
+  }
+
+  renderStats(stats) {
+    const list = document.getElementById('statsList');
+    if (!list) return;
+    list.innerHTML = '';
+    stats.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'stat-row';
+      div.innerHTML = `<span class="stat-label">${s.label}</span><span class="stat-value">${s.value}</span>`;
+      list.appendChild(div);
+    });
   }
 
   renderCrafting(recipes, onCraft) {

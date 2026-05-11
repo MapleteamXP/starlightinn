@@ -10,7 +10,7 @@ import {
   getAvatarAsset, getFurnitureAsset, getTilePattern, getWallPattern,
   createAvatarCanvas, clearAvatarCache, createSceneryCanvas
 } from '../assets/Generator.js';
-import { FURNITURE_CATALOG, ROOM_TEMPLATES, ROOM_THEMES } from '../world/Data.js';
+import { FURNITURE_CATALOG, ROOM_TEMPLATES, ROOM_THEMES, CATALOG_CATEGORIES } from '../world/Data.js';
 import { Furniture } from '../world/Furniture.js';
 import { Avatar } from '../world/Avatar.js';
 import { Room } from '../world/Room.js';
@@ -29,6 +29,7 @@ import { AchievementSystem } from '../economy/Achievements.js';
 import { CraftingSystem, CRAFTING_RECIPES } from '../economy/Crafting.js';
 import { FriendSystem } from '../social/Friends.js';
 import { LeaderboardSystem } from '../social/Leaderboard.js';
+import { StatsSystem } from '../social/Stats.js';
 import { PetSystem } from '../world/Pet.js';
 
 class Particle {
@@ -77,6 +78,7 @@ export class Game {
     this.selectedTool = 'walk';
     this.selectedInventoryItem = null;
     this.placementRotation = 0;
+    this.catalogCategory = 'all';
     this.customize = { skinColor: '#F5CBA7', hairColor: '#5D4037', hairStyle: 'short', shirtColor: '#3498DB', pantsColor: '#2C3E50', shoeColor: '#555555', hatType: 'none', glassesType: 'none' };
 
     this.currencySystem = new CurrencySystem(1000);
@@ -96,6 +98,7 @@ export class Game {
     this.achievementSystem = new AchievementSystem(this);
     this.leaderboardSystem = new LeaderboardSystem();
     this.craftingSystem = new CraftingSystem(this.inventorySystem);
+    this.statsSystem = new StatsSystem();
     this.photoMode = false;
 
     this.setupInput();
@@ -122,6 +125,7 @@ export class Game {
     }
 
     this.hasRendered = false;
+    this.autoSaveInterval = setInterval(() => this.saveAllData(), 60000);
     requestAnimationFrame(t => this.loop(t));
   }
 
@@ -239,6 +243,7 @@ export class Game {
         this.uiManager.showNotification(`Placed ${type}!`);
         this.soundManager.play('place');
         this.achievementSystem.track('place');
+        this.statsSystem.inc('furniturePlaced');
       } else {
         this.uiManager.showNotification('Cannot place there!', 'error');
         this.soundManager.play('error');
@@ -307,7 +312,7 @@ export class Game {
     else if (k === 'arrowright' || k === 'd') { dx = 1; dy = 0; }
     if (dx !== 0 || dy !== 0) {
       const tx = Math.round(this.player.x) + dx, ty = Math.round(this.player.y) + dy;
-      if (this.room.isWalkable(tx, ty, this.player)) this.player.moveTo(tx, ty, this.room);
+      if (this.room.isWalkable(tx, ty, this.player)) { this.player.moveTo(tx, ty, this.room); this.statsSystem.inc('stepsWalked'); }
     }
   }
 
@@ -325,6 +330,7 @@ export class Game {
         this.spawnParticles(tx, ty, '#f4d03f', 12);
         this.uiManager.showNotification(`Found ★${treasure.coins} in a treasure chest!`, 'success');
         this.soundManager.play('buy');
+        this.statsSystem.inc('treasureChestsFound');
         this.treasures = this.treasures.filter(t => t !== treasure);
         this.achievementSystem.track('walk');
         return;
@@ -332,6 +338,7 @@ export class Game {
       if (this.room.isWalkable(tx, ty)) {
         this.player.moveTo(tx, ty, this.room);
         this.achievementSystem.track('walk');
+      this.statsSystem.inc('stepsWalked');
         this.spawnParticles(tx, ty, 'rgba(244,208,63,0.6)', 5);
       }
     } else if (this.selectedTool === 'place' && this.selectedInventoryItem) {
@@ -375,6 +382,7 @@ export class Game {
     document.getElementById('btnAchievements')?.addEventListener('click', () => { this.uiManager.togglePanel('achievementsPanel'); this.renderAchievementsPanel(); });
     document.getElementById('btnLeaderboard')?.addEventListener('click', () => { this.uiManager.togglePanel('leaderboardPanel'); this.renderLeaderboardPanel(); });
     document.getElementById('btnCrafting')?.addEventListener('click', () => { this.uiManager.togglePanel('craftingPanel'); this.renderCraftingPanel(); });
+    document.getElementById('btnStats')?.addEventListener('click', () => { this.uiManager.togglePanel('statsPanel'); this.renderStatsPanel(); });
 
     document.getElementById('hairStyleSelect')?.addEventListener('change', e => { this.customize.hairStyle = e.target.value; this.renderCustomizePanel(); });
     document.getElementById('hatSelect')?.addEventListener('change', e => { this.customize.hatType = e.target.value; this.renderCustomizePanel(); });
@@ -543,6 +551,7 @@ export class Game {
     this.uiManager.renderNavigator(ROOM_TEMPLATES, room => {
       this.loadRoom(room);
       this.achievementSystem.visitRoom(room.id);
+      this.statsSystem.inc('roomsVisited');
       this.uiManager.showNotification(`Entered ${room.name}`);
       this.uiManager.closeAllPanels();
     });
@@ -573,18 +582,25 @@ export class Game {
   }
 
   renderCatalog() {
-    this.uiManager.renderCatalog(FURNITURE_CATALOG, this.currencySystem.get(), item => {
-      if (this.currencySystem.spend(item.price)) {
-        this.inventorySystem.add(item.id, 1);
-        this.uiManager.updateCurrency(this.currencySystem.get());
-        this.uiManager.showNotification(`Purchased ${item.name}!`);
-        this.soundManager.play('buy');
-        this.achievementSystem.track('buy');
-      } else {
-        this.uiManager.showNotification('Not enough StarCoins!', 'error');
-        this.soundManager.play('error');
-      }
-    });
+    const items = this.catalogCategory === 'all' ? FURNITURE_CATALOG : FURNITURE_CATALOG.filter(i => i.category === this.catalogCategory);
+    this.uiManager.renderCatalog(items, CATALOG_CATEGORIES, this.catalogCategory, this.currencySystem.get(),
+      item => {
+        if (this.currencySystem.spend(item.price)) {
+          this.inventorySystem.add(item.id, 1);
+          this.uiManager.updateCurrency(this.currencySystem.get());
+          this.uiManager.showNotification(`Purchased ${item.name}!`);
+          this.soundManager.play('buy');
+          this.achievementSystem.track('buy');
+          this.statsSystem.inc('furnitureBought');
+          this.statsSystem.inc('totalCoinsSpent', item.price);
+          this.renderCatalog();
+        } else {
+          this.uiManager.showNotification('Not enough StarCoins!', 'error');
+          this.soundManager.play('error');
+        }
+      },
+      catId => { this.catalogCategory = catId; this.renderCatalog(); }
+    );
   }
 
   renderInventory() {
@@ -796,6 +812,10 @@ export class Game {
     this.uiManager.renderLeaderboard(games, id => this.leaderboardSystem.getTop(id));
   }
 
+  renderStatsPanel() {
+    this.uiManager.renderStats(this.statsSystem.getStats());
+  }
+
   renderCraftingPanel() {
     this.uiManager.renderCrafting(this.craftingSystem.getAvailableRecipes(), id => {
       const recipe = CRAFTING_RECIPES.find(r => r.id === id);
@@ -898,6 +918,7 @@ export class Game {
       this.npcManager.update(dt, this.room);
       this.friendSystem.update(dt);
       this.petSystem.tick(dt);
+      this.statsSystem.tick(dt);
       // Treasure spawning
       this.treasureTimer += dt;
       if (this.treasureTimer > 45 && this.treasures.length < 3) {
@@ -1244,11 +1265,13 @@ export class Game {
     this.minigame = new MinigameClass(this);
     this.minigame.start();
     this.achievementSystem.track('minigame');
+    this.statsSystem.inc('minigamesPlayed');
   }
 
   endMinigame() {
     if (this.minigame && this.minigame.result === 'win') {
       this.achievementSystem.track('win');
+      this.statsSystem.inc('minigamesWon');
     }
     this.minigame = null;
   }
