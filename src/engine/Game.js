@@ -19,6 +19,7 @@ import { CurrencySystem } from '../economy/Currency.js';
 import { InventorySystem } from '../economy/Inventory.js';
 import { UIManager } from '../ui/UIManager.js';
 import { ContentFilter } from '../security/Filter.js';
+import { RingUppercut } from '../minigames/RingUppercut.js';
 
 class Particle {
   constructor(x, y, color, life, vx, vy) {
@@ -319,6 +320,10 @@ export class Game {
     document.getElementById('toolDance')?.addEventListener('click', () => { this.player.isDancing = !this.player.isDancing; this.uiManager.showNotification(this.player.isDancing ? 'Dancing!' : 'Stopped dancing'); });
     document.getElementById('toolWave')?.addEventListener('click', () => { this.player.isWaving = true; this.player.waveTimer = 0; this.player.say('Hey!'); });
     document.getElementById('toolMinimap')?.addEventListener('click', () => this.toggleMinimap());
+    document.getElementById('toolMinigame')?.addEventListener('click', () => {
+      this.uiManager.togglePanel('minigamePanel');
+      this.renderMinigamePanel();
+    });
 
     const sendChat = () => {
       const input = document.getElementById('chatInput');
@@ -376,6 +381,7 @@ export class Game {
     this.renderNavigator();
     this.renderCatalog();
     this.renderInventory();
+    this.renderMinigamePanel();
     this.uiManager.updateCurrency(this.currencySystem.get());
     this.uiManager.updateToolButtons(this.selectedTool);
   }
@@ -464,6 +470,16 @@ export class Game {
     this.uiManager.renderColorPresets(containerId, colors, current, key, (k, v) => {
       this.customize[k] = v;
       this.renderCustomizePanel();
+    });
+  }
+
+  renderMinigamePanel() {
+    const games = [
+      { name: 'Ring Uppercut', desc: 'Time your punches in the boxing ring!', reward: '200-500', class: RingUppercut }
+    ];
+    this.uiManager.renderMinigamePanel(games, g => {
+      this.startMinigame(g.class);
+      this.uiManager.closeAllPanels();
     });
   }
 

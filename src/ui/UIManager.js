@@ -50,6 +50,11 @@ export class UIManager {
     `);
     // Chat History
     this._ensurePanel('chatPanel', 'Chat History', `<div class="chat-history" id="chatHistory"></div>`);
+    // Minigames
+    this._ensurePanel('minigamePanel', 'Minigames', `
+      <div class="minigame-list" id="minigameList"></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Earn coins by playing minigames!</div>
+    `);
     // Chat color popover
     if (!document.getElementById('chatColorPopover')) {
       const popover = document.createElement('div');
@@ -233,6 +238,19 @@ export class UIManager {
       const btn = document.getElementById(id);
       if (btn) btn.classList.add('active');
     }
+  }
+
+  renderMinigamePanel(games, onLaunch) {
+    const list = document.getElementById('minigameList');
+    if (!list) return;
+    list.innerHTML = '';
+    games.forEach(g => {
+      const div = document.createElement('div');
+      div.className = 'room-item';
+      div.innerHTML = `<div class="room-name">${g.name}</div><div class="room-desc">${g.desc}</div><div class="room-meta">Reward: \u2605 ${g.reward}</div>`;
+      div.addEventListener('click', () => onLaunch && onLaunch(g));
+      list.appendChild(div);
+    });
   }
 
   setTypingIndicator(visible, text = '') {
