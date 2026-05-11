@@ -37,6 +37,7 @@ import { ProgressionSystem } from '../economy/Progression.js';
 import { PetSystem } from '../world/Pet.js';
 import { InboxSystem } from '../social/Inbox.js';
 import { QuestSystem } from '../economy/Quests.js';
+import { NetworkManager } from '../network/NetworkManager.js';
 
 class Particle {
   constructor(x, y, color, life, vx, vy) {
@@ -115,6 +116,7 @@ export class Game {
     this.autoSaveTimer = 0;
     this.visitorLog = [];
     this.loadVisitorLog();
+    this.networkManager = new NetworkManager(this);
     this.dailyRewards = new DailyRewardSystem(this);
     this.friendSystem = new FriendSystem(this);
     this.petSystem = new PetSystem(this);
@@ -186,6 +188,26 @@ export class Game {
         this.showSeasonalGreeting();
       }
     }, 1500);
+
+    // Connect to multiplayer server (optional)
+    setTimeout(() => {
+      this.connectToServer();
+    }, 2500);
+  }
+
+  connectToServer() {
+    if (!this.player) return;
+    const outfit = {
+      skinColor: this.player.skinColor,
+      hairColor: this.player.hairColor,
+      hairStyle: this.player.hairStyle,
+      shirtColor: this.player.shirtColor,
+      pantsColor: this.player.pantsColor,
+      shoeColor: this.player.shoeColor,
+      hatType: this.player.hatType,
+      glassesType: this.player.glassesType
+    };
+    this.networkManager.connect(this.player.name, outfit);
   }
 
   resize() {
@@ -262,6 +284,11 @@ export class Game {
     const center = isoToScreen(this.room.width / 2, this.room.height / 2);
     this.targetCamera = { x: this.width / 2 - center.x, y: this.height / 2 - center.y + 90 };
     this.camera = { ...this.targetCamera };
+
+    // Notify network of room change
+    if (this.networkManager) {
+      this.networkManager.joinRoom(this.room.id, this.player.x, this.player.y);
+    }
   }
 
   spawnNPCs(count) {
@@ -410,7 +437,7 @@ export class Game {
     else if (k === 'arrowright' || k === 'd') { dx = 1; dy = 0; }
     if (dx !== 0 || dy !== 0) {
       const tx = Math.round(this.player.x) + dx, ty = Math.round(this.player.y) + dy;
-      if (this.room.isWalkable(tx, ty, this.player)) { this.player.moveTo(tx, ty, this.room); this.statsSystem.inc('stepsWalked'); }
+      if (this.room.isWalkable(tx, ty, this.player)) { this.player.moveTo(tx, ty, this.room); this.statsSystem.inc('stepsWalked'); this.networkManager.move(this.player.x, this.player.y, this.player.facing); }
     }
   }
 
@@ -465,6 +492,7 @@ export class Game {
       }
       if (this.room.isWalkable(tx, ty)) {
         this.player.moveTo(tx, ty, this.room);
+        this.networkManager.move(this.player.x, this.player.y, this.player.facing);
         this.achievementSystem.track('walk');
         this.challengeSystem.track('walk');
         this.progressionSystem.addXP(5);
@@ -539,12 +567,12 @@ export class Game {
       const rand = arr => arr[Math.floor(Math.random() * arr.length)];
       this.customize.skinColor = rand(['#F5CBA7','#E0AC69','#8D5524','#C68642','#FFDBAC','#AA7C58']);
       this.customize.hairColor = rand(['#090806','#2C1608','#71635A','#B7A69E','#D6C4C2','#B55239','#A52A2A','#DC143C','#4B0082','#228B22']);
-      this.customize.hairStyle = rand(['short','spiky','long','mohawk','bald','curly','bob']);
-      this.customize.shirtColor = rand(['#E74C3C','#3498DB','#2ECC71','#F1C40F','#9B59B6','#E67E22','#1ABC9C','#34495E']);
-      this.customize.pantsColor = rand(['#2C3E50','#34495E','#1ABC9C','#8E44AD','#D35400','#7F8C8D']);
-      this.customize.shoeColor = rand(['#555555','#333333','#8B4513','#000000']);
-      this.customize.hatType = rand(['none','none','none','cap','beanie','crown','wizard']);
-      this.customize.glassesType = rand(['none','none','none','shades','round']);
+      this.customize.hairStyle = rand(['short','spiky','long','mohawk','bald','curly','bob','ponytail','buzz']);
+      this.customize.shirtColor = rand(['#E74C3C','#3498DB','#2ECC71','#F1C40F','#9B59B6','#E67E22','#1ABC9C','#34495E','#FF6B6B','#4ECDC4','#45B7D1','#96CEB4']);
+      this.customize.pantsColor = rand(['#2C3E50','#34495E','#1ABC9C','#8E44AD','#D35400','#7F8C8D','#3498DB','#E74C3C']);
+      this.customize.shoeColor = rand(['#555555','#333333','#8B4513','#000000','#FFFFFF','#E74C3C']);
+      this.customize.hatType = rand(['none','none','none','cap','beanie','crown','wizard','bowler']);
+      this.customize.glassesType = rand(['none','none','none','shades','round','heart']);
       this.renderCustomizePanel();
     });
 
@@ -576,6 +604,7 @@ export class Game {
       input.blur();
       this.chatManager.updateTypingIndicator(false);
       this.chatManager.send(text);
+      this.networkManager.chat(text, 'normal');
     this.soundManager.play('chat');
     this.achievementSystem.track('chat');
     this.challengeSystem.track('chat');
@@ -1546,6 +1575,7 @@ export class Game {
     }
     if (this.room) {
       this.room.avatars.forEach(a => a.update(dt, this.room));
+      this.networkManager.updateRemotePlayers(dt);
       this.npcManager.update(dt, this.room);
       this.friendSystem.update(dt);
       this.petSystem.tick(dt);
@@ -1662,6 +1692,9 @@ export class Game {
     ctx.translate(this.width / 2, this.height / 2);
     ctx.scale(this.zoom, this.zoom);
     ctx.translate(-this.width / 2 + this.camera.x + this.screenShake.x, -this.height / 2 + this.camera.y + this.screenShake.y);
+
+    // Room background
+    this.drawRoomBackground(ctx);
 
     // Day/night cycle overlay
     const hour = new Date().getHours();
@@ -1907,6 +1940,160 @@ export class Game {
         ctx.beginPath();
         ctx.arc(rx, ry, 1.5, 0, Math.PI * 2);
         ctx.fill();
+      }
+    }
+  }
+
+  drawRoomBackground(ctx) {
+    if (!this.room) return;
+    const rid = this.room.id;
+    const time = Date.now();
+    const w = this.width * 2;
+    const h = this.height * 2;
+    const cx = -this.camera.x;
+    const cy = -this.camera.y;
+
+    // Base gradient per room theme
+    const gradients = {
+      lobby: ['#1a3a42', '#0d2529'],
+      beach: ['#87CEEB', '#E0F6FF'],
+      forest: ['#1a331a', '#0d1f0d'],
+      game: ['#2c1a3d', '#1a0f29'],
+      rooftop: ['#1a1a2e', '#16213e'],
+      club: ['#1a0a1a', '#0d050d'],
+      pool: ['#0a3d5c', '#052a3d'],
+      restaurant: ['#3d1a1a', '#291010'],
+      library: ['#2a1a0d', '#1a0f05'],
+      spa: ['#0a3d3d', '#052929'],
+      cinema: ['#0d0d0d', '#1a1a1a'],
+      garden: ['#1a3d1a', '#0d290d'],
+      myroom: ['#2a2a3a', '#1a1a25'],
+    };
+    const [g1, g2] = gradients[rid] || gradients.lobby;
+    const grad = ctx.createLinearGradient(cx, cy, cx, cy + h);
+    grad.addColorStop(0, g1);
+    grad.addColorStop(1, g2);
+    ctx.fillStyle = grad;
+    ctx.fillRect(cx - w/4, cy - h/4, w, h);
+
+    // Room-specific decorative elements
+    if (rid === 'beach') {
+      // Sun
+      ctx.fillStyle = 'rgba(255,220,100,0.3)';
+      ctx.beginPath(); ctx.arc(cx + w*0.7, cy + h*0.15, 60, 0, Math.PI*2); ctx.fill();
+      // Ocean horizon
+      ctx.fillStyle = 'rgba(64,164,223,0.25)';
+      ctx.fillRect(cx - w/4, cy + h*0.45, w, h*0.3);
+      // Palm silhouettes
+      ctx.fillStyle = 'rgba(30,60,30,0.4)';
+      for (let i = 0; i < 4; i++) {
+        const px = cx + (i * w/5) + 30;
+        const py = cy + h*0.5;
+        ctx.beginPath(); ctx.ellipse(px, py, 8, 40, 0, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(px, py - 35, 25, Math.PI, 0); ctx.fill();
+      }
+    } else if (rid === 'forest') {
+      // Moon
+      ctx.fillStyle = 'rgba(220,230,255,0.15)';
+      ctx.beginPath(); ctx.arc(cx + w*0.8, cy + h*0.12, 50, 0, Math.PI*2); ctx.fill();
+      // Tree silhouettes
+      ctx.fillStyle = 'rgba(20,40,20,0.5)';
+      for (let i = 0; i < 6; i++) {
+        const tx = cx + (i * w/7) + 20;
+        const ty = cy + h*0.4;
+        ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(tx+15, ty-80); ctx.lineTo(tx+30, ty); ctx.fill();
+        ctx.beginPath(); ctx.arc(tx+15, ty-80, 35, Math.PI, 0); ctx.fill();
+      }
+    } else if (rid === 'club') {
+      // Disco lights
+      for (let i = 0; i < 5; i++) {
+        const lx = cx + (i * w/5) + 40;
+        const ly = cy + h*0.1;
+        const hue = (time/20 + i*60) % 360;
+        ctx.fillStyle = `hsla(${hue}, 80%, 50%, 0.08)`;
+        ctx.beginPath();
+        ctx.moveTo(lx, ly); ctx.lineTo(lx-30, cy+h); ctx.lineTo(lx+30, cy+h); ctx.closePath();
+        ctx.fill();
+      }
+    } else if (rid === 'pool') {
+      // Pool water shimmer
+      ctx.fillStyle = 'rgba(64,164,223,0.15)';
+      ctx.fillRect(cx - w/4, cy + h*0.4, w, h*0.4);
+      for (let i = 0; i < 8; i++) {
+        const sx = cx + ((time/50 + i*100) % w);
+        const sy = cy + h*0.5 + Math.sin(time/400 + i)*20;
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.beginPath(); ctx.ellipse(sx, sy, 30, 4, 0, 0, Math.PI*2); ctx.fill();
+      }
+    } else if (rid === 'rooftop') {
+      // City skyline
+      ctx.fillStyle = 'rgba(10,10,25,0.6)';
+      for (let i = 0; i < 10; i++) {
+        const bx = cx + (i * w/10);
+        const bh = 40 + Math.sin(i*2.5)*30 + 20;
+        ctx.fillRect(bx, cy + h*0.45 - bh, w/10 + 2, bh);
+      }
+      // Stars
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      for (let i = 0; i < 30; i++) {
+        const sx = cx + ((i*137) % w);
+        const sy = cy + ((i*89) % (h*0.4));
+        const twinkle = 0.3 + Math.sin(time/500 + i)*0.3;
+        ctx.globalAlpha = twinkle;
+        ctx.beginPath(); ctx.arc(sx, sy, 1.5, 0, Math.PI*2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    } else if (rid === 'cinema') {
+      // Screen glow
+      ctx.fillStyle = 'rgba(200,220,255,0.08)';
+      ctx.beginPath();
+      ctx.moveTo(cx + w*0.2, cy + h*0.2);
+      ctx.lineTo(cx + w*0.8, cy + h*0.2);
+      ctx.lineTo(cx + w*0.7, cy + h*0.7);
+      ctx.lineTo(cx + w*0.3, cy + h*0.7);
+      ctx.closePath(); ctx.fill();
+    } else if (rid === 'restaurant') {
+      // Warm lantern glows
+      for (let i = 0; i < 4; i++) {
+        const lx = cx + (i * w/4) + 50;
+        const ly = cy + h*0.15;
+        const glow = ctx.createRadialGradient(lx, ly, 5, lx, ly, 80);
+        glow.addColorStop(0, 'rgba(255,200,100,0.12)');
+        glow.addColorStop(1, 'rgba(255,200,100,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath(); ctx.arc(lx, ly, 80, 0, Math.PI*2); ctx.fill();
+      }
+    } else if (rid === 'spa') {
+      // Bamboo silhouettes
+      ctx.fillStyle = 'rgba(20,50,30,0.3)';
+      for (let i = 0; i < 5; i++) {
+        const bx = cx + (i * w/6) + 25;
+        ctx.fillRect(bx, cy + h*0.3, 6, h*0.5);
+        ctx.fillRect(bx-10, cy + h*0.35 + i*10, 26, 3);
+      }
+    } else if (rid === 'lobby') {
+      // Grand chandelier glow
+      const glow = ctx.createRadialGradient(cx + w*0.5, cy + h*0.15, 10, cx + w*0.5, cy + h*0.15, 150);
+      glow.addColorStop(0, 'rgba(244,208,63,0.12)');
+      glow.addColorStop(1, 'rgba(244,208,63,0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath(); ctx.arc(cx + w*0.5, cy + h*0.15, 150, 0, Math.PI*2); ctx.fill();
+      // Columns
+      ctx.fillStyle = 'rgba(200,180,140,0.08)';
+      for (let i = 0; i < 4; i++) {
+        const colx = cx + (i * w/4) + 30;
+        ctx.fillRect(colx, cy + h*0.2, 20, h*0.6);
+      }
+    } else if (rid === 'game') {
+      // Arcade screen glows
+      for (let i = 0; i < 3; i++) {
+        const gx = cx + (i * w/4) + 50;
+        const gy = cy + h*0.2;
+        const g = ctx.createRadialGradient(gx, gy, 5, gx, gy, 60);
+        g.addColorStop(0, `rgba(${i===0?0:255},${i===1?255:0},255,0.1)`);
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(gx, gy, 60, 0, Math.PI*2); ctx.fill();
       }
     }
   }

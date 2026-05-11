@@ -66,12 +66,12 @@ export class UIManager {
       <div class="customize-preview"><canvas id="previewCanvas" width="88" height="128"></canvas></div>
       <div class="customize-row"><label>Skin</label><div class="color-presets" id="skinPresets"></div></div>
       <div class="customize-row"><label>Hair Color</label><div class="color-presets" id="hairPresets"></div></div>
-      <div class="customize-row"><label>Hair Style</label><select id="hairStyleSelect"><option value="short">Short</option><option value="spiky">Spiky</option><option value="long">Long</option><option value="mohawk">Mohawk</option><option value="bald">Bald</option><option value="curly">Curly</option><option value="bob">Bob</option></select></div>
+      <div class="customize-row"><label>Hair Style</label><select id="hairStyleSelect"><option value="short">Short</option><option value="spiky">Spiky</option><option value="long">Long</option><option value="mohawk">Mohawk</option><option value="bald">Bald</option><option value="curly">Curly</option><option value="bob">Bob</option><option value="ponytail">Ponytail</option><option value="buzz">Buzz Cut</option></select></div>
       <div class="customize-row"><label>Shirt</label><div class="color-presets" id="shirtPresets"></div></div>
       <div class="customize-row"><label>Pants</label><div class="color-presets" id="pantsPresets"></div></div>
       <div class="customize-row"><label>Shoes</label><div class="color-presets" id="shoePresets"></div></div>
-      <div class="customize-row"><label>Hat</label><select id="hatSelect"><option value="none">None</option><option value="cap">Cap</option><option value="beanie">Beanie</option><option value="crown">Crown</option><option value="wizard">Wizard Hat</option></select></div>
-      <div class="customize-row"><label>Glasses</label><select id="glassesSelect"><option value="none">None</option><option value="shades">Shades</option><option value="round">Round</option></select></div>
+      <div class="customize-row"><label>Hat</label><select id="hatSelect"><option value="none">None</option><option value="cap">Cap</option><option value="beanie">Beanie</option><option value="crown">Crown</option><option value="wizard">Wizard Hat</option><option value="bowler">Bowler</option></select></div>
+      <div class="customize-row"><label>Glasses</label><select id="glassesSelect"><option value="none">None</option><option value="shades">Shades</option><option value="round">Round</option><option value="heart">Heart</option></select></div>
       <div class="customize-row"><label>Title</label><select id="titleSelect" style="flex:1;"></select></div>
       <div class="customize-actions"><button class="btn-random" id="btnRandomLook">Random</button><button class="btn-save" id="btnSaveLook">Save Look</button></div>
     `);

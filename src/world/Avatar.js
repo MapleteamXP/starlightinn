@@ -12,7 +12,7 @@ export class Avatar {
     this.y = y;
     this.path = [];
     this.pathIndex = 0;
-    this.speed = opts.speed || 0.10;
+    this.speed = opts.speed || 0.14;
     this.skinColor = opts.skinColor || '#F5CBA7';
     this.hairColor = opts.hairColor || '#5D4037';
     this.hairStyle = opts.hairStyle || 'short';
@@ -71,7 +71,7 @@ export class Avatar {
       const dx = target.x - this.x;
       const dy = target.y - this.y;
       const isRunning = !this.isNPC && this.game && this.game.keys && this.game.keys['shift'];
-      const step = this.speed * (isRunning ? 1.8 : 1);
+      const step = this.speed * (isRunning ? 2.0 : 1);
       const oldX = this.x;
       const oldY = this.y;
       if (Math.abs(dx) < step && Math.abs(dy) < step) {
@@ -82,6 +82,9 @@ export class Avatar {
           this.isWalking = false;
           this.path = [];
           this.pathIndex = 0;
+          // Snap to center of tile when done
+          this.x = Math.round(this.x);
+          this.y = Math.round(this.y);
         }
       } else {
         this.x += Math.sign(dx) * Math.min(Math.abs(dx), step);
@@ -96,6 +99,15 @@ export class Avatar {
       }
     } else {
       this.isWalking = false;
+      // Snap to nearest tile center when idle
+      if (!this.isSitting && !this.isDancing && !this.isNPC) {
+        const tx = Math.round(this.x);
+        const ty = Math.round(this.y);
+        if (Math.abs(this.x - tx) > 0.01 || Math.abs(this.y - ty) > 0.01) {
+          this.x += (tx - this.x) * 0.15;
+          this.y += (ty - this.y) * 0.15;
+        }
+      }
     }
 
     // NPC AI
@@ -158,10 +170,18 @@ export class Avatar {
   get screenPos() {
     const sp = isoToScreen(this.x, this.y);
     let bob = 0;
-    if (this.isWalking) bob = Math.sin(this.animFrame * Math.PI / 2) * 3;
-    else if (this.isDancing) bob = Math.sin(Date.now() / 120) * 5;
-    else if (this.isSitting) bob = 0;
-    else bob = Math.sin(Date.now() / 800) * 1.2; // idle breathing
+    if (this.isWalking) {
+      // Habbo-style step bounce: sharp down on each step
+      const stepCycle = (this.animFrame % 4);
+      if (stepCycle === 0 || stepCycle === 2) bob = 0;
+      else bob = -2.5;
+    } else if (this.isDancing) {
+      bob = Math.sin(Date.now() / 120) * 5;
+    } else if (this.isSitting) {
+      bob = 0;
+    } else {
+      bob = Math.sin(Date.now() / 800) * 1.2; // idle breathing
+    }
     return { x: sp.x, y: sp.y - AVATAR_H / 2 - this.z * TILE_H / 2 + bob };
   }
 }
