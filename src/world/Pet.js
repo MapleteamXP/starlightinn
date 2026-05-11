@@ -34,6 +34,8 @@ export class PetSystem {
       hunger: 50,
       happiness: 50,
       energy: 50,
+      level: 1,
+      xp: 0,
       adopted: Date.now()
     };
     this.save();
@@ -48,6 +50,7 @@ export class PetSystem {
     if (!this.pet) return false;
     this.pet.hunger = Math.min(100, this.pet.hunger + 30);
     this.pet.happiness = Math.min(100, this.pet.happiness + 5);
+    this.addXP(15);
     this.save();
     return true;
   }
@@ -57,6 +60,7 @@ export class PetSystem {
     this.pet.happiness = Math.min(100, this.pet.happiness + 20);
     this.pet.energy = Math.max(0, this.pet.energy - 10);
     this.pet.hunger = Math.max(0, this.pet.hunger - 5);
+    this.addXP(20);
     this.save();
     return true;
   }
@@ -64,8 +68,24 @@ export class PetSystem {
   rest() {
     if (!this.pet) return false;
     this.pet.energy = Math.min(100, this.pet.energy + 25);
+    this.addXP(10);
     this.save();
     return true;
+  }
+
+  addXP(amount) {
+    if (!this.pet) return;
+    this.pet.xp += amount;
+    const needed = this.pet.level * 100;
+    if (this.pet.xp >= needed) {
+      this.pet.xp -= needed;
+      this.pet.level++;
+      this.pet.happiness = Math.min(100, this.pet.happiness + 20);
+      if (this.game && this.game.uiManager) {
+        this.game.uiManager.showNotification(`${this.pet.name} leveled up to ${this.pet.level}! 🎉`, 'success');
+        this.game.soundManager.play('win');
+      }
+    }
   }
 
   tick(dt) {

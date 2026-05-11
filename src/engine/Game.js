@@ -10,7 +10,7 @@ import {
   getAvatarAsset, getFurnitureAsset, getTilePattern, getWallPattern,
   createAvatarCanvas, clearAvatarCache, createSceneryCanvas
 } from '../assets/Generator.js';
-import { FURNITURE_CATALOG, ROOM_TEMPLATES, ROOM_THEMES, CATALOG_CATEGORIES } from '../world/Data.js';
+import { FURNITURE_CATALOG, ROOM_TEMPLATES, ROOM_THEMES, CATALOG_CATEGORIES, ROOM_EXPANSIONS } from '../world/Data.js';
 import { Furniture } from '../world/Furniture.js';
 import { Avatar } from '../world/Avatar.js';
 import { Room } from '../world/Room.js';
@@ -72,8 +72,10 @@ export class Game {
     this.ownedThemes = ['classic'];
     this.currentTheme = 'classic';
     this.likedRooms = new Set();
+    this.myRoomSize = 10;
     this.loadThemes();
     this.loadLikedRooms();
+    this.loadRoomSize();
     this.chatColor = '#fffde7';
     this.lastTime = 0;
     this.hoverTile = null;
@@ -533,6 +535,7 @@ export class Game {
     document.getElementById('settingCamSpeed')?.addEventListener('input', e => { this.settings.camSpeed = parseInt(e.target.value); });
     document.getElementById('settingSound')?.addEventListener('change', e => { this.settings.sound = e.target.checked; });
     document.getElementById('settingSound')?.addEventListener('change', e => { this.settings.sound = e.target.checked; this.soundManager.setEnabled(e.target.checked); this.uiManager.showNotification(e.target.checked ? 'Sound enabled' : 'Sound muted'); });
+    document.getElementById('settingVolume')?.addEventListener('input', e => { const vol = parseInt(e.target.value) / 100; this.soundManager.setVolume(vol); });
     document.getElementById('settingSafeMode')?.addEventListener('change', e => { this.settings.safeMode = e.target.checked; this.uiManager.showNotification(e.target.checked ? 'Safe Mode enabled' : 'Safe Mode disabled'); });
     document.getElementById('btnLikeRoom')?.addEventListener('click', () => this.toggleLikeRoom());
     document.getElementById('btnExportSave')?.addEventListener('click', () => this.exportSave());
@@ -594,6 +597,31 @@ export class Game {
     try { localStorage.setItem('starlight_liked_rooms', JSON.stringify(Array.from(this.likedRooms))); } catch (e) {}
   }
 
+  loadRoomSize() {
+    try {
+      const data = JSON.parse(localStorage.getItem('starlight_room_size'));
+      if (data) this.myRoomSize = data.size || 10;
+    } catch (e) {}
+  }
+
+  saveRoomSize() {
+    try { localStorage.setItem('starlight_room_size', JSON.stringify({ size: this.myRoomSize })); } catch (e) {}
+  }
+
+  expandMyRoom(size) {
+    this.myRoomSize = size;
+    this.saveRoomSize();
+    const myRoom = ROOM_TEMPLATES.find(r => r.id === 'myroom');
+    if (myRoom) {
+      myRoom.width = size;
+      myRoom.height = size;
+      myRoom.map = Array.from({ length: size }, () => Array(size).fill(1));
+    }
+    if (this.room && this.room.id === 'myroom') {
+      this.loadRoom(myRoom);
+    }
+  }
+
   toggleLikeRoom() {
     if (!this.room) return;
     const id = this.room.id;
@@ -646,6 +674,17 @@ export class Game {
       this.statsSystem.inc('roomsVisited');
       this.uiManager.showNotification(`Entered ${room.name}`);
       this.uiManager.closeAllPanels();
+    });
+    this.uiManager.renderExpansions(ROOM_EXPANSIONS, this.myRoomSize, this.currencySystem.get(), expansion => {
+      if (this.currencySystem.spend(expansion.price)) {
+        this.expandMyRoom(expansion.size);
+        this.uiManager.showNotification(`Room expanded to ${expansion.size}x${expansion.size}!`, 'success');
+        this.uiManager.updateCurrency(this.currencySystem.get());
+        this.renderNavigator();
+      } else {
+        this.uiManager.showNotification('Not enough StarCoins!', 'error');
+        this.soundManager.play('error');
+      }
     });
     this.uiManager.renderThemes(ROOM_THEMES, this.ownedThemes, this.currentTheme, this.currencySystem.get(),
       theme => {
@@ -1130,6 +1169,16 @@ export class Game {
 
     if (!this.room) return;
     ctx.save(); ctx.translate(this.camera.x, this.camera.y);
+
+    // Day/night cycle overlay
+    const hour = new Date().getHours();
+    let brightness = 1;
+    if (hour >= 20 || hour < 6) brightness = 0.55;
+    else if (hour >= 18 || hour < 8) brightness = 0.75;
+    if (brightness < 1) {
+      ctx.fillStyle = `rgba(0, 10, 30, ${1 - brightness})`;
+      ctx.fillRect(-this.camera.x - 100, -this.camera.y - 100, this.width + 200, this.height + 200);
+    }
 
     for (let y = 0; y < this.room.height; y++) {
       for (let x = 0; x < this.room.width; x++) {

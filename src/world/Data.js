@@ -56,6 +56,15 @@ export const CATALOG_CATEGORIES = [
   { id: 'rare', name: 'Rare', icon: '💎' },
 ];
 
+export const ROOM_EXPANSIONS = [
+  { size: 10, price: 0 },
+  { size: 12, price: 500 },
+  { size: 14, price: 1200 },
+  { size: 16, price: 2500 },
+  { size: 18, price: 4000 },
+  { size: 20, price: 6000 },
+];
+
 export const ROOM_THEMES = [
   { id: 'classic', name: 'Classic Wood', floor: 'wood', wall: '#8B4513', price: 0 },
   { id: 'modern', name: 'Modern Tile', floor: 'tile', wall: '#2C3E50', price: 200 },

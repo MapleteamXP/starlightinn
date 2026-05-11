@@ -19,6 +19,8 @@ export class UIManager {
       <div class="room-list" id="userRoomList"></div>
       <div style="margin:12px 0 8px;font-size:12px;color:var(--habbo-text-dim);">Room Themes</div>
       <div class="theme-list" id="themeList"></div>
+      <div style="margin:12px 0 8px;font-size:12px;color:var(--habbo-text-dim);">Room Size</div>
+      <div class="theme-list" id="expansionList"></div>
     `);
     // Catalog
     this._ensurePanel('catalogPanel', 'Furniture Catalog', `
@@ -38,6 +40,7 @@ export class UIManager {
       <div class="setting-row"><label>NPC Count</label><select id="settingNPCs"><option value="0">None</option><option value="3" selected>3</option><option value="5">5</option><option value="8">8</option></select></div>
       <div class="setting-row"><label>Camera Speed</label><input type="range" id="settingCamSpeed" min="1" max="10" value="5"></div>
       <div class="setting-row"><label>Sound Effects</label><input type="checkbox" id="settingSound"></div>
+      <div class="setting-row"><label>Sound Volume</label><input type="range" id="settingVolume" min="0" max="100" value="50"></div>
       <div class="setting-row"><label>Safe Mode</label><input type="checkbox" id="settingSafeMode"></div>
       <div class="setting-row"><label>Export Save</label><button id="btnExportSave" style="padding:4px 10px;background:var(--habbo-light);color:white;border:1px solid var(--habbo-panel-border);border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;">Download</button></div>
       <div class="setting-row"><label>Import Save</label><button id="btnImportSave" style="padding:4px 10px;background:var(--habbo-light);color:white;border:1px solid var(--habbo-panel-border);border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;">Upload</button></div>
@@ -215,6 +218,37 @@ export class UIManager {
     const variance = Math.floor(Math.sin(Date.now() / 3600000 + roomId.length) * 6 + 6);
     const timeMod = (hour >= 18 || hour <= 2) ? 1.4 : (hour >= 9 && hour <= 17) ? 1.0 : 0.6;
     return Math.floor((base + variance) * timeMod);
+  }
+
+  showAchievementPopup(ach) {
+    const existing = document.querySelector('.achievement-popup');
+    if (existing) existing.remove();
+    const div = document.createElement('div');
+    div.className = 'achievement-popup';
+    div.innerHTML = `
+      <div class="ach-pop-icon">${ach.icon}</div>
+      <div class="ach-pop-title">Achievement Unlocked!</div>
+      <div style="font-weight:700;color:#fff;margin:4px 0;">${ach.name}</div>
+      <div class="ach-pop-text">${ach.desc} — +★${ach.reward}</div>
+    `;
+    document.body.appendChild(div);
+    setTimeout(() => { if (div.parentNode) div.remove(); }, 3500);
+  }
+
+  renderExpansions(expansions, currentSize, currency, onExpand) {
+    const list = document.getElementById('expansionList');
+    if (!list) return;
+    list.innerHTML = '';
+    expansions.forEach(e => {
+      const div = document.createElement('div');
+      div.className = 'room-item';
+      const isCurrent = e.size === currentSize;
+      div.innerHTML = `<div class="room-name">${e.size}x${e.size}</div><div class="room-desc">${e.size * e.size} tiles</div><div class="room-meta">${isCurrent ? 'Current' : (e.price === 0 ? 'Free' : '\u2605 ' + e.price)}</div>`;
+      div.addEventListener('click', () => {
+        if (!isCurrent) onExpand && onExpand(e);
+      });
+      list.appendChild(div);
+    });
   }
 
   renderThemes(themes, owned, current, currency, onBuy, onApply) {
@@ -454,7 +488,8 @@ export class UIManager {
       <div style="text-align:center;padding:12px;">
         <div style="font-size:56px;margin-bottom:4px;">${emoji}</div>
         <div style="font-weight:700;font-size:16px;">${pet.name}</div>
-        <div style="font-size:11px;color:var(--habbo-text-dim);margin-bottom:12px;">${pet.type.toUpperCase()}</div>
+        <div style="font-size:11px;color:var(--habbo-text-dim);margin-bottom:4px;">${pet.type.toUpperCase()} — Level ${pet.level}</div>
+        <div class="pet-stat"><label>XP</label><div class="pet-bar"><div style="width:${(pet.xp / (pet.level * 100)) * 100}%;background:#9b59b6;"></div></div></div>
         <div class="pet-stat"><label>Hunger</label><div class="pet-bar"><div style="width:${pet.hunger}%;background:#e74c3c;"></div></div></div>
         <div class="pet-stat"><label>Happiness</label><div class="pet-bar"><div style="width:${pet.happiness}%;background:#f4d03f;"></div></div></div>
         <div class="pet-stat"><label>Energy</label><div class="pet-bar"><div style="width:${pet.energy}%;background:#3498db;"></div></div></div>

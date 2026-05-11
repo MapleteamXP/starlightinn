@@ -198,6 +198,17 @@ body {
 /* Room Transition */
 #roomTransition { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--habbo-bg); z-index: 500; opacity: 0; pointer-events: none; transition: opacity 0.35s ease; }
 
+/* Achievement Unlock Animation */
+.achievement-popup { position: fixed; top: 80px; left: 50%; transform: translateX(-50%) scale(0); background: linear-gradient(135deg, var(--habbo-panel), var(--habbo-dark)); border: 3px solid var(--habbo-accent); border-radius: 16px; padding: 16px 28px; z-index: 400; box-shadow: 0 8px 32px rgba(0,0,0,0.5); text-align: center; animation: achievementPop 0.5s ease-out forwards; }
+.achievement-popup .ach-pop-icon { font-size: 36px; margin-bottom: 6px; }
+.achievement-popup .ach-pop-title { font-size: 14px; font-weight: 700; color: var(--habbo-accent); }
+.achievement-popup .ach-pop-text { font-size: 12px; color: var(--habbo-text-dim); }
+@keyframes achievementPop {
+  0% { transform: translateX(-50%) scale(0); opacity: 0; }
+  60% { transform: translateX(-50%) scale(1.1); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
 /* Theme List */
 .theme-list { display: flex; flex-direction: column; gap: 6px; }
 

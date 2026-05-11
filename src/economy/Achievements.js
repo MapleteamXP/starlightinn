@@ -72,7 +72,7 @@ export class AchievementSystem {
       if (val >= ach.target) {
         this.claimed.add(ach.id);
         this.game.currencySystem.add(ach.reward);
-        this.game.uiManager.showNotification(`Achievement Unlocked: ${ach.name}! +★${ach.reward}`, 'success');
+        this.game.uiManager.showAchievementPopup(ach);
         this.game.soundManager.play('win');
         this.save();
       }

@@ -206,6 +206,17 @@ body {
 /* Room Transition */
 #roomTransition { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--habbo-bg); z-index: 500; opacity: 0; pointer-events: none; transition: opacity 0.35s ease; }
 
+/* Achievement Unlock Animation */
+.achievement-popup { position: fixed; top: 80px; left: 50%; transform: translateX(-50%) scale(0); background: linear-gradient(135deg, var(--habbo-panel), var(--habbo-dark)); border: 3px solid var(--habbo-accent); border-radius: 16px; padding: 16px 28px; z-index: 400; box-shadow: 0 8px 32px rgba(0,0,0,0.5); text-align: center; animation: achievementPop 0.5s ease-out forwards; }
+.achievement-popup .ach-pop-icon { font-size: 36px; margin-bottom: 6px; }
+.achievement-popup .ach-pop-title { font-size: 14px; font-weight: 700; color: var(--habbo-accent); }
+.achievement-popup .ach-pop-text { font-size: 12px; color: var(--habbo-text-dim); }
+@keyframes achievementPop {
+  0% { transform: translateX(-50%) scale(0); opacity: 0; }
+  60% { transform: translateX(-50%) scale(1.1); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
 /* Theme List */
 .theme-list { display: flex; flex-direction: column; gap: 6px; }
 
@@ -1842,7 +1853,7 @@ var StarlightEngine = (() => {
   });
 
   // src/world/Data.js
-  var FURNITURE_CATALOG, CATALOG_CATEGORIES, ROOM_THEMES, ROOM_TEMPLATES;
+  var FURNITURE_CATALOG, CATALOG_CATEGORIES, ROOM_EXPANSIONS, ROOM_THEMES, ROOM_TEMPLATES;
   var init_Data = __esm({
     "src/world/Data.js"() {
       FURNITURE_CATALOG = [
@@ -1896,6 +1907,14 @@ var StarlightEngine = (() => {
         { id: "electronics", name: "Tech", icon: "\u{1F4FA}" },
         { id: "kitchen", name: "Kitchen", icon: "\u{1F373}" },
         { id: "rare", name: "Rare", icon: "\u{1F48E}" }
+      ];
+      ROOM_EXPANSIONS = [
+        { size: 10, price: 0 },
+        { size: 12, price: 500 },
+        { size: 14, price: 1200 },
+        { size: 16, price: 2500 },
+        { size: 18, price: 4e3 },
+        { size: 20, price: 6e3 }
       ];
       ROOM_THEMES = [
         { id: "classic", name: "Classic Wood", floor: "wood", wall: "#8B4513", price: 0 },
@@ -3247,6 +3266,8 @@ var StarlightEngine = (() => {
       <div class="room-list" id="userRoomList"></div>
       <div style="margin:12px 0 8px;font-size:12px;color:var(--habbo-text-dim);">Room Themes</div>
       <div class="theme-list" id="themeList"></div>
+      <div style="margin:12px 0 8px;font-size:12px;color:var(--habbo-text-dim);">Room Size</div>
+      <div class="theme-list" id="expansionList"></div>
     `);
           this._ensurePanel("catalogPanel", "Furniture Catalog", `
       <div class="catalog-tabs" id="catalogTabs"></div>
@@ -3263,6 +3284,7 @@ var StarlightEngine = (() => {
       <div class="setting-row"><label>NPC Count</label><select id="settingNPCs"><option value="0">None</option><option value="3" selected>3</option><option value="5">5</option><option value="8">8</option></select></div>
       <div class="setting-row"><label>Camera Speed</label><input type="range" id="settingCamSpeed" min="1" max="10" value="5"></div>
       <div class="setting-row"><label>Sound Effects</label><input type="checkbox" id="settingSound"></div>
+      <div class="setting-row"><label>Sound Volume</label><input type="range" id="settingVolume" min="0" max="100" value="50"></div>
       <div class="setting-row"><label>Safe Mode</label><input type="checkbox" id="settingSafeMode"></div>
       <div class="setting-row"><label>Export Save</label><button id="btnExportSave" style="padding:4px 10px;background:var(--habbo-light);color:white;border:1px solid var(--habbo-panel-border);border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;">Download</button></div>
       <div class="setting-row"><label>Import Save</label><button id="btnImportSave" style="padding:4px 10px;background:var(--habbo-light);color:white;border:1px solid var(--habbo-panel-border);border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;">Upload</button></div>
@@ -3421,6 +3443,37 @@ var StarlightEngine = (() => {
           const variance = Math.floor(Math.sin(Date.now() / 36e5 + roomId.length) * 6 + 6);
           const timeMod = hour >= 18 || hour <= 2 ? 1.4 : hour >= 9 && hour <= 17 ? 1 : 0.6;
           return Math.floor((base + variance) * timeMod);
+        }
+        showAchievementPopup(ach) {
+          const existing = document.querySelector(".achievement-popup");
+          if (existing) existing.remove();
+          const div = document.createElement("div");
+          div.className = "achievement-popup";
+          div.innerHTML = `
+      <div class="ach-pop-icon">${ach.icon}</div>
+      <div class="ach-pop-title">Achievement Unlocked!</div>
+      <div style="font-weight:700;color:#fff;margin:4px 0;">${ach.name}</div>
+      <div class="ach-pop-text">${ach.desc} \u2014 +\u2605${ach.reward}</div>
+    `;
+          document.body.appendChild(div);
+          setTimeout(() => {
+            if (div.parentNode) div.remove();
+          }, 3500);
+        }
+        renderExpansions(expansions, currentSize, currency, onExpand) {
+          const list = document.getElementById("expansionList");
+          if (!list) return;
+          list.innerHTML = "";
+          expansions.forEach((e) => {
+            const div = document.createElement("div");
+            div.className = "room-item";
+            const isCurrent = e.size === currentSize;
+            div.innerHTML = `<div class="room-name">${e.size}x${e.size}</div><div class="room-desc">${e.size * e.size} tiles</div><div class="room-meta">${isCurrent ? "Current" : e.price === 0 ? "Free" : "\u2605 " + e.price}</div>`;
+            div.addEventListener("click", () => {
+              if (!isCurrent) onExpand && onExpand(e);
+            });
+            list.appendChild(div);
+          });
         }
         renderThemes(themes, owned, current, currency, onBuy, onApply) {
           const list = document.getElementById("themeList");
@@ -3645,7 +3698,8 @@ var StarlightEngine = (() => {
       <div style="text-align:center;padding:12px;">
         <div style="font-size:56px;margin-bottom:4px;">${emoji}</div>
         <div style="font-weight:700;font-size:16px;">${pet.name}</div>
-        <div style="font-size:11px;color:var(--habbo-text-dim);margin-bottom:12px;">${pet.type.toUpperCase()}</div>
+        <div style="font-size:11px;color:var(--habbo-text-dim);margin-bottom:4px;">${pet.type.toUpperCase()} \u2014 Level ${pet.level}</div>
+        <div class="pet-stat"><label>XP</label><div class="pet-bar"><div style="width:${pet.xp / (pet.level * 100) * 100}%;background:#9b59b6;"></div></div></div>
         <div class="pet-stat"><label>Hunger</label><div class="pet-bar"><div style="width:${pet.hunger}%;background:#e74c3c;"></div></div></div>
         <div class="pet-stat"><label>Happiness</label><div class="pet-bar"><div style="width:${pet.happiness}%;background:#f4d03f;"></div></div></div>
         <div class="pet-stat"><label>Energy</label><div class="pet-bar"><div style="width:${pet.energy}%;background:#3498db;"></div></div></div>
@@ -4451,7 +4505,11 @@ var StarlightEngine = (() => {
       SoundManager = class {
         constructor(enabled = false) {
           this.enabled = enabled;
+          this.volume = 0.5;
           this.ctx = null;
+        }
+        setVolume(v) {
+          this.volume = Math.max(0, Math.min(1, v));
         }
         _ensureContext() {
           if (!this.ctx) {
@@ -4484,7 +4542,7 @@ var StarlightEngine = (() => {
                 osc.type = "sine";
                 osc.frequency.setValueAtTime(600, now);
                 osc.frequency.exponentialRampToValueAtTime(800, now + 0.06);
-                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.setValueAtTime(0.08 * this.volume, now);
                 gain.gain.exponentialRampToValueAtTime(1e-3, now + 0.1);
                 osc.start(now);
                 osc.stop(now + 0.1);
@@ -4494,7 +4552,7 @@ var StarlightEngine = (() => {
                 osc.frequency.setValueAtTime(500, now);
                 osc.frequency.setValueAtTime(700, now + 0.08);
                 osc.frequency.setValueAtTime(900, now + 0.16);
-                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.setValueAtTime(0.1 * this.volume, now);
                 gain.gain.exponentialRampToValueAtTime(1e-3, now + 0.3);
                 osc.start(now);
                 osc.stop(now + 0.3);
@@ -4503,7 +4561,7 @@ var StarlightEngine = (() => {
                 osc.type = "triangle";
                 osc.frequency.setValueAtTime(300, now);
                 osc.frequency.exponentialRampToValueAtTime(150, now + 0.12);
-                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.setValueAtTime(0.1 * this.volume, now);
                 gain.gain.exponentialRampToValueAtTime(1e-3, now + 0.15);
                 osc.start(now);
                 osc.stop(now + 0.15);
@@ -4512,7 +4570,7 @@ var StarlightEngine = (() => {
                 osc.type = "sawtooth";
                 osc.frequency.setValueAtTime(180, now);
                 osc.frequency.exponentialRampToValueAtTime(120, now + 0.15);
-                gain.gain.setValueAtTime(0.06, now);
+                gain.gain.setValueAtTime(0.06 * this.volume, now);
                 gain.gain.exponentialRampToValueAtTime(1e-3, now + 0.2);
                 osc.start(now);
                 osc.stop(now + 0.2);
@@ -4520,7 +4578,7 @@ var StarlightEngine = (() => {
               case "step":
                 osc.type = "sine";
                 osc.frequency.setValueAtTime(200, now);
-                gain.gain.setValueAtTime(0.04, now);
+                gain.gain.setValueAtTime(0.04 * this.volume, now);
                 gain.gain.exponentialRampToValueAtTime(1e-3, now + 0.05);
                 osc.start(now);
                 osc.stop(now + 0.05);
@@ -4528,7 +4586,7 @@ var StarlightEngine = (() => {
               case "punch":
                 osc.type = "square";
                 osc.frequency.setValueAtTime(120, now);
-                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.setValueAtTime(0.1 * this.volume, now);
                 gain.gain.exponentialRampToValueAtTime(1e-3, now + 0.08);
                 osc.start(now);
                 osc.stop(now + 0.08);
@@ -4539,7 +4597,7 @@ var StarlightEngine = (() => {
                 osc.frequency.setValueAtTime(659, now + 0.1);
                 osc.frequency.setValueAtTime(784, now + 0.2);
                 osc.frequency.setValueAtTime(1047, now + 0.35);
-                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.setValueAtTime(0.1 * this.volume, now);
                 gain.gain.exponentialRampToValueAtTime(1e-3, now + 0.6);
                 osc.start(now);
                 osc.stop(now + 0.6);
@@ -4547,7 +4605,7 @@ var StarlightEngine = (() => {
               case "click":
                 osc.type = "sine";
                 osc.frequency.setValueAtTime(900, now);
-                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.setValueAtTime(0.05 * this.volume, now);
                 gain.gain.exponentialRampToValueAtTime(1e-3, now + 0.04);
                 osc.start(now);
                 osc.stop(now + 0.04);
@@ -4712,7 +4770,7 @@ var StarlightEngine = (() => {
             if (val >= ach.target) {
               this.claimed.add(ach.id);
               this.game.currencySystem.add(ach.reward);
-              this.game.uiManager.showNotification(`Achievement Unlocked: ${ach.name}! +\u2605${ach.reward}`, "success");
+              this.game.uiManager.showAchievementPopup(ach);
               this.game.soundManager.play("win");
               this.save();
             }
@@ -5326,6 +5384,8 @@ var StarlightEngine = (() => {
             hunger: 50,
             happiness: 50,
             energy: 50,
+            level: 1,
+            xp: 0,
             adopted: Date.now()
           };
           this.save();
@@ -5338,6 +5398,7 @@ var StarlightEngine = (() => {
           if (!this.pet) return false;
           this.pet.hunger = Math.min(100, this.pet.hunger + 30);
           this.pet.happiness = Math.min(100, this.pet.happiness + 5);
+          this.addXP(15);
           this.save();
           return true;
         }
@@ -5346,14 +5407,30 @@ var StarlightEngine = (() => {
           this.pet.happiness = Math.min(100, this.pet.happiness + 20);
           this.pet.energy = Math.max(0, this.pet.energy - 10);
           this.pet.hunger = Math.max(0, this.pet.hunger - 5);
+          this.addXP(20);
           this.save();
           return true;
         }
         rest() {
           if (!this.pet) return false;
           this.pet.energy = Math.min(100, this.pet.energy + 25);
+          this.addXP(10);
           this.save();
           return true;
+        }
+        addXP(amount) {
+          if (!this.pet) return;
+          this.pet.xp += amount;
+          const needed = this.pet.level * 100;
+          if (this.pet.xp >= needed) {
+            this.pet.xp -= needed;
+            this.pet.level++;
+            this.pet.happiness = Math.min(100, this.pet.happiness + 20);
+            if (this.game && this.game.uiManager) {
+              this.game.uiManager.showNotification(`${this.pet.name} leveled up to ${this.pet.level}! \u{1F389}`, "success");
+              this.game.soundManager.play("win");
+            }
+          }
         }
         tick(dt) {
           if (!this.pet) return;
@@ -5464,8 +5541,10 @@ var StarlightEngine = (() => {
           this.ownedThemes = ["classic"];
           this.currentTheme = "classic";
           this.likedRooms = /* @__PURE__ */ new Set();
+          this.myRoomSize = 10;
           this.loadThemes();
           this.loadLikedRooms();
+          this.loadRoomSize();
           this.chatColor = "#fffde7";
           this.lastTime = 0;
           this.hoverTile = null;
@@ -6021,6 +6100,10 @@ var StarlightEngine = (() => {
             this.soundManager.setEnabled(e.target.checked);
             this.uiManager.showNotification(e.target.checked ? "Sound enabled" : "Sound muted");
           });
+          document.getElementById("settingVolume")?.addEventListener("input", (e) => {
+            const vol = parseInt(e.target.value) / 100;
+            this.soundManager.setVolume(vol);
+          });
           document.getElementById("settingSafeMode")?.addEventListener("change", (e) => {
             this.settings.safeMode = e.target.checked;
             this.uiManager.showNotification(e.target.checked ? "Safe Mode enabled" : "Safe Mode disabled");
@@ -6098,6 +6181,32 @@ var StarlightEngine = (() => {
           } catch (e) {
           }
         }
+        loadRoomSize() {
+          try {
+            const data = JSON.parse(localStorage.getItem("starlight_room_size"));
+            if (data) this.myRoomSize = data.size || 10;
+          } catch (e) {
+          }
+        }
+        saveRoomSize() {
+          try {
+            localStorage.setItem("starlight_room_size", JSON.stringify({ size: this.myRoomSize }));
+          } catch (e) {
+          }
+        }
+        expandMyRoom(size) {
+          this.myRoomSize = size;
+          this.saveRoomSize();
+          const myRoom = ROOM_TEMPLATES.find((r) => r.id === "myroom");
+          if (myRoom) {
+            myRoom.width = size;
+            myRoom.height = size;
+            myRoom.map = Array.from({ length: size }, () => Array(size).fill(1));
+          }
+          if (this.room && this.room.id === "myroom") {
+            this.loadRoom(myRoom);
+          }
+        }
         toggleLikeRoom() {
           if (!this.room) return;
           const id = this.room.id;
@@ -6148,6 +6257,17 @@ var StarlightEngine = (() => {
             this.statsSystem.inc("roomsVisited");
             this.uiManager.showNotification(`Entered ${room.name}`);
             this.uiManager.closeAllPanels();
+          });
+          this.uiManager.renderExpansions(ROOM_EXPANSIONS, this.myRoomSize, this.currencySystem.get(), (expansion) => {
+            if (this.currencySystem.spend(expansion.price)) {
+              this.expandMyRoom(expansion.size);
+              this.uiManager.showNotification(`Room expanded to ${expansion.size}x${expansion.size}!`, "success");
+              this.uiManager.updateCurrency(this.currencySystem.get());
+              this.renderNavigator();
+            } else {
+              this.uiManager.showNotification("Not enough StarCoins!", "error");
+              this.soundManager.play("error");
+            }
           });
           this.uiManager.renderThemes(
             ROOM_THEMES,
@@ -6656,6 +6776,14 @@ var StarlightEngine = (() => {
           if (!this.room) return;
           ctx.save();
           ctx.translate(this.camera.x, this.camera.y);
+          const hour = (/* @__PURE__ */ new Date()).getHours();
+          let brightness = 1;
+          if (hour >= 20 || hour < 6) brightness = 0.55;
+          else if (hour >= 18 || hour < 8) brightness = 0.75;
+          if (brightness < 1) {
+            ctx.fillStyle = `rgba(0, 10, 30, ${1 - brightness})`;
+            ctx.fillRect(-this.camera.x - 100, -this.camera.y - 100, this.width + 200, this.height + 200);
+          }
           for (let y = 0; y < this.room.height; y++) {
             for (let x = 0; x < this.room.width; x++) {
               const tile = this.room.map[y]?.[x];
