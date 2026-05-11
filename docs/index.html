@@ -200,6 +200,20 @@ body {
 
 /* Room Transition */
 #roomTransition { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--habbo-bg); z-index: 500; opacity: 0; pointer-events: none; transition: opacity 0.35s ease; }
+
+/* Theme List */
+.theme-list { display: flex; flex-direction: column; gap: 6px; }
+
+/* Achievements */
+.achieve-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(0,0,0,0.15); border-radius: 8px; margin-bottom: 6px; opacity: 0.55; }
+.achieve-item.unlocked { opacity: 1; background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); }
+.achieve-icon { font-size: 24px; width: 32px; text-align: center; }
+.achieve-info { flex: 1; }
+.achieve-name { font-weight: 700; font-size: 13px; }
+.achieve-desc { font-size: 11px; color: var(--habbo-text-dim); margin-bottom: 4px; }
+.achieve-bar { background: rgba(0,0,0,0.3); border-radius: 3px; height: 5px; }
+.achieve-bar div { height: 100%; background: var(--habbo-accent); border-radius: 3px; transition: width 0.3s; }
+.achieve-reward { font-weight: 800; font-size: 13px; color: var(--habbo-accent); min-width: 36px; text-align: right; }
 #minimap.open { display: block; }
 #minimapCanvas { width: 100%; height: 100%; border-radius: 6px; }
 
@@ -1781,7 +1795,7 @@ var StarlightEngine = (() => {
   });
 
   // src/world/Data.js
-  var FURNITURE_CATALOG, ROOM_TEMPLATES;
+  var FURNITURE_CATALOG, ROOM_THEMES, ROOM_TEMPLATES;
   var init_Data = __esm({
     "src/world/Data.js"() {
       FURNITURE_CATALOG = [
@@ -1826,6 +1840,17 @@ var StarlightEngine = (() => {
         { id: "radio", name: "Vintage Radio", price: 130, icon: "\u{1F4FB}", footprint: [1, 1], stackable: false, desc: "Tune in to good vibes." },
         { id: "guitar", name: "Acoustic Guitar", price: 350, icon: "\u{1F3B8}", footprint: [1, 1], stackable: false, desc: "Strum a melody." },
         { id: "easel", name: "Artist easel", price: 110, icon: "\u{1F3A8}", footprint: [1, 1], stackable: false, desc: "Paint your masterpiece." }
+      ];
+      ROOM_THEMES = [
+        { id: "classic", name: "Classic Wood", floor: "wood", wall: "#8B4513", price: 0 },
+        { id: "modern", name: "Modern Tile", floor: "tile", wall: "#2C3E50", price: 200 },
+        { id: "cozy", name: "Cozy Carpet", floor: "carpet", wall: "#7D3C98", price: 200 },
+        { id: "garden", name: "Garden Grass", floor: "grass", wall: "#27AE60", price: 300 },
+        { id: "beach", name: "Beach Sand", floor: "sand", wall: "#D35400", price: 300 },
+        { id: "stone", name: "Stone Castle", floor: "stone", wall: "#555555", price: 400 },
+        { id: "marble", name: "Marble Palace", floor: "marble", wall: "#BDC3C7", price: 500 },
+        { id: "dark", name: "Dark Lounge", floor: "darkwood", wall: "#111111", price: 400 },
+        { id: "diner", name: "Retro Diner", floor: "checkered", wall: "#C0392B", price: 350 }
       ];
       ROOM_TEMPLATES = [
         {
@@ -3066,6 +3091,8 @@ var StarlightEngine = (() => {
       <div class="room-list" id="publicRoomList"></div>
       <div style="margin:12px 0 8px;font-size:12px;color:var(--habbo-text-dim);">Your Rooms</div>
       <div class="room-list" id="userRoomList"></div>
+      <div style="margin:12px 0 8px;font-size:12px;color:var(--habbo-text-dim);">Room Themes</div>
+      <div class="theme-list" id="themeList"></div>
     `);
           this._ensurePanel("catalogPanel", "Furniture Catalog", `<div class="catalog-grid" id="catalogGrid"></div>`);
           this._ensurePanel("inventoryPanel", "My Inventory", `
@@ -3102,6 +3129,7 @@ var StarlightEngine = (() => {
           this._ensurePanel("friendsPanel", "Friends", `<div class="friend-list" id="friendList"></div>`);
           this._ensurePanel("petPanel", "My Pet", `<div id="petContent"></div>`);
           this._ensurePanel("dailyRewardPanel", "Daily Rewards", `<div id="dailyRewardContent"></div>`);
+          this._ensurePanel("achievementsPanel", "Achievements", `<div class="achieve-list" id="achieveList"></div>`);
           if (!document.getElementById("chatColorPopover")) {
             const popover = document.createElement("div");
             popover.className = "chat-color-popover";
@@ -3152,6 +3180,28 @@ var StarlightEngine = (() => {
             notif.style.transform = "translateX(30px)";
             setTimeout(() => notif.remove(), 300);
           }, 3e3);
+        }
+        renderThemes(themes, owned, current, currency, onBuy, onApply) {
+          const list = document.getElementById("themeList");
+          if (!list) return;
+          list.innerHTML = "";
+          themes.forEach((t) => {
+            const isOwned = owned.includes(t.id) || t.price === 0;
+            const isCurrent = current === t.id;
+            const div = document.createElement("div");
+            div.className = "room-item";
+            div.innerHTML = `
+        <div class="room-name">${t.name}</div>
+        <div class="room-desc">${t.floor} floor \xB7 ${t.wall} walls</div>
+        <div class="room-meta">${isCurrent ? "Active" : isOwned ? "Owned" : "\u2605 " + t.price}</div>
+      `;
+            div.addEventListener("click", () => {
+              if (isCurrent) return;
+              if (isOwned) onApply && onApply(t);
+              else onBuy && onBuy(t);
+            });
+            list.appendChild(div);
+          });
         }
         renderNavigator(rooms, onSelect) {
           const publicList = document.getElementById("publicRoomList");
@@ -3344,6 +3394,31 @@ var StarlightEngine = (() => {
           document.getElementById("petPlay")?.addEventListener("click", onPlay);
           document.getElementById("petRest")?.addEventListener("click", onRest);
           document.getElementById("petRelease")?.addEventListener("click", () => onAdopt && onAdopt(null));
+        }
+        renderAchievements(list) {
+          const container = document.getElementById("achieveList");
+          if (!container) return;
+          container.innerHTML = "";
+          let completed = 0;
+          list.forEach((a) => {
+            if (a.unlocked) completed++;
+            const div = document.createElement("div");
+            div.className = "achieve-item" + (a.unlocked ? " unlocked" : "");
+            div.innerHTML = `
+        <div class="achieve-icon">${a.icon}</div>
+        <div class="achieve-info">
+          <div class="achieve-name">${a.name}</div>
+          <div class="achieve-desc">${a.desc}</div>
+          <div class="achieve-bar"><div style="width:${a.percent}%"></div></div>
+        </div>
+        <div class="achieve-reward">${a.unlocked ? "\u2713" : "\u2605" + a.reward}</div>
+      `;
+            container.appendChild(div);
+          });
+          const header = document.createElement("div");
+          header.style.cssText = "text-align:center;margin-bottom:12px;font-size:13px;color:var(--habbo-accent);font-weight:700;";
+          header.textContent = `${completed}/${list.length} Completed`;
+          container.insertBefore(header, container.firstChild);
         }
         showDailyRewardPanel(dailySystem, onClaim) {
           const content = document.getElementById("dailyRewardContent");
@@ -4163,6 +4238,101 @@ var StarlightEngine = (() => {
     }
   });
 
+  // src/economy/Achievements.js
+  var ACHIEVEMENTS, AchievementSystem;
+  var init_Achievements = __esm({
+    "src/economy/Achievements.js"() {
+      ACHIEVEMENTS = [
+        { id: "first_steps", name: "First Steps", desc: "Walk 50 tiles", icon: "\u{1F6B6}", target: 50, reward: 50, type: "walk" },
+        { id: "socialite", name: "Socialite", desc: "Send 20 chat messages", icon: "\u{1F4AC}", target: 20, reward: 100, type: "chat" },
+        { id: "shopper", name: "Shopper", desc: "Buy 10 furniture items", icon: "\u{1F6D2}", target: 10, reward: 150, type: "buy" },
+        { id: "decorator", name: "Decorator", desc: "Place 25 furniture pieces", icon: "\u{1F3E0}", target: 25, reward: 200, type: "place" },
+        { id: "gamer", name: "Gamer", desc: "Play 5 minigames", icon: "\u{1F3AE}", target: 5, reward: 250, type: "minigame" },
+        { id: "winner", name: "Winner", desc: "Win 3 minigames", icon: "\u{1F3C6}", target: 3, reward: 300, type: "win" },
+        { id: "collector", name: "Collector", desc: "Own 15 unique furniture types", icon: "\u{1F4E6}", target: 15, reward: 400, type: "collect" },
+        { id: "explorer", name: "Explorer", desc: "Visit 10 different rooms", icon: "\u{1F5FA}\uFE0F", target: 10, reward: 200, type: "visit" },
+        { id: "customizer", name: "Customizer", desc: "Change your look 5 times", icon: "\u2702\uFE0F", target: 5, reward: 100, type: "customize" },
+        { id: "tycoon", name: "Starlight Tycoon", desc: "Earn 5,000 StarCoins total", icon: "\u{1F4B0}", target: 5e3, reward: 1e3, type: "earn" }
+      ];
+      AchievementSystem = class {
+        constructor(game) {
+          this.game = game;
+          this.progress = {};
+          this.claimed = /* @__PURE__ */ new Set();
+          this.totalEarned = 0;
+          this.visitedRooms = /* @__PURE__ */ new Set();
+          this.load();
+        }
+        load() {
+          try {
+            const data = JSON.parse(localStorage.getItem("starlight_achievements"));
+            if (data) {
+              this.progress = data.progress || {};
+              this.claimed = new Set(data.claimed || []);
+              this.totalEarned = data.totalEarned || 0;
+              this.visitedRooms = new Set(data.visitedRooms || []);
+            }
+          } catch (e) {
+          }
+        }
+        save() {
+          try {
+            localStorage.setItem("starlight_achievements", JSON.stringify({
+              progress: this.progress,
+              claimed: Array.from(this.claimed),
+              totalEarned: this.totalEarned,
+              visitedRooms: Array.from(this.visitedRooms)
+            }));
+          } catch (e) {
+          }
+        }
+        track(type, amount = 1) {
+          this.progress[type] = (this.progress[type] || 0) + amount;
+          this.save();
+          this._checkUnlocks();
+        }
+        visitRoom(roomId) {
+          if (!roomId) return;
+          this.visitedRooms.add(roomId);
+          this.track("visit", 0);
+          this._checkUnlocks();
+        }
+        _checkUnlocks() {
+          ACHIEVEMENTS.forEach((ach) => {
+            if (this.claimed.has(ach.id)) return;
+            let val = 0;
+            if (ach.type === "visit") val = this.visitedRooms.size;
+            else if (ach.type === "collect") val = Object.keys(this.game.inventorySystem.getAll()).length;
+            else if (ach.type === "earn") val = this.totalEarned;
+            else val = this.progress[ach.type] || 0;
+            if (val >= ach.target) {
+              this.claimed.add(ach.id);
+              this.game.currencySystem.add(ach.reward);
+              this.game.uiManager.showNotification(`Achievement Unlocked: ${ach.name}! +\u2605${ach.reward}`, "success");
+              this.game.soundManager.play("win");
+              this.save();
+            }
+          });
+        }
+        getList() {
+          return ACHIEVEMENTS.map((ach) => {
+            let current = 0;
+            if (ach.type === "visit") current = this.visitedRooms.size;
+            else if (ach.type === "collect") current = Object.keys(this.game.inventorySystem.getAll()).length;
+            else if (ach.type === "earn") current = this.totalEarned;
+            else current = this.progress[ach.type] || 0;
+            return {
+              ...ach,
+              current: Math.min(current, ach.target),
+              percent: Math.min(100, Math.floor(current / ach.target * 100)),
+              unlocked: this.claimed.has(ach.id)
+            };
+          });
+        }
+      };
+    }
+  });
+
   // src/social/Friends.js
   var BOT_NAMES, BOT_STATUSES, FriendSystem;
   var init_Friends = __esm({
@@ -4364,6 +4534,7 @@ var StarlightEngine = (() => {
       init_TilePuzzle();
       init_SoundManager();
       init_DailyRewards();
+      init_Achievements();
       init_Friends();
       init_Pet();
       Particle = class {
@@ -4405,6 +4576,9 @@ var StarlightEngine = (() => {
           this.player = null;
           this.particles = [];
           this.settings = { showMinimap: true, showNames: true, showChat: true, npcCount: 3, camSpeed: 5, sound: false, safeMode: false };
+          this.ownedThemes = ["classic"];
+          this.currentTheme = "classic";
+          this.loadThemes();
           this.chatColor = "#fffde7";
           this.lastTime = 0;
           this.hoverTile = null;
@@ -4427,12 +4601,15 @@ var StarlightEngine = (() => {
           this.dailyRewards = new DailyRewardSystem(this);
           this.friendSystem = new FriendSystem(this);
           this.petSystem = new PetSystem(this);
+          this.achievementSystem = new AchievementSystem(this);
           this.setupInput();
           this.setupUI();
-          this.loadRoom(ROOM_TEMPLATES[0]);
+          this.loadRoom(ROOM_TEMPLATES[0], false);
           this.loadAvatarFromStorage();
           this.applyAvatarToPlayer();
           this.spawnNPCs(this.settings.npcCount);
+          this.achievementSystem.visitRoom(ROOM_TEMPLATES[0].id);
+          this.applyThemeToMyRoom();
           setTimeout(() => this.checkDailyRewards(), 1200);
           const inv = this.inventorySystem.getAll();
           if (Object.keys(inv).length === 0) {
@@ -4557,6 +4734,7 @@ var StarlightEngine = (() => {
               this.spawnParticles(tx, ty, "#2ecc71", 10);
               this.uiManager.showNotification(`Placed ${type}!`);
               this.soundManager.play("place");
+              this.achievementSystem.track("place");
             } else {
               this.uiManager.showNotification("Cannot place there!", "error");
               this.soundManager.play("error");
@@ -4663,6 +4841,7 @@ var StarlightEngine = (() => {
           if (this.selectedTool === "walk") {
             if (this.room.isWalkable(tx, ty)) {
               this.player.moveTo(tx, ty, this.room);
+              this.achievementSystem.track("walk");
               this.spawnParticles(tx, ty, "rgba(244,208,63,0.6)", 5);
             }
           } else if (this.selectedTool === "place" && this.selectedInventoryItem) {
@@ -4709,6 +4888,10 @@ var StarlightEngine = (() => {
           document.getElementById("btnPet")?.addEventListener("click", () => {
             this.uiManager.togglePanel("petPanel");
             this.renderPetPanel();
+          });
+          document.getElementById("btnAchievements")?.addEventListener("click", () => {
+            this.uiManager.togglePanel("achievementsPanel");
+            this.renderAchievementsPanel();
           });
           document.getElementById("hairStyleSelect")?.addEventListener("change", (e) => {
             this.customize.hairStyle = e.target.value;
@@ -4782,6 +4965,7 @@ var StarlightEngine = (() => {
             this.chatManager.updateTypingIndicator(false);
             this.chatManager.send(text);
             this.soundManager.play("chat");
+            this.achievementSystem.track("chat");
           };
           document.getElementById("chatSend")?.addEventListener("click", sendChat);
           document.getElementById("chatInput")?.addEventListener("keydown", (e) => {
@@ -4873,12 +5057,71 @@ var StarlightEngine = (() => {
           const cb = document.getElementById("settingMinimap");
           if (cb) cb.checked = this.settings.showMinimap;
         }
+        loadThemes() {
+          try {
+            const data = JSON.parse(localStorage.getItem("starlight_themes"));
+            if (data) {
+              this.ownedThemes = data.owned || ["classic"];
+              this.currentTheme = data.current || "classic";
+            }
+          } catch (e) {
+          }
+        }
+        saveThemes() {
+          try {
+            localStorage.setItem("starlight_themes", JSON.stringify({ owned: this.ownedThemes, current: this.currentTheme }));
+          } catch (e) {
+          }
+        }
+        applyThemeToMyRoom() {
+          const theme = ROOM_THEMES.find((t) => t.id === this.currentTheme);
+          if (!theme) return;
+          const myRoomTemplate = ROOM_TEMPLATES.find((r) => r.id === "myroom");
+          if (myRoomTemplate) {
+            myRoomTemplate.floor = theme.floor;
+            myRoomTemplate.wall = theme.wall;
+          }
+          if (this.room && this.room.id === "myroom") {
+            this.room.floorType = theme.floor;
+            this.room.wallColor = theme.wall;
+            this.saveMyRoom();
+          }
+        }
         renderNavigator() {
           this.uiManager.renderNavigator(ROOM_TEMPLATES, (room) => {
             this.loadRoom(room);
+            this.achievementSystem.visitRoom(room.id);
             this.uiManager.showNotification(`Entered ${room.name}`);
             this.uiManager.closeAllPanels();
           });
+          this.uiManager.renderThemes(
+            ROOM_THEMES,
+            this.ownedThemes,
+            this.currentTheme,
+            this.currencySystem.get(),
+            (theme) => {
+              if (this.currencySystem.spend(theme.price)) {
+                this.ownedThemes.push(theme.id);
+                this.currentTheme = theme.id;
+                this.saveThemes();
+                this.applyThemeToMyRoom();
+                this.uiManager.showNotification(`Purchased ${theme.name}!`, "success");
+                this.uiManager.updateCurrency(this.currencySystem.get());
+                this.renderNavigator();
+                this.achievementSystem.track("buy");
+              } else {
+                this.uiManager.showNotification("Not enough StarCoins!", "error");
+                this.soundManager.play("error");
+              }
+            },
+            (theme) => {
+              this.currentTheme = theme.id;
+              this.saveThemes();
+              this.applyThemeToMyRoom();
+              this.uiManager.showNotification(`Applied ${theme.name}!`);
+              this.renderNavigator();
+            }
+          );
         }
         renderCatalog() {
           this.uiManager.renderCatalog(FURNITURE_CATALOG, this.currencySystem.get(), (item) => {
@@ -4887,6 +5130,7 @@ var StarlightEngine = (() => {
               this.uiManager.updateCurrency(this.currencySystem.get());
               this.uiManager.showNotification(`Purchased ${item.name}!`);
               this.soundManager.play("buy");
+              this.achievementSystem.track("buy");
             } else {
               this.uiManager.showNotification("Not enough StarCoins!", "error");
               this.soundManager.play("error");
@@ -4936,6 +5180,7 @@ var StarlightEngine = (() => {
             this.applyAvatarToPlayer();
             this.saveAvatarToStorage();
             this.uiManager.showNotification("Look saved!");
+            this.achievementSystem.track("customize");
           }, () => {
             const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
             this.customize.skinColor = rand(["#F5CBA7", "#E0AC69", "#8D5524", "#C68642", "#FFDBAC", "#AA7C58"]);
@@ -5021,6 +5266,9 @@ var StarlightEngine = (() => {
               }
             }
           );
+        }
+        renderAchievementsPanel() {
+          this.uiManager.renderAchievements(this.achievementSystem.getList());
         }
         renderMinigamePanel() {
           const games = [
@@ -5265,6 +5513,36 @@ var StarlightEngine = (() => {
               ctx.fill();
             }
           }
+          if (rid === "garden" || rid === "forest") {
+            ctx.strokeStyle = "rgba(180,210,255,0.35)";
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 40; i++) {
+              const rx = (time / 15 + i * 137) % (this.width + 100) - 50;
+              const ry = (time / 8 + i * 89) % (this.height + 100) - 50;
+              ctx.beginPath();
+              ctx.moveTo(rx, ry);
+              ctx.lineTo(rx - 3, ry + 12);
+              ctx.stroke();
+            }
+          } else if (rid === "spa" || rid === "cinema") {
+            ctx.fillStyle = "rgba(255,255,255,0.06)";
+            for (let i = 0; i < 20; i++) {
+              const rx = (time / 40 + i * 213) % (this.width + 80) - 40;
+              const ry = (time / 30 + i * 157) % (this.height + 80) - 40;
+              ctx.beginPath();
+              ctx.arc(rx, ry, 2 + Math.sin(time / 400 + i) * 1, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          } else if (rid === "beach") {
+            ctx.fillStyle = "rgba(255,250,200,0.08)";
+            for (let i = 0; i < 15; i++) {
+              const rx = (time / 50 + i * 301) % (this.width + 60) - 30;
+              const ry = (time / 35 + i * 197) % (this.height + 60) - 30;
+              ctx.beginPath();
+              ctx.arc(rx, ry, 1.5, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
         }
         drawFurniture(ctx, f) {
           const sp = isoToScreen(f.x, f.y);
@@ -5388,8 +5666,12 @@ var StarlightEngine = (() => {
           this.uiManager.closeAllPanels();
           this.minigame = new MinigameClass(this);
           this.minigame.start();
+          this.achievementSystem.track("minigame");
         }
         endMinigame() {
+          if (this.minigame && this.minigame.result === "win") {
+            this.achievementSystem.track("win");
+          }
           this.minigame = null;
         }
       };
@@ -5419,6 +5701,7 @@ var StarlightEngine = (() => {
         <button class="top-btn" id="btnChatHistory">&#128172; Chat</button>
         <button class="top-btn" id="btnFriends">&#128101; Friends</button>
         <button class="top-btn" id="btnPet">&#128054; Pet</button>
+        <button class="top-btn" id="btnAchievements">&#127942; Goals</button>
       </div>
     </div>
     <div id="roomInfo">

@@ -46,6 +46,18 @@ export const FURNITURE_CATALOG = [
   { id: 'easel', name: 'Artist easel', price: 110, icon: '\uD83C\uDFA8', footprint: [1, 1], stackable: false, desc: 'Paint your masterpiece.' }
 ];
 
+export const ROOM_THEMES = [
+  { id: 'classic', name: 'Classic Wood', floor: 'wood', wall: '#8B4513', price: 0 },
+  { id: 'modern', name: 'Modern Tile', floor: 'tile', wall: '#2C3E50', price: 200 },
+  { id: 'cozy', name: 'Cozy Carpet', floor: 'carpet', wall: '#7D3C98', price: 200 },
+  { id: 'garden', name: 'Garden Grass', floor: 'grass', wall: '#27AE60', price: 300 },
+  { id: 'beach', name: 'Beach Sand', floor: 'sand', wall: '#D35400', price: 300 },
+  { id: 'stone', name: 'Stone Castle', floor: 'stone', wall: '#555555', price: 400 },
+  { id: 'marble', name: 'Marble Palace', floor: 'marble', wall: '#BDC3C7', price: 500 },
+  { id: 'dark', name: 'Dark Lounge', floor: 'darkwood', wall: '#111111', price: 400 },
+  { id: 'diner', name: 'Retro Diner', floor: 'checkered', wall: '#C0392B', price: 350 },
+];
+
 export const ROOM_TEMPLATES = [
   {
     id: 'lobby', name: 'Main Lobby', description: 'Welcome to Starlight Inn! The heart of the hotel.',

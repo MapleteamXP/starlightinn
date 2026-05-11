@@ -192,6 +192,20 @@ body {
 
 /* Room Transition */
 #roomTransition { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--habbo-bg); z-index: 500; opacity: 0; pointer-events: none; transition: opacity 0.35s ease; }
+
+/* Theme List */
+.theme-list { display: flex; flex-direction: column; gap: 6px; }
+
+/* Achievements */
+.achieve-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(0,0,0,0.15); border-radius: 8px; margin-bottom: 6px; opacity: 0.55; }
+.achieve-item.unlocked { opacity: 1; background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); }
+.achieve-icon { font-size: 24px; width: 32px; text-align: center; }
+.achieve-info { flex: 1; }
+.achieve-name { font-weight: 700; font-size: 13px; }
+.achieve-desc { font-size: 11px; color: var(--habbo-text-dim); margin-bottom: 4px; }
+.achieve-bar { background: rgba(0,0,0,0.3); border-radius: 3px; height: 5px; }
+.achieve-bar div { height: 100%; background: var(--habbo-accent); border-radius: 3px; transition: width 0.3s; }
+.achieve-reward { font-weight: 800; font-size: 13px; color: var(--habbo-accent); min-width: 36px; text-align: right; }
 #minimap.open { display: block; }
 #minimapCanvas { width: 100%; height: 100%; border-radius: 6px; }
 

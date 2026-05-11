@@ -10,7 +10,7 @@ import {
   getAvatarAsset, getFurnitureAsset, getTilePattern, getWallPattern,
   createAvatarCanvas, clearAvatarCache, createSceneryCanvas
 } from '../assets/Generator.js';
-import { FURNITURE_CATALOG, ROOM_TEMPLATES } from '../world/Data.js';
+import { FURNITURE_CATALOG, ROOM_TEMPLATES, ROOM_THEMES } from '../world/Data.js';
 import { Furniture } from '../world/Furniture.js';
 import { Avatar } from '../world/Avatar.js';
 import { Room } from '../world/Room.js';
@@ -25,6 +25,7 @@ import { MemoryMatch } from '../minigames/MemoryMatch.js';
 import { TilePuzzle } from '../minigames/TilePuzzle.js';
 import { SoundManager } from '../audio/SoundManager.js';
 import { DailyRewardSystem } from '../economy/DailyRewards.js';
+import { AchievementSystem } from '../economy/Achievements.js';
 import { FriendSystem } from '../social/Friends.js';
 import { PetSystem } from '../world/Pet.js';
 
@@ -61,6 +62,9 @@ export class Game {
     this.player = null;
     this.particles = [];
     this.settings = { showMinimap: true, showNames: true, showChat: true, npcCount: 3, camSpeed: 5, sound: false, safeMode: false };
+    this.ownedThemes = ['classic'];
+    this.currentTheme = 'classic';
+    this.loadThemes();
     this.chatColor = '#fffde7';
     this.lastTime = 0;
     this.hoverTile = null;
@@ -85,14 +89,17 @@ export class Game {
     this.dailyRewards = new DailyRewardSystem(this);
     this.friendSystem = new FriendSystem(this);
     this.petSystem = new PetSystem(this);
+    this.achievementSystem = new AchievementSystem(this);
 
     this.setupInput();
     this.setupUI();
 
-    this.loadRoom(ROOM_TEMPLATES[0]);
+    this.loadRoom(ROOM_TEMPLATES[0], false);
     this.loadAvatarFromStorage();
     this.applyAvatarToPlayer();
     this.spawnNPCs(this.settings.npcCount);
+    this.achievementSystem.visitRoom(ROOM_TEMPLATES[0].id);
+    this.applyThemeToMyRoom();
 
     // Check daily rewards
     setTimeout(() => this.checkDailyRewards(), 1200);
@@ -224,6 +231,7 @@ export class Game {
         this.spawnParticles(tx, ty, '#2ecc71', 10);
         this.uiManager.showNotification(`Placed ${type}!`);
         this.soundManager.play('place');
+        this.achievementSystem.track('place');
       } else {
         this.uiManager.showNotification('Cannot place there!', 'error');
         this.soundManager.play('error');
@@ -301,6 +309,7 @@ export class Game {
     if (this.selectedTool === 'walk') {
       if (this.room.isWalkable(tx, ty)) {
         this.player.moveTo(tx, ty, this.room);
+        this.achievementSystem.track('walk');
         this.spawnParticles(tx, ty, 'rgba(244,208,63,0.6)', 5);
       }
     } else if (this.selectedTool === 'place' && this.selectedInventoryItem) {
@@ -341,6 +350,7 @@ export class Game {
     document.getElementById('btnChatHistory')?.addEventListener('click', () => this.uiManager.togglePanel('chatPanel'));
     document.getElementById('btnFriends')?.addEventListener('click', () => { this.uiManager.togglePanel('friendsPanel'); this.renderFriendsPanel(); });
     document.getElementById('btnPet')?.addEventListener('click', () => { this.uiManager.togglePanel('petPanel'); this.renderPetPanel(); });
+    document.getElementById('btnAchievements')?.addEventListener('click', () => { this.uiManager.togglePanel('achievementsPanel'); this.renderAchievementsPanel(); });
 
     document.getElementById('hairStyleSelect')?.addEventListener('change', e => { this.customize.hairStyle = e.target.value; this.renderCustomizePanel(); });
     document.getElementById('hatSelect')?.addEventListener('change', e => { this.customize.hatType = e.target.value; this.renderCustomizePanel(); });
@@ -389,6 +399,7 @@ export class Game {
       this.chatManager.updateTypingIndicator(false);
       this.chatManager.send(text);
     this.soundManager.play('chat');
+    this.achievementSystem.track('chat');
     };
     document.getElementById('chatSend')?.addEventListener('click', sendChat);
     document.getElementById('chatInput')?.addEventListener('keydown', e => {
@@ -453,12 +464,68 @@ export class Game {
   setTool(tool) { this.selectedTool = tool; this.uiManager.updateToolButtons(this.selectedTool); }
   toggleMinimap() { this.settings.showMinimap = !this.settings.showMinimap; document.getElementById('minimap')?.classList.toggle('open', this.settings.showMinimap); const cb = document.getElementById('settingMinimap'); if (cb) cb.checked = this.settings.showMinimap; }
 
+  loadThemes() {
+    try {
+      const data = JSON.parse(localStorage.getItem('starlight_themes'));
+      if (data) {
+        this.ownedThemes = data.owned || ['classic'];
+        this.currentTheme = data.current || 'classic';
+      }
+    } catch (e) {}
+  }
+
+  saveThemes() {
+    try { localStorage.setItem('starlight_themes', JSON.stringify({ owned: this.ownedThemes, current: this.currentTheme })); } catch (e) {}
+  }
+
+  applyThemeToMyRoom() {
+    const theme = ROOM_THEMES.find(t => t.id === this.currentTheme);
+    if (!theme) return;
+    // Apply to the My Room template so next load uses it
+    const myRoomTemplate = ROOM_TEMPLATES.find(r => r.id === 'myroom');
+    if (myRoomTemplate) {
+      myRoomTemplate.floor = theme.floor;
+      myRoomTemplate.wall = theme.wall;
+    }
+    // If currently in My Room, apply live
+    if (this.room && this.room.id === 'myroom') {
+      this.room.floorType = theme.floor;
+      this.room.wallColor = theme.wall;
+      this.saveMyRoom();
+    }
+  }
+
   renderNavigator() {
     this.uiManager.renderNavigator(ROOM_TEMPLATES, room => {
       this.loadRoom(room);
+      this.achievementSystem.visitRoom(room.id);
       this.uiManager.showNotification(`Entered ${room.name}`);
       this.uiManager.closeAllPanels();
     });
+    this.uiManager.renderThemes(ROOM_THEMES, this.ownedThemes, this.currentTheme, this.currencySystem.get(),
+      theme => {
+        if (this.currencySystem.spend(theme.price)) {
+          this.ownedThemes.push(theme.id);
+          this.currentTheme = theme.id;
+          this.saveThemes();
+          this.applyThemeToMyRoom();
+          this.uiManager.showNotification(`Purchased ${theme.name}!`, 'success');
+          this.uiManager.updateCurrency(this.currencySystem.get());
+          this.renderNavigator();
+          this.achievementSystem.track('buy');
+        } else {
+          this.uiManager.showNotification('Not enough StarCoins!', 'error');
+          this.soundManager.play('error');
+        }
+      },
+      theme => {
+        this.currentTheme = theme.id;
+        this.saveThemes();
+        this.applyThemeToMyRoom();
+        this.uiManager.showNotification(`Applied ${theme.name}!`);
+        this.renderNavigator();
+      }
+    );
   }
 
   renderCatalog() {
@@ -468,6 +535,7 @@ export class Game {
         this.uiManager.updateCurrency(this.currencySystem.get());
         this.uiManager.showNotification(`Purchased ${item.name}!`);
         this.soundManager.play('buy');
+        this.achievementSystem.track('buy');
       } else {
         this.uiManager.showNotification('Not enough StarCoins!', 'error');
         this.soundManager.play('error');
@@ -518,6 +586,7 @@ export class Game {
       this.applyAvatarToPlayer();
       this.saveAvatarToStorage();
       this.uiManager.showNotification('Look saved!');
+      this.achievementSystem.track('customize');
     }, () => {
       const rand = arr => arr[Math.floor(Math.random() * arr.length)];
       this.customize.skinColor = rand(['#F5CBA7','#E0AC69','#8D5524','#C68642','#FFDBAC','#AA7C58']);
@@ -605,6 +674,10 @@ export class Game {
         }
       }
     );
+  }
+
+  renderAchievementsPanel() {
+    this.uiManager.renderAchievements(this.achievementSystem.getList());
   }
 
   renderMinigamePanel() {
@@ -848,6 +921,38 @@ export class Game {
         ctx.fill();
       }
     }
+
+    // Weather effects
+    if (rid === 'garden' || rid === 'forest') {
+      ctx.strokeStyle = 'rgba(180,210,255,0.35)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 40; i++) {
+        const rx = ((time / 15 + i * 137) % (this.width + 100)) - 50;
+        const ry = ((time / 8 + i * 89) % (this.height + 100)) - 50;
+        ctx.beginPath();
+        ctx.moveTo(rx, ry);
+        ctx.lineTo(rx - 3, ry + 12);
+        ctx.stroke();
+      }
+    } else if (rid === 'spa' || rid === 'cinema') {
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      for (let i = 0; i < 20; i++) {
+        const rx = ((time / 40 + i * 213) % (this.width + 80)) - 40;
+        const ry = ((time / 30 + i * 157) % (this.height + 80)) - 40;
+        ctx.beginPath();
+        ctx.arc(rx, ry, 2 + Math.sin(time / 400 + i) * 1, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (rid === 'beach') {
+      ctx.fillStyle = 'rgba(255,250,200,0.08)';
+      for (let i = 0; i < 15; i++) {
+        const rx = ((time / 50 + i * 301) % (this.width + 60)) - 30;
+        const ry = ((time / 35 + i * 197) % (this.height + 60)) - 30;
+        ctx.beginPath();
+        ctx.arc(rx, ry, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
   }
 
   drawFurniture(ctx, f) {
@@ -937,9 +1042,13 @@ export class Game {
     this.uiManager.closeAllPanels();
     this.minigame = new MinigameClass(this);
     this.minigame.start();
+    this.achievementSystem.track('minigame');
   }
 
   endMinigame() {
+    if (this.minigame && this.minigame.result === 'win') {
+      this.achievementSystem.track('win');
+    }
     this.minigame = null;
   }
 }

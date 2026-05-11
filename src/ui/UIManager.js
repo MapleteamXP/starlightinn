@@ -16,6 +16,8 @@ export class UIManager {
       <div class="room-list" id="publicRoomList"></div>
       <div style="margin:12px 0 8px;font-size:12px;color:var(--habbo-text-dim);">Your Rooms</div>
       <div class="room-list" id="userRoomList"></div>
+      <div style="margin:12px 0 8px;font-size:12px;color:var(--habbo-text-dim);">Room Themes</div>
+      <div class="theme-list" id="themeList"></div>
     `);
     // Catalog
     this._ensurePanel('catalogPanel', 'Furniture Catalog', `<div class="catalog-grid" id="catalogGrid"></div>`);
@@ -61,6 +63,8 @@ export class UIManager {
     this._ensurePanel('petPanel', 'My Pet', `<div id="petContent"></div>`);
     // Daily Rewards
     this._ensurePanel('dailyRewardPanel', 'Daily Rewards', `<div id="dailyRewardContent"></div>`);
+    // Achievements
+    this._ensurePanel('achievementsPanel', 'Achievements', `<div class="achieve-list" id="achieveList"></div>`);
     // Chat color popover
     if (!document.getElementById('chatColorPopover')) {
       const popover = document.createElement('div');
@@ -116,6 +120,29 @@ export class UIManager {
       notif.style.transform = 'translateX(30px)';
       setTimeout(() => notif.remove(), 300);
     }, 3000);
+  }
+
+  renderThemes(themes, owned, current, currency, onBuy, onApply) {
+    const list = document.getElementById('themeList');
+    if (!list) return;
+    list.innerHTML = '';
+    themes.forEach(t => {
+      const isOwned = owned.includes(t.id) || t.price === 0;
+      const isCurrent = current === t.id;
+      const div = document.createElement('div');
+      div.className = 'room-item';
+      div.innerHTML = `
+        <div class="room-name">${t.name}</div>
+        <div class="room-desc">${t.floor} floor · ${t.wall} walls</div>
+        <div class="room-meta">${isCurrent ? 'Active' : (isOwned ? 'Owned' : '\u2605 ' + t.price)}</div>
+      `;
+      div.addEventListener('click', () => {
+        if (isCurrent) return;
+        if (isOwned) onApply && onApply(t);
+        else onBuy && onBuy(t);
+      });
+      list.appendChild(div);
+    });
   }
 
   renderNavigator(rooms, onSelect) {
@@ -325,6 +352,32 @@ export class UIManager {
     document.getElementById('petPlay')?.addEventListener('click', onPlay);
     document.getElementById('petRest')?.addEventListener('click', onRest);
     document.getElementById('petRelease')?.addEventListener('click', () => onAdopt && onAdopt(null));
+  }
+
+  renderAchievements(list) {
+    const container = document.getElementById('achieveList');
+    if (!container) return;
+    container.innerHTML = '';
+    let completed = 0;
+    list.forEach(a => {
+      if (a.unlocked) completed++;
+      const div = document.createElement('div');
+      div.className = 'achieve-item' + (a.unlocked ? ' unlocked' : '');
+      div.innerHTML = `
+        <div class="achieve-icon">${a.icon}</div>
+        <div class="achieve-info">
+          <div class="achieve-name">${a.name}</div>
+          <div class="achieve-desc">${a.desc}</div>
+          <div class="achieve-bar"><div style="width:${a.percent}%"></div></div>
+        </div>
+        <div class="achieve-reward">${a.unlocked ? '✓' : '★' + a.reward}</div>
+      `;
+      container.appendChild(div);
+    });
+    const header = document.createElement('div');
+    header.style.cssText = 'text-align:center;margin-bottom:12px;font-size:13px;color:var(--habbo-accent);font-weight:700;';
+    header.textContent = `${completed}/${list.length} Completed`;
+    container.insertBefore(header, container.firstChild);
   }
 
   showDailyRewardPanel(dailySystem, onClaim) {
