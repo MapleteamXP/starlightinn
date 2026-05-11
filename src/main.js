@@ -7,6 +7,7 @@ import { RingUppercut } from './minigames/RingUppercut.js';
 import { MemoryMatch } from './minigames/MemoryMatch.js';
 import { TilePuzzle } from './minigames/TilePuzzle.js';
 import { SimonSays } from './minigames/SimonSays.js';
+import { FishingGame } from './minigames/FishingGame.js';
 
 function createUI() {
   const overlay = document.getElementById('uiOverlay');
@@ -83,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.MemoryMatch = MemoryMatch;
     window.TilePuzzle = TilePuzzle;
     window.SimonSays = SimonSays;
+    window.FishingGame = FishingGame;
   } catch (err) {
     console.error('Failed to initialize game:', err);
     const loading = document.getElementById('loadingScreen');

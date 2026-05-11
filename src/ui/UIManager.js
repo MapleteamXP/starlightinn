@@ -764,10 +764,10 @@ export class UIManager {
       </div>
       <div style="background:var(--habbo-dark);border-radius:8px;padding:10px;margin-bottom:12px;">
         <div style="font-size:11px;color:var(--habbo-text-dim);margin-bottom:6px;">Outfit</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11px;">
-          <span style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">👕 ${avatar.shirtColor || '?'}</span>
-          <span style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">👖 ${avatar.pantsColor || '?'}</span>
-          <span style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">👟 ${avatar.shoeColor || '?'}</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11px;align-items:center;">
+          <span style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">👕 <span style="width:12px;height:12px;border-radius:50%;background:${avatar.shirtColor || '#999'};border:1px solid rgba(255,255,255,0.3);"></span></span>
+          <span style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">👖 <span style="width:12px;height:12px;border-radius:50%;background:${avatar.pantsColor || '#999'};border:1px solid rgba(255,255,255,0.3);"></span></span>
+          <span style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">👟 <span style="width:12px;height:12px;border-radius:50%;background:${avatar.shoeColor || '#999'};border:1px solid rgba(255,255,255,0.3);"></span></span>
           ${avatar.hatType !== 'none' ? `<span style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">${hatEmoji[avatar.hatType]} ${avatar.hatType}</span>` : ''}
           ${avatar.glassesType !== 'none' ? `<span style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">${glassesEmoji[avatar.glassesType]} ${avatar.glassesType}</span>` : ''}
         </div>

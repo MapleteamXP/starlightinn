@@ -24,6 +24,7 @@ import { RingUppercut } from '../minigames/RingUppercut.js';
 import { MemoryMatch } from '../minigames/MemoryMatch.js';
 import { TilePuzzle } from '../minigames/TilePuzzle.js';
 import { SimonSays } from '../minigames/SimonSays.js';
+import { FishingGame } from '../minigames/FishingGame.js';
 import { SoundManager } from '../audio/SoundManager.js';
 import { DailyRewardSystem } from '../economy/DailyRewards.js';
 import { AchievementSystem } from '../economy/Achievements.js';
@@ -1550,7 +1551,8 @@ export class Game {
       { name: 'Ring Uppercut', desc: 'Time your punches in the boxing ring!', reward: '200-500', class: RingUppercut },
       { name: 'Memory Match', desc: 'Flip cards and find matching pairs!', reward: '250', class: MemoryMatch },
       { name: 'Tile Puzzle', desc: 'Slide tiles to solve the puzzle!', reward: '300', class: TilePuzzle },
-      { name: 'Simon Says', desc: 'Watch the pattern and repeat it!', reward: '150-500', class: SimonSays }
+      { name: 'Simon Says', desc: 'Watch the pattern and repeat it!', reward: '150-500', class: SimonSays },
+      { name: 'Fishing', desc: 'Catch fish and earn coins!', reward: '50-500', class: FishingGame }
     ];
     this.uiManager.renderMinigamePanel(games, g => {
       this.startMinigame(g.class);
