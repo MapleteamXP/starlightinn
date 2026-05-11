@@ -290,18 +290,34 @@ export class UIManager {
     });
   }
 
-  renderNavigator(rooms, recent, onSelect, onRenameMyRoom, myRoomPrivate, onTogglePrivacy, searchQuery = '') {
+  renderNavigator(rooms, recent, onSelect, onRenameMyRoom, myRoomPrivate, onTogglePrivacy, searchQuery = '', bookmarks, onToggleBookmark) {
     const publicList = document.getElementById('publicRoomList');
     if (!publicList) return;
     publicList.innerHTML = '';
     const q = searchQuery.toLowerCase();
-    const filtered = q ? rooms.filter(r => r.name.toLowerCase().includes(q) || r.description.toLowerCase().includes(q)) : rooms;
+    let filtered = q ? rooms.filter(r => r.name.toLowerCase().includes(q) || r.description.toLowerCase().includes(q)) : rooms;
+    // Sort bookmarked rooms first
+    if (bookmarks) {
+      filtered = [...filtered].sort((a, b) => {
+        const ab = bookmarks.has(a.id) ? 1 : 0;
+        const bb = bookmarks.has(b.id) ? 1 : 0;
+        return bb - ab;
+      });
+    }
     filtered.forEach(room => {
       const div = document.createElement('div');
       div.className = 'room-item';
       const occupancy = this._getRoomOccupancy(room.id);
-      div.innerHTML = `<div class="room-name">${room.name}</div><div class="room-desc">${room.description}</div><div class="room-meta">${occupancy} users online ${occupancy > 15 ? '🔥' : ''}</div>`;
-      div.addEventListener('click', () => onSelect && onSelect(room));
+      const isBookmarked = bookmarks && bookmarks.has(room.id);
+      div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;"><span class="room-name">${room.name}</span><span class="bookmark-star" data-id="${room.id}" style="cursor:pointer;font-size:14px;color:${isBookmarked ? 'var(--habbo-accent)' : 'var(--habbo-text-dim)'};">${isBookmarked ? '\u2605' : '\u2606'}</span></div><div class="room-desc">${room.description}</div><div class="room-meta">${occupancy} users online ${occupancy > 15 ? '🔥' : ''}</div>`;
+      div.addEventListener('click', e => {
+        if (e.target.classList.contains('bookmark-star')) {
+          e.stopPropagation();
+          onToggleBookmark && onToggleBookmark(room.id);
+        } else {
+          onSelect && onSelect(room);
+        }
+      });
       publicList.appendChild(div);
     });
     const userList = document.getElementById('userRoomList');

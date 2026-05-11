@@ -2724,7 +2724,7 @@ var StarlightEngine = (() => {
           }
           return h;
         }
-        placeFurniture(type, x, y) {
+        canPlaceFurniture(type, x, y) {
           const cat = FURNITURE_CATALOG.find((c) => c.id === type);
           if (!cat) return false;
           if (x < 0 || y < 0 || x + cat.footprint[0] > this.width || y + cat.footprint[1] > this.height) return false;
@@ -2740,6 +2740,11 @@ var StarlightEngine = (() => {
               }
             }
           }
+          return true;
+        }
+        placeFurniture(type, x, y) {
+          if (!this.canPlaceFurniture(type, x, y)) return false;
+          const cat = FURNITURE_CATALOG.find((c) => c.id === type);
           const z = this.getStackHeight(x, y);
           this.furniture.push(new Furniture(type, x, y, z));
           return true;
@@ -3537,18 +3542,33 @@ var StarlightEngine = (() => {
             list.appendChild(div);
           });
         }
-        renderNavigator(rooms, recent, onSelect, onRenameMyRoom, myRoomPrivate, onTogglePrivacy, searchQuery = "") {
+        renderNavigator(rooms, recent, onSelect, onRenameMyRoom, myRoomPrivate, onTogglePrivacy, searchQuery = "", bookmarks, onToggleBookmark) {
           const publicList = document.getElementById("publicRoomList");
           if (!publicList) return;
           publicList.innerHTML = "";
           const q = searchQuery.toLowerCase();
-          const filtered = q ? rooms.filter((r) => r.name.toLowerCase().includes(q) || r.description.toLowerCase().includes(q)) : rooms;
+          let filtered = q ? rooms.filter((r) => r.name.toLowerCase().includes(q) || r.description.toLowerCase().includes(q)) : rooms;
+          if (bookmarks) {
+            filtered = [...filtered].sort((a, b) => {
+              const ab = bookmarks.has(a.id) ? 1 : 0;
+              const bb = bookmarks.has(b.id) ? 1 : 0;
+              return bb - ab;
+            });
+          }
           filtered.forEach((room) => {
             const div = document.createElement("div");
             div.className = "room-item";
             const occupancy = this._getRoomOccupancy(room.id);
-            div.innerHTML = `<div class="room-name">${room.name}</div><div class="room-desc">${room.description}</div><div class="room-meta">${occupancy} users online ${occupancy > 15 ? "\u{1F525}" : ""}</div>`;
-            div.addEventListener("click", () => onSelect && onSelect(room));
+            const isBookmarked = bookmarks && bookmarks.has(room.id);
+            div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;"><span class="room-name">${room.name}</span><span class="bookmark-star" data-id="${room.id}" style="cursor:pointer;font-size:14px;color:${isBookmarked ? "var(--habbo-accent)" : "var(--habbo-text-dim)"};">${isBookmarked ? "\u2605" : "\u2606"}</span></div><div class="room-desc">${room.description}</div><div class="room-meta">${occupancy} users online ${occupancy > 15 ? "\u{1F525}" : ""}</div>`;
+            div.addEventListener("click", (e) => {
+              if (e.target.classList.contains("bookmark-star")) {
+                e.stopPropagation();
+                onToggleBookmark && onToggleBookmark(room.id);
+              } else {
+                onSelect && onSelect(room);
+              }
+            });
             publicList.appendChild(div);
           });
           const userList = document.getElementById("userRoomList");
@@ -5580,6 +5600,11 @@ var StarlightEngine = (() => {
                 this.game.uiManager.showNotification(`Level Up! You are now Level ${this.level} \u2014 ${this.title}! +\u2605${this.level * 50}`, "success");
                 this.game.currencySystem.add(this.level * 50);
                 this.game.soundManager.play("win");
+                if (this.game.player) {
+                  this.game.spawnParticles(this.game.player.x, this.game.player.y, "#f4d03f", 20);
+                  this.game.spawnParticles(this.game.player.x, this.game.player.y, "#2ecc71", 12);
+                  this.game.spawnParticles(this.game.player.x, this.game.player.y, "#9b59b6", 8);
+                }
               }
               break;
             }
@@ -5983,6 +6008,8 @@ var StarlightEngine = (() => {
           this.ownedThemes = ["classic"];
           this.currentTheme = "classic";
           this.likedRooms = /* @__PURE__ */ new Set();
+          this.bookmarkedRooms = /* @__PURE__ */ new Set();
+          this.loadBookmarks();
           this.favorites = /* @__PURE__ */ new Set();
           this.loadFavorites();
           this.myRoomSize = 10;
@@ -6752,6 +6779,19 @@ var StarlightEngine = (() => {
           } catch (e) {
           }
         }
+        loadBookmarks() {
+          try {
+            const data = JSON.parse(localStorage.getItem("starlight_bookmarks"));
+            if (data && Array.isArray(data)) this.bookmarkedRooms = new Set(data);
+          } catch (e) {
+          }
+        }
+        saveBookmarks() {
+          try {
+            localStorage.setItem("starlight_bookmarks", JSON.stringify(Array.from(this.bookmarkedRooms)));
+          } catch (e) {
+          }
+        }
         trackRecentRoom(room) {
           this.recentRooms = this.recentRooms.filter((r) => r.id !== room.id);
           this.recentRooms.unshift({ id: room.id, name: room.name, time: Date.now() });
@@ -6835,7 +6875,12 @@ var StarlightEngine = (() => {
             this.saveSettings();
             this.uiManager.showNotification(isPrivate ? "My Room is now private \u{1F512}" : "My Room is now public \u{1F310}");
             this.renderNavigator();
-          }, searchQuery);
+          }, searchQuery, this.bookmarkedRooms, (id) => {
+            if (this.bookmarkedRooms.has(id)) this.bookmarkedRooms.delete(id);
+            else this.bookmarkedRooms.add(id);
+            this.saveBookmarks();
+            this.renderNavigator();
+          });
           this.uiManager.renderExpansions(ROOM_EXPANSIONS, this.myRoomSize, this.currencySystem.get(), (expansion) => {
             if (this.currencySystem.spend(expansion.price)) {
               this.expandMyRoom(expansion.size);
@@ -7042,6 +7087,7 @@ var StarlightEngine = (() => {
             myroom: localStorage.getItem("starlight_myroom"),
             inbox: { messages: this.inboxSystem.messages, unreadCount: this.inboxSystem.unreadCount },
             settings: { showWeather: this.settings.showWeather, myRoomPrivate: this.settings.myRoomPrivate, showTimestamps: this.settings.showTimestamps },
+            bookmarks: Array.from(this.bookmarkedRooms),
             quests: { active: this.questSystem.active, completed: this.questSystem.completed },
             version: "2.3"
           };
@@ -7123,6 +7169,10 @@ var StarlightEngine = (() => {
                 this.questSystem.completed = data.quests.completed || [];
                 this.questSystem.save();
               }
+              if (data.bookmarks) {
+                this.bookmarkedRooms = new Set(data.bookmarks);
+                this.saveBookmarks();
+              }
               this.uiManager.showNotification("Save imported! Reloading...", "success");
               setTimeout(() => location.reload(), 1200);
             } catch (err) {
@@ -7144,6 +7194,7 @@ var StarlightEngine = (() => {
           this.leaderboardSystem.save();
           this.saveSettings();
           this.saveFavorites();
+          this.saveBookmarks();
           this.inboxSystem.save();
         }
         saveMyRoom() {
@@ -7585,13 +7636,14 @@ var StarlightEngine = (() => {
             if (this.selectedTool === "place" && this.selectedInventoryItem) {
               const cat = FURNITURE_CATALOG.find((c) => c.id === this.selectedInventoryItem);
               if (cat) {
+                const canPlace = this.room.canPlaceFurniture(this.selectedInventoryItem, this.hoverTile.x, this.hoverTile.y);
                 ctx.globalAlpha = 0.55;
                 const img = getFurnitureAsset(this.selectedInventoryItem);
                 const fsp = isoToScreen(this.hoverTile.x, this.hoverTile.y);
                 ctx.drawImage(img, fsp.x - img.width / 2, fsp.y - img.height + TILE_H);
                 ctx.globalAlpha = 1;
-                ctx.strokeStyle = "rgba(46, 204, 113, 0.6)";
-                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = canPlace ? "rgba(46, 204, 113, 0.8)" : "rgba(231, 76, 60, 0.8)";
+                ctx.lineWidth = 2;
                 for (let dx = 0; dx < cat.footprint[0]; dx++) {
                   for (let dy = 0; dy < cat.footprint[1]; dy++) {
                     const tsp = isoToScreen(this.hoverTile.x + dx, this.hoverTile.y + dy);
@@ -7602,6 +7654,21 @@ var StarlightEngine = (() => {
                     ctx.lineTo(tsp.x - TILE_W / 2, tsp.y + TILE_H / 2);
                     ctx.closePath();
                     ctx.stroke();
+                  }
+                }
+                if (!canPlace) {
+                  ctx.fillStyle = "rgba(231, 76, 60, 0.12)";
+                  for (let dx = 0; dx < cat.footprint[0]; dx++) {
+                    for (let dy = 0; dy < cat.footprint[1]; dy++) {
+                      const tsp = isoToScreen(this.hoverTile.x + dx, this.hoverTile.y + dy);
+                      ctx.beginPath();
+                      ctx.moveTo(tsp.x, tsp.y);
+                      ctx.lineTo(tsp.x + TILE_W / 2, tsp.y + TILE_H / 2);
+                      ctx.lineTo(tsp.x, tsp.y + TILE_H);
+                      ctx.lineTo(tsp.x - TILE_W / 2, tsp.y + TILE_H / 2);
+                      ctx.closePath();
+                      ctx.fill();
+                    }
                   }
                 }
               }

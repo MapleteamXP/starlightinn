@@ -44,7 +44,7 @@ export class Room {
     return h;
   }
 
-  placeFurniture(type, x, y) {
+  canPlaceFurniture(type, x, y) {
     const cat = FURNITURE_CATALOG.find(c => c.id === type);
     if (!cat) return false;
     if (x < 0 || y < 0 || x + cat.footprint[0] > this.width || y + cat.footprint[1] > this.height) return false;
@@ -60,6 +60,12 @@ export class Room {
         }
       }
     }
+    return true;
+  }
+
+  placeFurniture(type, x, y) {
+    if (!this.canPlaceFurniture(type, x, y)) return false;
+    const cat = FURNITURE_CATALOG.find(c => c.id === type);
     const z = this.getStackHeight(x, y);
     this.furniture.push(new Furniture(type, x, y, z));
     return true;

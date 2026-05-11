@@ -52,6 +52,12 @@ export class ProgressionSystem {
           this.game.uiManager.showNotification(`Level Up! You are now Level ${this.level} — ${this.title}! +★${this.level * 50}`, 'success');
           this.game.currencySystem.add(this.level * 50);
           this.game.soundManager.play('win');
+          // Particle burst at player position
+          if (this.game.player) {
+            this.game.spawnParticles(this.game.player.x, this.game.player.y, '#f4d03f', 20);
+            this.game.spawnParticles(this.game.player.x, this.game.player.y, '#2ecc71', 12);
+            this.game.spawnParticles(this.game.player.x, this.game.player.y, '#9b59b6', 8);
+          }
         }
         break;
       }

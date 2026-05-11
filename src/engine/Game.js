@@ -74,6 +74,8 @@ export class Game {
     this.ownedThemes = ['classic'];
     this.currentTheme = 'classic';
     this.likedRooms = new Set();
+    this.bookmarkedRooms = new Set();
+    this.loadBookmarks();
     this.favorites = new Set();
     this.loadFavorites();
     this.myRoomSize = 10;
@@ -692,6 +694,17 @@ export class Game {
     try { localStorage.setItem('starlight_favorites', JSON.stringify(Array.from(this.favorites))); } catch (e) {}
   }
 
+  loadBookmarks() {
+    try {
+      const data = JSON.parse(localStorage.getItem('starlight_bookmarks'));
+      if (data && Array.isArray(data)) this.bookmarkedRooms = new Set(data);
+    } catch (e) {}
+  }
+
+  saveBookmarks() {
+    try { localStorage.setItem('starlight_bookmarks', JSON.stringify(Array.from(this.bookmarkedRooms))); } catch (e) {}
+  }
+
   trackRecentRoom(room) {
     this.recentRooms = this.recentRooms.filter(r => r.id !== room.id);
     this.recentRooms.unshift({ id: room.id, name: room.name, time: Date.now() });
@@ -779,7 +792,12 @@ export class Game {
       this.saveSettings();
       this.uiManager.showNotification(isPrivate ? 'My Room is now private 🔒' : 'My Room is now public 🌐');
       this.renderNavigator();
-    }, searchQuery);
+    }, searchQuery, this.bookmarkedRooms, id => {
+      if (this.bookmarkedRooms.has(id)) this.bookmarkedRooms.delete(id);
+      else this.bookmarkedRooms.add(id);
+      this.saveBookmarks();
+      this.renderNavigator();
+    });
     this.uiManager.renderExpansions(ROOM_EXPANSIONS, this.myRoomSize, this.currencySystem.get(), expansion => {
       if (this.currencySystem.spend(expansion.price)) {
         this.expandMyRoom(expansion.size);
@@ -977,6 +995,7 @@ export class Game {
       myroom: localStorage.getItem('starlight_myroom'),
       inbox: { messages: this.inboxSystem.messages, unreadCount: this.inboxSystem.unreadCount },
       settings: { showWeather: this.settings.showWeather, myRoomPrivate: this.settings.myRoomPrivate, showTimestamps: this.settings.showTimestamps },
+      bookmarks: Array.from(this.bookmarkedRooms),
       quests: { active: this.questSystem.active, completed: this.questSystem.completed },
       version: '2.3'
     };
@@ -1010,6 +1029,7 @@ export class Game {
         if (data.inbox) { this.inboxSystem.messages = data.inbox.messages || []; this.inboxSystem.unreadCount = data.inbox.unreadCount || 0; this.inboxSystem.save(); }
         if (data.settings) { this.settings.showWeather = data.settings.showWeather !== false; this.settings.myRoomPrivate = data.settings.myRoomPrivate === true; this.settings.showTimestamps = data.settings.showTimestamps !== false; this.saveSettings(); }
         if (data.quests) { this.questSystem.active = data.quests.active || null; this.questSystem.completed = data.quests.completed || []; this.questSystem.save(); }
+        if (data.bookmarks) { this.bookmarkedRooms = new Set(data.bookmarks); this.saveBookmarks(); }
         this.uiManager.showNotification('Save imported! Reloading...', 'success');
         setTimeout(() => location.reload(), 1200);
       } catch (err) {
@@ -1032,6 +1052,7 @@ export class Game {
     this.leaderboardSystem.save();
     this.saveSettings();
     this.saveFavorites();
+    this.saveBookmarks();
     this.inboxSystem.save();
   }
 
@@ -1486,12 +1507,14 @@ export class Game {
       if (this.selectedTool === 'place' && this.selectedInventoryItem) {
         const cat = FURNITURE_CATALOG.find(c => c.id === this.selectedInventoryItem);
         if (cat) {
+          const canPlace = this.room.canPlaceFurniture(this.selectedInventoryItem, this.hoverTile.x, this.hoverTile.y);
           ctx.globalAlpha = 0.55;
           const img = getFurnitureAsset(this.selectedInventoryItem);
           const fsp = isoToScreen(this.hoverTile.x, this.hoverTile.y);
           ctx.drawImage(img, fsp.x - img.width / 2, fsp.y - img.height + TILE_H);
           ctx.globalAlpha = 1;
-          ctx.strokeStyle = 'rgba(46, 204, 113, 0.6)'; ctx.lineWidth = 1.5;
+          ctx.strokeStyle = canPlace ? 'rgba(46, 204, 113, 0.8)' : 'rgba(231, 76, 60, 0.8)';
+          ctx.lineWidth = 2;
           for (let dx = 0; dx < cat.footprint[0]; dx++) {
             for (let dy = 0; dy < cat.footprint[1]; dy++) {
               const tsp = isoToScreen(this.hoverTile.x + dx, this.hoverTile.y + dy);
@@ -1499,6 +1522,18 @@ export class Game {
               ctx.moveTo(tsp.x, tsp.y); ctx.lineTo(tsp.x + TILE_W / 2, tsp.y + TILE_H / 2);
               ctx.lineTo(tsp.x, tsp.y + TILE_H); ctx.lineTo(tsp.x - TILE_W / 2, tsp.y + TILE_H / 2);
               ctx.closePath(); ctx.stroke();
+            }
+          }
+          if (!canPlace) {
+            ctx.fillStyle = 'rgba(231, 76, 60, 0.12)';
+            for (let dx = 0; dx < cat.footprint[0]; dx++) {
+              for (let dy = 0; dy < cat.footprint[1]; dy++) {
+                const tsp = isoToScreen(this.hoverTile.x + dx, this.hoverTile.y + dy);
+                ctx.beginPath();
+                ctx.moveTo(tsp.x, tsp.y); ctx.lineTo(tsp.x + TILE_W / 2, tsp.y + TILE_H / 2);
+                ctx.lineTo(tsp.x, tsp.y + TILE_H); ctx.lineTo(tsp.x - TILE_W / 2, tsp.y + TILE_H / 2);
+                ctx.closePath(); ctx.fill();
+              }
             }
           }
         }
