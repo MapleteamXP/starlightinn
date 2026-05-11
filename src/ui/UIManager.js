@@ -13,6 +13,7 @@ export class UIManager {
     if (!this.overlay) return;
     // Navigator
     this._ensurePanel('navigatorPanel', 'Room Navigator', `
+      <input type="text" id="roomSearchInput" placeholder="Search rooms..." style="width:100%;padding:6px 10px;margin-bottom:10px;border:1px solid var(--habbo-panel-border);border-radius:6px;background:var(--habbo-dark);color:white;font-family:inherit;font-size:12px;box-sizing:border-box;">
       <div style="margin-bottom:8px;font-size:12px;color:var(--habbo-text-dim);">Public Rooms</div>
       <div class="room-list" id="publicRoomList"></div>
       <div style="margin:12px 0 8px;font-size:12px;color:var(--habbo-text-dim);">Your Rooms</div>
@@ -33,8 +34,9 @@ export class UIManager {
         <span style="font-size:11px;color:var(--habbo-text-dim);">Click to select, right-click to sell one</span>
         <button id="btnSellAll" style="padding:4px 10px;background:var(--habbo-danger);color:white;border:none;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;">Sell All</button>
       </div>
+      <div id="favBar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;min-height:0;"></div>
       <div class="inv-grid" id="inventoryGrid"></div>
-      <div style="margin-top:10px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Click an item to select it, then click a tile to place.</div>
+      <div style="margin-top:10px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Click an item to select it, then click a tile to place. Star items to quick-access them.</div>
     `);
     // Settings
     this._ensurePanel('settingsPanel', 'Settings', `
@@ -137,7 +139,7 @@ export class UIManager {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
   }
 
-  showNotification(text, type = 'info') {
+  showNotification(text, type = 'info', duration = 3000) {
     const area = document.getElementById('notificationArea');
     if (!area) return;
     const notif = document.createElement('div');
@@ -151,7 +153,7 @@ export class UIManager {
       notif.style.opacity = '0';
       notif.style.transform = 'translateX(30px)';
       setTimeout(() => notif.remove(), 300);
-    }, 3000);
+    }, duration);
   }
 
   showNPCTrade(npc, items, onBuy) {
@@ -280,11 +282,13 @@ export class UIManager {
     });
   }
 
-  renderNavigator(rooms, recent, onSelect, onRenameMyRoom, myRoomPrivate, onTogglePrivacy) {
+  renderNavigator(rooms, recent, onSelect, onRenameMyRoom, myRoomPrivate, onTogglePrivacy, searchQuery = '') {
     const publicList = document.getElementById('publicRoomList');
     if (!publicList) return;
     publicList.innerHTML = '';
-    rooms.forEach(room => {
+    const q = searchQuery.toLowerCase();
+    const filtered = q ? rooms.filter(r => r.name.toLowerCase().includes(q) || r.description.toLowerCase().includes(q)) : rooms;
+    filtered.forEach(room => {
       const div = document.createElement('div');
       div.className = 'room-item';
       const occupancy = this._getRoomOccupancy(room.id);
@@ -365,10 +369,26 @@ export class UIManager {
     });
   }
 
-  renderInventory(inventory, selected, onSelect, onSell, onSellAll) {
+  renderInventory(inventory, selected, onSelect, onSell, onSellAll, favorites, onToggleFavorite) {
     const grid = document.getElementById('inventoryGrid');
+    const favBar = document.getElementById('favBar');
     if (!grid) return;
     grid.innerHTML = '';
+    if (favBar) {
+      favBar.innerHTML = '';
+      const favItems = Object.keys(inventory).filter(type => favorites.has(type));
+      if (favItems.length > 0) {
+        favItems.forEach(type => {
+          const btn = document.createElement('button');
+          btn.style.cssText = 'padding:4px 10px;background:var(--habbo-light);color:white;border:none;border-radius:12px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;white-space:nowrap;';
+          btn.textContent = '\u2b50 ' + type;
+          btn.addEventListener('click', () => onSelect && onSelect(type));
+          favBar.appendChild(btn);
+        });
+      } else {
+        favBar.innerHTML = '<span style="font-size:11px;color:var(--habbo-text-dim);">Star items to quick-access them here</span>';
+      }
+    }
     const items = Object.entries(inventory);
     if (items.length === 0) {
       grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--habbo-text-dim);padding:20px;">Your inventory is empty. Visit the catalog to buy furniture!</div>';
@@ -377,12 +397,20 @@ export class UIManager {
     items.forEach(([type, count]) => {
       const div = document.createElement('div');
       div.className = 'inv-item';
-      div.innerHTML = `<div>${type}</div><div class="inv-count">x${count}</div>`;
+      const isFav = favorites && favorites.has(type);
+      div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;"><span>${type}</span><span class="fav-star" data-type="${type}" style="cursor:pointer;font-size:14px;color:${isFav ? 'var(--habbo-accent)' : 'var(--habbo-text-dim)'};">${isFav ? '\u2605' : '\u2606'}</span></div><div class="inv-count">x${count}</div>`;
       if (selected === type) {
         div.style.borderColor = 'var(--habbo-accent)';
         div.style.background = 'rgba(244,208,63,0.25)';
       }
-      div.addEventListener('click', () => onSelect && onSelect(type));
+      div.addEventListener('click', e => {
+        if (e.target.classList.contains('fav-star')) {
+          e.stopPropagation();
+          onToggleFavorite && onToggleFavorite(type);
+        } else {
+          onSelect && onSelect(type);
+        }
+      });
       if (onSell) {
         div.addEventListener('contextmenu', e => { e.preventDefault(); e.stopPropagation(); onSell(type); });
       }

@@ -2851,6 +2851,22 @@ var StarlightEngine = (() => {
                 player.say("\u{1F44F} *claps*", this.chatColor, "emote");
                 this.addHistory("You", "\u{1F44F} *claps*", timeStr, "emote");
                 return;
+              case "jump":
+                player.say("*jumps* \u{1F998}", this.chatColor, "emote");
+                this.addHistory("You", "*jumps* \u{1F998}", timeStr, "emote");
+                return;
+              case "hug":
+                player.say("*hugs* \u{1F917}", this.chatColor, "emote");
+                this.addHistory("You", "*hugs* \u{1F917}", timeStr, "emote");
+                return;
+              case "bow":
+                player.say("*bows* \u{1F647}", this.chatColor, "emote");
+                this.addHistory("You", "*bows* \u{1F647}", timeStr, "emote");
+                return;
+              case "think":
+                player.say("\u{1F914} Hmm...", this.chatColor, "emote");
+                this.addHistory("You", "\u{1F914} Hmm...", timeStr, "emote");
+                return;
               case "me":
                 if (args) {
                   player.say(`*${args}*`, this.chatColor, "emote");
@@ -3262,6 +3278,7 @@ var StarlightEngine = (() => {
         createPanels() {
           if (!this.overlay) return;
           this._ensurePanel("navigatorPanel", "Room Navigator", `
+      <input type="text" id="roomSearchInput" placeholder="Search rooms..." style="width:100%;padding:6px 10px;margin-bottom:10px;border:1px solid var(--habbo-panel-border);border-radius:6px;background:var(--habbo-dark);color:white;font-family:inherit;font-size:12px;box-sizing:border-box;">
       <div style="margin-bottom:8px;font-size:12px;color:var(--habbo-text-dim);">Public Rooms</div>
       <div class="room-list" id="publicRoomList"></div>
       <div style="margin:12px 0 8px;font-size:12px;color:var(--habbo-text-dim);">Your Rooms</div>
@@ -3280,8 +3297,9 @@ var StarlightEngine = (() => {
         <span style="font-size:11px;color:var(--habbo-text-dim);">Click to select, right-click to sell one</span>
         <button id="btnSellAll" style="padding:4px 10px;background:var(--habbo-danger);color:white;border:none;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;">Sell All</button>
       </div>
+      <div id="favBar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;min-height:0;"></div>
       <div class="inv-grid" id="inventoryGrid"></div>
-      <div style="margin-top:10px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Click an item to select it, then click a tile to place.</div>
+      <div style="margin-top:10px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Click an item to select it, then click a tile to place. Star items to quick-access them.</div>
     `);
           this._ensurePanel("settingsPanel", "Settings", `
       <div class="setting-row"><label>Show Minimap</label><input type="checkbox" id="settingMinimap" checked></div>
@@ -3364,7 +3382,7 @@ var StarlightEngine = (() => {
         closeAllPanels() {
           document.querySelectorAll(".panel").forEach((p) => p.classList.remove("open"));
         }
-        showNotification(text, type = "info") {
+        showNotification(text, type = "info", duration = 3e3) {
           const area = document.getElementById("notificationArea");
           if (!area) return;
           const notif = document.createElement("div");
@@ -3378,7 +3396,7 @@ var StarlightEngine = (() => {
             notif.style.opacity = "0";
             notif.style.transform = "translateX(30px)";
             setTimeout(() => notif.remove(), 300);
-          }, 3e3);
+          }, duration);
         }
         showNPCTrade(npc, items, onBuy) {
           const existing = document.getElementById("npcTrade");
@@ -3505,11 +3523,13 @@ var StarlightEngine = (() => {
             list.appendChild(div);
           });
         }
-        renderNavigator(rooms, recent, onSelect, onRenameMyRoom, myRoomPrivate, onTogglePrivacy) {
+        renderNavigator(rooms, recent, onSelect, onRenameMyRoom, myRoomPrivate, onTogglePrivacy, searchQuery = "") {
           const publicList = document.getElementById("publicRoomList");
           if (!publicList) return;
           publicList.innerHTML = "";
-          rooms.forEach((room) => {
+          const q = searchQuery.toLowerCase();
+          const filtered = q ? rooms.filter((r) => r.name.toLowerCase().includes(q) || r.description.toLowerCase().includes(q)) : rooms;
+          filtered.forEach((room) => {
             const div = document.createElement("div");
             div.className = "room-item";
             const occupancy = this._getRoomOccupancy(room.id);
@@ -3593,10 +3613,26 @@ var StarlightEngine = (() => {
             grid.appendChild(div);
           });
         }
-        renderInventory(inventory, selected, onSelect, onSell, onSellAll) {
+        renderInventory(inventory, selected, onSelect, onSell, onSellAll, favorites, onToggleFavorite) {
           const grid = document.getElementById("inventoryGrid");
+          const favBar = document.getElementById("favBar");
           if (!grid) return;
           grid.innerHTML = "";
+          if (favBar) {
+            favBar.innerHTML = "";
+            const favItems = Object.keys(inventory).filter((type) => favorites.has(type));
+            if (favItems.length > 0) {
+              favItems.forEach((type) => {
+                const btn = document.createElement("button");
+                btn.style.cssText = "padding:4px 10px;background:var(--habbo-light);color:white;border:none;border-radius:12px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;white-space:nowrap;";
+                btn.textContent = "\u2B50 " + type;
+                btn.addEventListener("click", () => onSelect && onSelect(type));
+                favBar.appendChild(btn);
+              });
+            } else {
+              favBar.innerHTML = '<span style="font-size:11px;color:var(--habbo-text-dim);">Star items to quick-access them here</span>';
+            }
+          }
           const items = Object.entries(inventory);
           if (items.length === 0) {
             grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--habbo-text-dim);padding:20px;">Your inventory is empty. Visit the catalog to buy furniture!</div>';
@@ -3605,12 +3641,20 @@ var StarlightEngine = (() => {
           items.forEach(([type, count]) => {
             const div = document.createElement("div");
             div.className = "inv-item";
-            div.innerHTML = `<div>${type}</div><div class="inv-count">x${count}</div>`;
+            const isFav = favorites && favorites.has(type);
+            div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;"><span>${type}</span><span class="fav-star" data-type="${type}" style="cursor:pointer;font-size:14px;color:${isFav ? "var(--habbo-accent)" : "var(--habbo-text-dim)"};">${isFav ? "\u2605" : "\u2606"}</span></div><div class="inv-count">x${count}</div>`;
             if (selected === type) {
               div.style.borderColor = "var(--habbo-accent)";
               div.style.background = "rgba(244,208,63,0.25)";
             }
-            div.addEventListener("click", () => onSelect && onSelect(type));
+            div.addEventListener("click", (e) => {
+              if (e.target.classList.contains("fav-star")) {
+                e.stopPropagation();
+                onToggleFavorite && onToggleFavorite(type);
+              } else {
+                onSelect && onSelect(type);
+              }
+            });
             if (onSell) {
               div.addEventListener("contextmenu", (e) => {
                 e.preventDefault();
@@ -5751,6 +5795,8 @@ var StarlightEngine = (() => {
           this.ownedThemes = ["classic"];
           this.currentTheme = "classic";
           this.likedRooms = /* @__PURE__ */ new Set();
+          this.favorites = /* @__PURE__ */ new Set();
+          this.loadFavorites();
           this.myRoomSize = 10;
           this.myRoomName = "My Room";
           this.recentRooms = [];
@@ -5817,7 +5863,10 @@ var StarlightEngine = (() => {
             this.inventorySystem.add("rug", 1);
           }
           this.hasRendered = false;
-          this.autoSaveInterval = setInterval(() => this.saveAllData(), 6e4);
+          this.autoSaveInterval = setInterval(() => {
+            this.saveAllData();
+            this.uiManager?.showNotification("Game auto-saved \u{1F4BE}", "info", 1500);
+          }, 6e4);
           requestAnimationFrame((t) => this.loop(t));
           setTimeout(() => {
             if (this.tutorialSystem.shouldShow()) {
@@ -6187,6 +6236,9 @@ var StarlightEngine = (() => {
             this.uiManager.togglePanel("inboxPanel");
             this.renderInboxPanel();
           });
+          document.getElementById("roomSearchInput")?.addEventListener("input", () => {
+            if (document.getElementById("navigatorPanel")?.classList.contains("open")) this.renderNavigator();
+          });
           document.getElementById("hairStyleSelect")?.addEventListener("change", (e) => {
             this.customize.hairStyle = e.target.value;
             this.renderCustomizePanel();
@@ -6369,7 +6421,7 @@ var StarlightEngine = (() => {
           const cb = document.getElementById("settingMinimap");
           if (cb) cb.checked = this.settings.showMinimap;
         }
-        takeScreenshot() {
+        async takeScreenshot() {
           try {
             const dataUrl = this.canvas.toDataURL("image/png");
             let gallery = [];
@@ -6382,6 +6434,12 @@ var StarlightEngine = (() => {
             localStorage.setItem("starlight_gallery", JSON.stringify(gallery));
             this.uiManager.showNotification("Screenshot saved! Press N to view gallery.", "success");
             this.soundManager.play("click");
+            try {
+              const blob = await (await fetch(dataUrl)).blob();
+              await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+              this.uiManager.showNotification("Screenshot copied to clipboard!", "success", 2e3);
+            } catch (e) {
+            }
           } catch (e) {
           }
         }
@@ -6461,6 +6519,19 @@ var StarlightEngine = (() => {
           } catch (e) {
           }
         }
+        loadFavorites() {
+          try {
+            const data = JSON.parse(localStorage.getItem("starlight_favorites"));
+            if (data && Array.isArray(data)) this.favorites = new Set(data);
+          } catch (e) {
+          }
+        }
+        saveFavorites() {
+          try {
+            localStorage.setItem("starlight_favorites", JSON.stringify(Array.from(this.favorites)));
+          } catch (e) {
+          }
+        }
         trackRecentRoom(room) {
           this.recentRooms = this.recentRooms.filter((r) => r.id !== room.id);
           this.recentRooms.unshift({ id: room.id, name: room.name, time: Date.now() });
@@ -6523,6 +6594,8 @@ var StarlightEngine = (() => {
           }
         }
         renderNavigator() {
+          const searchInput = document.getElementById("roomSearchInput");
+          const searchQuery = searchInput ? searchInput.value : "";
           this.uiManager.renderNavigator(ROOM_TEMPLATES, this.recentRooms, (room) => {
             this.loadRoom(room);
             this.trackRecentRoom(room);
@@ -6542,7 +6615,7 @@ var StarlightEngine = (() => {
             this.saveSettings();
             this.uiManager.showNotification(isPrivate ? "My Room is now private \u{1F512}" : "My Room is now public \u{1F310}");
             this.renderNavigator();
-          });
+          }, searchQuery);
           this.uiManager.renderExpansions(ROOM_EXPANSIONS, this.myRoomSize, this.currencySystem.get(), (expansion) => {
             if (this.currencySystem.spend(expansion.price)) {
               this.expandMyRoom(expansion.size);
@@ -6652,6 +6725,13 @@ var StarlightEngine = (() => {
                 this.selectedTool = "walk";
                 this.uiManager.updateToolButtons(this.selectedTool);
               }
+              this.renderInventory();
+            },
+            this.favorites,
+            (type) => {
+              if (this.favorites.has(type)) this.favorites.delete(type);
+              else this.favorites.add(type);
+              this.saveFavorites();
               this.renderInventory();
             }
           );
@@ -6820,6 +6900,7 @@ var StarlightEngine = (() => {
           this.petSystem.save();
           this.leaderboardSystem.save();
           this.saveSettings();
+          this.saveFavorites();
           this.inboxSystem.save();
         }
         saveMyRoom() {

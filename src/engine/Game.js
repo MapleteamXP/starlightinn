@@ -73,6 +73,8 @@ export class Game {
     this.ownedThemes = ['classic'];
     this.currentTheme = 'classic';
     this.likedRooms = new Set();
+    this.favorites = new Set();
+    this.loadFavorites();
     this.myRoomSize = 10;
     this.myRoomName = 'My Room';
     this.recentRooms = [];
@@ -148,7 +150,7 @@ export class Game {
     }
 
     this.hasRendered = false;
-    this.autoSaveInterval = setInterval(() => this.saveAllData(), 60000);
+    this.autoSaveInterval = setInterval(() => { this.saveAllData(); this.uiManager?.showNotification('Game auto-saved 💾', 'info', 1500); }, 60000);
     requestAnimationFrame(t => this.loop(t));
 
     // Show tutorial for first-time players
@@ -453,6 +455,7 @@ export class Game {
     document.getElementById('btnChallenges')?.addEventListener('click', () => { this.uiManager.togglePanel('challengesPanel'); this.renderChallengesPanel(); });
     document.getElementById('btnNotifications')?.addEventListener('click', () => { this.uiManager.togglePanel('notificationsPanel'); this.uiManager.renderNotificationHistory(); });
     document.getElementById('btnInbox')?.addEventListener('click', () => { this.uiManager.togglePanel('inboxPanel'); this.renderInboxPanel(); });
+    document.getElementById('roomSearchInput')?.addEventListener('input', () => { if (document.getElementById('navigatorPanel')?.classList.contains('open')) this.renderNavigator(); });
 
     document.getElementById('hairStyleSelect')?.addEventListener('change', e => { this.customize.hairStyle = e.target.value; this.renderCustomizePanel(); });
     document.getElementById('hatSelect')?.addEventListener('change', e => { this.customize.hatType = e.target.value; this.renderCustomizePanel(); });
@@ -576,7 +579,7 @@ export class Game {
 
   setTool(tool) { this.selectedTool = tool; this.uiManager.updateToolButtons(this.selectedTool); }
   toggleMinimap() { this.settings.showMinimap = !this.settings.showMinimap; document.getElementById('minimap')?.classList.toggle('open', this.settings.showMinimap); const cb = document.getElementById('settingMinimap'); if (cb) cb.checked = this.settings.showMinimap; }
-  takeScreenshot() {
+  async takeScreenshot() {
     try {
       const dataUrl = this.canvas.toDataURL('image/png');
       let gallery = [];
@@ -586,6 +589,12 @@ export class Game {
       localStorage.setItem('starlight_gallery', JSON.stringify(gallery));
       this.uiManager.showNotification('Screenshot saved! Press N to view gallery.', 'success');
       this.soundManager.play('click');
+      // Try to copy to clipboard
+      try {
+        const blob = await (await fetch(dataUrl)).blob();
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        this.uiManager.showNotification('Screenshot copied to clipboard!', 'success', 2000);
+      } catch (e) {}
     } catch (e) {}
   }
 
@@ -654,6 +663,17 @@ export class Game {
     try { localStorage.setItem('starlight_settings', JSON.stringify({ showWeather: this.settings.showWeather, myRoomPrivate: this.settings.myRoomPrivate })); } catch (e) {}
   }
 
+  loadFavorites() {
+    try {
+      const data = JSON.parse(localStorage.getItem('starlight_favorites'));
+      if (data && Array.isArray(data)) this.favorites = new Set(data);
+    } catch (e) {}
+  }
+
+  saveFavorites() {
+    try { localStorage.setItem('starlight_favorites', JSON.stringify(Array.from(this.favorites))); } catch (e) {}
+  }
+
   trackRecentRoom(room) {
     this.recentRooms = this.recentRooms.filter(r => r.id !== room.id);
     this.recentRooms.unshift({ id: room.id, name: room.name, time: Date.now() });
@@ -720,6 +740,8 @@ export class Game {
   }
 
   renderNavigator() {
+    const searchInput = document.getElementById('roomSearchInput');
+    const searchQuery = searchInput ? searchInput.value : '';
     this.uiManager.renderNavigator(ROOM_TEMPLATES, this.recentRooms, room => {
       this.loadRoom(room);
       this.trackRecentRoom(room);
@@ -739,7 +761,7 @@ export class Game {
       this.saveSettings();
       this.uiManager.showNotification(isPrivate ? 'My Room is now private 🔒' : 'My Room is now public 🌐');
       this.renderNavigator();
-    });
+    }, searchQuery);
     this.uiManager.renderExpansions(ROOM_EXPANSIONS, this.myRoomSize, this.currencySystem.get(), expansion => {
       if (this.currencySystem.spend(expansion.price)) {
         this.expandMyRoom(expansion.size);
@@ -838,6 +860,13 @@ export class Game {
           this.selectedTool = 'walk';
           this.uiManager.updateToolButtons(this.selectedTool);
         }
+        this.renderInventory();
+      },
+      this.favorites,
+      type => {
+        if (this.favorites.has(type)) this.favorites.delete(type);
+        else this.favorites.add(type);
+        this.saveFavorites();
         this.renderInventory();
       }
     );
@@ -966,6 +995,7 @@ export class Game {
     this.petSystem.save();
     this.leaderboardSystem.save();
     this.saveSettings();
+    this.saveFavorites();
     this.inboxSystem.save();
   }
 

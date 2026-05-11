@@ -75,6 +75,22 @@ export class ChatManager {
           player.say('👏 *claps*', this.chatColor, 'emote');
           this.addHistory('You', '👏 *claps*', timeStr, 'emote');
           return;
+        case 'jump':
+          player.say('*jumps* 🦘', this.chatColor, 'emote');
+          this.addHistory('You', '*jumps* 🦘', timeStr, 'emote');
+          return;
+        case 'hug':
+          player.say('*hugs* 🤗', this.chatColor, 'emote');
+          this.addHistory('You', '*hugs* 🤗', timeStr, 'emote');
+          return;
+        case 'bow':
+          player.say('*bows* 🙇', this.chatColor, 'emote');
+          this.addHistory('You', '*bows* 🙇', timeStr, 'emote');
+          return;
+        case 'think':
+          player.say('🤔 Hmm...', this.chatColor, 'emote');
+          this.addHistory('You', '🤔 Hmm...', timeStr, 'emote');
+          return;
         case 'me':
           if (args) {
             player.say(`*${args}*`, this.chatColor, 'emote');
