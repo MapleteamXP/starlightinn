@@ -3,6 +3,7 @@
 // ============================================================
 
 import { Game } from './engine/Game.js';
+import { RingUppercut } from './minigames/RingUppercut.js';
 
 function createUI() {
   const overlay = document.getElementById('uiOverlay');
@@ -41,6 +42,7 @@ function createUI() {
       <button class="tool-btn" id="toolDance" title="Dance (D)"><span class="icon">&#128131;</span><span>Dance</span></button>
       <button class="tool-btn" id="toolWave" title="Wave (W)"><span class="icon">&#128075;</span><span>Wave</span></button>
       <button class="tool-btn" id="toolMinimap" title="Toggle Map (M)"><span class="icon">&#128506;&#65039;</span><span>Map</span></button>
+      <button class="tool-btn" id="toolMinigame" title="Minigames"><span class="icon">&#127918;</span><span>Games</span></button>
     </div>
     <div id="notificationArea"></div>
   `;
@@ -50,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try {
     createUI();
     window.game = new Game();
+    window.RingUppercut = RingUppercut;
   } catch (err) {
     console.error('Failed to initialize game:', err);
     const loading = document.getElementById('loadingScreen');
