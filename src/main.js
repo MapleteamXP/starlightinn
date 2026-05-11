@@ -33,8 +33,10 @@ function createUI() {
         <button class="top-btn" id="btnStats">&#128202; Stats</button>
         <button class="top-btn" id="btnShortcuts">&#9000;&#65039; Keys</button>
         <button class="top-btn" id="btnChallenges">&#128170; Quests</button>
+        <button class="top-btn" id="btnActiveQuest">&#128220; Mission</button>
         <button class="top-btn" id="btnNotifications">&#128276; Alerts</button>
         <button class="top-btn" id="btnInbox">&#128231; Mail</button>
+        <button class="top-btn" id="btnCollection">&#127912; Collection</button>
       </div>
     </div>
     <div id="roomInfo">

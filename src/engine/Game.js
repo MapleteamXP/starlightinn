@@ -36,6 +36,7 @@ import { TutorialSystem } from '../ui/Tutorial.js';
 import { ProgressionSystem } from '../economy/Progression.js';
 import { PetSystem } from '../world/Pet.js';
 import { InboxSystem } from '../social/Inbox.js';
+import { QuestSystem } from '../economy/Quests.js';
 
 class Particle {
   constructor(x, y, color, life, vx, vy) {
@@ -113,6 +114,7 @@ export class Game {
     this.friendSystem = new FriendSystem(this);
     this.petSystem = new PetSystem(this);
     this.inboxSystem = new InboxSystem(this);
+    this.questSystem = new QuestSystem(this);
     this.achievementSystem = new AchievementSystem(this);
     this.leaderboardSystem = new LeaderboardSystem();
     this.craftingSystem = new CraftingSystem(this.inventorySystem);
@@ -281,6 +283,7 @@ export class Game {
         this.soundManager.play('place');
         this.achievementSystem.track('place');
         this.challengeSystem.track('place');
+        this.questSystem.track('place');
         this.progressionSystem.addXP(15);
         this.statsSystem.inc('furniturePlaced');
       } else {
@@ -382,7 +385,8 @@ export class Game {
         this.soundManager.play('buy');
         this.statsSystem.inc('treasureChestsFound');
         this.challengeSystem.track('treasure');
-    this.progressionSystem.addXP(25);
+        this.questSystem.track('treasure');
+        this.progressionSystem.addXP(25);
         this.treasures = this.treasures.filter(t => t !== treasure);
         this.achievementSystem.track('walk');
         return;
@@ -391,6 +395,7 @@ export class Game {
       const npc = this.room.avatars.find(a => a.isNPC && Math.round(a.x) === tx && Math.round(a.y) === ty);
       if (npc) {
         this.inboxSystem.maybeReceiveRandom();
+        this.questSystem.track('talk');
         this.uiManager.showNPCProfile(npc,
           () => {
             this.player.moveTo(tx, ty, this.room);
@@ -456,8 +461,10 @@ export class Game {
     document.getElementById('btnStats')?.addEventListener('click', () => { this.uiManager.togglePanel('statsPanel'); this.renderStatsPanel(); });
     document.getElementById('btnShortcuts')?.addEventListener('click', () => { this.uiManager.togglePanel('shortcutsPanel'); this.renderShortcutsPanel(); });
     document.getElementById('btnChallenges')?.addEventListener('click', () => { this.uiManager.togglePanel('challengesPanel'); this.renderChallengesPanel(); });
+    document.getElementById('btnActiveQuest')?.addEventListener('click', () => { this.uiManager.togglePanel('questPanel'); this.renderQuestPanel(); });
     document.getElementById('btnNotifications')?.addEventListener('click', () => { this.uiManager.togglePanel('notificationsPanel'); this.uiManager.renderNotificationHistory(); });
     document.getElementById('btnInbox')?.addEventListener('click', () => { this.uiManager.togglePanel('inboxPanel'); this.renderInboxPanel(); });
+    document.getElementById('btnCollection')?.addEventListener('click', () => { this.uiManager.togglePanel('collectionPanel'); this.renderCollectionPanel(); });
     document.getElementById('roomSearchInput')?.addEventListener('input', () => { if (document.getElementById('navigatorPanel')?.classList.contains('open')) this.renderNavigator(); });
 
     document.getElementById('hairStyleSelect')?.addEventListener('change', e => { this.customize.hairStyle = e.target.value; this.renderCustomizePanel(); });
@@ -876,6 +883,13 @@ export class Game {
       sortBy => {
         this.inventorySort = this.inventorySort === sortBy ? 'default' : sortBy;
         this.renderInventory();
+      },
+      type => {
+        const item = FURNITURE_CATALOG.find(i => i.id === type);
+        if (!item) return null;
+        if (item.price >= 500) return '#f4d03f';
+        if (item.price >= 200) return '#e67e22';
+        return null;
       }
     );
   }
@@ -914,8 +928,8 @@ export class Game {
       this.saveAvatarToStorage();
       this.uiManager.showNotification('Look saved!');
       this.achievementSystem.track('customize');
-    this.challengeSystem.track('customize');
-    this.progressionSystem.addXP(10);
+      this.challengeSystem.track('customize');
+      this.progressionSystem.addXP(10);
     }, () => {
       const rand = arr => arr[Math.floor(Math.random() * arr.length)];
       this.customize.skinColor = rand(['#F5CBA7','#E0AC69','#8D5524','#C68642','#FFDBAC','#AA7C58']);
@@ -927,6 +941,10 @@ export class Game {
       this.customize.hatType = rand(['none','none','none','cap','beanie','crown','wizard']);
       this.customize.glassesType = rand(['none','none','none','shades','round']);
       this.renderCustomizePanel();
+    }, this.progressionSystem.getUnlockedTitles(), this.progressionSystem.getTitle(), title => {
+      this.progressionSystem.setEquippedTitle(title);
+      this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
+      this.uiManager.showNotification(`Title changed to ${title}!`);
     });
   }
 
@@ -1097,6 +1115,13 @@ export class Game {
     this.uiManager.renderStats(this.statsSystem.getStats());
   }
 
+  renderCollectionPanel() {
+    const inventory = this.inventorySystem.getAll();
+    const ownedTypes = Object.keys(inventory);
+    const totalCount = Object.values(inventory).reduce((a, b) => a + b, 0);
+    this.uiManager.renderCollection(FURNITURE_CATALOG, ownedTypes, totalCount);
+  }
+
   renderInboxPanel() {
     this.uiManager.renderInbox(this.inboxSystem.getAll(),
       id => { this.inboxSystem.read(id); this.renderInboxPanel(); },
@@ -1153,6 +1178,16 @@ export class Game {
     this.uiManager.renderChallenges(this.challengeSystem.getList());
   }
 
+  renderQuestPanel() {
+    this.uiManager.renderQuest(this.questSystem.getActive(), () => {
+      if (this.questSystem.claim()) {
+        this.uiManager.updateCurrency(this.currencySystem.get());
+        this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
+        this.renderQuestPanel();
+      }
+    });
+  }
+
   renderShortcutsPanel() {
     this.uiManager.renderShortcuts([
       { key: 'W / A / S / D', action: 'Walk around' },
@@ -1179,6 +1214,7 @@ export class Game {
         this.renderCraftingPanel();
         this.renderInventory();
         this.achievementSystem.track('place');
+        this.questSystem.track('craft');
       } else {
         this.uiManager.showNotification('Missing ingredients!', 'error');
         this.soundManager.play('error');
@@ -1695,6 +1731,7 @@ export class Game {
   endMinigame() {
     if (this.minigame && this.minigame.result === 'win') {
       this.achievementSystem.track('win');
+      this.questSystem.track('win');
       this.statsSystem.inc('minigamesWon');
     }
     this.minigame = null;

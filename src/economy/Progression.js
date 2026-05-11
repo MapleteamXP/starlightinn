@@ -26,19 +26,20 @@ export class ProgressionSystem {
     this.xp = 0;
     this.level = 1;
     this.title = 'Newcomer';
+    this.equippedTitle = null;
     this.load();
   }
 
   load() {
     try {
       const data = JSON.parse(localStorage.getItem('starlight_progression'));
-      if (data) { this.xp = data.xp || 0; this.level = data.level || 1; this.title = data.title || 'Newcomer'; }
+      if (data) { this.xp = data.xp || 0; this.level = data.level || 1; this.title = data.title || 'Newcomer'; this.equippedTitle = data.equippedTitle || null; }
     } catch (e) {}
     this._recalc();
   }
 
   save() {
-    try { localStorage.setItem('starlight_progression', JSON.stringify({ xp: this.xp, level: this.level, title: this.title })); } catch (e) {}
+    try { localStorage.setItem('starlight_progression', JSON.stringify({ xp: this.xp, level: this.level, title: this.title, equippedTitle: this.equippedTitle })); } catch (e) {}
   }
 
   _recalc() {
@@ -73,6 +74,17 @@ export class ProgressionSystem {
     const nextLevel = LEVELS.find(l => l.level === this.level + 1);
     const needed = nextLevel ? nextLevel.xp - currentLevel.xp : 1;
     const have = this.xp - currentLevel.xp;
-    return { level: this.level, title: this.title, xp: this.xp, have, needed, percent: nextLevel ? Math.min(100, Math.floor((have / needed) * 100)) : 100 };
+    return { level: this.level, title: this.getTitle(), xp: this.xp, have, needed, percent: nextLevel ? Math.min(100, Math.floor((have / needed) * 100)) : 100 };
+  }
+
+  getTitle() { return this.equippedTitle || this.title; }
+
+  getUnlockedTitles() {
+    return LEVELS.filter(l => this.xp >= l.xp).map(l => l.title);
+  }
+
+  setEquippedTitle(title) {
+    this.equippedTitle = title;
+    this.save();
   }
 }

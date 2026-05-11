@@ -69,6 +69,7 @@ export class UIManager {
       <div class="customize-row"><label>Shoes</label><div class="color-presets" id="shoePresets"></div></div>
       <div class="customize-row"><label>Hat</label><select id="hatSelect"><option value="none">None</option><option value="cap">Cap</option><option value="beanie">Beanie</option><option value="crown">Crown</option><option value="wizard">Wizard Hat</option></select></div>
       <div class="customize-row"><label>Glasses</label><select id="glassesSelect"><option value="none">None</option><option value="shades">Shades</option><option value="round">Round</option></select></div>
+      <div class="customize-row"><label>Title</label><select id="titleSelect" style="flex:1;"></select></div>
       <div class="customize-actions"><button class="btn-random" id="btnRandomLook">Random</button><button class="btn-save" id="btnSaveLook">Save Look</button></div>
     `);
     // Chat History
@@ -92,10 +93,12 @@ export class UIManager {
     this._ensurePanel('craftingPanel', 'Crafting Workshop', `<div class="craft-list" id="craftList"></div>`);
     // Stats
     this._ensurePanel('statsPanel', 'Player Stats', `<div class="stats-list" id="statsList"></div>`);
+    this._ensurePanel('collectionPanel', 'Collection', `<div class="collection-list" id="collectionList"></div>`);
     // Shortcuts
     this._ensurePanel('shortcutsPanel', 'Keyboard Shortcuts', `<div class="shortcuts-list" id="shortcutsList"></div>`);
     // Challenges
     this._ensurePanel('challengesPanel', 'Daily Challenges', `<div class="challenge-list" id="challengeList"></div>`);
+    this._ensurePanel('questPanel', 'Active Quest', `<div id="questContent"></div>`);
     // Notifications
     this._ensurePanel('notificationsPanel', 'Notification History', `<div class="notif-history" id="notifHistory"></div>`);
     this._ensurePanel('inboxPanel', 'Mailbox', `<div class="inbox-list" id="inboxList"></div>`);
@@ -373,7 +376,7 @@ export class UIManager {
     });
   }
 
-  renderInventory(inventory, selected, onSelect, onSell, onSellAll, favorites, onToggleFavorite, sortBy, onSort) {
+  renderInventory(inventory, selected, onSelect, onSell, onSellAll, favorites, onToggleFavorite, sortBy, onSort, getRarityColor) {
     const grid = document.getElementById('inventoryGrid');
     const favBar = document.getElementById('favBar');
     if (!grid) return;
@@ -419,10 +422,13 @@ export class UIManager {
       const div = document.createElement('div');
       div.className = 'inv-item';
       const isFav = favorites && favorites.has(type);
+      const rarityColor = getRarityColor ? getRarityColor(type) : null;
       div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;"><span>${type}</span><span class="fav-star" data-type="${type}" style="cursor:pointer;font-size:14px;color:${isFav ? 'var(--habbo-accent)' : 'var(--habbo-text-dim)'};">${isFav ? '\u2605' : '\u2606'}</span></div><div class="inv-count">x${count}</div>`;
       if (selected === type) {
         div.style.borderColor = 'var(--habbo-accent)';
         div.style.background = 'rgba(244,208,63,0.25)';
+      } else if (rarityColor) {
+        div.style.borderColor = rarityColor;
       }
       div.addEventListener('click', e => {
         if (e.target.classList.contains('fav-star')) {
@@ -450,7 +456,7 @@ export class UIManager {
     }
   }
 
-  renderCustomizePanel(customize, onChange, onSave, onRandom) {
+  renderCustomizePanel(customize, onChange, onSave, onRandom, titles, currentTitle, onTitleChange) {
     // Update selects
     const hairStyleSelect = document.getElementById('hairStyleSelect');
     const hatSelect = document.getElementById('hatSelect');
@@ -458,6 +464,21 @@ export class UIManager {
     if (hairStyleSelect) hairStyleSelect.value = customize.hairStyle;
     if (hatSelect) hatSelect.value = customize.hatType;
     if (glassesSelect) glassesSelect.value = customize.glassesType;
+
+    const titleSelect = document.getElementById('titleSelect');
+    if (titleSelect && titles) {
+      titleSelect.innerHTML = '';
+      titles.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t;
+        if (t === currentTitle) opt.selected = true;
+        titleSelect.appendChild(opt);
+      });
+      const newSelect = titleSelect.cloneNode(true);
+      titleSelect.parentNode.replaceChild(newSelect, titleSelect);
+      newSelect.addEventListener('change', e => onTitleChange && onTitleChange(e.target.value));
+    }
 
     this.renderColorPresets('skinPresets', ['#F5CBA7','#E0AC69','#8D5524','#C68642','#FFDBAC','#AA7C58','#F1C27D','#E8C39E'], customize.skinColor, 'skinColor', onChange);
     this.renderColorPresets('hairPresets', ['#090806','#2C1608','#71635A','#B7A69E','#D6C4C2','#B55239','#A52A2A','#DC143C','#4B0082','#228B22','#F1C40F','#D5DBDB'], customize.hairColor, 'hairColor', onChange);
@@ -729,6 +750,30 @@ export class UIManager {
     });
   }
 
+  renderCollection(catalog, ownedTypes, totalCount) {
+    const list = document.getElementById('collectionList');
+    if (!list) return;
+    const owned = new Set(ownedTypes);
+    const percent = Math.round((owned.size / catalog.length) * 100);
+    let html = `<div style="margin-bottom:12px;text-align:center;">
+      <div style="font-size:22px;font-weight:800;color:var(--habbo-accent);">${owned.size} / ${catalog.length}</div>
+      <div style="font-size:12px;color:var(--habbo-text-dim);">${percent}% complete · ${totalCount} total items</div>
+      <div style="width:100%;height:8px;background:var(--habbo-dark);border-radius:4px;margin-top:8px;overflow:hidden;">
+        <div style="width:${percent}%;height:100%;background:var(--habbo-accent);border-radius:4px;transition:width 0.5s;"></div>
+      </div>
+    </div>`;
+    html += `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">`;
+    catalog.forEach(item => {
+      const has = owned.has(item.id);
+      html += `<div style="padding:6px;border-radius:6px;text-align:center;font-size:11px;border:1px solid ${has ? 'var(--habbo-accent)' : 'var(--habbo-panel-border)'};background:${has ? 'rgba(244,208,63,0.1)' : 'var(--habbo-dark)'};color:${has ? 'white' : 'var(--habbo-text-dim)'};">
+        <div style="font-size:18px;">${has ? item.icon : '?'}</div>
+        <div style="margin-top:2px;">${has ? item.name : '???'}</div>
+      </div>`;
+    });
+    html += `</div>`;
+    list.innerHTML = html;
+  }
+
   renderCrafting(recipes, onCraft) {
     const list = document.getElementById('craftList');
     if (!list) return;
@@ -749,6 +794,32 @@ export class UIManager {
     list.querySelectorAll('.craft-btn').forEach(btn => {
       btn.addEventListener('click', () => onCraft && onCraft(btn.dataset.id));
     });
+  }
+
+  renderQuest(quest, onClaim) {
+    const content = document.getElementById('questContent');
+    if (!content) return;
+    if (!quest) {
+      content.innerHTML = '<div style="text-align:center;color:var(--habbo-text-dim);padding:20px;font-size:13px;">No active quest. Check back soon!</div>';
+      return;
+    }
+    const isComplete = quest.progress >= quest.amount;
+    const pct = Math.min(100, Math.floor((quest.progress / quest.amount) * 100));
+    content.innerHTML = `
+      <div style="text-align:center;margin-bottom:12px;">
+        <div style="font-size:16px;font-weight:700;color:var(--habbo-accent);">${quest.name}</div>
+        <div style="font-size:12px;color:var(--habbo-text-dim);margin-top:4px;">${quest.desc}</div>
+      </div>
+      <div style="width:100%;height:10px;background:var(--habbo-dark);border-radius:5px;overflow:hidden;margin-bottom:8px;">
+        <div style="width:${pct}%;height:100%;background:${isComplete ? 'var(--habbo-success)' : 'var(--habbo-accent)'};border-radius:5px;transition:width 0.3s;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:12px;">
+        <span>${quest.progress} / ${quest.amount}</span>
+        <span style="color:var(--habbo-success);font-weight:700;">Reward: \u2605${quest.reward}</span>
+      </div>
+      <button id="btnClaimQuest" style="width:100%;padding:8px;background:${isComplete ? 'var(--habbo-success)' : 'var(--habbo-dark)'};color:${isComplete ? 'white' : 'var(--habbo-text-dim)'};border:none;border-radius:6px;font-family:inherit;font-weight:700;cursor:${isComplete ? 'pointer' : 'not-allowed'};" ${isComplete ? '' : 'disabled'}>Claim Reward</button>
+    `;
+    document.getElementById('btnClaimQuest')?.addEventListener('click', () => onClaim && onClaim());
   }
 
   renderLeaderboard(games, getScores, filter, onFilter) {
