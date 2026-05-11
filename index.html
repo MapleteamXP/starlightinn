@@ -209,6 +209,12 @@ body {
 /* Theme List */
 .theme-list { display: flex; flex-direction: column; gap: 6px; }
 
+.notif-history { display: flex; flex-direction: column; gap: 6px; max-height: 300px; overflow-y: auto; }
+.notif-history-item { display: flex; align-items: center; gap: 8px; padding: 8px; background: rgba(0,0,0,0.15); border-radius: 6px; font-size: 12px; }
+
+.gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.gallery-item { background: rgba(0,0,0,0.2); border-radius: 8px; padding: 6px; }
+
 /* NPC Profile */
 .npc-profile { position: absolute; background: var(--habbo-panel); border: 2px solid var(--habbo-panel-border); border-radius: 12px; padding: 12px; z-index: 300; box-shadow: 0 8px 32px rgba(0,0,0,0.5); min-width: 180px; animation: popIn 0.2s ease-out; }
 .npc-profile-header { display: flex; align-items: center; gap: 10px; }
@@ -3230,6 +3236,7 @@ var StarlightEngine = (() => {
         constructor(game) {
           this.game = game;
           this.overlay = document.getElementById("uiOverlay");
+          this.notificationHistory = [];
         }
         createPanels() {
           if (!this.overlay) return;
@@ -3288,6 +3295,8 @@ var StarlightEngine = (() => {
           this._ensurePanel("statsPanel", "Player Stats", `<div class="stats-list" id="statsList"></div>`);
           this._ensurePanel("shortcutsPanel", "Keyboard Shortcuts", `<div class="shortcuts-list" id="shortcutsList"></div>`);
           this._ensurePanel("challengesPanel", "Daily Challenges", `<div class="challenge-list" id="challengeList"></div>`);
+          this._ensurePanel("notificationsPanel", "Notification History", `<div class="notif-history" id="notifHistory"></div>`);
+          this._ensurePanel("galleryPanel", "Screenshot Gallery", `<div class="gallery-grid" id="galleryGrid"></div>`);
           if (!document.getElementById("chatColorPopover")) {
             const popover = document.createElement("div");
             popover.className = "chat-color-popover";
@@ -3333,11 +3342,56 @@ var StarlightEngine = (() => {
           notif.style.borderLeftColor = type === "error" ? "var(--habbo-danger)" : type === "success" ? "var(--habbo-success)" : "var(--habbo-accent)";
           notif.textContent = text;
           area.appendChild(notif);
+          this.notificationHistory.unshift({ text, type, time: (/* @__PURE__ */ new Date()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
+          if (this.notificationHistory.length > 30) this.notificationHistory.pop();
           setTimeout(() => {
             notif.style.opacity = "0";
             notif.style.transform = "translateX(30px)";
             setTimeout(() => notif.remove(), 300);
           }, 3e3);
+        }
+        renderGallery() {
+          const grid = document.getElementById("galleryGrid");
+          if (!grid) return;
+          let gallery = [];
+          try {
+            gallery = JSON.parse(localStorage.getItem("starlight_gallery")) || [];
+          } catch (e) {
+          }
+          grid.innerHTML = "";
+          if (gallery.length === 0) {
+            grid.innerHTML = '<div style="text-align:center;color:var(--habbo-text-dim);padding:20px;">No screenshots yet. Press P for photo mode, then S to save!</div>';
+            return;
+          }
+          gallery.forEach((shot, i) => {
+            const div = document.createElement("div");
+            div.className = "gallery-item";
+            div.innerHTML = `<img src="${shot.data}" style="width:100%;border-radius:6px;display:block;"><div style="font-size:10px;color:var(--habbo-text-dim);text-align:center;margin-top:4px;">#${i + 1} \u2014 ${new Date(shot.date).toLocaleDateString()}</div>`;
+            grid.appendChild(div);
+          });
+        }
+        renderNotificationHistory() {
+          const list = document.getElementById("notifHistory");
+          if (!list) return;
+          list.innerHTML = "";
+          if (this.notificationHistory.length === 0) {
+            list.innerHTML = '<div style="text-align:center;color:var(--habbo-text-dim);padding:20px;">No notifications yet.</div>';
+            return;
+          }
+          this.notificationHistory.forEach((n) => {
+            const div = document.createElement("div");
+            div.className = "notif-history-item";
+            const color = n.type === "error" ? "var(--habbo-danger)" : n.type === "success" ? "var(--habbo-success)" : "var(--habbo-accent)";
+            div.innerHTML = `<span style="color:${color};font-weight:700;">\u25CF</span> <span>${n.text}</span><span style="color:var(--habbo-text-dim);font-size:11px;margin-left:auto;">${n.time}</span>`;
+            list.appendChild(div);
+          });
+        }
+        _getRoomOccupancy(roomId) {
+          const hour = (/* @__PURE__ */ new Date()).getHours();
+          const base = { lobby: 24, beach: 12, forest: 8, game: 18, rooftop: 6, club: 20, pool: 14, restaurant: 10, library: 7, spa: 9, cinema: 11, garden: 13, arcade_room: 16 }[roomId] || 8;
+          const variance = Math.floor(Math.sin(Date.now() / 36e5 + roomId.length) * 6 + 6);
+          const timeMod = hour >= 18 || hour <= 2 ? 1.4 : hour >= 9 && hour <= 17 ? 1 : 0.6;
+          return Math.floor((base + variance) * timeMod);
         }
         renderThemes(themes, owned, current, currency, onBuy, onApply) {
           const list = document.getElementById("themeList");
@@ -3368,7 +3422,8 @@ var StarlightEngine = (() => {
           rooms.forEach((room) => {
             const div = document.createElement("div");
             div.className = "room-item";
-            div.innerHTML = `<div class="room-name">${room.name}</div><div class="room-desc">${room.description}</div><div class="room-meta">${Math.floor(Math.random() * 18 + 3)} users online</div>`;
+            const occupancy = this._getRoomOccupancy(room.id);
+            div.innerHTML = `<div class="room-name">${room.name}</div><div class="room-desc">${room.description}</div><div class="room-meta">${occupancy} users online ${occupancy > 15 ? "\u{1F525}" : ""}</div>`;
             div.addEventListener("click", () => onSelect && onSelect(room));
             publicList.appendChild(div);
           });
@@ -5034,6 +5089,88 @@ var StarlightEngine = (() => {
     }
   });
 
+  // src/ui/Tutorial.js
+  var STEPS, TutorialSystem;
+  var init_Tutorial = __esm({
+    "src/ui/Tutorial.js"() {
+      STEPS = [
+        { title: "Welcome to Starlight Inn!", text: "Use W/A/S/D or arrow keys to walk around. Click tiles to move.", highlight: null },
+        { title: "Chat with others", text: "Press Enter to chat, or click the chat bar at the bottom.", highlight: "chatBar" },
+        { title: "Explore rooms", text: "Click the Navigator button to visit different rooms.", highlight: "btnNavigator" },
+        { title: "Buy furniture", text: "Visit the Catalog to buy furniture for your room.", highlight: "btnCatalog" },
+        { title: "Customize yourself", text: "Click the Me button to change your look.", highlight: "btnCustomize" },
+        { title: "Play minigames", text: "Click the Games button to earn StarCoins!", highlight: "toolMinigame" }
+      ];
+      TutorialSystem = class {
+        constructor() {
+          this.step = 0;
+          this.seen = false;
+          this.load();
+        }
+        load() {
+          try {
+            this.seen = localStorage.getItem("starlight_tutorial") === "seen";
+          } catch (e) {
+          }
+        }
+        markSeen() {
+          this.seen = true;
+          try {
+            localStorage.setItem("starlight_tutorial", "seen");
+          } catch (e) {
+          }
+        }
+        shouldShow() {
+          return !this.seen;
+        }
+        show(uiManager, onNext, onSkip) {
+          this._render(uiManager, onNext, onSkip);
+        }
+        _render(uiManager, onNext, onSkip) {
+          const existing = document.getElementById("tutorialOverlay");
+          if (existing) existing.remove();
+          const step = STEPS[this.step];
+          if (!step) {
+            this.markSeen();
+            onSkip && onSkip();
+            return;
+          }
+          const overlay = document.createElement("div");
+          overlay.id = "tutorialOverlay";
+          overlay.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;";
+          const card = document.createElement("div");
+          card.style.cssText = "background:var(--habbo-panel);border:3px solid var(--habbo-accent);border-radius:16px;padding:24px;max-width:360px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.5);";
+          card.innerHTML = `
+      <div style="font-size:20px;font-weight:800;color:var(--habbo-accent);margin-bottom:10px;">${step.title}</div>
+      <div style="font-size:14px;color:var(--habbo-text);margin-bottom:20px;line-height:1.5;">${step.text}</div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button id="tutSkip" style="padding:8px 16px;background:transparent;border:2px solid var(--habbo-panel-border);color:white;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:600;">Skip Tutorial</button>
+        <button id="tutNext" style="padding:8px 16px;background:var(--habbo-accent);color:var(--habbo-dark);border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:700;">${this.step < STEPS.length - 1 ? "Next" : "Get Started!"}</button>
+      </div>
+      <div style="margin-top:12px;font-size:11px;color:var(--habbo-text-dim);">Step ${this.step + 1} of ${STEPS.length}</div>
+    `;
+          overlay.appendChild(card);
+          document.body.appendChild(overlay);
+          card.querySelector("#tutNext").addEventListener("click", () => {
+            this.step++;
+            if (this.step >= STEPS.length) {
+              this.markSeen();
+              overlay.remove();
+              onSkip && onSkip();
+            } else {
+              this._render(uiManager, onNext, onSkip);
+            }
+          });
+          card.querySelector("#tutSkip").addEventListener("click", () => {
+            this.markSeen();
+            overlay.remove();
+            onSkip && onSkip();
+          });
+        }
+      };
+    }
+  });
+
   // src/world/Pet.js
   var PET_TYPES, PET_EMOJIS, PET_NAMES, PetSystem;
   var init_Pet = __esm({
@@ -5162,6 +5299,7 @@ var StarlightEngine = (() => {
       init_Stats();
       init_Events();
       init_Challenges();
+      init_Tutorial();
       init_Pet();
       Particle = class {
         constructor(x, y, color, life, vx, vy) {
@@ -5236,6 +5374,7 @@ var StarlightEngine = (() => {
           this.statsSystem = new StatsSystem();
           this.eventSystem = new EventSystem(this);
           this.challengeSystem = new ChallengeSystem(this);
+          this.tutorialSystem = new TutorialSystem();
           this.photoMode = false;
           this.setupInput();
           this.setupUI();
@@ -5258,6 +5397,11 @@ var StarlightEngine = (() => {
           this.hasRendered = false;
           this.autoSaveInterval = setInterval(() => this.saveAllData(), 6e4);
           requestAnimationFrame((t) => this.loop(t));
+          setTimeout(() => {
+            if (this.tutorialSystem.shouldShow()) {
+              this.tutorialSystem.show(this.uiManager);
+            }
+          }, 1500);
         }
         resize() {
           this.canvas.width = window.innerWidth;
@@ -5439,6 +5583,16 @@ var StarlightEngine = (() => {
               case "p":
                 this.togglePhotoMode();
                 break;
+              case "s":
+                if (this.photoMode) {
+                  this.takeScreenshot();
+                  e.preventDefault();
+                }
+                break;
+              case "n":
+                this.uiManager.togglePanel("galleryPanel");
+                this.uiManager.renderGallery();
+                break;
               case "escape":
                 if (this.photoMode) {
                   this.togglePhotoMode();
@@ -5584,6 +5738,10 @@ var StarlightEngine = (() => {
           document.getElementById("btnChallenges")?.addEventListener("click", () => {
             this.uiManager.togglePanel("challengesPanel");
             this.renderChallengesPanel();
+          });
+          document.getElementById("btnNotifications")?.addEventListener("click", () => {
+            this.uiManager.togglePanel("notificationsPanel");
+            this.uiManager.renderNotificationHistory();
           });
           document.getElementById("hairStyleSelect")?.addEventListener("change", (e) => {
             this.customize.hairStyle = e.target.value;
@@ -5752,6 +5910,22 @@ var StarlightEngine = (() => {
           document.getElementById("minimap")?.classList.toggle("open", this.settings.showMinimap);
           const cb = document.getElementById("settingMinimap");
           if (cb) cb.checked = this.settings.showMinimap;
+        }
+        takeScreenshot() {
+          try {
+            const dataUrl = this.canvas.toDataURL("image/png");
+            let gallery = [];
+            try {
+              gallery = JSON.parse(localStorage.getItem("starlight_gallery")) || [];
+            } catch (e) {
+            }
+            gallery.unshift({ data: dataUrl, date: Date.now() });
+            if (gallery.length > 10) gallery = gallery.slice(0, 10);
+            localStorage.setItem("starlight_gallery", JSON.stringify(gallery));
+            this.uiManager.showNotification("Screenshot saved! Press N to view gallery.", "success");
+            this.soundManager.play("click");
+          } catch (e) {
+          }
         }
         togglePhotoMode() {
           this.photoMode = !this.photoMode;
@@ -6665,6 +6839,7 @@ var StarlightEngine = (() => {
         <button class="top-btn" id="btnStats">&#128202; Stats</button>
         <button class="top-btn" id="btnShortcuts">&#9000;&#65039; Keys</button>
         <button class="top-btn" id="btnChallenges">&#128170; Quests</button>
+        <button class="top-btn" id="btnNotifications">&#128276; Alerts</button>
       </div>
     </div>
     <div id="roomInfo">

@@ -32,6 +32,7 @@ import { LeaderboardSystem } from '../social/Leaderboard.js';
 import { StatsSystem } from '../social/Stats.js';
 import { EventSystem } from '../world/Events.js';
 import { ChallengeSystem } from '../economy/Challenges.js';
+import { TutorialSystem } from '../ui/Tutorial.js';
 import { PetSystem } from '../world/Pet.js';
 
 class Particle {
@@ -103,6 +104,7 @@ export class Game {
     this.statsSystem = new StatsSystem();
     this.eventSystem = new EventSystem(this);
     this.challengeSystem = new ChallengeSystem(this);
+    this.tutorialSystem = new TutorialSystem();
     this.photoMode = false;
 
     this.setupInput();
@@ -132,6 +134,13 @@ export class Game {
     this.hasRendered = false;
     this.autoSaveInterval = setInterval(() => this.saveAllData(), 60000);
     requestAnimationFrame(t => this.loop(t));
+
+    // Show tutorial for first-time players
+    setTimeout(() => {
+      if (this.tutorialSystem.shouldShow()) {
+        this.tutorialSystem.show(this.uiManager);
+      }
+    }, 1500);
   }
 
   resize() {
@@ -296,6 +305,13 @@ export class Game {
         case 'r': this.placementRotation = (this.placementRotation + 1) % 4; this.uiManager.showNotification(`Rotation: ${this.placementRotation * 90}°`); break;
         case 'm': this.toggleMinimap(); break;
         case 'p': this.togglePhotoMode(); break;
+        case 's':
+          if (this.photoMode) { this.takeScreenshot(); e.preventDefault(); }
+          break;
+        case 'n':
+          this.uiManager.togglePanel('galleryPanel');
+          this.uiManager.renderGallery();
+          break;
         case 'escape':
           if (this.photoMode) { this.togglePhotoMode(); }
           else { this.uiManager.closeAllPanels(); }
@@ -403,6 +419,7 @@ export class Game {
     document.getElementById('btnStats')?.addEventListener('click', () => { this.uiManager.togglePanel('statsPanel'); this.renderStatsPanel(); });
     document.getElementById('btnShortcuts')?.addEventListener('click', () => { this.uiManager.togglePanel('shortcutsPanel'); this.renderShortcutsPanel(); });
     document.getElementById('btnChallenges')?.addEventListener('click', () => { this.uiManager.togglePanel('challengesPanel'); this.renderChallengesPanel(); });
+    document.getElementById('btnNotifications')?.addEventListener('click', () => { this.uiManager.togglePanel('notificationsPanel'); this.uiManager.renderNotificationHistory(); });
 
     document.getElementById('hairStyleSelect')?.addEventListener('change', e => { this.customize.hairStyle = e.target.value; this.renderCustomizePanel(); });
     document.getElementById('hatSelect')?.addEventListener('change', e => { this.customize.hatType = e.target.value; this.renderCustomizePanel(); });
@@ -519,6 +536,19 @@ export class Game {
 
   setTool(tool) { this.selectedTool = tool; this.uiManager.updateToolButtons(this.selectedTool); }
   toggleMinimap() { this.settings.showMinimap = !this.settings.showMinimap; document.getElementById('minimap')?.classList.toggle('open', this.settings.showMinimap); const cb = document.getElementById('settingMinimap'); if (cb) cb.checked = this.settings.showMinimap; }
+  takeScreenshot() {
+    try {
+      const dataUrl = this.canvas.toDataURL('image/png');
+      let gallery = [];
+      try { gallery = JSON.parse(localStorage.getItem('starlight_gallery')) || []; } catch (e) {}
+      gallery.unshift({ data: dataUrl, date: Date.now() });
+      if (gallery.length > 10) gallery = gallery.slice(0, 10);
+      localStorage.setItem('starlight_gallery', JSON.stringify(gallery));
+      this.uiManager.showNotification('Screenshot saved! Press N to view gallery.', 'success');
+      this.soundManager.play('click');
+    } catch (e) {}
+  }
+
   togglePhotoMode() {
     this.photoMode = !this.photoMode;
     const ui = document.getElementById('uiOverlay');

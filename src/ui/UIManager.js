@@ -6,6 +6,7 @@ export class UIManager {
   constructor(game) {
     this.game = game;
     this.overlay = document.getElementById('uiOverlay');
+    this.notificationHistory = [];
   }
 
   createPanels() {
@@ -81,6 +82,10 @@ export class UIManager {
     this._ensurePanel('shortcutsPanel', 'Keyboard Shortcuts', `<div class="shortcuts-list" id="shortcutsList"></div>`);
     // Challenges
     this._ensurePanel('challengesPanel', 'Daily Challenges', `<div class="challenge-list" id="challengeList"></div>`);
+    // Notifications
+    this._ensurePanel('notificationsPanel', 'Notification History', `<div class="notif-history" id="notifHistory"></div>`);
+    // Gallery
+    this._ensurePanel('galleryPanel', 'Screenshot Gallery', `<div class="gallery-grid" id="galleryGrid"></div>`);
     // Chat color popover
     if (!document.getElementById('chatColorPopover')) {
       const popover = document.createElement('div');
@@ -131,11 +136,57 @@ export class UIManager {
     notif.style.borderLeftColor = type === 'error' ? 'var(--habbo-danger)' : (type === 'success' ? 'var(--habbo-success)' : 'var(--habbo-accent)');
     notif.textContent = text;
     area.appendChild(notif);
+    this.notificationHistory.unshift({ text, type, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+    if (this.notificationHistory.length > 30) this.notificationHistory.pop();
     setTimeout(() => {
       notif.style.opacity = '0';
       notif.style.transform = 'translateX(30px)';
       setTimeout(() => notif.remove(), 300);
     }, 3000);
+  }
+
+  renderGallery() {
+    const grid = document.getElementById('galleryGrid');
+    if (!grid) return;
+    let gallery = [];
+    try { gallery = JSON.parse(localStorage.getItem('starlight_gallery')) || []; } catch (e) {}
+    grid.innerHTML = '';
+    if (gallery.length === 0) {
+      grid.innerHTML = '<div style="text-align:center;color:var(--habbo-text-dim);padding:20px;">No screenshots yet. Press P for photo mode, then S to save!</div>';
+      return;
+    }
+    gallery.forEach((shot, i) => {
+      const div = document.createElement('div');
+      div.className = 'gallery-item';
+      div.innerHTML = `<img src="${shot.data}" style="width:100%;border-radius:6px;display:block;"><div style="font-size:10px;color:var(--habbo-text-dim);text-align:center;margin-top:4px;">#${i + 1} — ${new Date(shot.date).toLocaleDateString()}</div>`;
+      grid.appendChild(div);
+    });
+  }
+
+  renderNotificationHistory() {
+    const list = document.getElementById('notifHistory');
+    if (!list) return;
+    list.innerHTML = '';
+    if (this.notificationHistory.length === 0) {
+      list.innerHTML = '<div style="text-align:center;color:var(--habbo-text-dim);padding:20px;">No notifications yet.</div>';
+      return;
+    }
+    this.notificationHistory.forEach(n => {
+      const div = document.createElement('div');
+      div.className = 'notif-history-item';
+      const color = n.type === 'error' ? 'var(--habbo-danger)' : (n.type === 'success' ? 'var(--habbo-success)' : 'var(--habbo-accent)');
+      div.innerHTML = `<span style="color:${color};font-weight:700;">●</span> <span>${n.text}</span><span style="color:var(--habbo-text-dim);font-size:11px;margin-left:auto;">${n.time}</span>`;
+      list.appendChild(div);
+    });
+  }
+
+  _getRoomOccupancy(roomId) {
+    // Deterministic pseudo-random based on room id and time of day
+    const hour = new Date().getHours();
+    const base = { lobby: 24, beach: 12, forest: 8, game: 18, rooftop: 6, club: 20, pool: 14, restaurant: 10, library: 7, spa: 9, cinema: 11, garden: 13, arcade_room: 16 }[roomId] || 8;
+    const variance = Math.floor(Math.sin(Date.now() / 3600000 + roomId.length) * 6 + 6);
+    const timeMod = (hour >= 18 || hour <= 2) ? 1.4 : (hour >= 9 && hour <= 17) ? 1.0 : 0.6;
+    return Math.floor((base + variance) * timeMod);
   }
 
   renderThemes(themes, owned, current, currency, onBuy, onApply) {
@@ -168,7 +219,8 @@ export class UIManager {
     rooms.forEach(room => {
       const div = document.createElement('div');
       div.className = 'room-item';
-      div.innerHTML = `<div class="room-name">${room.name}</div><div class="room-desc">${room.description}</div><div class="room-meta">${Math.floor(Math.random() * 18 + 3)} users online</div>`;
+      const occupancy = this._getRoomOccupancy(room.id);
+      div.innerHTML = `<div class="room-name">${room.name}</div><div class="room-desc">${room.description}</div><div class="room-meta">${occupancy} users online ${occupancy > 15 ? '🔥' : ''}</div>`;
       div.addEventListener('click', () => onSelect && onSelect(room));
       publicList.appendChild(div);
     });

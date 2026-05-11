@@ -201,6 +201,12 @@ body {
 /* Theme List */
 .theme-list { display: flex; flex-direction: column; gap: 6px; }
 
+.notif-history { display: flex; flex-direction: column; gap: 6px; max-height: 300px; overflow-y: auto; }
+.notif-history-item { display: flex; align-items: center; gap: 8px; padding: 8px; background: rgba(0,0,0,0.15); border-radius: 6px; font-size: 12px; }
+
+.gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.gallery-item { background: rgba(0,0,0,0.2); border-radius: 8px; padding: 6px; }
+
 /* NPC Profile */
 .npc-profile { position: absolute; background: var(--habbo-panel); border: 2px solid var(--habbo-panel-border); border-radius: 12px; padding: 12px; z-index: 300; box-shadow: 0 8px 32px rgba(0,0,0,0.5); min-width: 180px; animation: popIn 0.2s ease-out; }
 .npc-profile-header { display: flex; align-items: center; gap: 10px; }
