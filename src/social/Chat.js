@@ -11,6 +11,7 @@ export class ChatManager {
     this.filter = new ContentFilter();
     this.lastChatTime = 0;
     this.chatColor = '#fffde7';
+    this.showTimestamps = true;
   }
 
   send(text) {
@@ -213,7 +214,7 @@ export class ChatManager {
         div.style.background = 'rgba(244,208,63,0.15)';
         div.style.borderLeft = '2px solid var(--habbo-accent)';
       }
-      div.innerHTML = `<span class="msg-name" style="color:${nameColor}">${msg.name}</span><span class="msg-time">${msg.time}</span><div class="msg-text">${textHtml}</div>`;
+      div.innerHTML = `<span class="msg-name" style="color:${nameColor}">${msg.name}</span>${this.showTimestamps ? `<span class="msg-time">${msg.time}</span>` : ''}<div class="msg-text">${textHtml}</div>`;
       container.appendChild(div);
     });
     container.scrollTop = container.scrollHeight;

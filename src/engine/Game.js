@@ -70,7 +70,7 @@ export class Game {
     this.room = null;
     this.player = null;
     this.particles = [];
-    this.settings = { showMinimap: true, showNames: true, showChat: true, npcCount: 3, camSpeed: 5, sound: false, safeMode: false, showWeather: true, myRoomPrivate: false };
+    this.settings = { showMinimap: true, showNames: true, showChat: true, npcCount: 3, camSpeed: 5, sound: false, safeMode: false, showWeather: true, myRoomPrivate: false, showTimestamps: true };
     this.ownedThemes = ['classic'];
     this.currentTheme = 'classic';
     this.likedRooms = new Set();
@@ -340,6 +340,10 @@ export class Game {
           this.uiManager.togglePanel('galleryPanel');
           this.uiManager.renderGallery();
           break;
+        case 'q':
+          this.uiManager.togglePanel('questPanel');
+          this.renderQuestPanel();
+          break;
         case 'escape':
           if (this.photoMode) { this.togglePhotoMode(); }
           else { this.uiManager.closeAllPanels(); }
@@ -569,6 +573,7 @@ export class Game {
     document.getElementById('settingVolume')?.addEventListener('input', e => { const vol = parseInt(e.target.value) / 100; this.soundManager.setVolume(vol); });
     document.getElementById('settingSafeMode')?.addEventListener('change', e => { this.settings.safeMode = e.target.checked; this.uiManager.showNotification(e.target.checked ? 'Safe Mode enabled' : 'Safe Mode disabled'); });
     document.getElementById('settingWeather')?.addEventListener('change', e => { this.settings.showWeather = e.target.checked; this.saveSettings(); this.uiManager.showNotification(e.target.checked ? 'Weather effects on' : 'Weather effects off'); });
+    document.getElementById('settingTimestamps')?.addEventListener('change', e => { this.settings.showTimestamps = e.target.checked; this.chatManager.showTimestamps = e.target.checked; this.saveSettings(); this.chatManager.renderHistory(); this.uiManager.showNotification(e.target.checked ? 'Timestamps on' : 'Timestamps off'); });
     document.getElementById('btnLikeRoom')?.addEventListener('click', () => this.toggleLikeRoom());
     document.getElementById('btnExportSave')?.addEventListener('click', () => this.exportSave());
     document.getElementById('btnImportSave')?.addEventListener('click', () => document.getElementById('importFileInput')?.click());
@@ -577,6 +582,8 @@ export class Game {
     document.getElementById('minimap')?.classList.toggle('open', this.settings.showMinimap);
     const weatherCb = document.getElementById('settingWeather');
     if (weatherCb) weatherCb.checked = this.settings.showWeather;
+    const timestampsCb = document.getElementById('settingTimestamps');
+    if (timestampsCb) { timestampsCb.checked = this.settings.showTimestamps; this.chatManager.showTimestamps = this.settings.showTimestamps; }
 
     this.renderNavigator();
     this.renderCatalog();
@@ -665,12 +672,13 @@ export class Game {
       if (data) {
         this.settings.showWeather = data.showWeather !== false;
         this.settings.myRoomPrivate = data.myRoomPrivate === true;
+        this.settings.showTimestamps = data.showTimestamps !== false;
       }
     } catch (e) {}
   }
 
   saveSettings() {
-    try { localStorage.setItem('starlight_settings', JSON.stringify({ showWeather: this.settings.showWeather, myRoomPrivate: this.settings.myRoomPrivate })); } catch (e) {}
+    try { localStorage.setItem('starlight_settings', JSON.stringify({ showWeather: this.settings.showWeather, myRoomPrivate: this.settings.myRoomPrivate, showTimestamps: this.settings.showTimestamps })); } catch (e) {}
   }
 
   loadFavorites() {
@@ -968,8 +976,9 @@ export class Game {
       leaderboard: this.leaderboardSystem.scores,
       myroom: localStorage.getItem('starlight_myroom'),
       inbox: { messages: this.inboxSystem.messages, unreadCount: this.inboxSystem.unreadCount },
-      settings: { showWeather: this.settings.showWeather, myRoomPrivate: this.settings.myRoomPrivate },
-      version: '2.2'
+      settings: { showWeather: this.settings.showWeather, myRoomPrivate: this.settings.myRoomPrivate, showTimestamps: this.settings.showTimestamps },
+      quests: { active: this.questSystem.active, completed: this.questSystem.completed },
+      version: '2.3'
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -999,7 +1008,8 @@ export class Game {
         if (data.leaderboard) { this.leaderboardSystem.scores = data.leaderboard; this.leaderboardSystem.save(); }
         if (data.myroom) { localStorage.setItem('starlight_myroom', data.myroom); }
         if (data.inbox) { this.inboxSystem.messages = data.inbox.messages || []; this.inboxSystem.unreadCount = data.inbox.unreadCount || 0; this.inboxSystem.save(); }
-        if (data.settings) { this.settings.showWeather = data.settings.showWeather !== false; this.settings.myRoomPrivate = data.settings.myRoomPrivate === true; this.saveSettings(); }
+        if (data.settings) { this.settings.showWeather = data.settings.showWeather !== false; this.settings.myRoomPrivate = data.settings.myRoomPrivate === true; this.settings.showTimestamps = data.settings.showTimestamps !== false; this.saveSettings(); }
+        if (data.quests) { this.questSystem.active = data.quests.active || null; this.questSystem.completed = data.quests.completed || []; this.questSystem.save(); }
         this.uiManager.showNotification('Save imported! Reloading...', 'success');
         setTimeout(() => location.reload(), 1200);
       } catch (err) {
@@ -1198,10 +1208,13 @@ export class Game {
       { key: 'R', action: 'Rotate placement' },
       { key: 'M', action: 'Toggle minimap' },
       { key: 'P', action: 'Toggle photo mode' },
+      { key: 'Q', action: 'Toggle quest panel' },
+      { key: 'N', action: 'Screenshot gallery' },
       { key: 'ESC', action: 'Close panels / exit photo mode' },
       { key: 'Space', action: 'Punch in minigames' },
       { key: 'Click + Drag', action: 'Pan camera' },
       { key: 'Right-click item', action: 'Sell from inventory' },
+      { key: 'Double-click', action: 'Quick walk to tile' },
     ]);
   }
 
@@ -1713,8 +1726,14 @@ export class Game {
     mmCtx.fillStyle = 'rgba(244, 208, 63, 0.7)';
     this.room.furniture.forEach(f => { mmCtx.fillRect(offX + f.x * scale, offY + f.y * scale, scale * f.footprint[0] - 1, scale * f.footprint[1] - 1); });
     this.room.avatars.forEach(a => {
+      const isPlayer = !a.isNPC;
       mmCtx.fillStyle = a.isNPC ? '#e74c3c' : '#2ecc71';
-      mmCtx.beginPath(); mmCtx.arc(offX + a.x * scale + scale / 2, offY + a.y * scale + scale / 2, scale / 3, 0, Math.PI * 2); mmCtx.fill();
+      const radius = isPlayer ? Math.max(scale / 2, 3 + Math.sin(Date.now() / 300) * 1.5) : scale / 3;
+      mmCtx.beginPath(); mmCtx.arc(offX + a.x * scale + scale / 2, offY + a.y * scale + scale / 2, radius, 0, Math.PI * 2); mmCtx.fill();
+      if (isPlayer) {
+        mmCtx.strokeStyle = '#fff'; mmCtx.lineWidth = 1.5;
+        mmCtx.beginPath(); mmCtx.arc(offX + a.x * scale + scale / 2, offY + a.y * scale + scale / 2, radius + 1, 0, Math.PI * 2); mmCtx.stroke();
+      }
     });
   }
 
