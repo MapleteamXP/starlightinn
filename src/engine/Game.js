@@ -21,7 +21,12 @@ import { InventorySystem } from '../economy/Inventory.js';
 import { UIManager } from '../ui/UIManager.js';
 import { ContentFilter } from '../security/Filter.js';
 import { RingUppercut } from '../minigames/RingUppercut.js';
+import { MemoryMatch } from '../minigames/MemoryMatch.js';
+import { TilePuzzle } from '../minigames/TilePuzzle.js';
 import { SoundManager } from '../audio/SoundManager.js';
+import { DailyRewardSystem } from '../economy/DailyRewards.js';
+import { FriendSystem } from '../social/Friends.js';
+import { PetSystem } from '../world/Pet.js';
 
 class Particle {
   constructor(x, y, color, life, vx, vy) {
@@ -77,6 +82,9 @@ export class Game {
     this.soundManager = new SoundManager(this.settings.sound);
 
     this.minigame = null;
+    this.dailyRewards = new DailyRewardSystem(this);
+    this.friendSystem = new FriendSystem(this);
+    this.petSystem = new PetSystem(this);
 
     this.setupInput();
     this.setupUI();
@@ -85,6 +93,9 @@ export class Game {
     this.loadAvatarFromStorage();
     this.applyAvatarToPlayer();
     this.spawnNPCs(this.settings.npcCount);
+
+    // Check daily rewards
+    setTimeout(() => this.checkDailyRewards(), 1200);
 
     // Starter inventory only if empty
     const inv = this.inventorySystem.getAll();
@@ -107,7 +118,34 @@ export class Game {
     this.height = this.canvas.height;
   }
 
-  loadRoom(template) {
+  loadRoom(template, animate = true) {
+    if (animate) {
+      this._doRoomTransition(() => this._loadRoomImpl(template));
+      return;
+    }
+    this._loadRoomImpl(template);
+  }
+
+  _doRoomTransition(callback) {
+    let overlay = document.getElementById('roomTransition');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'roomTransition';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:#0a3d44;z-index:500;opacity:0;pointer-events:none;transition:opacity 0.35s ease;';
+      document.body.appendChild(overlay);
+    }
+    overlay.style.pointerEvents = 'auto';
+    overlay.style.opacity = '1';
+    setTimeout(() => {
+      callback();
+      setTimeout(() => {
+        overlay.style.opacity = '0';
+        overlay.style.pointerEvents = 'none';
+      }, 80);
+    }, 350);
+  }
+
+  _loadRoomImpl(template) {
     const oldPlayer = this.player;
     this.room = new Room(template);
     if (oldPlayer) {
@@ -301,6 +339,8 @@ export class Game {
     document.getElementById('btnSettings')?.addEventListener('click', () => this.uiManager.togglePanel('settingsPanel'));
     document.getElementById('btnCustomize')?.addEventListener('click', () => { this.uiManager.togglePanel('customizePanel'); this.renderCustomizePanel(); });
     document.getElementById('btnChatHistory')?.addEventListener('click', () => this.uiManager.togglePanel('chatPanel'));
+    document.getElementById('btnFriends')?.addEventListener('click', () => { this.uiManager.togglePanel('friendsPanel'); this.renderFriendsPanel(); });
+    document.getElementById('btnPet')?.addEventListener('click', () => { this.uiManager.togglePanel('petPanel'); this.renderPetPanel(); });
 
     document.getElementById('hairStyleSelect')?.addEventListener('change', e => { this.customize.hairStyle = e.target.value; this.renderCustomizePanel(); });
     document.getElementById('hatSelect')?.addEventListener('change', e => { this.customize.hatType = e.target.value; this.renderCustomizePanel(); });
@@ -522,14 +562,74 @@ export class Game {
     } catch (e) {}
   }
 
+  renderFriendsPanel() {
+    this.uiManager.renderFriends(this.friendSystem.friends, (friendId, itemType) => {
+      if (this.friendSystem.giftFriend(friendId, itemType)) {
+        this.uiManager.showNotification('Gift sent! Friendship increased!', 'success');
+        this.renderFriendsPanel();
+        this.renderInventory();
+      } else {
+        this.uiManager.showNotification('Cannot send gift!', 'error');
+      }
+    });
+  }
+
+  renderPetPanel() {
+    this.uiManager.renderPetPanel(this.petSystem,
+      type => {
+        if (type) {
+          this.petSystem.adopt(type);
+          this.uiManager.showNotification(`You adopted a ${type}!`, 'success');
+        } else {
+          this.petSystem.release();
+          this.uiManager.showNotification('Pet released.', 'info');
+        }
+        this.renderPetPanel();
+      },
+      () => {
+        if (this.petSystem.feed()) {
+          this.uiManager.showNotification('Pet fed! Yum!', 'success');
+          this.renderPetPanel();
+        }
+      },
+      () => {
+        if (this.petSystem.play()) {
+          this.uiManager.showNotification('Pet played! So happy!', 'success');
+          this.renderPetPanel();
+        }
+      },
+      () => {
+        if (this.petSystem.rest()) {
+          this.uiManager.showNotification('Pet is resting...', 'info');
+          this.renderPetPanel();
+        }
+      }
+    );
+  }
+
   renderMinigamePanel() {
     const games = [
-      { name: 'Ring Uppercut', desc: 'Time your punches in the boxing ring!', reward: '200-500', class: RingUppercut }
+      { name: 'Ring Uppercut', desc: 'Time your punches in the boxing ring!', reward: '200-500', class: RingUppercut },
+      { name: 'Memory Match', desc: 'Flip cards and find matching pairs!', reward: '250', class: MemoryMatch },
+      { name: 'Tile Puzzle', desc: 'Slide tiles to solve the puzzle!', reward: '300', class: TilePuzzle }
     ];
     this.uiManager.renderMinigamePanel(games, g => {
       this.startMinigame(g.class);
       this.uiManager.closeAllPanels();
     });
+  }
+
+  checkDailyRewards() {
+    if (this.dailyRewards.canClaim()) {
+      this.uiManager.showDailyRewardPanel(this.dailyRewards, () => {
+        const reward = this.dailyRewards.claim();
+        if (reward) {
+          this.uiManager.showNotification(`Day ${reward.day} reward: ★${reward.coins}${reward.item ? ' + ' + reward.item : ''}!`, 'success');
+          this.renderInventory();
+          this.uiManager.updateCurrency(this.currencySystem.get());
+        }
+      });
+    }
   }
 
   renderCustomizePreview() {
@@ -591,6 +691,8 @@ export class Game {
     if (this.room) {
       this.room.avatars.forEach(a => a.update(dt, this.room));
       this.npcManager.update(dt, this.room);
+    this.friendSystem.update(dt);
+    this.petSystem.tick(dt);
     }
     for (let i = this.particles.length - 1; i >= 0; i--) {
       this.particles[i].update(dt);
@@ -698,6 +800,9 @@ export class Game {
 
     ctx.restore();
     this.particles.forEach(p => p.draw(ctx));
+    if (this.player && this.petSystem) {
+      this.petSystem.draw(ctx, this.player.x, this.player.y, this.camera);
+    }
     this.renderMinimap();
   }
 

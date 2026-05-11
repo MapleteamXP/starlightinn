@@ -4,6 +4,8 @@
 
 import { Game } from './engine/Game.js';
 import { RingUppercut } from './minigames/RingUppercut.js';
+import { MemoryMatch } from './minigames/MemoryMatch.js';
+import { TilePuzzle } from './minigames/TilePuzzle.js';
 
 function createUI() {
   const overlay = document.getElementById('uiOverlay');
@@ -20,6 +22,8 @@ function createUI() {
         <button class="top-btn" id="btnSettings">&#9881;&#65039; Settings</button>
         <button class="top-btn" id="btnCustomize">&#128100; Me</button>
         <button class="top-btn" id="btnChatHistory">&#128172; Chat</button>
+        <button class="top-btn" id="btnFriends">&#128101; Friends</button>
+        <button class="top-btn" id="btnPet">&#128054; Pet</button>
       </div>
     </div>
     <div id="roomInfo">
@@ -53,6 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
     createUI();
     window.game = new Game();
     window.RingUppercut = RingUppercut;
+    window.MemoryMatch = MemoryMatch;
+    window.TilePuzzle = TilePuzzle;
   } catch (err) {
     console.error('Failed to initialize game:', err);
     const loading = document.getElementById('loadingScreen');

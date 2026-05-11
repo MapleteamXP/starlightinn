@@ -55,6 +55,12 @@ export class UIManager {
       <div class="minigame-list" id="minigameList"></div>
       <div style="margin-top:10px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Earn coins by playing minigames!</div>
     `);
+    // Friends
+    this._ensurePanel('friendsPanel', 'Friends', `<div class="friend-list" id="friendList"></div>`);
+    // Pet
+    this._ensurePanel('petPanel', 'My Pet', `<div id="petContent"></div>`);
+    // Daily Rewards
+    this._ensurePanel('dailyRewardPanel', 'Daily Rewards', `<div id="dailyRewardContent"></div>`);
     // Chat color popover
     if (!document.getElementById('chatColorPopover')) {
       const popover = document.createElement('div');
@@ -251,6 +257,101 @@ export class UIManager {
       div.addEventListener('click', () => onLaunch && onLaunch(g));
       list.appendChild(div);
     });
+  }
+
+  renderFriends(friends, onGift) {
+    const list = document.getElementById('friendList');
+    if (!list) return;
+    list.innerHTML = '';
+    if (friends.length === 0) {
+      list.innerHTML = '<div style="text-align:center;color:var(--habbo-text-dim);padding:20px;">No friends yet. Visit rooms to meet people!</div>';
+      return;
+    }
+    friends.forEach(f => {
+      const div = document.createElement('div');
+      div.className = 'friend-item';
+      const statusColor = f.status === 'online' ? '#2ecc71' : (f.status === 'away' ? '#f39c12' : '#7f8c8d');
+      div.innerHTML = `
+        <div class="friend-row">
+          <span class="friend-name">${f.name}</span>
+          <span class="friend-status" style="color:${statusColor}">${f.status}</span>
+        </div>
+        <div class="friend-meta">Room: ${f.room} | Friendship: ${f.friendship}/100</div>
+        <div class="friend-bar"><div style="width:${f.friendship}%;background:${statusColor};height:4px;border-radius:2px;"></div></div>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  renderPetPanel(petSystem, onAdopt, onFeed, onPlay, onRest) {
+    const content = document.getElementById('petContent');
+    if (!content) return;
+    const pet = petSystem.pet;
+    if (!pet) {
+      content.innerHTML = `
+        <div style="text-align:center;padding:20px;">
+          <div style="font-size:48px;margin-bottom:12px;">🐾</div>
+          <div style="color:var(--habbo-text-dim);margin-bottom:16px;">You don't have a pet yet!</div>
+          <div class="pet-adopt-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+            <button class="pet-adopt-btn" data-type="dog">🐶 Dog</button>
+            <button class="pet-adopt-btn" data-type="cat">🐱 Cat</button>
+            <button class="pet-adopt-btn" data-type="bird">🐦 Bird</button>
+            <button class="pet-adopt-btn" data-type="dragon">🐲 Dragon</button>
+            <button class="pet-adopt-btn" data-type="bunny">🐰 Bunny</button>
+          </div>
+        </div>`;
+      content.querySelectorAll('.pet-adopt-btn').forEach(btn => {
+        btn.addEventListener('click', () => onAdopt && onAdopt(btn.dataset.type));
+      });
+      return;
+    }
+    const emoji = petSystem.getEmoji();
+    content.innerHTML = `
+      <div style="text-align:center;padding:12px;">
+        <div style="font-size:56px;margin-bottom:4px;">${emoji}</div>
+        <div style="font-weight:700;font-size:16px;">${pet.name}</div>
+        <div style="font-size:11px;color:var(--habbo-text-dim);margin-bottom:12px;">${pet.type.toUpperCase()}</div>
+        <div class="pet-stat"><label>Hunger</label><div class="pet-bar"><div style="width:${pet.hunger}%;background:#e74c3c;"></div></div></div>
+        <div class="pet-stat"><label>Happiness</label><div class="pet-bar"><div style="width:${pet.happiness}%;background:#f4d03f;"></div></div></div>
+        <div class="pet-stat"><label>Energy</label><div class="pet-bar"><div style="width:${pet.energy}%;background:#3498db;"></div></div></div>
+        <div style="display:flex;gap:8px;margin-top:14px;">
+          <button id="petFeed" class="pet-action">🍖 Feed</button>
+          <button id="petPlay" class="pet-action">🎾 Play</button>
+          <button id="petRest" class="pet-action">💤 Rest</button>
+        </div>
+        <button id="petRelease" style="margin-top:10px;background:transparent;border:1px solid var(--habbo-danger);color:var(--habbo-danger);padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;">Release Pet</button>
+      </div>`;
+    document.getElementById('petFeed')?.addEventListener('click', onFeed);
+    document.getElementById('petPlay')?.addEventListener('click', onPlay);
+    document.getElementById('petRest')?.addEventListener('click', onRest);
+    document.getElementById('petRelease')?.addEventListener('click', () => onAdopt && onAdopt(null));
+  }
+
+  showDailyRewardPanel(dailySystem, onClaim) {
+    const content = document.getElementById('dailyRewardContent');
+    if (!content) return;
+    const canClaim = dailySystem.canClaim();
+    const table = dailySystem.getRewardsTable();
+    let html = `<div style="text-align:center;padding:8px 0;"><div style="font-size:14px;font-weight:700;">Streak: ${dailySystem.streak} days</div></div>`;
+    html += `<div class="daily-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:14px;">`;
+    table.forEach(r => {
+      const cls = r.claimed ? 'daily-cell claimed' : (r.current ? 'daily-cell current' : 'daily-cell');
+      html += `<div class="${cls}" style="text-align:center;padding:8px 4px;border-radius:8px;background:${r.claimed ? 'rgba(46,204,113,0.2)' : (r.current ? 'rgba(244,208,63,0.2)' : 'rgba(0,0,0,0.15)')};border:2px solid ${r.claimed ? '#2ecc71' : (r.current ? '#f4d03f' : 'transparent')};">
+        <div style="font-size:10px;color:var(--habbo-text-dim);">Day ${r.index}</div>
+        <div style="font-size:16px;margin:2px 0;">${r.item || '★'}</div>
+        <div style="font-size:11px;font-weight:700;">${r.coins}</div>
+      </div>`;
+    });
+    html += `</div>`;
+    if (canClaim) {
+      html += `<button id="dailyClaimBtn" style="width:100%;padding:10px;background:var(--habbo-accent);color:var(--habbo-dark);border:none;border-radius:8px;font-weight:800;font-size:14px;cursor:pointer;">Claim Reward!</button>`;
+    } else {
+      html += `<div style="text-align:center;color:var(--habbo-text-dim);font-size:12px;">Come back tomorrow for your next reward!</div>`;
+    }
+    content.innerHTML = html;
+    document.getElementById('dailyClaimBtn')?.addEventListener('click', onClaim);
+    this.closeAllPanels();
+    document.getElementById('dailyRewardPanel')?.classList.add('open');
   }
 
   setTypingIndicator(visible, text = '') {

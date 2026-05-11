@@ -174,6 +174,32 @@ body {
 #loadingScreen p { margin-top: 16px; color: var(--habbo-text-dim); font-size: 14px; }
 
 #minimap { position: absolute; top: 60px; right: 12px; width: 140px; height: 140px; background: rgba(7, 58, 66, 0.9); border: 2px solid var(--habbo-panel-border); border-radius: 8px; z-index: 90; display: none; }
+
+/* Friends Panel */
+.friend-item { background: rgba(0,0,0,0.15); border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; }
+.friend-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.friend-name { font-weight: 700; font-size: 13px; }
+.friend-status { font-size: 11px; font-weight: 600; text-transform: uppercase; }
+.friend-meta { font-size: 11px; color: var(--habbo-text-dim); margin-bottom: 4px; }
+.friend-bar { background: rgba(0,0,0,0.3); border-radius: 2px; height: 4px; }
+
+/* Pet Panel */
+.pet-stat { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.pet-stat label { font-size: 11px; width: 70px; color: var(--habbo-text-dim); }
+.pet-bar { flex: 1; background: rgba(0,0,0,0.3); border-radius: 4px; height: 8px; overflow: hidden; }
+.pet-bar div { height: 100%; border-radius: 4px; transition: width 0.3s; }
+.pet-action { flex: 1; padding: 8px; border-radius: 6px; border: none; background: var(--habbo-light); color: white; font-family: inherit; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+.pet-action:hover { background: var(--habbo-accent); color: var(--habbo-dark); }
+.pet-adopt-btn { padding: 10px; border-radius: 8px; border: 2px solid var(--habbo-panel-border); background: rgba(0,0,0,0.15); color: white; font-family: inherit; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+.pet-adopt-btn:hover { border-color: var(--habbo-accent); background: rgba(244,208,63,0.1); }
+
+/* Daily Rewards */
+.daily-cell { transition: all 0.15s; }
+.daily-cell.current { animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+/* Room Transition */
+#roomTransition { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--habbo-bg); z-index: 500; opacity: 0; pointer-events: none; transition: opacity 0.35s ease; }
 #minimap.open { display: block; }
 #minimapCanvas { width: 100%; height: 100%; border-radius: 6px; }
 
@@ -3073,6 +3099,9 @@ var StarlightEngine = (() => {
       <div class="minigame-list" id="minigameList"></div>
       <div style="margin-top:10px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Earn coins by playing minigames!</div>
     `);
+          this._ensurePanel("friendsPanel", "Friends", `<div class="friend-list" id="friendList"></div>`);
+          this._ensurePanel("petPanel", "My Pet", `<div id="petContent"></div>`);
+          this._ensurePanel("dailyRewardPanel", "Daily Rewards", `<div id="dailyRewardContent"></div>`);
           if (!document.getElementById("chatColorPopover")) {
             const popover = document.createElement("div");
             popover.className = "chat-color-popover";
@@ -3249,6 +3278,98 @@ var StarlightEngine = (() => {
             div.addEventListener("click", () => onLaunch && onLaunch(g));
             list.appendChild(div);
           });
+        }
+        renderFriends(friends, onGift) {
+          const list = document.getElementById("friendList");
+          if (!list) return;
+          list.innerHTML = "";
+          if (friends.length === 0) {
+            list.innerHTML = '<div style="text-align:center;color:var(--habbo-text-dim);padding:20px;">No friends yet. Visit rooms to meet people!</div>';
+            return;
+          }
+          friends.forEach((f) => {
+            const div = document.createElement("div");
+            div.className = "friend-item";
+            const statusColor = f.status === "online" ? "#2ecc71" : f.status === "away" ? "#f39c12" : "#7f8c8d";
+            div.innerHTML = `
+        <div class="friend-row">
+          <span class="friend-name">${f.name}</span>
+          <span class="friend-status" style="color:${statusColor}">${f.status}</span>
+        </div>
+        <div class="friend-meta">Room: ${f.room} | Friendship: ${f.friendship}/100</div>
+        <div class="friend-bar"><div style="width:${f.friendship}%;background:${statusColor};height:4px;border-radius:2px;"></div></div>
+      `;
+            list.appendChild(div);
+          });
+        }
+        renderPetPanel(petSystem, onAdopt, onFeed, onPlay, onRest) {
+          const content = document.getElementById("petContent");
+          if (!content) return;
+          const pet = petSystem.pet;
+          if (!pet) {
+            content.innerHTML = `
+        <div style="text-align:center;padding:20px;">
+          <div style="font-size:48px;margin-bottom:12px;">\u{1F43E}</div>
+          <div style="color:var(--habbo-text-dim);margin-bottom:16px;">You don't have a pet yet!</div>
+          <div class="pet-adopt-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+            <button class="pet-adopt-btn" data-type="dog">\u{1F436} Dog</button>
+            <button class="pet-adopt-btn" data-type="cat">\u{1F431} Cat</button>
+            <button class="pet-adopt-btn" data-type="bird">\u{1F426} Bird</button>
+            <button class="pet-adopt-btn" data-type="dragon">\u{1F432} Dragon</button>
+            <button class="pet-adopt-btn" data-type="bunny">\u{1F430} Bunny</button>
+          </div>
+        </div>`;
+            content.querySelectorAll(".pet-adopt-btn").forEach((btn) => {
+              btn.addEventListener("click", () => onAdopt && onAdopt(btn.dataset.type));
+            });
+            return;
+          }
+          const emoji = petSystem.getEmoji();
+          content.innerHTML = `
+      <div style="text-align:center;padding:12px;">
+        <div style="font-size:56px;margin-bottom:4px;">${emoji}</div>
+        <div style="font-weight:700;font-size:16px;">${pet.name}</div>
+        <div style="font-size:11px;color:var(--habbo-text-dim);margin-bottom:12px;">${pet.type.toUpperCase()}</div>
+        <div class="pet-stat"><label>Hunger</label><div class="pet-bar"><div style="width:${pet.hunger}%;background:#e74c3c;"></div></div></div>
+        <div class="pet-stat"><label>Happiness</label><div class="pet-bar"><div style="width:${pet.happiness}%;background:#f4d03f;"></div></div></div>
+        <div class="pet-stat"><label>Energy</label><div class="pet-bar"><div style="width:${pet.energy}%;background:#3498db;"></div></div></div>
+        <div style="display:flex;gap:8px;margin-top:14px;">
+          <button id="petFeed" class="pet-action">\u{1F356} Feed</button>
+          <button id="petPlay" class="pet-action">\u{1F3BE} Play</button>
+          <button id="petRest" class="pet-action">\u{1F4A4} Rest</button>
+        </div>
+        <button id="petRelease" style="margin-top:10px;background:transparent;border:1px solid var(--habbo-danger);color:var(--habbo-danger);padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;">Release Pet</button>
+      </div>`;
+          document.getElementById("petFeed")?.addEventListener("click", onFeed);
+          document.getElementById("petPlay")?.addEventListener("click", onPlay);
+          document.getElementById("petRest")?.addEventListener("click", onRest);
+          document.getElementById("petRelease")?.addEventListener("click", () => onAdopt && onAdopt(null));
+        }
+        showDailyRewardPanel(dailySystem, onClaim) {
+          const content = document.getElementById("dailyRewardContent");
+          if (!content) return;
+          const canClaim = dailySystem.canClaim();
+          const table = dailySystem.getRewardsTable();
+          let html = `<div style="text-align:center;padding:8px 0;"><div style="font-size:14px;font-weight:700;">Streak: ${dailySystem.streak} days</div></div>`;
+          html += `<div class="daily-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:14px;">`;
+          table.forEach((r) => {
+            const cls = r.claimed ? "daily-cell claimed" : r.current ? "daily-cell current" : "daily-cell";
+            html += `<div class="${cls}" style="text-align:center;padding:8px 4px;border-radius:8px;background:${r.claimed ? "rgba(46,204,113,0.2)" : r.current ? "rgba(244,208,63,0.2)" : "rgba(0,0,0,0.15)"};border:2px solid ${r.claimed ? "#2ecc71" : r.current ? "#f4d03f" : "transparent"};">
+        <div style="font-size:10px;color:var(--habbo-text-dim);">Day ${r.index}</div>
+        <div style="font-size:16px;margin:2px 0;">${r.item || "\u2605"}</div>
+        <div style="font-size:11px;font-weight:700;">${r.coins}</div>
+      </div>`;
+          });
+          html += `</div>`;
+          if (canClaim) {
+            html += `<button id="dailyClaimBtn" style="width:100%;padding:10px;background:var(--habbo-accent);color:var(--habbo-dark);border:none;border-radius:8px;font-weight:800;font-size:14px;cursor:pointer;">Claim Reward!</button>`;
+          } else {
+            html += `<div style="text-align:center;color:var(--habbo-text-dim);font-size:12px;">Come back tomorrow for your next reward!</div>`;
+          }
+          content.innerHTML = html;
+          document.getElementById("dailyClaimBtn")?.addEventListener("click", onClaim);
+          this.closeAllPanels();
+          document.getElementById("dailyRewardPanel")?.classList.add("open");
         }
         setTypingIndicator(visible, text = "") {
           const bar = document.getElementById("typingIndicatorBar");
@@ -3523,6 +3644,329 @@ var StarlightEngine = (() => {
     }
   });
 
+  // src/minigames/MemoryMatch.js
+  var EMOJIS, MemoryMatch;
+  var init_MemoryMatch = __esm({
+    "src/minigames/MemoryMatch.js"() {
+      init_Framework();
+      EMOJIS = ["\u{1F31F}", "\u{1F680}", "\u{1F3B5}", "\u{1F3A8}", "\u{1F3AE}", "\u{1F355}", "\u26A1", "\u{1F48E}", "\u{1F308}", "\u{1F525}", "\u2744\uFE0F", "\u{1F33A}"];
+      MemoryMatch = class extends BaseMinigame {
+        constructor(game) {
+          super(game, { duration: 90, rewards: { win: 250, lose: 25 } });
+          this.gridSize = 4;
+          this.cards = [];
+          this.flipped = [];
+          this.matched = 0;
+          this.canFlip = true;
+          this.moves = 0;
+          this._click = this.handleClick.bind(this);
+        }
+        start() {
+          super.start();
+          this.matched = 0;
+          this.moves = 0;
+          this.flipped = [];
+          this.canFlip = true;
+          this._buildDeck();
+          this.game.canvas.addEventListener("click", this._click);
+        }
+        end(won) {
+          this.game.canvas.removeEventListener("click", this._click);
+          super.end(won);
+        }
+        _buildDeck() {
+          const pairs = this.gridSize * this.gridSize / 2;
+          const deck = [];
+          for (let i = 0; i < pairs; i++) {
+            const emoji = EMOJIS[i % EMOJIS.length];
+            deck.push({ id: i, emoji, face: "down", matched: false });
+            deck.push({ id: i, emoji, face: "down", matched: false });
+          }
+          for (let i = deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [deck[i], deck[j]] = [deck[j], deck[i]];
+          }
+          this.cards = deck;
+        }
+        handleClick(e) {
+          if (this.state !== "playing" || !this.canFlip) return;
+          const w = this.game.canvas.width;
+          const h = this.game.canvas.height;
+          const cardW = 64, cardH = 80, gap = 12;
+          const totalW = this.gridSize * cardW + (this.gridSize - 1) * gap;
+          const totalH = this.gridSize * cardH + (this.gridSize - 1) * gap;
+          const offX = (w - totalW) / 2;
+          const offY = (h - totalH) / 2 - 20;
+          const mx = e.clientX, my = e.clientY;
+          for (let i = 0; i < this.cards.length; i++) {
+            const col = i % this.gridSize;
+            const row = Math.floor(i / this.gridSize);
+            const cx = offX + col * (cardW + gap);
+            const cy = offY + row * (cardH + gap);
+            if (mx >= cx && mx <= cx + cardW && my >= cy && my <= cy + cardH) {
+              this._flipCard(i);
+              break;
+            }
+          }
+        }
+        _flipCard(index) {
+          const card = this.cards[index];
+          if (card.face === "up" || card.matched || this.flipped.includes(index)) return;
+          card.face = "up";
+          this.flipped.push(index);
+          this.game.soundManager.play("click");
+          if (this.flipped.length === 2) {
+            this.moves++;
+            const [a, b] = this.flipped;
+            if (this.cards[a].emoji === this.cards[b].emoji) {
+              this.cards[a].matched = true;
+              this.cards[b].matched = true;
+              this.matched++;
+              this.flipped = [];
+              this.score += 100;
+              this.game.soundManager.play("buy");
+              if (this.matched >= this.cards.length / 2) {
+                this.end(true);
+              }
+            } else {
+              this.canFlip = false;
+              setTimeout(() => {
+                this.cards[a].face = "down";
+                this.cards[b].face = "down";
+                this.flipped = [];
+                this.canFlip = true;
+                this.game.soundManager.play("error");
+              }, 700);
+            }
+          }
+        }
+        update(dt) {
+          super.update(dt);
+        }
+        render(ctx) {
+          const w = ctx.canvas.width;
+          const h = ctx.canvas.height;
+          ctx.fillStyle = "#0e2a30";
+          ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = "#f4d03f";
+          ctx.font = "bold 24px Nunito, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("Memory Match", w / 2, 40);
+          ctx.fillStyle = "#fff";
+          ctx.font = "14px Nunito, sans-serif";
+          ctx.fillText(`Matches: ${this.matched}/${this.cards.length / 2}   Moves: ${this.moves}   Time: ${Math.ceil(this.duration - this.timer)}s`, w / 2, 66);
+          const cardW = 64, cardH = 80, gap = 12;
+          const totalW = this.gridSize * cardW + (this.gridSize - 1) * gap;
+          const totalH = this.gridSize * cardH + (this.gridSize - 1) * gap;
+          const offX = (w - totalW) / 2;
+          const offY = (h - totalH) / 2 - 10;
+          for (let i = 0; i < this.cards.length; i++) {
+            const col = i % this.gridSize;
+            const row = Math.floor(i / this.gridSize);
+            const cx = offX + col * (cardW + gap);
+            const cy = offY + row * (cardH + gap);
+            const card = this.cards[i];
+            if (card.face === "up" || card.matched) {
+              ctx.fillStyle = card.matched ? "rgba(46,204,113,0.25)" : "rgba(255,255,255,0.1)";
+              ctx.fillRect(cx, cy, cardW, cardH);
+              ctx.strokeStyle = card.matched ? "#2ecc71" : "#f4d03f";
+              ctx.lineWidth = 2;
+              ctx.strokeRect(cx, cy, cardW, cardH);
+              ctx.fillStyle = "#fff";
+              ctx.font = "32px Nunito, sans-serif";
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillText(card.emoji, cx + cardW / 2, cy + cardH / 2);
+            } else {
+              ctx.fillStyle = "rgba(255,255,255,0.06)";
+              ctx.fillRect(cx, cy, cardW, cardH);
+              ctx.strokeStyle = "rgba(255,255,255,0.25)";
+              ctx.lineWidth = 2;
+              ctx.strokeRect(cx, cy, cardW, cardH);
+              ctx.fillStyle = "rgba(255,255,255,0.15)";
+              ctx.font = "20px Nunito, sans-serif";
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillText("?", cx + cardW / 2, cy + cardH / 2);
+            }
+          }
+          if (this.state === "ended") {
+            ctx.fillStyle = "rgba(0,0,0,0.75)";
+            ctx.fillRect(0, 0, w, h);
+            ctx.fillStyle = this.result === "win" ? "#2ecc71" : "#e74c3c";
+            ctx.font = "bold 48px Nunito, sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(this.result === "win" ? "YOU WIN!" : "TIME UP!", w / 2, h / 2 - 20);
+            ctx.fillStyle = "#fff";
+            ctx.font = "20px Nunito, sans-serif";
+            const reward = this.result === "win" ? this.rewards.win : this.rewards.lose;
+            ctx.fillText(`+${reward} StarCoins`, w / 2, h / 2 + 25);
+            ctx.font = "14px Nunito, sans-serif";
+            ctx.fillText("Press ESC to return", w / 2, h / 2 + 55);
+          }
+          super.render(ctx);
+        }
+      };
+    }
+  });
+
+  // src/minigames/TilePuzzle.js
+  var TilePuzzle;
+  var init_TilePuzzle = __esm({
+    "src/minigames/TilePuzzle.js"() {
+      init_Framework();
+      TilePuzzle = class extends BaseMinigame {
+        constructor(game) {
+          super(game, { duration: 120, rewards: { win: 300, lose: 20 } });
+          this.gridSize = 4;
+          this.tiles = [];
+          this.emptyIndex = 15;
+          this.moves = 0;
+          this.solved = false;
+          this._click = this.handleClick.bind(this);
+        }
+        start() {
+          super.start();
+          this.moves = 0;
+          this.solved = false;
+          this._buildBoard();
+          this._shuffle(120);
+          this.game.canvas.addEventListener("click", this._click);
+        }
+        end(won) {
+          this.game.canvas.removeEventListener("click", this._click);
+          super.end(won);
+        }
+        _buildBoard() {
+          this.tiles = [];
+          for (let i = 0; i < 15; i++) this.tiles.push(i + 1);
+          this.tiles.push(0);
+          this.emptyIndex = 15;
+        }
+        _shuffle(count) {
+          for (let i = 0; i < count; i++) {
+            const neighbors = this._getNeighbors(this.emptyIndex);
+            const pick = neighbors[Math.floor(Math.random() * neighbors.length)];
+            this._swap(pick, this.emptyIndex, false);
+          }
+          this.moves = 0;
+        }
+        _getNeighbors(idx) {
+          const row = Math.floor(idx / this.gridSize);
+          const col = idx % this.gridSize;
+          const neighbors = [];
+          if (row > 0) neighbors.push(idx - this.gridSize);
+          if (row < this.gridSize - 1) neighbors.push(idx + this.gridSize);
+          if (col > 0) neighbors.push(idx - 1);
+          if (col < this.gridSize - 1) neighbors.push(idx + 1);
+          return neighbors;
+        }
+        _swap(from, to, countMove = true) {
+          [this.tiles[from], this.tiles[to]] = [this.tiles[to], this.tiles[from]];
+          this.emptyIndex = from;
+          if (countMove) this.moves++;
+        }
+        handleClick(e) {
+          if (this.state !== "playing" || this.solved) return;
+          const w = this.game.canvas.width;
+          const h = this.game.canvas.height;
+          const tileSize = 72, gap = 6;
+          const totalW = this.gridSize * tileSize + (this.gridSize - 1) * gap;
+          const totalH = this.gridSize * tileSize + (this.gridSize - 1) * gap;
+          const offX = (w - totalW) / 2;
+          const offY = (h - totalH) / 2 + 10;
+          const mx = e.clientX, my = e.clientY;
+          for (let i = 0; i < this.tiles.length; i++) {
+            const col = i % this.gridSize;
+            const row = Math.floor(i / this.gridSize);
+            const cx = offX + col * (tileSize + gap);
+            const cy = offY + row * (tileSize + gap);
+            if (mx >= cx && mx <= cx + tileSize && my >= cy && my <= cy + tileSize) {
+              if (this._getNeighbors(this.emptyIndex).includes(i)) {
+                this._swap(i, this.emptyIndex);
+                this.game.soundManager.play("click");
+                if (this._checkSolved()) {
+                  this.solved = true;
+                  this.end(true);
+                }
+              } else {
+                this.game.soundManager.play("error");
+              }
+              break;
+            }
+          }
+        }
+        _checkSolved() {
+          for (let i = 0; i < 15; i++) {
+            if (this.tiles[i] !== i + 1) return false;
+          }
+          return true;
+        }
+        render(ctx) {
+          const w = ctx.canvas.width;
+          const h = ctx.canvas.height;
+          ctx.fillStyle = "#0e2a30";
+          ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = "#f4d03f";
+          ctx.font = "bold 24px Nunito, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("Tile Puzzle", w / 2, 40);
+          ctx.fillStyle = "#fff";
+          ctx.font = "14px Nunito, sans-serif";
+          ctx.fillText(`Moves: ${this.moves}   Time: ${Math.ceil(this.duration - this.timer)}s`, w / 2, 66);
+          const tileSize = 72, gap = 6;
+          const totalW = this.gridSize * tileSize + (this.gridSize - 1) * gap;
+          const totalH = this.gridSize * tileSize + (this.gridSize - 1) * gap;
+          const offX = (w - totalW) / 2;
+          const offY = (h - totalH) / 2 + 20;
+          for (let i = 0; i < this.tiles.length; i++) {
+            const col = i % this.gridSize;
+            const row = Math.floor(i / this.gridSize);
+            const cx = offX + col * (tileSize + gap);
+            const cy = offY + row * (tileSize + gap);
+            const val = this.tiles[i];
+            if (val !== 0) {
+              const isCorrect = val === i + 1;
+              ctx.fillStyle = isCorrect ? "rgba(46,204,113,0.2)" : "rgba(255,255,255,0.08)";
+              ctx.fillRect(cx, cy, tileSize, tileSize);
+              ctx.strokeStyle = isCorrect ? "#2ecc71" : "rgba(255,255,255,0.3)";
+              ctx.lineWidth = 2;
+              ctx.strokeRect(cx, cy, tileSize, tileSize);
+              ctx.fillStyle = "#fff";
+              ctx.font = "bold 28px Nunito, sans-serif";
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillText(String(val), cx + tileSize / 2, cy + tileSize / 2);
+            } else {
+              ctx.fillStyle = "rgba(0,0,0,0.2)";
+              ctx.fillRect(cx, cy, tileSize, tileSize);
+              ctx.strokeStyle = "rgba(255,255,255,0.1)";
+              ctx.lineWidth = 1;
+              ctx.strokeRect(cx, cy, tileSize, tileSize);
+            }
+          }
+          if (this.state === "ended") {
+            ctx.fillStyle = "rgba(0,0,0,0.75)";
+            ctx.fillRect(0, 0, w, h);
+            ctx.fillStyle = this.result === "win" ? "#2ecc71" : "#e74c3c";
+            ctx.font = "bold 48px Nunito, sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(this.result === "win" ? "SOLVED!" : "TIME UP!", w / 2, h / 2 - 20);
+            ctx.fillStyle = "#fff";
+            ctx.font = "20px Nunito, sans-serif";
+            const reward = this.result === "win" ? this.rewards.win : this.rewards.lose;
+            ctx.fillText(`+${reward} StarCoins`, w / 2, h / 2 + 25);
+            ctx.font = "14px Nunito, sans-serif";
+            ctx.fillText("Press ESC to return", w / 2, h / 2 + 55);
+          }
+          super.render(ctx);
+        }
+      };
+    }
+  });
+
   // src/audio/SoundManager.js
   var SoundManager;
   var init_SoundManager = __esm({
@@ -3639,6 +4083,266 @@ var StarlightEngine = (() => {
     }
   });
 
+  // src/economy/DailyRewards.js
+  var REWARDS, DailyRewardSystem;
+  var init_DailyRewards = __esm({
+    "src/economy/DailyRewards.js"() {
+      REWARDS = [
+        { day: 1, coins: 50, item: null },
+        { day: 2, coins: 100, item: null },
+        { day: 3, coins: 150, item: "plant" },
+        { day: 4, coins: 200, item: null },
+        { day: 5, coins: 300, item: "lamp" },
+        { day: 6, coins: 400, item: null },
+        { day: 7, coins: 1e3, item: "dragon" }
+      ];
+      DailyRewardSystem = class {
+        constructor(game) {
+          this.game = game;
+          this.streak = 0;
+          this.lastClaim = 0;
+          this.load();
+        }
+        load() {
+          try {
+            const data = JSON.parse(localStorage.getItem("starlight_daily"));
+            if (data) {
+              this.streak = data.streak || 0;
+              this.lastClaim = data.lastClaim || 0;
+            }
+          } catch (e) {
+          }
+        }
+        save() {
+          try {
+            localStorage.setItem("starlight_daily", JSON.stringify({ streak: this.streak, lastClaim: this.lastClaim }));
+          } catch (e) {
+          }
+        }
+        canClaim() {
+          const now = /* @__PURE__ */ new Date();
+          const last = new Date(this.lastClaim);
+          const sameDay = now.getFullYear() === last.getFullYear() && now.getMonth() === last.getMonth() && now.getDate() === last.getDate();
+          return !sameDay;
+        }
+        getStreakDay() {
+          return (this.streak - 1) % 7 + 1;
+        }
+        claim() {
+          if (!this.canClaim()) return null;
+          const now = Date.now();
+          const last = new Date(this.lastClaim);
+          const yesterday = new Date(now);
+          yesterday.setDate(yesterday.getDate() - 1);
+          const isConsecutive = last.getFullYear() === yesterday.getFullYear() && last.getMonth() === yesterday.getMonth() && last.getDate() === yesterday.getDate();
+          if (isConsecutive || this.streak === 0) {
+            this.streak++;
+          } else {
+            this.streak = 1;
+          }
+          this.lastClaim = now;
+          this.save();
+          const day = this.getStreakDay();
+          const reward = REWARDS[day - 1];
+          if (reward) {
+            this.game.currencySystem.add(reward.coins);
+            if (reward.item) this.game.inventorySystem.add(reward.item, 1);
+          }
+          return { day, ...reward };
+        }
+        getRewardsTable() {
+          const currentDay = this.getStreakDay();
+          return REWARDS.map((r, i) => ({
+            ...r,
+            index: i + 1,
+            claimed: i + 1 < currentDay || i + 1 === currentDay && !this.canClaim(),
+            current: i + 1 === currentDay && this.canClaim()
+          }));
+        }
+      };
+    }
+  });
+
+  // src/social/Friends.js
+  var BOT_NAMES, BOT_STATUSES, FriendSystem;
+  var init_Friends = __esm({
+    "src/social/Friends.js"() {
+      init_Core();
+      BOT_NAMES = ["Astro", "Luna", "Nova", "Zephyr", "Pixel", "Echo", "Jazz", "Coco", "Milo", "Ruby"];
+      BOT_STATUSES = ["online", "online", "online", "away", "offline"];
+      FriendSystem = class {
+        constructor(game) {
+          this.game = game;
+          this.friends = [];
+          this.load();
+          this._ensureBots();
+          this._tick = 0;
+        }
+        _ensureBots() {
+          if (this.friends.length === 0) {
+            const shuffled = [...BOT_NAMES].sort(() => Math.random() - 0.5);
+            for (let i = 0; i < 5; i++) {
+              this.friends.push({
+                id: "bot_" + i,
+                name: shuffled[i],
+                status: randChoice(BOT_STATUSES),
+                room: randChoice(["Lobby", "Beach", "Club", "Arcade"]),
+                friendship: randInt(10, 80),
+                lastUpdate: Date.now()
+              });
+            }
+            this.save();
+          }
+        }
+        update(dt) {
+          this._tick += dt;
+          if (this._tick < 8) return;
+          this._tick = 0;
+          this.friends.forEach((f) => {
+            if (f.id.startsWith("bot_") && Math.random() < 0.3) {
+              f.status = randChoice(BOT_STATUSES);
+              f.room = randChoice(["Lobby", "Beach", "Club", "Arcade", "Garden", "Library", "My Room"]);
+              f.lastUpdate = Date.now();
+            }
+          });
+        }
+        addFriend(name) {
+          const id = "friend_" + Date.now();
+          this.friends.push({ id, name, status: "online", room: "Lobby", friendship: 10, lastUpdate: Date.now() });
+          this.save();
+          return id;
+        }
+        removeFriend(id) {
+          this.friends = this.friends.filter((f) => f.id !== id);
+          this.save();
+        }
+        giftFriend(id, itemType) {
+          const f = this.friends.find((x) => x.id === id);
+          if (!f) return false;
+          if (!this.game.inventorySystem.has(itemType)) return false;
+          this.game.inventorySystem.remove(itemType, 1);
+          f.friendship = Math.min(100, f.friendship + 15);
+          f.lastUpdate = Date.now();
+          this.save();
+          return true;
+        }
+        load() {
+          try {
+            const data = JSON.parse(localStorage.getItem("starlight_friends"));
+            if (data && Array.isArray(data)) this.friends = data;
+          } catch (e) {
+          }
+        }
+        save() {
+          try {
+            localStorage.setItem("starlight_friends", JSON.stringify(this.friends));
+          } catch (e) {
+          }
+        }
+      };
+    }
+  });
+
+  // src/world/Pet.js
+  var PET_TYPES, PET_EMOJIS, PET_NAMES, PetSystem;
+  var init_Pet = __esm({
+    "src/world/Pet.js"() {
+      init_Core();
+      PET_TYPES = ["dog", "cat", "bird", "dragon", "bunny"];
+      PET_EMOJIS = { dog: "\u{1F436}", cat: "\u{1F431}", bird: "\u{1F426}", dragon: "\u{1F432}", bunny: "\u{1F430}" };
+      PET_NAMES = ["Buddy", "Mochi", "Pip", "Ziggy", "Luna", "Oreo", "Coco", "Bean"];
+      PetSystem = class {
+        constructor(game) {
+          this.game = game;
+          this.pet = null;
+          this.load();
+        }
+        load() {
+          try {
+            const data = JSON.parse(localStorage.getItem("starlight_pet"));
+            if (data) this.pet = data;
+          } catch (e) {
+          }
+        }
+        save() {
+          try {
+            localStorage.setItem("starlight_pet", JSON.stringify(this.pet));
+          } catch (e) {
+          }
+        }
+        adopt(type, name) {
+          if (!PET_TYPES.includes(type)) type = "dog";
+          this.pet = {
+            type,
+            name: name || PET_NAMES[Math.floor(Math.random() * PET_NAMES.length)],
+            hunger: 50,
+            happiness: 50,
+            energy: 50,
+            adopted: Date.now()
+          };
+          this.save();
+        }
+        release() {
+          this.pet = null;
+          localStorage.removeItem("starlight_pet");
+        }
+        feed() {
+          if (!this.pet) return false;
+          this.pet.hunger = Math.min(100, this.pet.hunger + 30);
+          this.pet.happiness = Math.min(100, this.pet.happiness + 5);
+          this.save();
+          return true;
+        }
+        play() {
+          if (!this.pet) return false;
+          this.pet.happiness = Math.min(100, this.pet.happiness + 20);
+          this.pet.energy = Math.max(0, this.pet.energy - 10);
+          this.pet.hunger = Math.max(0, this.pet.hunger - 5);
+          this.save();
+          return true;
+        }
+        rest() {
+          if (!this.pet) return false;
+          this.pet.energy = Math.min(100, this.pet.energy + 25);
+          this.save();
+          return true;
+        }
+        tick(dt) {
+          if (!this.pet) return;
+          const decay = dt * 0.3;
+          this.pet.hunger = Math.max(0, this.pet.hunger - decay);
+          this.pet.happiness = Math.max(0, this.pet.happiness - decay * 0.5);
+          this.pet.energy = Math.min(100, this.pet.energy + decay * 0.2);
+          if (Math.random() < 5e-3) this.save();
+        }
+        getEmoji() {
+          return this.pet ? PET_EMOJIS[this.pet.type] || "\u{1F43E}" : "";
+        }
+        draw(ctx, playerX, playerY, camera) {
+          if (!this.pet) return;
+          const offset = { x: -0.6, y: 0.4 };
+          const px = playerX + offset.x + Math.sin(Date.now() / 400) * 0.08;
+          const py = playerY + offset.y;
+          const sp = isoToScreen(px, py);
+          const x = sp.x + camera.x;
+          const y = sp.y + camera.y - 10;
+          ctx.fillStyle = "rgba(0,0,0,0.15)";
+          ctx.beginPath();
+          ctx.ellipse(x, y + 8, 10, 4, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.font = "22px Nunito, sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          const bob = Math.sin(Date.now() / 300) * 2;
+          ctx.fillText(this.getEmoji(), x, y + bob);
+          ctx.fillStyle = "#fff";
+          ctx.font = "bold 8px Nunito, sans-serif";
+          ctx.fillText(this.pet.name, x, y - 14);
+        }
+      };
+    }
+  });
+
   // src/engine/Game.js
   var Particle, Game;
   var init_Game = __esm({
@@ -3656,7 +4360,12 @@ var StarlightEngine = (() => {
       init_UIManager();
       init_Filter();
       init_RingUppercut();
+      init_MemoryMatch();
+      init_TilePuzzle();
       init_SoundManager();
+      init_DailyRewards();
+      init_Friends();
+      init_Pet();
       Particle = class {
         constructor(x, y, color, life, vx, vy) {
           this.x = x;
@@ -3715,12 +4424,16 @@ var StarlightEngine = (() => {
           this.contentFilter = new ContentFilter();
           this.soundManager = new SoundManager(this.settings.sound);
           this.minigame = null;
+          this.dailyRewards = new DailyRewardSystem(this);
+          this.friendSystem = new FriendSystem(this);
+          this.petSystem = new PetSystem(this);
           this.setupInput();
           this.setupUI();
           this.loadRoom(ROOM_TEMPLATES[0]);
           this.loadAvatarFromStorage();
           this.applyAvatarToPlayer();
           this.spawnNPCs(this.settings.npcCount);
+          setTimeout(() => this.checkDailyRewards(), 1200);
           const inv = this.inventorySystem.getAll();
           if (Object.keys(inv).length === 0) {
             this.inventorySystem.add("chair", 2);
@@ -3738,7 +4451,32 @@ var StarlightEngine = (() => {
           this.width = this.canvas.width;
           this.height = this.canvas.height;
         }
-        loadRoom(template) {
+        loadRoom(template, animate = true) {
+          if (animate) {
+            this._doRoomTransition(() => this._loadRoomImpl(template));
+            return;
+          }
+          this._loadRoomImpl(template);
+        }
+        _doRoomTransition(callback) {
+          let overlay = document.getElementById("roomTransition");
+          if (!overlay) {
+            overlay = document.createElement("div");
+            overlay.id = "roomTransition";
+            overlay.style.cssText = "position:fixed;top:0;left:0;right:0;bottom:0;background:#0a3d44;z-index:500;opacity:0;pointer-events:none;transition:opacity 0.35s ease;";
+            document.body.appendChild(overlay);
+          }
+          overlay.style.pointerEvents = "auto";
+          overlay.style.opacity = "1";
+          setTimeout(() => {
+            callback();
+            setTimeout(() => {
+              overlay.style.opacity = "0";
+              overlay.style.pointerEvents = "none";
+            }, 80);
+          }, 350);
+        }
+        _loadRoomImpl(template) {
           const oldPlayer = this.player;
           this.room = new Room(template);
           if (oldPlayer) {
@@ -3964,6 +4702,14 @@ var StarlightEngine = (() => {
             this.renderCustomizePanel();
           });
           document.getElementById("btnChatHistory")?.addEventListener("click", () => this.uiManager.togglePanel("chatPanel"));
+          document.getElementById("btnFriends")?.addEventListener("click", () => {
+            this.uiManager.togglePanel("friendsPanel");
+            this.renderFriendsPanel();
+          });
+          document.getElementById("btnPet")?.addEventListener("click", () => {
+            this.uiManager.togglePanel("petPanel");
+            this.renderPetPanel();
+          });
           document.getElementById("hairStyleSelect")?.addEventListener("change", (e) => {
             this.customize.hairStyle = e.target.value;
             this.renderCustomizePanel();
@@ -4232,14 +4978,72 @@ var StarlightEngine = (() => {
           } catch (e) {
           }
         }
+        renderFriendsPanel() {
+          this.uiManager.renderFriends(this.friendSystem.friends, (friendId, itemType) => {
+            if (this.friendSystem.giftFriend(friendId, itemType)) {
+              this.uiManager.showNotification("Gift sent! Friendship increased!", "success");
+              this.renderFriendsPanel();
+              this.renderInventory();
+            } else {
+              this.uiManager.showNotification("Cannot send gift!", "error");
+            }
+          });
+        }
+        renderPetPanel() {
+          this.uiManager.renderPetPanel(
+            this.petSystem,
+            (type) => {
+              if (type) {
+                this.petSystem.adopt(type);
+                this.uiManager.showNotification(`You adopted a ${type}!`, "success");
+              } else {
+                this.petSystem.release();
+                this.uiManager.showNotification("Pet released.", "info");
+              }
+              this.renderPetPanel();
+            },
+            () => {
+              if (this.petSystem.feed()) {
+                this.uiManager.showNotification("Pet fed! Yum!", "success");
+                this.renderPetPanel();
+              }
+            },
+            () => {
+              if (this.petSystem.play()) {
+                this.uiManager.showNotification("Pet played! So happy!", "success");
+                this.renderPetPanel();
+              }
+            },
+            () => {
+              if (this.petSystem.rest()) {
+                this.uiManager.showNotification("Pet is resting...", "info");
+                this.renderPetPanel();
+              }
+            }
+          );
+        }
         renderMinigamePanel() {
           const games = [
-            { name: "Ring Uppercut", desc: "Time your punches in the boxing ring!", reward: "200-500", class: RingUppercut }
+            { name: "Ring Uppercut", desc: "Time your punches in the boxing ring!", reward: "200-500", class: RingUppercut },
+            { name: "Memory Match", desc: "Flip cards and find matching pairs!", reward: "250", class: MemoryMatch },
+            { name: "Tile Puzzle", desc: "Slide tiles to solve the puzzle!", reward: "300", class: TilePuzzle }
           ];
           this.uiManager.renderMinigamePanel(games, (g) => {
             this.startMinigame(g.class);
             this.uiManager.closeAllPanels();
           });
+        }
+        checkDailyRewards() {
+          if (this.dailyRewards.canClaim()) {
+            this.uiManager.showDailyRewardPanel(this.dailyRewards, () => {
+              const reward = this.dailyRewards.claim();
+              if (reward) {
+                this.uiManager.showNotification(`Day ${reward.day} reward: \u2605${reward.coins}${reward.item ? " + " + reward.item : ""}!`, "success");
+                this.renderInventory();
+                this.uiManager.updateCurrency(this.currencySystem.get());
+              }
+            });
+          }
         }
         renderCustomizePreview() {
           const canvas = document.getElementById("previewCanvas");
@@ -4296,6 +5100,8 @@ var StarlightEngine = (() => {
           if (this.room) {
             this.room.avatars.forEach((a) => a.update(dt, this.room));
             this.npcManager.update(dt, this.room);
+            this.friendSystem.update(dt);
+            this.petSystem.tick(dt);
           }
           for (let i = this.particles.length - 1; i >= 0; i--) {
             this.particles[i].update(dt);
@@ -4411,6 +5217,9 @@ var StarlightEngine = (() => {
           }
           ctx.restore();
           this.particles.forEach((p) => p.draw(ctx));
+          if (this.player && this.petSystem) {
+            this.petSystem.draw(ctx, this.player.x, this.player.y, this.camera);
+          }
           this.renderMinimap();
         }
         getZIndex(x, y, z) {
@@ -4592,6 +5401,8 @@ var StarlightEngine = (() => {
     "src/main.js"() {
       init_Game();
       init_RingUppercut();
+      init_MemoryMatch();
+      init_TilePuzzle();
       function createUI() {
         const overlay = document.getElementById("uiOverlay");
         if (!overlay) return;
@@ -4606,6 +5417,8 @@ var StarlightEngine = (() => {
         <button class="top-btn" id="btnSettings">&#9881;&#65039; Settings</button>
         <button class="top-btn" id="btnCustomize">&#128100; Me</button>
         <button class="top-btn" id="btnChatHistory">&#128172; Chat</button>
+        <button class="top-btn" id="btnFriends">&#128101; Friends</button>
+        <button class="top-btn" id="btnPet">&#128054; Pet</button>
       </div>
     </div>
     <div id="roomInfo">
@@ -4638,6 +5451,8 @@ var StarlightEngine = (() => {
           createUI();
           window.game = new Game();
           window.RingUppercut = RingUppercut;
+          window.MemoryMatch = MemoryMatch;
+          window.TilePuzzle = TilePuzzle;
         } catch (err) {
           console.error("Failed to initialize game:", err);
           const loading = document.getElementById("loadingScreen");
