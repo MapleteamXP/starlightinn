@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -173,24 +173,39 @@
     /* Help modal */
     .help-grid { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 13px; text-align: left; }
     .help-key { background: var(--habbo-dark); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--habbo-panel-border); font-family: monospace; color: var(--habbo-accent); }
+#customizePanel { top: 60px; right: 50%; transform: translateX(50%); width: 380px; }
+.customize-preview { text-align: center; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 10px; margin-bottom: 12px; }
+.customize-preview canvas { width: 80px; height: 110px; image-rendering: pixelated; }
+.customize-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.customize-row label { font-size: 12px; font-weight: 600; }
+.customize-row input[type="color"] { width: 36px; height: 24px; border: none; border-radius: 4px; cursor: pointer; }
+.customize-row select { background: var(--habbo-dark); color: white; border: 1px solid var(--habbo-panel-border); border-radius: 4px; padding: 4px 8px; font-family: inherit; font-size: 12px; min-width: 120px; }
+.color-presets { display: flex; gap: 4px; }
+.color-swatch { width: 18px; height: 18px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; }
+.color-swatch:hover, .color-swatch.active { border-color: var(--habbo-accent); transform: scale(1.15); }
+.customize-actions { display: flex; gap: 8px; margin-top: 12px; }
+.customize-actions button { flex: 1; padding: 8px; border-radius: 6px; font-family: inherit; font-weight: 700; cursor: pointer; border: none; }
+.btn-save { background: var(--habbo-accent); color: var(--habbo-dark); }
+.btn-random { background: var(--habbo-light); color: white; border: 1px solid var(--habbo-panel-border); }
   </style>
 </head>
 <body>
   <div id="loadingScreen">
-    <h1>✦ STARLIGHT INN</h1>
+    <h1>âœ¦ STARLIGHT INN</h1>
     <div class="loader"></div>
     <p>Loading your virtual world...</p>
   </div>
   <canvas id="gameCanvas"></canvas>
   <div class="ui-overlay">
     <div id="topBar">
-      <div id="logo">✦ STARLIGHT INN</div>
+      <div id="logo">âœ¦ STARLIGHT INN</div>
       <div id="topBarRight">
         <div class="currency-badge" id="currencyDisplay">1,000</div>
-        <button class="top-btn" id="btnNavigator">🌍 Navigator</button>
-        <button class="top-btn" id="btnCatalog">🛒 Catalog</button>
-        <button class="top-btn" id="btnInventory">🎒 Inventory</button>
-        <button class="top-btn" id="btnSettings">⚙️ Settings</button>
+        <button class="top-btn" id="btnNavigator">ðŸŒ Navigator</button>
+        <button class="top-btn" id="btnCatalog">ðŸ›’ Catalog</button>
+        <button class="top-btn" id="btnInventory">ðŸŽ’ Inventory</button>
+        <button class="top-btn" id="btnSettings">âš™ï¸ Settings</button>
+        <button class="top-btn" id="btnCustomize">ðŸ‘¤ Me</button>
       </div>
     </div>
     <div id="roomInfo">
@@ -199,7 +214,7 @@
     </div>
     <div id="minimap"><canvas id="minimapCanvas" width="140" height="140"></canvas></div>
     <div class="panel" id="navigatorPanel">
-      <div class="panel-header"><span class="panel-title">🌍 Room Navigator</span><button class="panel-close" data-panel="navigatorPanel">×</button></div>
+      <div class="panel-header"><span class="panel-title">ðŸŒ Room Navigator</span><button class="panel-close" data-panel="navigatorPanel">Ã—</button></div>
       <div class="panel-body">
         <div style="margin-bottom:8px;font-size:12px;color:var(--habbo-text-dim);">Public Rooms</div>
         <div class="room-list" id="publicRoomList"></div>
@@ -208,18 +223,18 @@
       </div>
     </div>
     <div class="panel" id="catalogPanel">
-      <div class="panel-header"><span class="panel-title">🛒 Furniture Catalog</span><button class="panel-close" data-panel="catalogPanel">×</button></div>
+      <div class="panel-header"><span class="panel-title">ðŸ›’ Furniture Catalog</span><button class="panel-close" data-panel="catalogPanel">Ã—</button></div>
       <div class="panel-body"><div class="catalog-grid" id="catalogGrid"></div></div>
     </div>
     <div class="panel" id="inventoryPanel">
-      <div class="panel-header"><span class="panel-title">🎒 My Inventory</span><button class="panel-close" data-panel="inventoryPanel">×</button></div>
+      <div class="panel-header"><span class="panel-title">ðŸŽ’ My Inventory</span><button class="panel-close" data-panel="inventoryPanel">Ã—</button></div>
       <div class="panel-body">
         <div class="inv-grid" id="inventoryGrid"></div>
         <div style="margin-top:10px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Click an item to select it, then click a tile to place.</div>
       </div>
     </div>
     <div class="panel" id="settingsPanel">
-      <div class="panel-header"><span class="panel-title">⚙️ Settings</span><button class="panel-close" data-panel="settingsPanel">×</button></div>
+      <div class="panel-header"><span class="panel-title">âš™ï¸ Settings</span><button class="panel-close" data-panel="settingsPanel">Ã—</button></div>
       <div class="panel-body">
         <div class="setting-row"><label>Show Minimap</label><input type="checkbox" id="settingMinimap" checked></div>
         <div class="setting-row"><label>Show Names</label><input type="checkbox" id="settingNames" checked></div>
@@ -227,7 +242,22 @@
         <div class="setting-row"><label>NPC Count</label><select id="settingNPCs"><option value="0">None</option><option value="3" selected>3</option><option value="5">5</option><option value="8">8</option></select></div>
         <div class="setting-row"><label>Camera Speed</label><input type="range" id="settingCamSpeed" min="1" max="10" value="5"></div>
         <div class="setting-row"><label>Sound Effects</label><input type="checkbox" id="settingSound"></div>
-        <div style="margin-top:12px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Starlight Inn v1.0<br>Built with HTML5 Canvas</div>
+        <div style="margin-top:12px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Starlight Inn v1.2<br>Built with HTML5 Canvas</div>
+      </div>
+    </div>
+    <div class="panel" id="customizePanel">
+      <div class="panel-header"><span class="panel-title">ðŸ‘¤ Customize Avatar</span><button class="panel-close" data-panel="customizePanel">Ã—</button></div>
+      <div class="panel-body">
+        <div class="customize-preview"><canvas id="previewCanvas" width="88" height="128"></canvas></div>
+        <div class="customize-row"><label>Skin</label><div class="color-presets" id="skinPresets"></div></div>
+        <div class="customize-row"><label>Hair Color</label><div class="color-presets" id="hairPresets"></div></div>
+        <div class="customize-row"><label>Hair Style</label><select id="hairStyleSelect"><option value="short">Short</option><option value="spiky">Spiky</option><option value="long">Long</option><option value="mohawk">Mohawk</option><option value="bald">Bald</option><option value="curly">Curly</option><option value="bob">Bob</option></select></div>
+        <div class="customize-row"><label>Shirt</label><div class="color-presets" id="shirtPresets"></div></div>
+        <div class="customize-row"><label>Pants</label><div class="color-presets" id="pantsPresets"></div></div>
+        <div class="customize-row"><label>Shoes</label><div class="color-presets" id="shoePresets"></div></div>
+        <div class="customize-row"><label>Hat</label><select id="hatSelect"><option value="none">None</option><option value="cap">Cap</option><option value="beanie">Beanie</option><option value="crown">Crown</option><option value="wizard">Wizard Hat</option></select></div>
+        <div class="customize-row"><label>Glasses</label><select id="glassesSelect"><option value="none">None</option><option value="shades">Shades</option><option value="round">Round</option></select></div>
+        <div class="customize-actions"><button class="btn-random" id="btnRandomLook">ðŸŽ² Random</button><button class="btn-save" id="btnSaveLook">âœ“ Save Look</button></div>
       </div>
     </div>
     <div id="chatBar">
@@ -235,14 +265,14 @@
       <button id="chatSend">Send</button>
     </div>
     <div id="toolbar">
-      <button class="tool-btn" id="toolChat" title="Chat (Enter)"><span class="icon">💬</span><span>Chat</span></button>
-      <button class="tool-btn" id="toolWalk" title="Walk (Click tiles)"><span class="icon">🚶</span><span>Walk</span></button>
-      <button class="tool-btn" id="toolPlace" title="Place Furniture"><span class="icon">📦</span><span>Place</span></button>
-      <button class="tool-btn" id="toolPick" title="Pick Up"><span class="icon">✋</span><span>Pick</span></button>
-      <button class="tool-btn" id="toolRotate" title="Rotate (R)"><span class="icon">🔄</span><span>Rotate</span></button>
-      <button class="tool-btn" id="toolDance" title="Dance (D)"><span class="icon">💃</span><span>Dance</span></button>
-      <button class="tool-btn" id="toolWave" title="Wave (W)"><span class="icon">👋</span><span>Wave</span></button>
-      <button class="tool-btn" id="toolMinimap" title="Toggle Map (M)"><span class="icon">🗺️</span><span>Map</span></button>
+      <button class="tool-btn" id="toolChat" title="Chat (Enter)"><span class="icon">ðŸ’¬</span><span>Chat</span></button>
+      <button class="tool-btn" id="toolWalk" title="Walk (Click tiles)"><span class="icon">ðŸš¶</span><span>Walk</span></button>
+      <button class="tool-btn" id="toolPlace" title="Place Furniture"><span class="icon">ðŸ“¦</span><span>Place</span></button>
+      <button class="tool-btn" id="toolPick" title="Pick Up"><span class="icon">âœ‹</span><span>Pick</span></button>
+      <button class="tool-btn" id="toolRotate" title="Rotate (R)"><span class="icon">ðŸ”„</span><span>Rotate</span></button>
+      <button class="tool-btn" id="toolDance" title="Dance (D)"><span class="icon">ðŸ’ƒ</span><span>Dance</span></button>
+      <button class="tool-btn" id="toolWave" title="Wave (W)"><span class="icon">ðŸ‘‹</span><span>Wave</span></button>
+      <button class="tool-btn" id="toolMinimap" title="Toggle Map (M)"><span class="icon">ðŸ—ºï¸</span><span>Map</span></button>
     </div>
     <div id="notificationArea"></div>
   </div>
@@ -290,7 +320,7 @@ function roundRect(ctx, x, y, w, h, r) {
 // --- Asset Cache ---
 const Assets = { avatars: {}, furniture: {}, tiles: {} };
 
-function createAvatarCanvas(skinColor, hairColor, hairStyle, shirtColor, pantsColor, shoeColor) {
+function createAvatarCanvas(skinColor, hairColor, hairStyle, shirtColor, pantsColor, shoeColor, hatType, glassesType) {
   const c = document.createElement('canvas');
   c.width = 44; c.height = 64;
   const ctx = c.getContext('2d');
@@ -356,9 +386,58 @@ function createAvatarCanvas(skinColor, hairColor, hairStyle, shirtColor, pantsCo
   } else if (hairStyle === 'bald') {
     ctx.fillStyle = 'rgba(255,255,255,0.2)';
     ctx.beginPath(); ctx.arc(cx - 4, cy - 8, 4, 0, Math.PI * 2); ctx.fill();
+  } else if (hairStyle === 'curly') {
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI + Math.PI;
+      const rx = cx + Math.cos(angle) * 14;
+      const ry = cy - 4 + Math.sin(angle) * 10;
+      ctx.beginPath(); ctx.arc(rx, ry, 5, 0, Math.PI * 2); ctx.fill();
+    }
+  } else if (hairStyle === 'bob') {
+    ctx.beginPath(); ctx.arc(cx, cy - 2, 17, Math.PI, 0);
+    ctx.lineTo(cx + 17, cy + 8); ctx.lineTo(cx - 17, cy + 8); ctx.closePath(); ctx.fill();
   } else {
     ctx.beginPath(); ctx.arc(cx, cy - 4, 16, Math.PI, 0);
     ctx.lineTo(cx + 16, cy + 2); ctx.lineTo(cx - 16, cy + 2); ctx.closePath(); ctx.fill();
+  }
+
+  // Hat
+  if (hatType === 'cap') {
+    ctx.fillStyle = shirtColor;
+    ctx.beginPath(); ctx.arc(cx, cy - 6, 16, Math.PI, 0); ctx.lineTo(cx + 20, cy + 2); ctx.lineTo(cx - 20, cy + 2); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillRect(cx - 18, cy + 2, 36, 3);
+  } else if (hatType === 'beanie') {
+    ctx.fillStyle = shirtColor;
+    ctx.beginPath(); ctx.arc(cx, cy - 8, 16, Math.PI, 0); ctx.lineTo(cx + 16, cy + 4); ctx.lineTo(cx - 16, cy + 4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.beginPath(); ctx.ellipse(cx, cy - 2, 16, 3, 0, 0, Math.PI * 2); ctx.fill();
+  } else if (hatType === 'crown') {
+    ctx.fillStyle = '#f4d03f';
+    ctx.beginPath(); ctx.moveTo(cx - 14, cy - 2); ctx.lineTo(cx - 10, cy - 14); ctx.lineTo(cx - 4, cy - 6); ctx.lineTo(cx, cy - 16); ctx.lineTo(cx + 4, cy - 6); ctx.lineTo(cx + 10, cy - 14); ctx.lineTo(cx + 14, cy - 2); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#f39c12';
+    ctx.fillRect(cx - 14, cy - 2, 28, 4);
+  } else if (hatType === 'wizard') {
+    ctx.fillStyle = '#4B0082';
+    ctx.beginPath(); ctx.moveTo(cx - 14, cy + 2); ctx.lineTo(cx, cy - 28); ctx.lineTo(cx + 14, cy + 2); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath(); ctx.arc(cx, cy - 28, 3, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Glasses
+  if (glassesType === 'shades') {
+    ctx.fillStyle = '#222';
+    ctx.beginPath(); ctx.rect(cx - 11, cy - 2, 10, 6); ctx.fill();
+    ctx.beginPath(); ctx.rect(cx + 1, cy - 2, 10, 6); ctx.fill();
+    ctx.strokeStyle = '#222'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(cx - 11, cy + 1); ctx.lineTo(cx - 15, cy - 1); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx + 11, cy + 1); ctx.lineTo(cx + 15, cy - 1); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - 1, cy + 1); ctx.lineTo(cx + 1, cy + 1); ctx.stroke();
+  } else if (glassesType === 'round') {
+    ctx.strokeStyle = '#5D4037'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx - 5, cy + 1, 5, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx + 5, cy + 1, 5, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, cy + 1); ctx.lineTo(cx, cy + 1); ctx.stroke();
   }
 
   ctx.strokeStyle = 'rgba(0,0,0,0.08)'; ctx.lineWidth = 1;
@@ -563,7 +642,7 @@ function getFurnitureAsset(type) {
 function getAvatarAsset(key) {
   if (!Assets.avatars[key]) {
     const parts = key.split('|');
-    Assets.avatars[key] = createAvatarCanvas(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]);
+    Assets.avatars[key] = createAvatarCanvas(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6] || 'none', parts[7] || 'none');
   }
   return Assets.avatars[key];
 }
@@ -689,6 +768,134 @@ const ROOM_TEMPLATES = [
       { type: 'lamp', x: 12, y: 10, z: 0 }, { type: 'tv', x: 6, y: 2, z: 0 },
       { type: 'piano', x: 9, y: 9, z: 0 }
     ]
+  },
+  {
+    id: 'pool', name: 'Swimming Pool', description: 'Take a swim and relax by the water.',
+    width: 14, height: 10, floor: 'tile', wall: '#2980B9',
+    map: [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,1,1],
+      [1,1,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,0,0,0,0,0,0,0,0,0,0,1,1],
+      [1,1,0,0,0,0,0,0,0,0,0,0,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    furniture: [
+      { type: 'plant', x: 2, y: 2, z: 0 }, { type: 'plant', x: 11, y: 2, z: 0 },
+      { type: 'plant', x: 2, y: 7, z: 0 }, { type: 'plant', x: 11, y: 7, z: 0 },
+      { type: 'fountain', x: 6, y: 4, z: 0 }, { type: 'chair', x: 1, y: 1, z: 0 }
+    ]
+  },
+  {
+    id: 'restaurant', name: 'Restaurant', description: 'Fine dining with friends at the Inn.',
+    width: 14, height: 12, floor: 'darkwood', wall: '#7B241C',
+    map: [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    furniture: [
+      { type: 'table', x: 3, y: 3, z: 0 }, { type: 'chair', x: 2, y: 3, z: 0 }, { type: 'chair', x: 4, y: 3, z: 0 },
+      { type: 'table', x: 8, y: 3, z: 0 }, { type: 'chair', x: 7, y: 3, z: 0 }, { type: 'chair', x: 9, y: 3, z: 0 },
+      { type: 'table', x: 5, y: 7, z: 0 }, { type: 'chair', x: 4, y: 7, z: 0 }, { type: 'chair', x: 6, y: 7, z: 0 },
+      { type: 'lamp', x: 1, y: 1, z: 0 }, { type: 'lamp', x: 12, y: 10, z: 0 },
+      { type: 'plant', x: 1, y: 10, z: 0 }, { type: 'plant', x: 12, y: 1, z: 0 }
+    ]
+  },
+  {
+    id: 'library', name: 'Library', description: 'Quiet reading and study space.',
+    width: 12, height: 12, floor: 'wood', wall: '#5D4037',
+    map: [
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    furniture: [
+      { type: 'bookshelf', x: 1, y: 1, z: 0 }, { type: 'bookshelf', x: 2, y: 1, z: 0 },
+      { type: 'bookshelf', x: 1, y: 10, z: 0 }, { type: 'bookshelf', x: 2, y: 10, z: 0 },
+      { type: 'bookshelf', x: 9, y: 1, z: 0 }, { type: 'bookshelf', x: 10, y: 1, z: 0 },
+      { type: 'bookshelf', x: 9, y: 10, z: 0 }, { type: 'bookshelf', x: 10, y: 10, z: 0 },
+      { type: 'chair', x: 5, y: 5, z: 0 }, { type: 'table', x: 6, y: 5, z: 0 },
+      { type: 'lamp', x: 5, y: 6, z: 0 }
+    ]
+  },
+  {
+    id: 'spa', name: 'Spa & Wellness', description: 'Relax and rejuvenate your senses.',
+    width: 12, height: 10, floor: 'marble', wall: '#1ABC9C',
+    map: [
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    furniture: [
+      { type: 'plant', x: 1, y: 1, z: 0 }, { type: 'plant', x: 10, y: 8, z: 0 },
+      { type: 'plant', x: 5, y: 4, z: 0 }, { type: 'plant', x: 6, y: 5, z: 0 },
+      { type: 'fountain', x: 5, y: 4, z: 0 }, { type: 'sofa', x: 2, y: 2, z: 0 },
+      { type: 'sofa', x: 8, y: 7, z: 0 }, { type: 'lamp', x: 1, y: 8, z: 0 }
+    ]
+  },
+  {
+    id: 'cinema', name: 'Cinema', description: 'Watch movies on the big screen.',
+    width: 16, height: 10, floor: 'carpet', wall: '#2C3E50',
+    map: [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    furniture: [
+      { type: 'sofa', x: 2, y: 2, z: 0 }, { type: 'sofa', x: 5, y: 2, z: 0 }, { type: 'sofa', x: 8, y: 2, z: 0 },
+      { type: 'sofa', x: 2, y: 5, z: 0 }, { type: 'sofa', x: 5, y: 5, z: 0 }, { type: 'sofa', x: 8, y: 5, z: 0 },
+      { type: 'tv', x: 13, y: 4, z: 0 }, { type: 'lamp', x: 1, y: 1, z: 0 }, { type: 'lamp', x: 14, y: 8, z: 0 }
+    ]
+  },
+  {
+    id: 'garden', name: 'Garden', description: 'A peaceful outdoor garden retreat.',
+    width: 14, height: 14, floor: 'grass', wall: '#27AE60',
+    map: [
+      [0,0,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,0],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [0,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,1,1,1,1,0,0]
+    ],
+    furniture: [
+      { type: 'plant', x: 2, y: 2, z: 0 }, { type: 'plant', x: 11, y: 11, z: 0 },
+      { type: 'plant', x: 5, y: 8, z: 0 }, { type: 'plant', x: 8, y: 4, z: 0 },
+      { type: 'plant', x: 3, y: 10, z: 0 }, { type: 'plant', x: 10, y: 3, z: 0 },
+      { type: 'fountain', x: 6, y: 6, z: 0 }, { type: 'chair', x: 6, y: 9, z: 0 },
+      { type: 'chair', x: 9, y: 6, z: 0 }, { type: 'lamp', x: 1, y: 1, z: 0 }
+    ]
+  },
+  {
+    id: 'arcade', name: 'Arcade', description: 'Classic games and fun for everyone.',
+    width: 12, height: 12, floor: 'checkered', wall: '#8E44AD',
+    map: [
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    furniture: [
+      { type: 'tv', x: 2, y: 2, z: 0 }, { type: 'tv', x: 5, y: 2, z: 0 },
+      { type: 'tv', x: 8, y: 2, z: 0 }, { type: 'table', x: 3, y: 6, z: 0 },
+      { type: 'table', x: 7, y: 6, z: 0 }, { type: 'chair', x: 2, y: 6, z: 0 },
+      { type: 'chair', x: 4, y: 6, z: 0 }, { type: 'chair', x: 6, y: 6, z: 0 },
+      { type: 'chair', x: 8, y: 6, z: 0 }, { type: 'sofa', x: 2, y: 9, z: 0 },
+      { type: 'lamp', x: 1, y: 1, z: 0 }, { type: 'lamp', x: 10, y: 10, z: 0 }
+    ]
   }
 ];
 
@@ -754,6 +961,8 @@ class Avatar {
     this.shirtColor = opts.shirtColor || '#3498DB';
     this.pantsColor = opts.pantsColor || '#2C3E50';
     this.shoeColor = opts.shoeColor || '#555555';
+    this.hatType = opts.hatType || 'none';
+    this.glassesType = opts.glassesType || 'none';
     this.facing = opts.facing || 'se';
     this.animFrame = 0; this.animTimer = 0;
     this.isWalking = false; this.isDancing = opts.isDancing || false;
@@ -764,7 +973,7 @@ class Avatar {
     this.waveTimer = 0;
   }
   get assetKey() {
-    return [this.skinColor, this.hairColor, this.hairStyle, this.shirtColor, this.pantsColor, this.shoeColor].join('|');
+    return [this.skinColor, this.hairColor, this.hairStyle, this.shirtColor, this.pantsColor, this.shoeColor, this.hatType, this.glassesType].join('|');
   }
   update(dt, room) {
     this.animTimer += dt;
@@ -945,7 +1154,10 @@ class Game {
     this.lastTime = 0; this.hoverTile = null;
     this.mouse = { x: 0, y: 0 }; this.isDragging = false; this.dragStart = { x: 0, y: 0 }; this.keys = {};
     this.setupInput(); this.setupUI();
+    this.customize = { skinColor: '#F5CBA7', hairColor: '#5D4037', hairStyle: 'short', shirtColor: '#3498DB', pantsColor: '#2C3E50', shoeColor: '#555555', hatType: 'none', glassesType: 'none' };
     this.loadRoom(ROOM_TEMPLATES[0]);
+    this.loadAvatarFromStorage();
+    this.applyAvatarToPlayer();
     this.spawnNPCs(this.settings.npcCount);
     this.addToInventory('chair', 2); this.addToInventory('plant', 3);
     this.addToInventory('lamp', 1); this.addToInventory('table', 1); this.addToInventory('rug', 1);
@@ -964,9 +1176,11 @@ class Game {
       this.player.x = Math.floor(this.room.width / 2); this.player.y = Math.floor(this.room.height / 2);
       this.player.path = []; this.player.isWalking = false; this.player.isDancing = false;
     } else {
+      const c = this.customize;
       this.player = new Avatar('You', Math.floor(this.room.width / 2), Math.floor(this.room.height / 2), {
-        skinColor: '#F5CBA7', hairColor: '#5D4037', hairStyle: 'short',
-        shirtColor: '#3498DB', pantsColor: '#2C3E50', shoeColor: '#555'
+        skinColor: c.skinColor, hairColor: c.hairColor, hairStyle: c.hairStyle,
+        shirtColor: c.shirtColor, pantsColor: c.pantsColor, shoeColor: c.shoeColor,
+        hatType: c.hatType, glassesType: c.glassesType
       });
     }
     this.room.avatars.push(this.player);
@@ -984,7 +1198,9 @@ class Game {
     const skins = ['#F5CBA7','#E0AC69','#8D5524','#C68642','#FFDBAC','#AA7C58'];
     const hairs = ['#5D4037','#E67E22','#F1C40F','#2C3E50','#8E44AD','#E74C3C','#D5DBDB'];
     const shirts = ['#E74C3C','#2ECC71','#9B59B6','#1ABC9C','#E67E22','#3498DB','#F39C12'];
-    const styles = ['short','long','spiky','mohawk','bald'];
+    const styles = ['short','long','spiky','mohawk','bald','curly','bob'];
+    const hats = ['none','none','none','cap','beanie','crown','wizard'];
+    const glasses = ['none','none','none','shades','round'];
     for (let i = 0; i < count; i++) {
       let nx, ny, attempts = 0;
       do {
@@ -993,6 +1209,7 @@ class Game {
       const npc = new Avatar(randChoice(names), nx, ny, {
         skinColor: randChoice(skins), hairColor: randChoice(hairs), hairStyle: randChoice(styles),
         shirtColor: randChoice(shirts), pantsColor: '#2C3E50', shoeColor: '#444',
+        hatType: randChoice(hats), glassesType: randChoice(glasses),
         isNPC: true, speed: 0.06 + Math.random() * 0.04
       });
       this.npcs.push(npc);
@@ -1034,7 +1251,7 @@ class Game {
         case 'enter': document.getElementById('chatInput').focus(); break;
         case 'w': this.player.isWaving = true; this.player.waveTimer = 0; this.player.say('Hey!'); break;
         case 'd': this.player.isDancing = !this.player.isDancing; this.showNotification(this.player.isDancing ? 'Dancing!' : 'Stopped dancing'); break;
-        case 'r': this.placementRotation = (this.placementRotation + 1) % 4; this.showNotification(`Rotation: ${this.placementRotation * 90}°`); break;
+        case 'r': this.placementRotation = (this.placementRotation + 1) % 4; this.showNotification(`Rotation: ${this.placementRotation * 90}Â°`); break;
         case 'm': this.toggleMinimap(); break;
         case 'escape': this.closeAllPanels(); break;
       }
@@ -1080,6 +1297,23 @@ class Game {
     document.getElementById('btnCatalog').addEventListener('click', () => this.togglePanel('catalogPanel'));
     document.getElementById('btnInventory').addEventListener('click', () => this.togglePanel('inventoryPanel'));
     document.getElementById('btnSettings').addEventListener('click', () => this.togglePanel('settingsPanel'));
+    document.getElementById('btnCustomize').addEventListener('click', () => { this.togglePanel('customizePanel'); this.renderCustomizePanel(); });
+    document.getElementById('hairStyleSelect').addEventListener('change', e => { this.customize.hairStyle = e.target.value; this.renderCustomizePanel(); });
+    document.getElementById('hatSelect').addEventListener('change', e => { this.customize.hatType = e.target.value; this.renderCustomizePanel(); });
+    document.getElementById('glassesSelect').addEventListener('change', e => { this.customize.glassesType = e.target.value; this.renderCustomizePanel(); });
+    document.getElementById('btnSaveLook').addEventListener('click', () => { this.applyAvatarToPlayer(); this.saveAvatarToStorage(); this.showNotification('Look saved!'); });
+    document.getElementById('btnRandomLook').addEventListener('click', () => {
+      const rand = arr => arr[Math.floor(Math.random()*arr.length)];
+      this.customize.skinColor = rand(['#F5CBA7','#E0AC69','#8D5524','#C68642','#FFDBAC','#AA7C58']);
+      this.customize.hairColor = rand(['#090806','#2C1608','#71635A','#B7A69E','#D6C4C2','#B55239','#A52A2A','#DC143C','#4B0082','#228B22']);
+      this.customize.hairStyle = rand(['short','spiky','long','mohawk','bald','curly','bob']);
+      this.customize.shirtColor = rand(['#E74C3C','#3498DB','#2ECC71','#F1C40F','#9B59B6','#E67E22','#1ABC9C','#34495E']);
+      this.customize.pantsColor = rand(['#2C3E50','#34495E','#1ABC9C','#8E44AD','#D35400','#7F8C8D']);
+      this.customize.shoeColor = rand(['#555555','#333333','#8B4513','#000000']);
+      this.customize.hatType = rand(['none','none','none','cap','beanie','crown','wizard']);
+      this.customize.glassesType = rand(['none','none','none','shades','round']);
+      this.renderCustomizePanel();
+    });
     document.querySelectorAll('.panel-close').forEach(btn => {
       btn.addEventListener('click', () => { document.getElementById(btn.dataset.panel).classList.remove('open'); });
     });
@@ -1090,7 +1324,7 @@ class Game {
       this.setTool('place'); this.togglePanel('inventoryPanel');
     });
     document.getElementById('toolPick').addEventListener('click', () => this.setTool('pick'));
-    document.getElementById('toolRotate').addEventListener('click', () => { this.placementRotation = (this.placementRotation + 1) % 4; this.showNotification(`Rotation: ${this.placementRotation * 90}°`); });
+    document.getElementById('toolRotate').addEventListener('click', () => { this.placementRotation = (this.placementRotation + 1) % 4; this.showNotification(`Rotation: ${this.placementRotation * 90}Â°`); });
     document.getElementById('toolDance').addEventListener('click', () => { this.player.isDancing = !this.player.isDancing; this.showNotification(this.player.isDancing ? 'Dancing!' : 'Stopped dancing'); });
     document.getElementById('toolWave').addEventListener('click', () => { this.player.isWaving = true; this.player.waveTimer = 0; this.player.say('Hey!'); });
     document.getElementById('toolMinimap').addEventListener('click', () => this.toggleMinimap());
@@ -1171,7 +1405,7 @@ class Game {
       const div = document.createElement('div'); div.className = 'inv-item';
       div.innerHTML = `<div>${cat ? cat.icon : '\uD83D\uDCE6'}</div><div class="inv-count">x${count}</div>`;
       if (this.selectedInventoryItem === type) { div.style.borderColor = 'var(--habbo-accent)'; div.style.background = 'rgba(244,208,63,0.25)'; }
-      div.addEventListener('click', () => { this.selectedInventoryItem = type; this.selectedTool = 'place'; this.updateToolButtons(); this.renderInventory(); this.showNotification(`Selected ${cat?.name || type} — click a tile to place`); });
+      div.addEventListener('click', () => { this.selectedInventoryItem = type; this.selectedTool = 'place'; this.updateToolButtons(); this.renderInventory(); this.showNotification(`Selected ${cat?.name || type} â€” click a tile to place`); });
       grid.appendChild(div);
     });
   }
@@ -1182,6 +1416,56 @@ class Game {
     notif.style.borderLeftColor = type === 'error' ? 'var(--habbo-danger)' : (type === 'success' ? 'var(--habbo-success)' : 'var(--habbo-accent)');
     notif.textContent = text; area.appendChild(notif);
     setTimeout(() => { notif.style.opacity = '0'; notif.style.transform = 'translateX(30px)'; setTimeout(() => notif.remove(), 300); }, 3000);
+  }
+  loadAvatarFromStorage() {
+    try {
+      const data = JSON.parse(localStorage.getItem('starlight_avatar'));
+      if (data) Object.assign(this.customize, data);
+    } catch(e) {}
+  }
+  saveAvatarToStorage() {
+    localStorage.setItem('starlight_avatar', JSON.stringify(this.customize));
+  }
+  applyAvatarToPlayer() {
+    if (!this.player) return;
+    const c = this.customize;
+    this.player.skinColor = c.skinColor; this.player.hairColor = c.hairColor; this.player.hairStyle = c.hairStyle;
+    this.player.shirtColor = c.shirtColor; this.player.pantsColor = c.pantsColor; this.player.shoeColor = c.shoeColor;
+    this.player.hatType = c.hatType; this.player.glassesType = c.glassesType;
+    // Clear avatar cache for player
+    const oldKey = this.player.assetKey;
+    delete Assets.avatars[oldKey];
+  }
+  renderCustomizePanel() {
+    const c = this.customize;
+    // Update selects
+    document.getElementById('hairStyleSelect').value = c.hairStyle;
+    document.getElementById('hatSelect').value = c.hatType;
+    document.getElementById('glassesSelect').value = c.glassesType;
+    this.renderColorPresets('skinPresets', ['#F5CBA7','#E0AC69','#8D5524','#C68642','#FFDBAC','#AA7C58','#F1C27D','#E8C39E'], c.skinColor, 'skinColor');
+    this.renderColorPresets('hairPresets', ['#090806','#2C1608','#71635A','#B7A69E','#D6C4C2','#B55239','#A52A2A','#DC143C','#4B0082','#228B22','#F1C40F','#D5DBDB'], c.hairColor, 'hairColor');
+    this.renderColorPresets('shirtPresets', ['#E74C3C','#3498DB','#2ECC71','#F1C40F','#9B59B6','#E67E22','#1ABC9C','#34495E','#FF6B6B','#4ECDC4','#FFFFFF','#111111'], c.shirtColor, 'shirtColor');
+    this.renderColorPresets('pantsPresets', ['#2C3E50','#34495E','#1ABC9C','#8E44AD','#D35400','#7F8C8D','#2980B9','#27AE60','#C0392B','#000000'], c.pantsColor, 'pantsColor');
+    this.renderColorPresets('shoePresets', ['#555555','#333333','#8B4513','#000000','#FFFFFF','#C0392B'], c.shoeColor, 'shoeColor');
+    this.renderCustomizePreview();
+  }
+  renderColorPresets(containerId, colors, current, key) {
+    const container = document.getElementById(containerId); if (!container) return;
+    container.innerHTML = '';
+    colors.forEach(color => {
+      const swatch = document.createElement('div'); swatch.className = 'color-swatch' + (color === current ? ' active' : '');
+      swatch.style.backgroundColor = color;
+      swatch.addEventListener('click', () => { this.customize[key] = color; this.renderCustomizePanel(); });
+      container.appendChild(swatch);
+    });
+  }
+  renderCustomizePreview() {
+    const canvas = document.getElementById('previewCanvas'); if (!canvas) return;
+    const c = this.customize;
+    const img = createAvatarCanvas(c.skinColor, c.hairColor, c.hairStyle, c.shirtColor, c.pantsColor, c.shoeColor, c.hatType, c.glassesType);
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 22, 20, 44, 64);
   }
 
   loop(timestamp) {
@@ -1356,516 +1640,6 @@ window.addEventListener('DOMContentLoaded', () => {
   catch (err) { console.error('Failed to initialize game:', err); document.getElementById('loadingScreen').innerHTML = `<h1 style="color:#e74c3c">Error</h1><p>${err.message}</p>`; }
 });
 window.addEventListener('contextmenu', e => { if (e.target.tagName === 'CANVAS') e.preventDefault(); });
-</script>
-</body>
-</html>
-
-
-// ==========================================
-// GAME ENGINE
-// ==========================================
-class Game {
-  constructor() {
-    this.canvas = document.getElementById('gameCanvas');
-    this.ctx = this.canvas.getContext('2d');
-    this.ctx.imageSmoothingEnabled = false;
-    this.resize();
-    window.addEventListener('resize', () => this.resize());
-
-    this.camera = { x: 0, y: 0, targetX: 0, targetY: 0 };
-    this.room = null;
-    this.player = null;
-    this.lastTime = 0;
-    this.hoverTile = null;
-    this.selectedTool = 'walk';
-    this.selectedItem = null;
-    this.placingType = null;
-    this.credits = 1000;
-    this.inventory = [];
-    this.showNames = true;
-    this.showChat = true;
-    this.showMinimap = false;
-    this.camSpeed = 5;
-    this.soundOn = false;
-    this.keys = {};
-    this.mouse = { x: 0, y: 0, down: false };
-    this.notifications = [];
-
-    this.loadSave();
-    this.setupInput();
-    this.setupUI();
-    this.enterRoom('lobby');
-
-    document.getElementById('loadingScreen').classList.add('hidden');
-    requestAnimationFrame(t => this.loop(t));
-  }
-
-  resize() {
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
-    this.W = this.canvas.width;
-    this.H = this.canvas.height;
-  }
-
-  loadSave() {
-    try {
-      const data = JSON.parse(localStorage.getItem('starlight_inn_save_v2'));
-      if (data) {
-        this.credits = data.credits || 1000;
-        this.inventory = data.inventory || [];
-      }
-    } catch (e) {}
-  }
-
-  save() {
-    localStorage.setItem('starlight_inn_save_v2', JSON.stringify({
-      credits: this.credits, inventory: this.inventory
-    }));
-  }
-
-  enterRoom(roomId) {
-    const template = ROOM_TEMPLATES.find(r => r.id === roomId);
-    if (!template) return;
-    this.room = new Room(template);
-
-    // Spawn player
-    const px = Math.floor(this.room.width / 2), py = Math.floor(this.room.height / 2);
-    this.player = new Avatar('You', px, py, {
-      skinColor: '#F5CBA7', hairColor: '#5D4037', hairStyle: 'short',
-      shirtColor: '#3498DB', pantsColor: '#2C3E50', shoeColor: '#555555',
-      speed: 0.12
-    });
-    this.room.avatars.push(this.player);
-
-    // Spawn NPCs
-    const npcCount = parseInt(document.getElementById('settingNPCs').value) || 3;
-    const names = ['Alice','Bob','Charlie','Diana','Evan','Fiona','George','Hannah','Ivan','Julia'];
-    const skins = ['#F5CBA7','#E8C39E','#D4A574','#C68642','#8D5524','#E0AC69','#FFDBAC','#F1C27D'];
-    const hairs = ['#090806','#2C1608','#71635A','#B7A69E','#D6C4C2','#B55239','#A52A2A','#DC143C','#4B0082','#228B22'];
-    const shirts = ['#E74C3C','#3498DB','#2ECC71','#F1C40F','#9B59B6','#E67E22','#1ABC9C','#34495E','#FF6B6B','#4ECDC4'];
-    const styles = ['short','spiky','long','mohawk','bald'];
-    for (let i = 0; i < npcCount; i++) {
-      let nx, ny;
-      for (let tries = 0; tries < 20; tries++) {
-        nx = randInt(0, this.room.width - 1); ny = randInt(0, this.room.height - 1);
-        if (this.room.isWalkable(nx, ny)) break;
-      }
-      const npc = new Avatar(names[i % names.length], nx, ny, {
-        skinColor: skins[i % skins.length], hairColor: hairs[i % hairs.length],
-        hairStyle: styles[i % styles.length], shirtColor: shirts[i % shirts.length],
-        pantsColor: '#2C3E50', speed: 0.06, isNPC: true
-      });
-      this.room.avatars.push(npc);
-    }
-
-    this.centerCamera();
-    document.getElementById('roomName').textContent = this.room.name;
-    document.getElementById('roomDesc').textContent = this.room.description;
-    this.notify(`Entered ${this.room.name}`, 'info');
-  }
-
-  centerCamera() {
-    if (!this.player) return;
-    const sp = isoToScreen(this.player.x, this.player.y);
-    this.camera.targetX = this.W / 2 - sp.x;
-    this.camera.targetY = this.H / 2 - sp.y + 60;
-  }
-
-  setupInput() {
-    this.canvas.addEventListener('mousemove', e => {
-      const rect = this.canvas.getBoundingClientRect();
-      this.mouse.x = e.clientX - rect.left;
-      this.mouse.y = e.clientY - rect.top;
-      const iso = screenToIso(this.mouse.x - this.camera.x, this.mouse.y - this.camera.y);
-      this.hoverTile = { x: Math.floor(iso.x), y: Math.floor(iso.y) };
-    });
-
-    this.canvas.addEventListener('mousedown', e => {
-      this.mouse.down = true;
-      if (!this.room) return;
-      const rect = this.canvas.getBoundingClientRect();
-      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-      const iso = screenToIso(mx - this.camera.x, my - this.camera.y);
-      const tx = Math.floor(iso.x), ty = Math.floor(iso.y);
-
-      if (this.placingType) {
-        if (this.room.placeFurniture(this.placingType, tx, ty)) {
-          this.placingType = null; this.selectedTool = 'walk'; this.updateCursor();
-          this.notify('Furniture placed!', 'success');
-        } else {
-          this.notify('Cannot place there!', 'error');
-        }
-        return;
-      }
-
-      if (this.selectedTool === 'pick') {
-        const removed = this.room.removeFurnitureAt(tx, ty);
-        if (removed) { this.inventory.push(removed); this.notify('Picked up furniture!', 'success'); this.save(); }
-        return;
-      }
-
-      if (this.selectedTool === 'walk') {
-        if (tx >= 0 && ty >= 0 && tx < this.room.width && ty < this.room.height && this.room.isWalkable(tx, ty)) {
-          this.player.moveTo(tx, ty, this.room);
-        }
-      }
-    });
-
-    this.canvas.addEventListener('mouseup', () => this.mouse.down = false);
-
-    this.canvas.addEventListener('touchstart', e => {
-      e.preventDefault();
-      const t = e.touches[0];
-      const rect = this.canvas.getBoundingClientRect();
-      this.mouse.x = t.clientX - rect.left; this.mouse.y = t.clientY - rect.top;
-      const iso = screenToIso(this.mouse.x - this.camera.x, this.mouse.y - this.camera.y);
-      const tx = Math.floor(iso.x), ty = Math.floor(iso.y);
-      if (this.selectedTool === 'walk' && tx >= 0 && ty >= 0 && tx < this.room.width && ty < this.room.height && this.room.isWalkable(tx, ty)) {
-        this.player.moveTo(tx, ty, this.room);
-      }
-    }, { passive: false });
-
-    window.addEventListener('keydown', e => {
-      this.keys[e.key.toLowerCase()] = true;
-      if (e.key === 'Enter') { const ci = document.getElementById('chatInput'); if (document.activeElement !== ci) { ci.focus(); e.preventDefault(); } }
-      if (e.key === 'Escape') { this.closeAllPanels(); this.placingType = null; this.selectedTool = 'walk'; this.updateCursor(); }
-      if (e.key.toLowerCase() === 'd') this.player.isDancing = !this.player.isDancing;
-      if (e.key.toLowerCase() === 'w') { this.player.isWaving = true; this.player.waveTimer = 0; }
-      if (e.key.toLowerCase() === 'm') this.toggleMinimap();
-      if (e.key.toLowerCase() === 'r') { /* rotate placeholder */ }
-    });
-    window.addEventListener('keyup', e => this.keys[e.key.toLowerCase()] = false);
-
-    document.getElementById('chatInput').addEventListener('keydown', e => { if (e.key === 'Enter') this.sendChat(); });
-    document.getElementById('chatSend').addEventListener('click', () => this.sendChat());
-  }
-
-  setupUI() {
-    document.getElementById('btnNavigator').addEventListener('click', () => this.togglePanel('navigatorPanel'));
-    document.getElementById('btnCatalog').addEventListener('click', () => this.togglePanel('catalogPanel'));
-    document.getElementById('btnInventory').addEventListener('click', () => this.togglePanel('inventoryPanel'));
-    document.getElementById('btnSettings').addEventListener('click', () => this.togglePanel('settingsPanel'));
-
-    document.querySelectorAll('.panel-close').forEach(btn => {
-      btn.addEventListener('click', () => this.closePanel(btn.dataset.panel));
-    });
-
-    document.getElementById('toolChat').addEventListener('click', () => { this.selectedTool = 'chat'; document.getElementById('chatInput').focus(); this.updateToolButtons(); });
-    document.getElementById('toolWalk').addEventListener('click', () => { this.selectedTool = 'walk'; this.placingType = null; this.updateCursor(); this.updateToolButtons(); });
-    document.getElementById('toolPlace').addEventListener('click', () => { this.selectedTool = 'place'; this.updateToolButtons(); });
-    document.getElementById('toolPick').addEventListener('click', () => { this.selectedTool = 'pick'; this.placingType = null; this.updateCursor(); this.updateToolButtons(); });
-    document.getElementById('toolRotate').addEventListener('click', () => { this.notify('Rotate coming soon!', 'info'); });
-    document.getElementById('toolDance').addEventListener('click', () => { this.player.isDancing = !this.player.isDancing; });
-    document.getElementById('toolWave').addEventListener('click', () => { this.player.isWaving = true; this.player.waveTimer = 0; });
-    document.getElementById('toolMinimap').addEventListener('click', () => this.toggleMinimap());
-
-    document.getElementById('settingMinimap').addEventListener('change', e => { this.showMinimap = e.target.checked; });
-    document.getElementById('settingNames').addEventListener('change', e => { this.showNames = e.target.checked; });
-    document.getElementById('settingChat').addEventListener('change', e => { this.showChat = e.target.checked; });
-    document.getElementById('settingCamSpeed').addEventListener('input', e => { this.camSpeed = parseInt(e.target.value); });
-    document.getElementById('settingSound').addEventListener('change', e => { this.soundOn = e.target.checked; });
-    document.getElementById('settingNPCs').addEventListener('change', e => {
-      const target = parseInt(e.target.value);
-      const current = this.room.avatars.filter(a => a.isNPC).length;
-      if (target > current) {
-        const names = ['Alice','Bob','Charlie','Diana','Evan','Fiona','George','Hannah','Ivan','Julia'];
-        const skins = ['#F5CBA7','#E8C39E','#D4A574','#C68642','#8D5524','#E0AC69','#FFDBAC','#F1C27D'];
-        const hairs = ['#090806','#2C1608','#71635A','#B7A69E','#D6C4C2','#B55239','#A52A2A','#DC143C','#4B0082','#228B22'];
-        const shirts = ['#E74C3C','#3498DB','#2ECC71','#F1C40F','#9B59B6','#E67E22','#1ABC9C','#34495E'];
-        const styles = ['short','spiky','long','mohawk','bald'];
-        for (let i = current; i < target; i++) {
-          let nx, ny;
-          for (let t = 0; t < 20; t++) { nx = randInt(0, this.room.width - 1); ny = randInt(0, this.room.height - 1); if (this.room.isWalkable(nx, ny)) break; }
-          const npc = new Avatar(names[i % names.length], nx, ny, { skinColor: skins[i % skins.length], hairColor: hairs[i % hairs.length], hairStyle: styles[i % styles.length], shirtColor: shirts[i % shirts.length], pantsColor: '#2C3E50', speed: 0.06, isNPC: true });
-          this.room.avatars.push(npc);
-        }
-      } else if (target < current) {
-        const npcs = this.room.avatars.filter(a => a.isNPC);
-        for (let i = current - 1; i >= target; i--) {
-          const idx = this.room.avatars.indexOf(npcs[i]);
-          if (idx >= 0) this.room.avatars.splice(idx, 1);
-        }
-      }
-    });
-
-    this.updateToolButtons();
-    this.renderNavigator();
-    this.renderCatalog();
-    this.renderInventory();
-    this.updateCurrency();
-  }
-
-  updateCursor() {
-    this.canvas.style.cursor = this.placingType ? 'crosshair' : (this.selectedTool === 'pick' ? 'grab' : 'pointer');
-  }
-
-  updateToolButtons() {
-    document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-    const map = { chat: 'toolChat', walk: 'toolWalk', place: 'toolPlace', pick: 'toolPick' };
-    if (map[this.selectedTool]) document.getElementById(map[this.selectedTool]).classList.add('active');
-  }
-
-  togglePanel(id) {
-    const panel = document.getElementById(id);
-    const isOpen = panel.classList.contains('open');
-    this.closeAllPanels();
-    if (!isOpen) { panel.classList.add('open'); if (id === 'catalogPanel') this.renderCatalog(); if (id === 'inventoryPanel') this.renderInventory(); if (id === 'navigatorPanel') this.renderNavigator(); }
-  }
-
-  closePanel(id) { document.getElementById(id).classList.remove('open'); }
-  closeAllPanels() { document.querySelectorAll('.panel').forEach(p => p.classList.remove('open')); }
-
-  toggleMinimap() { this.showMinimap = !this.showMinimap; document.getElementById('minimap').classList.toggle('open', this.showMinimap); }
-
-  sendChat() {
-    const input = document.getElementById('chatInput');
-    const text = input.value.trim(); if (!text) return;
-    this.player.say(text); input.value = ''; input.blur();
-    if (Math.random() > 0.5) {
-      setTimeout(() => {
-        const npcs = this.room.avatars.filter(a => a.isNPC);
-        if (npcs.length > 0) {
-          const npc = randChoice(npcs);
-          const replies = ['Nice!', 'Haha', 'Cool', 'I agree', 'Interesting!', 'Wow!', 'Hey there!', 'lol'];
-          npc.say(randChoice(replies));
-        }
-      }, 500 + Math.random() * 1500);
-    }
-  }
-
-  notify(msg, type = 'info') {
-    const area = document.getElementById('notificationArea');
-    const el = document.createElement('div');
-    el.className = 'notification';
-    if (type === 'error') el.style.borderLeftColor = 'var(--habbo-danger)';
-    if (type === 'success') el.style.borderLeftColor = 'var(--habbo-success)';
-    el.textContent = msg;
-    area.appendChild(el);
-    setTimeout(() => el.remove(), 3000);
-  }
-
-  updateCurrency() { document.getElementById('currencyDisplay').textContent = this.credits.toLocaleString(); }
-
-  buyItem(id) {
-    const item = FURNITURE_CATALOG.find(c => c.id === id);
-    if (!item) return;
-    if (this.credits < item.price) { this.notify('Not enough credits!', 'error'); return; }
-    this.credits -= item.price;
-    this.inventory.push(item.id);
-    this.updateCurrency();
-    this.notify(`Bought ${item.name}!`, 'success');
-    this.save();
-  }
-
-  selectInventoryItem(idx) {
-    const type = this.inventory[idx];
-    if (this.selectedItem === idx) {
-      this.placingType = type;
-      this.selectedItem = null;
-      this.selectedTool = 'place';
-      this.updateCursor();
-      this.updateToolButtons();
-      this.closeAllPanels();
-      this.notify('Click a tile to place furniture', 'info');
-    } else {
-      this.selectedItem = idx;
-      this.renderInventory();
-    }
-  }
-
-  renderNavigator() {
-    const publicList = document.getElementById('publicRoomList');
-    publicList.innerHTML = '';
-    ROOM_TEMPLATES.forEach(room => {
-      const el = document.createElement('div'); el.className = 'room-item';
-      const count = room.id === this.room?.id ? this.room.avatars.length : randInt(2, 15);
-      el.innerHTML = `<div class="room-name">${room.name}</div><div class="room-desc">${room.description}</div><div class="room-meta">${count} users</div>`;
-      el.addEventListener('click', () => { this.enterRoom(room.id); this.closeAllPanels(); });
-      publicList.appendChild(el);
-    });
-  }
-
-  renderCatalog() {
-    const grid = document.getElementById('catalogGrid'); grid.innerHTML = '';
-    FURNITURE_CATALOG.forEach(item => {
-      const el = document.createElement('div'); el.className = 'catalog-item';
-      el.innerHTML = `<div class="cat-icon">${item.icon}</div><div class="cat-name">${item.name}</div><div class="cat-price">${item.price} cr</div>`;
-      el.addEventListener('click', () => this.buyItem(item.id));
-      grid.appendChild(el);
-    });
-  }
-
-  renderInventory() {
-    const grid = document.getElementById('inventoryGrid'); grid.innerHTML = '';
-    const counts = {};
-    this.inventory.forEach(id => { counts[id] = (counts[id] || 0) + 1; });
-    const unique = Object.keys(counts);
-    unique.forEach((id, idx) => {
-      const item = FURNITURE_CATALOG.find(c => c.id === id);
-      if (!item) return;
-      const el = document.createElement('div'); el.className = 'inv-item' + (this.selectedItem === idx ? ' selected' : '');
-      el.innerHTML = `<div style="font-size:28px">${item.icon}</div>${counts[id] > 1 ? `<div class="inv-count">x${counts[id]}</div>` : ''}`;
-      el.title = item.name;
-      el.addEventListener('click', () => this.selectInventoryItem(idx));
-      grid.appendChild(el);
-    });
-  }
-
-  // ==========================================
-  // RENDERING
-  // ==========================================
-  loop(timestamp) {
-    const dt = Math.min((timestamp - this.lastTime) / 1000, 0.05);
-    this.lastTime = timestamp;
-    this.update(dt);
-    this.render();
-    requestAnimationFrame(t => this.loop(t));
-  }
-
-  update(dt) {
-    if (!this.room) return;
-    this.room.avatars.forEach(a => a.update(dt, this.room));
-
-    // Camera follow
-    if (this.player) {
-      const sp = isoToScreen(this.player.x, this.player.y);
-      this.camera.targetX = this.W / 2 - sp.x;
-      this.camera.targetY = this.H / 2 - sp.y + 60;
-    }
-    const camLerp = 0.08 * this.camSpeed;
-    this.camera.x = lerp(this.camera.x, this.camera.targetX, camLerp);
-    this.camera.y = lerp(this.camera.y, this.camera.targetY, camLerp);
-  }
-
-  render() {
-    const ctx = this.ctx;
-    ctx.clearRect(0, 0, this.W, this.H);
-    ctx.fillStyle = '#1a2a3a';
-    ctx.fillRect(0, 0, this.W, this.H);
-    if (!this.room) return;
-
-    // Draw room tiles (back to front)
-    for (let y = 0; y < this.room.height; y++) {
-      for (let x = 0; x < this.room.width; x++) {
-        if (!this.room.map[y] || !this.room.map[y][x]) continue;
-        const sp = isoToScreen(x, y);
-        const sx = sp.x + this.camera.x, sy = sp.y + this.camera.y;
-        const tile = getTilePattern(this.room.floorType);
-        ctx.drawImage(tile, sx - TILE_W / 2 - 1, sy - TILE_H / 2 - 1);
-
-        // Wall if edge
-        if (y === 0 || !this.room.map[y - 1] || !this.room.map[y - 1][x]) {
-          const wall = getWallPattern(this.room.wallColor);
-          ctx.drawImage(wall, sx - TILE_W / 4, sy - WALL_H - TILE_H / 2);
-        }
-      }
-    }
-
-    // Collect renderables
-    const renderables = [];
-    for (const f of this.room.furniture) {
-      renderables.push({ type: 'furniture', obj: f, sortY: f.y + f.x + f.z * 0.5 });
-    }
-    for (const a of this.room.avatars) {
-      renderables.push({ type: 'avatar', obj: a, sortY: a.y + a.x });
-    }
-    if (this.hoverTile && (this.selectedTool === 'walk' || this.placingType)) {
-      renderables.push({ type: 'highlight', x: this.hoverTile.x, y: this.hoverTile.y, sortY: this.hoverTile.y + this.hoverTile.x });
-    }
-
-    renderables.sort((a, b) => a.sortY - b.sortY);
-
-    for (const r of renderables) {
-      if (r.type === 'furniture') {
-        const f = r.obj;
-        const sp = f.screenPos;
-        const sx = sp.x + this.camera.x, sy = sp.y + this.camera.y;
-        const asset = getFurnitureAsset(f.type);
-        ctx.drawImage(asset, sx - 40, sy - 60);
-      } else if (r.type === 'avatar') {
-        const a = r.obj;
-        const sp = a.screenPos;
-        const sx = sp.x + this.camera.x, sy = sp.y + this.camera.y;
-        const asset = getAvatarAsset(a.assetKey);
-        ctx.drawImage(asset, sx - 22, sy - 32);
-
-        // Name tag
-        if (this.showNames) {
-          ctx.font = 'bold 11px Nunito, sans-serif';
-          ctx.textAlign = 'center';
-          const tw = ctx.measureText(a.name).width;
-          ctx.fillStyle = 'rgba(0,0,0,0.55)';
-          roundRect(ctx, sx - tw / 2 - 4, sy - 42, tw + 8, 16, 4);
-          ctx.fill();
-          ctx.fillStyle = a === this.player ? '#f4d03f' : '#fff';
-          ctx.fillText(a.name, sx, sy - 30);
-        }
-
-        // Chat bubble
-        if (this.showChat && a.chatBubble) {
-          ctx.font = '600 12px Nunito, sans-serif';
-          ctx.textAlign = 'center';
-          const bw = Math.min(ctx.measureText(a.chatBubble).width + 16, 200);
-          ctx.fillStyle = 'rgba(255,255,255,0.95)';
-          roundRect(ctx, sx - bw / 2, sy - 68, bw, 22, 10);
-          ctx.fill();
-          ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
-          ctx.stroke();
-          ctx.fillStyle = '#333';
-          ctx.fillText(a.chatBubble, sx, sy - 52);
-        }
-      } else if (r.type === 'highlight') {
-        const sp = isoToScreen(r.x, r.y);
-        const sx = sp.x + this.camera.x, sy = sp.y + this.camera.y;
-        ctx.strokeStyle = 'rgba(244,208,63,0.8)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(sx, sy - TILE_H / 2); ctx.lineTo(sx + TILE_W / 2, sy);
-        ctx.lineTo(sx, sy + TILE_H / 2); ctx.lineTo(sx - TILE_W / 2, sy);
-        ctx.closePath(); ctx.stroke();
-        if (this.placingType) {
-          ctx.fillStyle = 'rgba(244,208,63,0.15)';
-          ctx.fill();
-          const asset = getFurnitureAsset(this.placingType);
-          ctx.globalAlpha = 0.5;
-          ctx.drawImage(asset, sx - 40, sy - 60 - WALL_H / 2);
-          ctx.globalAlpha = 1;
-        }
-      }
-    }
-
-    // Minimap
-    if (this.showMinimap) this.renderMinimap();
-  }
-
-  renderMinimap() {
-    const mc = document.getElementById('minimapCanvas');
-    const mctx = mc.getContext('2d');
-    mctx.clearRect(0, 0, 140, 140);
-    if (!this.room) return;
-    const scaleX = 140 / this.room.width, scaleY = 140 / this.room.height;
-    for (let y = 0; y < this.room.height; y++) {
-      for (let x = 0; x < this.room.width; x++) {
-        if (this.room.map[y] && this.room.map[y][x]) {
-          mctx.fillStyle = this.room.floorType === 'grass' ? '#2E7D32' : '#546E7A';
-          mctx.fillRect(x * scaleX, y * scaleY, scaleX - 1, scaleY - 1);
-        }
-      }
-    }
-    for (const a of this.room.avatars) {
-      mctx.fillStyle = a === this.player ? '#f4d03f' : '#fff';
-      mctx.beginPath(); mctx.arc(a.x * scaleX + scaleX / 2, a.y * scaleY + scaleY / 2, 3, 0, Math.PI * 2); mctx.fill();
-    }
-  }
-}
-
-// Boot
-document.addEventListener('DOMContentLoaded', () => {
-  window.game = new Game();
-});
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  setTimeout(() => { if (!window.game) window.game = new Game(); }, 1);
-}
 </script>
 </body>
 </html>

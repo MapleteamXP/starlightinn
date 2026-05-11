@@ -7,72 +7,31 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --habbo-teal: #0e7c8a;
-      --habbo-dark: #073a42;
-      --habbo-light: #1a9aaa;
-      --habbo-accent: #f4d03f;
-      --habbo-bg: #0a3d44;
-      --habbo-panel: #0e5a63;
-      --habbo-panel-border: #178a99;
-      --habbo-text: #ffffff;
-      --habbo-text-dim: #a0d8e0;
-      --habbo-danger: #e74c3c;
-      --habbo-success: #2ecc71;
+      --habbo-teal: #0e7c8a; --habbo-dark: #073a42; --habbo-light: #1a9aaa;
+      --habbo-accent: #f4d03f; --habbo-bg: #0a3d44; --habbo-panel: #0e5a63;
+      --habbo-panel-border: #178a99; --habbo-text: #ffffff; --habbo-text-dim: #a0d8e0;
+      --habbo-danger: #e74c3c; --habbo-success: #2ecc71;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Nunito', sans-serif; background: var(--habbo-bg); color: var(--habbo-text);
-      overflow: hidden; width: 100vw; height: 100vh; user-select: none;
-    }
+    body { font-family: 'Nunito', sans-serif; background: var(--habbo-bg); color: var(--habbo-text); overflow: hidden; width: 100vw; height: 100vh; user-select: none; }
     #gameCanvas { display: block; width: 100vw; height: 100vh; cursor: crosshair; }
     .ui-overlay { position: absolute; pointer-events: none; top: 0; left: 0; right: 0; bottom: 0; }
     .ui-overlay > * { pointer-events: auto; }
-    #topBar {
-      position: absolute; top: 0; left: 0; right: 0; height: 48px;
-      background: linear-gradient(180deg, var(--habbo-panel) 0%, var(--habbo-dark) 100%);
-      border-bottom: 3px solid var(--habbo-accent); display: flex;
-      align-items: center; justify-content: space-between; padding: 0 16px; z-index: 100;
-    }
+    #topBar { position: absolute; top: 0; left: 0; right: 0; height: 48px; background: linear-gradient(180deg, var(--habbo-panel) 0%, var(--habbo-dark) 100%); border-bottom: 3px solid var(--habbo-accent); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; z-index: 100; }
     #logo { font-size: 20px; font-weight: 800; color: var(--habbo-accent); text-shadow: 2px 2px 0 var(--habbo-dark); letter-spacing: 1px; }
     #topBarRight { display: flex; align-items: center; gap: 12px; }
-    .currency-badge {
-      background: var(--habbo-accent); color: var(--habbo-dark); padding: 4px 12px;
-      border-radius: 16px; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 6px;
-    }
+    .currency-badge { background: var(--habbo-accent); color: var(--habbo-dark); padding: 4px 12px; border-radius: 16px; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 6px; }
     .currency-badge::before { content: "\2605"; font-size: 16px; }
-    .top-btn {
-      background: var(--habbo-light); border: 2px solid var(--habbo-panel-border); color: white;
-      padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: inherit;
-      font-weight: 600; font-size: 13px; transition: all 0.15s;
-    }
+    .top-btn { background: var(--habbo-light); border: 2px solid var(--habbo-panel-border); color: white; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 600; font-size: 13px; transition: all 0.15s; }
     .top-btn:hover { background: var(--habbo-accent); color: var(--habbo-dark); transform: translateY(-1px); }
-    #toolbar {
-      position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); height: 64px;
-      background: linear-gradient(0deg, var(--habbo-panel) 0%, var(--habbo-dark) 100%);
-      border: 3px solid var(--habbo-panel-border); border-bottom: none;
-      border-radius: 16px 16px 0 0; display: flex; align-items: center;
-      padding: 0 12px; gap: 6px; z-index: 100; box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
-    }
-    .tool-btn {
-      width: 52px; height: 52px; background: var(--habbo-light); border: 2px solid var(--habbo-panel-border);
-      border-radius: 10px; color: white; cursor: pointer; font-family: inherit; font-size: 11px;
-      font-weight: 700; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 2px; transition: all 0.15s; position: relative;
-    }
+    #toolbar { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); height: 64px; background: linear-gradient(0deg, var(--habbo-panel) 0%, var(--habbo-dark) 100%); border: 3px solid var(--habbo-panel-border); border-bottom: none; border-radius: 16px 16px 0 0; display: flex; align-items: center; padding: 0 12px; gap: 6px; z-index: 100; box-shadow: 0 -4px 20px rgba(0,0,0,0.4); }
+    .tool-btn { width: 52px; height: 52px; background: var(--habbo-light); border: 2px solid var(--habbo-panel-border); border-radius: 10px; color: white; cursor: pointer; font-family: inherit; font-size: 11px; font-weight: 700; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: all 0.15s; position: relative; }
     .tool-btn .icon { font-size: 20px; }
     .tool-btn:hover { background: var(--habbo-accent); color: var(--habbo-dark); transform: translateY(-4px); }
     .tool-btn.active { background: var(--habbo-accent); color: var(--habbo-dark); box-shadow: 0 0 10px rgba(244,208,63,0.5); }
-    .panel {
-      position: absolute; background: var(--habbo-panel); border: 3px solid var(--habbo-panel-border);
-      border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 200;
-      display: none; flex-direction: column; overflow: hidden; min-width: 280px;
-    }
+    .panel { position: absolute; background: var(--habbo-panel); border: 3px solid var(--habbo-panel-border); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 200; display: none; flex-direction: column; overflow: hidden; min-width: 280px; }
     .panel.open { display: flex; }
-    .panel-header {
-      background: linear-gradient(180deg, var(--habbo-light) 0%, var(--habbo-teal) 100%);
-      padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 2px solid var(--habbo-accent);
-    }
+    .panel-header { background: linear-gradient(180deg, var(--habbo-light) 0%, var(--habbo-teal) 100%); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--habbo-accent); }
     .panel-title { font-weight: 700; font-size: 15px; }
     .panel-close { background: var(--habbo-danger); border: none; color: white; width: 24px; height: 24px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 14px; line-height: 1; }
     .panel-body { padding: 12px; overflow-y: auto; max-height: 60vh; }
@@ -135,44 +94,6 @@
       #inventoryPanel { width: 340px; }
       .inv-grid { grid-template-columns: repeat(5, 1fr); }
     }
-    /* Tooltip */
-    .tooltip { position: absolute; background: var(--habbo-dark); border: 1px solid var(--habbo-panel-border); padding: 6px 10px; border-radius: 6px; font-size: 12px; pointer-events: none; z-index: 500; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-    /* Achievement Toast */
-    .achievement {
-      position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
-      background: linear-gradient(90deg, var(--habbo-accent), #f39c12); color: var(--habbo-dark);
-      padding: 10px 20px; border-radius: 24px; font-weight: 800; font-size: 14px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.4); opacity: 0; pointer-events: none;
-      animation: achieveIn 0.4s forwards; z-index: 400;
-    }
-    @keyframes achieveIn { to { opacity: 1; transform: translateX(-50%) translateY(0); } }
-    /* Tutorial overlay */
-    #tutorialOverlay {
-      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.6); z-index: 500; display: none;
-      align-items: center; justify-content: center; pointer-events: auto;
-    }
-    #tutorialOverlay.open { display: flex; }
-    .tutorial-card {
-      background: var(--habbo-panel); border: 3px solid var(--habbo-accent);
-      border-radius: 16px; padding: 24px; max-width: 420px; text-align: center;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-    }
-    .tutorial-card h3 { color: var(--habbo-accent); font-size: 20px; margin-bottom: 12px; }
-    .tutorial-card p { font-size: 14px; color: var(--habbo-text-dim); line-height: 1.6; margin-bottom: 16px; }
-    .tutorial-btn {
-      background: var(--habbo-accent); color: var(--habbo-dark); border: none;
-      padding: 10px 24px; border-radius: 8px; font-family: inherit; font-weight: 700;
-      font-size: 14px; cursor: pointer;
-    }
-    /* Day/Night overlay */
-    #dayNightOverlay {
-      position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;
-      z-index: 80; transition: background 2s;
-    }
-    /* Help modal */
-    .help-grid { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 13px; text-align: left; }
-    .help-key { background: var(--habbo-dark); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--habbo-panel-border); font-family: monospace; color: var(--habbo-accent); }
   </style>
 </head>
 <body>
@@ -295,47 +216,31 @@ function createAvatarCanvas(skinColor, hairColor, hairStyle, shirtColor, pantsCo
   c.width = 44; c.height = 64;
   const ctx = c.getContext('2d');
   const cx = 22, cy = 20;
-
-  // Legs
   ctx.strokeStyle = pantsColor; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.moveTo(cx - 4, 42); ctx.lineTo(cx - 5, 58); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(cx + 4, 42); ctx.lineTo(cx + 5, 58); ctx.stroke();
-
-  // Shoes
   ctx.fillStyle = shoeColor || '#333';
   ctx.beginPath(); ctx.ellipse(cx - 5, 59, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.ellipse(cx + 5, 59, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
-
-  // Body
   ctx.fillStyle = shirtColor;
   ctx.beginPath();
   ctx.moveTo(cx - 10, 32); ctx.lineTo(cx + 10, 32);
   ctx.lineTo(cx + 8, 46); ctx.lineTo(cx - 8, 46);
   ctx.closePath(); ctx.fill();
   ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 1; ctx.stroke();
-
-  // Arms
   ctx.strokeStyle = skinColor; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.moveTo(cx - 10, 34); ctx.lineTo(cx - 14, 44); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(cx + 10, 34); ctx.lineTo(cx + 14, 44); ctx.stroke();
-
-  // Head
   ctx.fillStyle = skinColor;
   ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI * 2); ctx.fill();
-
-  // Eyes
   ctx.fillStyle = '#222';
   ctx.beginPath(); ctx.arc(cx - 5, cy + 1, 2.5, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(cx + 5, cy + 1, 2.5, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = '#fff';
   ctx.beginPath(); ctx.arc(cx - 4, cy, 1, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(cx + 6, cy, 1, 0, Math.PI * 2); ctx.fill();
-
-  // Mouth
   ctx.strokeStyle = '#a04040'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.arc(cx, cy + 7, 4, 0.2, Math.PI - 0.2); ctx.stroke();
-
-  // Hair
   ctx.fillStyle = hairColor;
   if (hairStyle === 'spiky') {
     ctx.beginPath();
@@ -360,7 +265,6 @@ function createAvatarCanvas(skinColor, hairColor, hairStyle, shirtColor, pantsCo
     ctx.beginPath(); ctx.arc(cx, cy - 4, 16, Math.PI, 0);
     ctx.lineTo(cx + 16, cy + 2); ctx.lineTo(cx - 16, cy + 2); ctx.closePath(); ctx.fill();
   }
-
   ctx.strokeStyle = 'rgba(0,0,0,0.08)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI * 2); ctx.stroke();
   return c;
@@ -370,7 +274,6 @@ function createFurnitureCanvas(type) {
   const c = document.createElement('canvas');
   c.width = 80; c.height = 80;
   const ctx = c.getContext('2d');
-
   if (type === 'chair') {
     ctx.fillStyle = '#8B4513';
     ctx.beginPath(); ctx.moveTo(20, 40); ctx.lineTo(40, 30); ctx.lineTo(60, 40); ctx.lineTo(40, 50); ctx.closePath(); ctx.fill();
@@ -516,7 +419,6 @@ function getTilePattern(type) {
   ctx.lineTo(TILE_W + 1, TILE_H / 2 + 1);
   ctx.lineTo(TILE_W / 2 + 1, TILE_H + 1);
   ctx.closePath(); ctx.fill();
-
   if (type === 'wood') {
     ctx.strokeStyle = 'rgba(139,105,20,0.25)'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(TILE_W / 2, 4); ctx.lineTo(TILE_W / 2, TILE_H - 2); ctx.stroke();
@@ -569,19 +471,19 @@ function getAvatarAsset(key) {
 }
 
 const FURNITURE_CATALOG = [
-  { id: 'chair', name: 'Wooden Chair', price: 50, icon: '\uD83E\uDE91', footprint: [1, 1], stackable: false, desc: 'A simple wooden chair.' },
-  { id: 'table', name: 'Dining Table', price: 120, icon: '\uD83E\uDEB5', footprint: [2, 1], stackable: false, desc: 'Perfect for meals.' },
-  { id: 'lamp', name: 'Golden Lamp', price: 80, icon: '\uD83D\uDE94', footprint: [1, 1], stackable: true, desc: 'Light up your room.' },
-  { id: 'bed', name: 'Cozy Bed', price: 200, icon: '\uD83D\uDECF\uFE0F', footprint: [2, 2], stackable: false, desc: 'Sleep in comfort.' },
-  { id: 'plant', name: 'Potted Plant', price: 40, icon: '\uD83E\uDEB4', footprint: [1, 1], stackable: true, desc: 'Bring nature indoors.' },
-  { id: 'tv', name: 'Retro TV', price: 300, icon: '\uD83D\uDCFA', footprint: [1, 1], stackable: false, desc: 'Watch classic shows.' },
-  { id: 'rug', name: 'Persian Rug', price: 150, icon: '\uD83E\uDDF6', footprint: [2, 2], stackable: false, desc: 'Adds warmth to floors.' },
-  { id: 'sofa', name: 'Velvet Sofa', price: 250, icon: '\uD83D\uDECB\uFE0F', footprint: [2, 1], stackable: false, desc: 'Luxurious seating.' },
-  { id: 'fridge', name: 'Cool Fridge', price: 180, icon: '\uD83E\uDDCA', footprint: [1, 1], stackable: false, desc: 'Keep food fresh.' },
-  { id: 'bookshelf', name: 'Bookshelf', price: 160, icon: '\uD83D\uDCDA', footprint: [1, 1], stackable: false, desc: 'Store your books.' },
-  { id: 'fountain', name: 'Water Fountain', price: 500, icon: '\u26F2', footprint: [2, 2], stackable: false, desc: 'Relaxing water feature.' },
-  { id: 'piano', name: 'Grand Piano', price: 800, icon: '\uD83C\uDFB9', footprint: [2, 1], stackable: false, desc: 'Make beautiful music.' },
-  { id: 'dragon', name: 'Toy Dragon', price: 1000, icon: '\uD83D\uDC09', footprint: [1, 1], stackable: true, desc: 'A rare collectible!' }
+  { id: 'chair', name: 'Wooden Chair', price: 50, icon: '🪑', footprint: [1, 1], stackable: false, desc: 'A simple wooden chair.' },
+  { id: 'table', name: 'Dining Table', price: 120, icon: '🪵', footprint: [2, 1], stackable: false, desc: 'Perfect for meals.' },
+  { id: 'lamp', name: 'Golden Lamp', price: 80, icon: '🚔', footprint: [1, 1], stackable: true, desc: 'Light up your room.' },
+  { id: 'bed', name: 'Cozy Bed', price: 200, icon: '🛏️', footprint: [2, 2], stackable: false, desc: 'Sleep in comfort.' },
+  { id: 'plant', name: 'Potted Plant', price: 40, icon: '🪴', footprint: [1, 1], stackable: true, desc: 'Bring nature indoors.' },
+  { id: 'tv', name: 'Retro TV', price: 300, icon: '📺', footprint: [1, 1], stackable: false, desc: 'Watch classic shows.' },
+  { id: 'rug', name: 'Persian Rug', price: 150, icon: '🧶', footprint: [2, 2], stackable: false, desc: 'Adds warmth to floors.' },
+  { id: 'sofa', name: 'Velvet Sofa', price: 250, icon: '🛋️', footprint: [2, 1], stackable: false, desc: 'Luxurious seating.' },
+  { id: 'fridge', name: 'Cool Fridge', price: 180, icon: '🧊', footprint: [1, 1], stackable: false, desc: 'Keep food fresh.' },
+  { id: 'bookshelf', name: 'Bookshelf', price: 160, icon: '📚', footprint: [1, 1], stackable: false, desc: 'Store your books.' },
+  { id: 'fountain', name: 'Water Fountain', price: 500, icon: '⛲', footprint: [2, 2], stackable: false, desc: 'Relaxing water feature.' },
+  { id: 'piano', name: 'Grand Piano', price: 800, icon: '🎹', footprint: [2, 1], stackable: false, desc: 'Make beautiful music.' },
+  { id: 'dragon', name: 'Toy Dragon', price: 1000, icon: '🐉', footprint: [1, 1], stackable: true, desc: 'A rare collectible!' }
 ];
 
 const ROOM_TEMPLATES = [
@@ -771,7 +673,6 @@ class Avatar {
     if (this.animTimer > 0.12) { this.animTimer = 0; this.animFrame = (this.animFrame + 1) % 4; }
     if (this.chatTimer > 0) { this.chatTimer -= dt; if (this.chatTimer <= 0) this.chatBubble = null; }
     if (this.isWaving) { this.waveTimer += dt; if (this.waveTimer > 1.5) { this.isWaving = false; this.waveTimer = 0; } }
-
     if (this.path.length > 0 && this.pathIndex < this.path.length) {
       this.isWalking = true;
       const target = this.path[this.pathIndex];
@@ -787,7 +688,6 @@ class Avatar {
         else this.facing = dy > 0 ? 'se' : 'nw';
       }
     } else { this.isWalking = false; }
-
     if (this.isNPC) {
       this.npcTimer -= dt;
       if (this.npcTimer <= 0 && !this.isWalking) {
@@ -1010,6 +910,7 @@ class Game {
       this.particles.push(new Particle(sp.x + this.camera.x, sp.y + this.camera.y - 20, color, 1.0 + Math.random() * 0.5));
     }
   }
+
   setupInput() {
     this.canvas.addEventListener('mousedown', e => { this.isDragging = true; this.dragStart = { x: e.clientX, y: e.clientY }; });
     this.canvas.addEventListener('mousemove', e => {
@@ -1075,6 +976,7 @@ class Game {
       if (removed) { this.addToInventory(removed, 1); this.spawnParticles(tx, ty, '#e74c3c', 8); this.showNotification(`Picked up ${removed}`); }
     }
   }
+
   setupUI() {
     document.getElementById('btnNavigator').addEventListener('click', () => this.togglePanel('navigatorPanel'));
     document.getElementById('btnCatalog').addEventListener('click', () => this.togglePanel('catalogPanel'));
@@ -1212,7 +1114,6 @@ class Game {
     ctx.clearRect(0, 0, this.width, this.height);
     if (!this.room) return;
     ctx.save(); ctx.translate(this.camera.x, this.camera.y);
-    // Draw tiles and walls
     for (let y = 0; y < this.room.height; y++) {
       for (let x = 0; x < this.room.width; x++) {
         const tile = this.room.map[y]?.[x];
@@ -1233,7 +1134,6 @@ class Game {
         }
       }
     }
-    // Z-sorted renderables
     const renderList = [];
     this.room.furniture.forEach(f => { renderList.push({ type: 'furniture', obj: f, zIndex: this.getZIndex(f.x, f.y, f.z + 0.5) }); });
     this.room.avatars.forEach(a => { renderList.push({ type: 'avatar', obj: a, zIndex: this.getZIndex(a.x, a.y, a.z + 1) }); });
@@ -1242,7 +1142,6 @@ class Game {
       if (item.type === 'furniture') this.drawFurniture(ctx, item.obj);
       else if (item.type === 'avatar') this.drawAvatar(ctx, item.obj);
     });
-    // Hover highlight
     if (this.hoverTile && this.hoverTile.x >= 0 && this.hoverTile.y >= 0 &&
         this.hoverTile.x < this.room.width && this.hoverTile.y < this.room.height &&
         this.room.map[this.hoverTile.y]?.[this.hoverTile.x]) {
@@ -1356,516 +1255,6 @@ window.addEventListener('DOMContentLoaded', () => {
   catch (err) { console.error('Failed to initialize game:', err); document.getElementById('loadingScreen').innerHTML = `<h1 style="color:#e74c3c">Error</h1><p>${err.message}</p>`; }
 });
 window.addEventListener('contextmenu', e => { if (e.target.tagName === 'CANVAS') e.preventDefault(); });
-</script>
-</body>
-</html>
-
-
-// ==========================================
-// GAME ENGINE
-// ==========================================
-class Game {
-  constructor() {
-    this.canvas = document.getElementById('gameCanvas');
-    this.ctx = this.canvas.getContext('2d');
-    this.ctx.imageSmoothingEnabled = false;
-    this.resize();
-    window.addEventListener('resize', () => this.resize());
-
-    this.camera = { x: 0, y: 0, targetX: 0, targetY: 0 };
-    this.room = null;
-    this.player = null;
-    this.lastTime = 0;
-    this.hoverTile = null;
-    this.selectedTool = 'walk';
-    this.selectedItem = null;
-    this.placingType = null;
-    this.credits = 1000;
-    this.inventory = [];
-    this.showNames = true;
-    this.showChat = true;
-    this.showMinimap = false;
-    this.camSpeed = 5;
-    this.soundOn = false;
-    this.keys = {};
-    this.mouse = { x: 0, y: 0, down: false };
-    this.notifications = [];
-
-    this.loadSave();
-    this.setupInput();
-    this.setupUI();
-    this.enterRoom('lobby');
-
-    document.getElementById('loadingScreen').classList.add('hidden');
-    requestAnimationFrame(t => this.loop(t));
-  }
-
-  resize() {
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
-    this.W = this.canvas.width;
-    this.H = this.canvas.height;
-  }
-
-  loadSave() {
-    try {
-      const data = JSON.parse(localStorage.getItem('starlight_inn_save_v2'));
-      if (data) {
-        this.credits = data.credits || 1000;
-        this.inventory = data.inventory || [];
-      }
-    } catch (e) {}
-  }
-
-  save() {
-    localStorage.setItem('starlight_inn_save_v2', JSON.stringify({
-      credits: this.credits, inventory: this.inventory
-    }));
-  }
-
-  enterRoom(roomId) {
-    const template = ROOM_TEMPLATES.find(r => r.id === roomId);
-    if (!template) return;
-    this.room = new Room(template);
-
-    // Spawn player
-    const px = Math.floor(this.room.width / 2), py = Math.floor(this.room.height / 2);
-    this.player = new Avatar('You', px, py, {
-      skinColor: '#F5CBA7', hairColor: '#5D4037', hairStyle: 'short',
-      shirtColor: '#3498DB', pantsColor: '#2C3E50', shoeColor: '#555555',
-      speed: 0.12
-    });
-    this.room.avatars.push(this.player);
-
-    // Spawn NPCs
-    const npcCount = parseInt(document.getElementById('settingNPCs').value) || 3;
-    const names = ['Alice','Bob','Charlie','Diana','Evan','Fiona','George','Hannah','Ivan','Julia'];
-    const skins = ['#F5CBA7','#E8C39E','#D4A574','#C68642','#8D5524','#E0AC69','#FFDBAC','#F1C27D'];
-    const hairs = ['#090806','#2C1608','#71635A','#B7A69E','#D6C4C2','#B55239','#A52A2A','#DC143C','#4B0082','#228B22'];
-    const shirts = ['#E74C3C','#3498DB','#2ECC71','#F1C40F','#9B59B6','#E67E22','#1ABC9C','#34495E','#FF6B6B','#4ECDC4'];
-    const styles = ['short','spiky','long','mohawk','bald'];
-    for (let i = 0; i < npcCount; i++) {
-      let nx, ny;
-      for (let tries = 0; tries < 20; tries++) {
-        nx = randInt(0, this.room.width - 1); ny = randInt(0, this.room.height - 1);
-        if (this.room.isWalkable(nx, ny)) break;
-      }
-      const npc = new Avatar(names[i % names.length], nx, ny, {
-        skinColor: skins[i % skins.length], hairColor: hairs[i % hairs.length],
-        hairStyle: styles[i % styles.length], shirtColor: shirts[i % shirts.length],
-        pantsColor: '#2C3E50', speed: 0.06, isNPC: true
-      });
-      this.room.avatars.push(npc);
-    }
-
-    this.centerCamera();
-    document.getElementById('roomName').textContent = this.room.name;
-    document.getElementById('roomDesc').textContent = this.room.description;
-    this.notify(`Entered ${this.room.name}`, 'info');
-  }
-
-  centerCamera() {
-    if (!this.player) return;
-    const sp = isoToScreen(this.player.x, this.player.y);
-    this.camera.targetX = this.W / 2 - sp.x;
-    this.camera.targetY = this.H / 2 - sp.y + 60;
-  }
-
-  setupInput() {
-    this.canvas.addEventListener('mousemove', e => {
-      const rect = this.canvas.getBoundingClientRect();
-      this.mouse.x = e.clientX - rect.left;
-      this.mouse.y = e.clientY - rect.top;
-      const iso = screenToIso(this.mouse.x - this.camera.x, this.mouse.y - this.camera.y);
-      this.hoverTile = { x: Math.floor(iso.x), y: Math.floor(iso.y) };
-    });
-
-    this.canvas.addEventListener('mousedown', e => {
-      this.mouse.down = true;
-      if (!this.room) return;
-      const rect = this.canvas.getBoundingClientRect();
-      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-      const iso = screenToIso(mx - this.camera.x, my - this.camera.y);
-      const tx = Math.floor(iso.x), ty = Math.floor(iso.y);
-
-      if (this.placingType) {
-        if (this.room.placeFurniture(this.placingType, tx, ty)) {
-          this.placingType = null; this.selectedTool = 'walk'; this.updateCursor();
-          this.notify('Furniture placed!', 'success');
-        } else {
-          this.notify('Cannot place there!', 'error');
-        }
-        return;
-      }
-
-      if (this.selectedTool === 'pick') {
-        const removed = this.room.removeFurnitureAt(tx, ty);
-        if (removed) { this.inventory.push(removed); this.notify('Picked up furniture!', 'success'); this.save(); }
-        return;
-      }
-
-      if (this.selectedTool === 'walk') {
-        if (tx >= 0 && ty >= 0 && tx < this.room.width && ty < this.room.height && this.room.isWalkable(tx, ty)) {
-          this.player.moveTo(tx, ty, this.room);
-        }
-      }
-    });
-
-    this.canvas.addEventListener('mouseup', () => this.mouse.down = false);
-
-    this.canvas.addEventListener('touchstart', e => {
-      e.preventDefault();
-      const t = e.touches[0];
-      const rect = this.canvas.getBoundingClientRect();
-      this.mouse.x = t.clientX - rect.left; this.mouse.y = t.clientY - rect.top;
-      const iso = screenToIso(this.mouse.x - this.camera.x, this.mouse.y - this.camera.y);
-      const tx = Math.floor(iso.x), ty = Math.floor(iso.y);
-      if (this.selectedTool === 'walk' && tx >= 0 && ty >= 0 && tx < this.room.width && ty < this.room.height && this.room.isWalkable(tx, ty)) {
-        this.player.moveTo(tx, ty, this.room);
-      }
-    }, { passive: false });
-
-    window.addEventListener('keydown', e => {
-      this.keys[e.key.toLowerCase()] = true;
-      if (e.key === 'Enter') { const ci = document.getElementById('chatInput'); if (document.activeElement !== ci) { ci.focus(); e.preventDefault(); } }
-      if (e.key === 'Escape') { this.closeAllPanels(); this.placingType = null; this.selectedTool = 'walk'; this.updateCursor(); }
-      if (e.key.toLowerCase() === 'd') this.player.isDancing = !this.player.isDancing;
-      if (e.key.toLowerCase() === 'w') { this.player.isWaving = true; this.player.waveTimer = 0; }
-      if (e.key.toLowerCase() === 'm') this.toggleMinimap();
-      if (e.key.toLowerCase() === 'r') { /* rotate placeholder */ }
-    });
-    window.addEventListener('keyup', e => this.keys[e.key.toLowerCase()] = false);
-
-    document.getElementById('chatInput').addEventListener('keydown', e => { if (e.key === 'Enter') this.sendChat(); });
-    document.getElementById('chatSend').addEventListener('click', () => this.sendChat());
-  }
-
-  setupUI() {
-    document.getElementById('btnNavigator').addEventListener('click', () => this.togglePanel('navigatorPanel'));
-    document.getElementById('btnCatalog').addEventListener('click', () => this.togglePanel('catalogPanel'));
-    document.getElementById('btnInventory').addEventListener('click', () => this.togglePanel('inventoryPanel'));
-    document.getElementById('btnSettings').addEventListener('click', () => this.togglePanel('settingsPanel'));
-
-    document.querySelectorAll('.panel-close').forEach(btn => {
-      btn.addEventListener('click', () => this.closePanel(btn.dataset.panel));
-    });
-
-    document.getElementById('toolChat').addEventListener('click', () => { this.selectedTool = 'chat'; document.getElementById('chatInput').focus(); this.updateToolButtons(); });
-    document.getElementById('toolWalk').addEventListener('click', () => { this.selectedTool = 'walk'; this.placingType = null; this.updateCursor(); this.updateToolButtons(); });
-    document.getElementById('toolPlace').addEventListener('click', () => { this.selectedTool = 'place'; this.updateToolButtons(); });
-    document.getElementById('toolPick').addEventListener('click', () => { this.selectedTool = 'pick'; this.placingType = null; this.updateCursor(); this.updateToolButtons(); });
-    document.getElementById('toolRotate').addEventListener('click', () => { this.notify('Rotate coming soon!', 'info'); });
-    document.getElementById('toolDance').addEventListener('click', () => { this.player.isDancing = !this.player.isDancing; });
-    document.getElementById('toolWave').addEventListener('click', () => { this.player.isWaving = true; this.player.waveTimer = 0; });
-    document.getElementById('toolMinimap').addEventListener('click', () => this.toggleMinimap());
-
-    document.getElementById('settingMinimap').addEventListener('change', e => { this.showMinimap = e.target.checked; });
-    document.getElementById('settingNames').addEventListener('change', e => { this.showNames = e.target.checked; });
-    document.getElementById('settingChat').addEventListener('change', e => { this.showChat = e.target.checked; });
-    document.getElementById('settingCamSpeed').addEventListener('input', e => { this.camSpeed = parseInt(e.target.value); });
-    document.getElementById('settingSound').addEventListener('change', e => { this.soundOn = e.target.checked; });
-    document.getElementById('settingNPCs').addEventListener('change', e => {
-      const target = parseInt(e.target.value);
-      const current = this.room.avatars.filter(a => a.isNPC).length;
-      if (target > current) {
-        const names = ['Alice','Bob','Charlie','Diana','Evan','Fiona','George','Hannah','Ivan','Julia'];
-        const skins = ['#F5CBA7','#E8C39E','#D4A574','#C68642','#8D5524','#E0AC69','#FFDBAC','#F1C27D'];
-        const hairs = ['#090806','#2C1608','#71635A','#B7A69E','#D6C4C2','#B55239','#A52A2A','#DC143C','#4B0082','#228B22'];
-        const shirts = ['#E74C3C','#3498DB','#2ECC71','#F1C40F','#9B59B6','#E67E22','#1ABC9C','#34495E'];
-        const styles = ['short','spiky','long','mohawk','bald'];
-        for (let i = current; i < target; i++) {
-          let nx, ny;
-          for (let t = 0; t < 20; t++) { nx = randInt(0, this.room.width - 1); ny = randInt(0, this.room.height - 1); if (this.room.isWalkable(nx, ny)) break; }
-          const npc = new Avatar(names[i % names.length], nx, ny, { skinColor: skins[i % skins.length], hairColor: hairs[i % hairs.length], hairStyle: styles[i % styles.length], shirtColor: shirts[i % shirts.length], pantsColor: '#2C3E50', speed: 0.06, isNPC: true });
-          this.room.avatars.push(npc);
-        }
-      } else if (target < current) {
-        const npcs = this.room.avatars.filter(a => a.isNPC);
-        for (let i = current - 1; i >= target; i--) {
-          const idx = this.room.avatars.indexOf(npcs[i]);
-          if (idx >= 0) this.room.avatars.splice(idx, 1);
-        }
-      }
-    });
-
-    this.updateToolButtons();
-    this.renderNavigator();
-    this.renderCatalog();
-    this.renderInventory();
-    this.updateCurrency();
-  }
-
-  updateCursor() {
-    this.canvas.style.cursor = this.placingType ? 'crosshair' : (this.selectedTool === 'pick' ? 'grab' : 'pointer');
-  }
-
-  updateToolButtons() {
-    document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-    const map = { chat: 'toolChat', walk: 'toolWalk', place: 'toolPlace', pick: 'toolPick' };
-    if (map[this.selectedTool]) document.getElementById(map[this.selectedTool]).classList.add('active');
-  }
-
-  togglePanel(id) {
-    const panel = document.getElementById(id);
-    const isOpen = panel.classList.contains('open');
-    this.closeAllPanels();
-    if (!isOpen) { panel.classList.add('open'); if (id === 'catalogPanel') this.renderCatalog(); if (id === 'inventoryPanel') this.renderInventory(); if (id === 'navigatorPanel') this.renderNavigator(); }
-  }
-
-  closePanel(id) { document.getElementById(id).classList.remove('open'); }
-  closeAllPanels() { document.querySelectorAll('.panel').forEach(p => p.classList.remove('open')); }
-
-  toggleMinimap() { this.showMinimap = !this.showMinimap; document.getElementById('minimap').classList.toggle('open', this.showMinimap); }
-
-  sendChat() {
-    const input = document.getElementById('chatInput');
-    const text = input.value.trim(); if (!text) return;
-    this.player.say(text); input.value = ''; input.blur();
-    if (Math.random() > 0.5) {
-      setTimeout(() => {
-        const npcs = this.room.avatars.filter(a => a.isNPC);
-        if (npcs.length > 0) {
-          const npc = randChoice(npcs);
-          const replies = ['Nice!', 'Haha', 'Cool', 'I agree', 'Interesting!', 'Wow!', 'Hey there!', 'lol'];
-          npc.say(randChoice(replies));
-        }
-      }, 500 + Math.random() * 1500);
-    }
-  }
-
-  notify(msg, type = 'info') {
-    const area = document.getElementById('notificationArea');
-    const el = document.createElement('div');
-    el.className = 'notification';
-    if (type === 'error') el.style.borderLeftColor = 'var(--habbo-danger)';
-    if (type === 'success') el.style.borderLeftColor = 'var(--habbo-success)';
-    el.textContent = msg;
-    area.appendChild(el);
-    setTimeout(() => el.remove(), 3000);
-  }
-
-  updateCurrency() { document.getElementById('currencyDisplay').textContent = this.credits.toLocaleString(); }
-
-  buyItem(id) {
-    const item = FURNITURE_CATALOG.find(c => c.id === id);
-    if (!item) return;
-    if (this.credits < item.price) { this.notify('Not enough credits!', 'error'); return; }
-    this.credits -= item.price;
-    this.inventory.push(item.id);
-    this.updateCurrency();
-    this.notify(`Bought ${item.name}!`, 'success');
-    this.save();
-  }
-
-  selectInventoryItem(idx) {
-    const type = this.inventory[idx];
-    if (this.selectedItem === idx) {
-      this.placingType = type;
-      this.selectedItem = null;
-      this.selectedTool = 'place';
-      this.updateCursor();
-      this.updateToolButtons();
-      this.closeAllPanels();
-      this.notify('Click a tile to place furniture', 'info');
-    } else {
-      this.selectedItem = idx;
-      this.renderInventory();
-    }
-  }
-
-  renderNavigator() {
-    const publicList = document.getElementById('publicRoomList');
-    publicList.innerHTML = '';
-    ROOM_TEMPLATES.forEach(room => {
-      const el = document.createElement('div'); el.className = 'room-item';
-      const count = room.id === this.room?.id ? this.room.avatars.length : randInt(2, 15);
-      el.innerHTML = `<div class="room-name">${room.name}</div><div class="room-desc">${room.description}</div><div class="room-meta">${count} users</div>`;
-      el.addEventListener('click', () => { this.enterRoom(room.id); this.closeAllPanels(); });
-      publicList.appendChild(el);
-    });
-  }
-
-  renderCatalog() {
-    const grid = document.getElementById('catalogGrid'); grid.innerHTML = '';
-    FURNITURE_CATALOG.forEach(item => {
-      const el = document.createElement('div'); el.className = 'catalog-item';
-      el.innerHTML = `<div class="cat-icon">${item.icon}</div><div class="cat-name">${item.name}</div><div class="cat-price">${item.price} cr</div>`;
-      el.addEventListener('click', () => this.buyItem(item.id));
-      grid.appendChild(el);
-    });
-  }
-
-  renderInventory() {
-    const grid = document.getElementById('inventoryGrid'); grid.innerHTML = '';
-    const counts = {};
-    this.inventory.forEach(id => { counts[id] = (counts[id] || 0) + 1; });
-    const unique = Object.keys(counts);
-    unique.forEach((id, idx) => {
-      const item = FURNITURE_CATALOG.find(c => c.id === id);
-      if (!item) return;
-      const el = document.createElement('div'); el.className = 'inv-item' + (this.selectedItem === idx ? ' selected' : '');
-      el.innerHTML = `<div style="font-size:28px">${item.icon}</div>${counts[id] > 1 ? `<div class="inv-count">x${counts[id]}</div>` : ''}`;
-      el.title = item.name;
-      el.addEventListener('click', () => this.selectInventoryItem(idx));
-      grid.appendChild(el);
-    });
-  }
-
-  // ==========================================
-  // RENDERING
-  // ==========================================
-  loop(timestamp) {
-    const dt = Math.min((timestamp - this.lastTime) / 1000, 0.05);
-    this.lastTime = timestamp;
-    this.update(dt);
-    this.render();
-    requestAnimationFrame(t => this.loop(t));
-  }
-
-  update(dt) {
-    if (!this.room) return;
-    this.room.avatars.forEach(a => a.update(dt, this.room));
-
-    // Camera follow
-    if (this.player) {
-      const sp = isoToScreen(this.player.x, this.player.y);
-      this.camera.targetX = this.W / 2 - sp.x;
-      this.camera.targetY = this.H / 2 - sp.y + 60;
-    }
-    const camLerp = 0.08 * this.camSpeed;
-    this.camera.x = lerp(this.camera.x, this.camera.targetX, camLerp);
-    this.camera.y = lerp(this.camera.y, this.camera.targetY, camLerp);
-  }
-
-  render() {
-    const ctx = this.ctx;
-    ctx.clearRect(0, 0, this.W, this.H);
-    ctx.fillStyle = '#1a2a3a';
-    ctx.fillRect(0, 0, this.W, this.H);
-    if (!this.room) return;
-
-    // Draw room tiles (back to front)
-    for (let y = 0; y < this.room.height; y++) {
-      for (let x = 0; x < this.room.width; x++) {
-        if (!this.room.map[y] || !this.room.map[y][x]) continue;
-        const sp = isoToScreen(x, y);
-        const sx = sp.x + this.camera.x, sy = sp.y + this.camera.y;
-        const tile = getTilePattern(this.room.floorType);
-        ctx.drawImage(tile, sx - TILE_W / 2 - 1, sy - TILE_H / 2 - 1);
-
-        // Wall if edge
-        if (y === 0 || !this.room.map[y - 1] || !this.room.map[y - 1][x]) {
-          const wall = getWallPattern(this.room.wallColor);
-          ctx.drawImage(wall, sx - TILE_W / 4, sy - WALL_H - TILE_H / 2);
-        }
-      }
-    }
-
-    // Collect renderables
-    const renderables = [];
-    for (const f of this.room.furniture) {
-      renderables.push({ type: 'furniture', obj: f, sortY: f.y + f.x + f.z * 0.5 });
-    }
-    for (const a of this.room.avatars) {
-      renderables.push({ type: 'avatar', obj: a, sortY: a.y + a.x });
-    }
-    if (this.hoverTile && (this.selectedTool === 'walk' || this.placingType)) {
-      renderables.push({ type: 'highlight', x: this.hoverTile.x, y: this.hoverTile.y, sortY: this.hoverTile.y + this.hoverTile.x });
-    }
-
-    renderables.sort((a, b) => a.sortY - b.sortY);
-
-    for (const r of renderables) {
-      if (r.type === 'furniture') {
-        const f = r.obj;
-        const sp = f.screenPos;
-        const sx = sp.x + this.camera.x, sy = sp.y + this.camera.y;
-        const asset = getFurnitureAsset(f.type);
-        ctx.drawImage(asset, sx - 40, sy - 60);
-      } else if (r.type === 'avatar') {
-        const a = r.obj;
-        const sp = a.screenPos;
-        const sx = sp.x + this.camera.x, sy = sp.y + this.camera.y;
-        const asset = getAvatarAsset(a.assetKey);
-        ctx.drawImage(asset, sx - 22, sy - 32);
-
-        // Name tag
-        if (this.showNames) {
-          ctx.font = 'bold 11px Nunito, sans-serif';
-          ctx.textAlign = 'center';
-          const tw = ctx.measureText(a.name).width;
-          ctx.fillStyle = 'rgba(0,0,0,0.55)';
-          roundRect(ctx, sx - tw / 2 - 4, sy - 42, tw + 8, 16, 4);
-          ctx.fill();
-          ctx.fillStyle = a === this.player ? '#f4d03f' : '#fff';
-          ctx.fillText(a.name, sx, sy - 30);
-        }
-
-        // Chat bubble
-        if (this.showChat && a.chatBubble) {
-          ctx.font = '600 12px Nunito, sans-serif';
-          ctx.textAlign = 'center';
-          const bw = Math.min(ctx.measureText(a.chatBubble).width + 16, 200);
-          ctx.fillStyle = 'rgba(255,255,255,0.95)';
-          roundRect(ctx, sx - bw / 2, sy - 68, bw, 22, 10);
-          ctx.fill();
-          ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
-          ctx.stroke();
-          ctx.fillStyle = '#333';
-          ctx.fillText(a.chatBubble, sx, sy - 52);
-        }
-      } else if (r.type === 'highlight') {
-        const sp = isoToScreen(r.x, r.y);
-        const sx = sp.x + this.camera.x, sy = sp.y + this.camera.y;
-        ctx.strokeStyle = 'rgba(244,208,63,0.8)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(sx, sy - TILE_H / 2); ctx.lineTo(sx + TILE_W / 2, sy);
-        ctx.lineTo(sx, sy + TILE_H / 2); ctx.lineTo(sx - TILE_W / 2, sy);
-        ctx.closePath(); ctx.stroke();
-        if (this.placingType) {
-          ctx.fillStyle = 'rgba(244,208,63,0.15)';
-          ctx.fill();
-          const asset = getFurnitureAsset(this.placingType);
-          ctx.globalAlpha = 0.5;
-          ctx.drawImage(asset, sx - 40, sy - 60 - WALL_H / 2);
-          ctx.globalAlpha = 1;
-        }
-      }
-    }
-
-    // Minimap
-    if (this.showMinimap) this.renderMinimap();
-  }
-
-  renderMinimap() {
-    const mc = document.getElementById('minimapCanvas');
-    const mctx = mc.getContext('2d');
-    mctx.clearRect(0, 0, 140, 140);
-    if (!this.room) return;
-    const scaleX = 140 / this.room.width, scaleY = 140 / this.room.height;
-    for (let y = 0; y < this.room.height; y++) {
-      for (let x = 0; x < this.room.width; x++) {
-        if (this.room.map[y] && this.room.map[y][x]) {
-          mctx.fillStyle = this.room.floorType === 'grass' ? '#2E7D32' : '#546E7A';
-          mctx.fillRect(x * scaleX, y * scaleY, scaleX - 1, scaleY - 1);
-        }
-      }
-    }
-    for (const a of this.room.avatars) {
-      mctx.fillStyle = a === this.player ? '#f4d03f' : '#fff';
-      mctx.beginPath(); mctx.arc(a.x * scaleX + scaleX / 2, a.y * scaleY + scaleY / 2, 3, 0, Math.PI * 2); mctx.fill();
-    }
-  }
-}
-
-// Boot
-document.addEventListener('DOMContentLoaded', () => {
-  window.game = new Game();
-});
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  setTimeout(() => { if (!window.game) window.game = new Game(); }, 1);
-}
 </script>
 </body>
 </html>
