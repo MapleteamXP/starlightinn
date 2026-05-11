@@ -69,7 +69,8 @@ export class Avatar {
       const target = this.path[this.pathIndex];
       const dx = target.x - this.x;
       const dy = target.y - this.y;
-      const step = this.speed;
+      const isRunning = !this.isNPC && this.game && this.game.keys && this.game.keys['shift'];
+      const step = this.speed * (isRunning ? 1.8 : 1);
       const oldX = this.x;
       const oldY = this.y;
       if (Math.abs(dx) < step && Math.abs(dy) < step) {
@@ -146,7 +147,8 @@ export class Avatar {
 
   say(text, color, type) {
     this.chatBubble = text;
-    this.chatTimer = type === 'shout' ? 6 : (type === 'whisper' ? 3 : 4.5);
+    const baseDuration = (this.game && this.game.settings && this.game.settings.chatBubbleDuration) || 4.5;
+    this.chatTimer = type === 'shout' ? baseDuration * 1.3 : (type === 'whisper' ? baseDuration * 0.7 : baseDuration);
     this.chatColor = color || this.chatColor || '#fffde7';
     this.chatType = type || 'normal';
     return true;

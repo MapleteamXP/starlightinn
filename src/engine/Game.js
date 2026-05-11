@@ -70,7 +70,7 @@ export class Game {
     this.room = null;
     this.player = null;
     this.particles = [];
-    this.settings = { showMinimap: true, showNames: true, showChat: true, npcCount: 3, camSpeed: 5, sound: false, safeMode: false, showWeather: true, myRoomPrivate: false, showTimestamps: true };
+    this.settings = { showMinimap: true, showNames: true, showChat: true, npcCount: 3, camSpeed: 5, sound: false, safeMode: false, showWeather: true, myRoomPrivate: false, showTimestamps: true, chatBubbleDuration: 4.5 };
     this.ownedThemes = ['classic'];
     this.currentTheme = 'classic';
     this.likedRooms = new Set();
@@ -128,6 +128,7 @@ export class Game {
     this.photoMode = false;
     this.simulatedPlayers = [];
     this.simPlayerTimer = 30 + Math.random() * 60;
+    this.screenShake = { x: 0, y: 0, intensity: 0 };
     this.globalChatTimer = 20 + Math.random() * 40;
     this.globalChatMessages = [
       { name: 'SkyWalker', text: 'Anyone want to play Ring Uppercut?' },
@@ -262,6 +263,12 @@ export class Game {
     this.room.avatars = this.room.avatars.filter(a => !a.isNPC);
     const npcs = this.npcManager.spawn(count, this.room, this.player);
     npcs.forEach(n => this.room.avatars.push(n));
+  }
+
+  shakeScreen(intensity = 5, duration = 0.3) {
+    this.screenShake.intensity = intensity;
+    this.screenShake.duration = duration;
+    this.screenShake.timer = duration;
   }
 
   spawnParticles(x, y, color, count = 8) {
@@ -589,6 +596,7 @@ export class Game {
     document.getElementById('settingSafeMode')?.addEventListener('change', e => { this.settings.safeMode = e.target.checked; this.uiManager.showNotification(e.target.checked ? 'Safe Mode enabled' : 'Safe Mode disabled'); });
     document.getElementById('settingWeather')?.addEventListener('change', e => { this.settings.showWeather = e.target.checked; this.saveSettings(); this.uiManager.showNotification(e.target.checked ? 'Weather effects on' : 'Weather effects off'); });
     document.getElementById('settingTimestamps')?.addEventListener('change', e => { this.settings.showTimestamps = e.target.checked; this.chatManager.showTimestamps = e.target.checked; this.saveSettings(); this.chatManager.renderHistory(); this.uiManager.showNotification(e.target.checked ? 'Timestamps on' : 'Timestamps off'); });
+    document.getElementById('settingBubbleDuration')?.addEventListener('input', e => { this.settings.chatBubbleDuration = parseFloat(e.target.value); this.saveSettings(); });
     document.getElementById('btnLikeRoom')?.addEventListener('click', () => this.toggleLikeRoom());
     document.getElementById('btnExportSave')?.addEventListener('click', () => this.exportSave());
     document.getElementById('btnImportSave')?.addEventListener('click', () => document.getElementById('importFileInput')?.click());
@@ -599,6 +607,8 @@ export class Game {
     if (weatherCb) weatherCb.checked = this.settings.showWeather;
     const timestampsCb = document.getElementById('settingTimestamps');
     if (timestampsCb) { timestampsCb.checked = this.settings.showTimestamps; this.chatManager.showTimestamps = this.settings.showTimestamps; }
+    const bubbleSlider = document.getElementById('settingBubbleDuration');
+    if (bubbleSlider) bubbleSlider.value = this.settings.chatBubbleDuration;
 
     this.renderNavigator();
     this.renderCatalog();
@@ -688,12 +698,13 @@ export class Game {
         this.settings.showWeather = data.showWeather !== false;
         this.settings.myRoomPrivate = data.myRoomPrivate === true;
         this.settings.showTimestamps = data.showTimestamps !== false;
+        this.settings.chatBubbleDuration = data.chatBubbleDuration || 4.5;
       }
     } catch (e) {}
   }
 
   saveSettings() {
-    try { localStorage.setItem('starlight_settings', JSON.stringify({ showWeather: this.settings.showWeather, myRoomPrivate: this.settings.myRoomPrivate, showTimestamps: this.settings.showTimestamps })); } catch (e) {}
+    try { localStorage.setItem('starlight_settings', JSON.stringify({ showWeather: this.settings.showWeather, myRoomPrivate: this.settings.myRoomPrivate, showTimestamps: this.settings.showTimestamps, chatBubbleDuration: this.settings.chatBubbleDuration })); } catch (e) {}
   }
 
   loadFavorites() {
@@ -1007,7 +1018,7 @@ export class Game {
       leaderboard: this.leaderboardSystem.scores,
       myroom: localStorage.getItem('starlight_myroom'),
       inbox: { messages: this.inboxSystem.messages, unreadCount: this.inboxSystem.unreadCount },
-      settings: { showWeather: this.settings.showWeather, myRoomPrivate: this.settings.myRoomPrivate, showTimestamps: this.settings.showTimestamps },
+      settings: { showWeather: this.settings.showWeather, myRoomPrivate: this.settings.myRoomPrivate, showTimestamps: this.settings.showTimestamps, chatBubbleDuration: this.settings.chatBubbleDuration },
       bookmarks: Array.from(this.bookmarkedRooms),
       quests: { active: this.questSystem.active, completed: this.questSystem.completed },
       version: '2.3'
@@ -1040,7 +1051,7 @@ export class Game {
         if (data.leaderboard) { this.leaderboardSystem.scores = data.leaderboard; this.leaderboardSystem.save(); }
         if (data.myroom) { localStorage.setItem('starlight_myroom', data.myroom); }
         if (data.inbox) { this.inboxSystem.messages = data.inbox.messages || []; this.inboxSystem.unreadCount = data.inbox.unreadCount || 0; this.inboxSystem.save(); }
-        if (data.settings) { this.settings.showWeather = data.settings.showWeather !== false; this.settings.myRoomPrivate = data.settings.myRoomPrivate === true; this.settings.showTimestamps = data.settings.showTimestamps !== false; this.saveSettings(); }
+        if (data.settings) { this.settings.showWeather = data.settings.showWeather !== false; this.settings.myRoomPrivate = data.settings.myRoomPrivate === true; this.settings.showTimestamps = data.settings.showTimestamps !== false; this.settings.chatBubbleDuration = data.settings.chatBubbleDuration || 4.5; this.saveSettings(); }
         if (data.quests) { this.questSystem.active = data.quests.active || null; this.questSystem.completed = data.quests.completed || []; this.questSystem.save(); }
         if (data.bookmarks) { this.bookmarkedRooms = new Set(data.bookmarks); this.saveBookmarks(); }
         this.uiManager.showNotification('Save imported! Reloading...', 'success');
@@ -1366,6 +1377,15 @@ export class Game {
       this.camera.x = clamp(this.camera.x, minX, maxX);
       this.camera.y = clamp(this.camera.y, minY, maxY);
     }
+    // Screen shake decay
+    if (this.screenShake.timer > 0) {
+      this.screenShake.timer -= dt;
+      const t = this.screenShake.timer / this.screenShake.duration;
+      this.screenShake.x = (Math.random() - 0.5) * 2 * this.screenShake.intensity * t;
+      this.screenShake.y = (Math.random() - 0.5) * 2 * this.screenShake.intensity * t;
+    } else {
+      this.screenShake.x = 0; this.screenShake.y = 0;
+    }
     if (this.room) {
       this.room.avatars.forEach(a => a.update(dt, this.room));
       this.npcManager.update(dt, this.room);
@@ -1415,6 +1435,7 @@ export class Game {
             this.treasures.push({ x: tx, y: ty, coins: 25 + Math.floor(Math.random() * 76), life: 30 });
             this.spawnParticles(tx, ty, '#f4d03f', 10);
             this.spawnParticles(tx, ty, '#fff', 6);
+            this.shakeScreen(3, 0.2);
             break;
           }
         }
@@ -1456,7 +1477,7 @@ export class Game {
     }
 
     if (!this.room) return;
-    ctx.save(); ctx.translate(this.camera.x, this.camera.y);
+    ctx.save(); ctx.translate(this.camera.x + this.screenShake.x, this.camera.y + this.screenShake.y);
 
     // Day/night cycle overlay
     const hour = new Date().getHours();
@@ -1600,17 +1621,27 @@ export class Game {
     // Furniture hover tooltip
     if (this.hoverFurniture) {
       const fsp = isoToScreen(this.hoverFurniture.x, this.hoverFurniture.y);
-      const sx = fsp.x + this.camera.x, sy = fsp.y + this.camera.y - 50;
-      ctx.fillStyle = 'rgba(0,0,0,0.75)';
-      const text = this.hoverFurniture.type.replace(/_/g, ' ');
-      const tw = ctx.measureText(text).width;
-      roundRect(ctx, sx - tw / 2 - 8, sy - 10, tw + 16, 22, 4);
+      const sx = fsp.x + this.camera.x, sy = fsp.y + this.camera.y - 60;
+      const catItem = FURNITURE_CATALOG.find(c => c.id === this.hoverFurniture.type);
+      const nameText = this.hoverFurniture.type.replace(/_/g, ' ');
+      const rarityText = catItem ? (catItem.price >= 500 ? '★★★' : (catItem.price >= 200 ? '★★' : '★')) : '';
+      const priceText = catItem ? `★${catItem.price}` : '';
+      ctx.font = 'bold 11px Nunito, sans-serif';
+      const nw = ctx.measureText(nameText).width;
+      ctx.font = '10px Nunito, sans-serif';
+      const rw = ctx.measureText(rarityText + ' ' + priceText).width;
+      const maxW = Math.max(nw, rw) + 16;
+      ctx.fillStyle = 'rgba(0,0,0,0.8)';
+      roundRect(ctx, sx - maxW / 2, sy - 10, maxW, 38, 6);
       ctx.fill();
       ctx.fillStyle = '#fff';
       ctx.font = 'bold 11px Nunito, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(text, sx, sy);
+      ctx.fillText(nameText, sx, sy);
+      ctx.font = '10px Nunito, sans-serif';
+      ctx.fillStyle = catItem ? (catItem.price >= 500 ? '#f4d03f' : (catItem.price >= 200 ? '#e67e22' : '#aaa')) : '#aaa';
+      ctx.fillText(`${rarityText} ${priceText}`, sx, sy + 14);
     }
     this.renderMinimap();
   }

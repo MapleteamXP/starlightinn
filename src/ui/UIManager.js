@@ -54,6 +54,7 @@ export class UIManager {
       <div class="setting-row"><label>Safe Mode</label><input type="checkbox" id="settingSafeMode"></div>
       <div class="setting-row"><label>Weather Effects</label><input type="checkbox" id="settingWeather" checked></div>
       <div class="setting-row"><label>Chat Timestamps</label><input type="checkbox" id="settingTimestamps" checked></div>
+      <div class="setting-row"><label>Bubble Duration</label><input type="range" id="settingBubbleDuration" min="1" max="10" value="4.5" step="0.5"></div>
       <div class="setting-row"><label>Export Save</label><button id="btnExportSave" style="padding:4px 10px;background:var(--habbo-light);color:white;border:1px solid var(--habbo-panel-border);border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;">Download</button></div>
       <div class="setting-row"><label>Import Save</label><button id="btnImportSave" style="padding:4px 10px;background:var(--habbo-light);color:white;border:1px solid var(--habbo-panel-border);border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;">Upload</button></div>
       <input type="file" id="importFileInput" style="display:none;" accept=".json">
