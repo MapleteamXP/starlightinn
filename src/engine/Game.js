@@ -31,6 +31,7 @@ import { FriendSystem } from '../social/Friends.js';
 import { LeaderboardSystem } from '../social/Leaderboard.js';
 import { StatsSystem } from '../social/Stats.js';
 import { EventSystem } from '../world/Events.js';
+import { ChallengeSystem } from '../economy/Challenges.js';
 import { PetSystem } from '../world/Pet.js';
 
 class Particle {
@@ -101,6 +102,7 @@ export class Game {
     this.craftingSystem = new CraftingSystem(this.inventorySystem);
     this.statsSystem = new StatsSystem();
     this.eventSystem = new EventSystem(this);
+    this.challengeSystem = new ChallengeSystem(this);
     this.photoMode = false;
 
     this.setupInput();
@@ -111,6 +113,7 @@ export class Game {
     this.applyAvatarToPlayer();
     this.spawnNPCs(this.settings.npcCount);
     this.achievementSystem.visitRoom(ROOM_TEMPLATES[0].id);
+    this.challengeSystem.track('visit');
     this.applyThemeToMyRoom();
 
     // Check daily rewards
@@ -245,6 +248,7 @@ export class Game {
         this.uiManager.showNotification(`Placed ${type}!`);
         this.soundManager.play('place');
         this.achievementSystem.track('place');
+        this.challengeSystem.track('place');
         this.statsSystem.inc('furniturePlaced');
       } else {
         this.uiManager.showNotification('Cannot place there!', 'error');
@@ -333,6 +337,7 @@ export class Game {
         this.uiManager.showNotification(`Found ★${treasure.coins} in a treasure chest!`, 'success');
         this.soundManager.play('buy');
         this.statsSystem.inc('treasureChestsFound');
+        this.challengeSystem.track('treasure');
         this.treasures = this.treasures.filter(t => t !== treasure);
         this.achievementSystem.track('walk');
         return;
@@ -350,6 +355,7 @@ export class Game {
       if (this.room.isWalkable(tx, ty)) {
         this.player.moveTo(tx, ty, this.room);
         this.achievementSystem.track('walk');
+        this.challengeSystem.track('walk');
         this.statsSystem.inc('stepsWalked');
         this.spawnParticles(tx, ty, 'rgba(244,208,63,0.6)', 5);
       }
@@ -396,6 +402,7 @@ export class Game {
     document.getElementById('btnCrafting')?.addEventListener('click', () => { this.uiManager.togglePanel('craftingPanel'); this.renderCraftingPanel(); });
     document.getElementById('btnStats')?.addEventListener('click', () => { this.uiManager.togglePanel('statsPanel'); this.renderStatsPanel(); });
     document.getElementById('btnShortcuts')?.addEventListener('click', () => { this.uiManager.togglePanel('shortcutsPanel'); this.renderShortcutsPanel(); });
+    document.getElementById('btnChallenges')?.addEventListener('click', () => { this.uiManager.togglePanel('challengesPanel'); this.renderChallengesPanel(); });
 
     document.getElementById('hairStyleSelect')?.addEventListener('change', e => { this.customize.hairStyle = e.target.value; this.renderCustomizePanel(); });
     document.getElementById('hatSelect')?.addEventListener('change', e => { this.customize.hatType = e.target.value; this.renderCustomizePanel(); });
@@ -445,6 +452,7 @@ export class Game {
       this.chatManager.send(text);
     this.soundManager.play('chat');
     this.achievementSystem.track('chat');
+    this.challengeSystem.track('chat');
     };
     document.getElementById('chatSend')?.addEventListener('click', sendChat);
     document.getElementById('chatInput')?.addEventListener('keydown', e => {
@@ -605,6 +613,7 @@ export class Game {
           this.soundManager.play('buy');
           this.achievementSystem.track('buy');
           this.statsSystem.inc('furnitureBought');
+        this.challengeSystem.track('buy');
           this.statsSystem.inc('totalCoinsSpent', item.price);
           this.renderCatalog();
         } else {
@@ -671,6 +680,7 @@ export class Game {
       this.saveAvatarToStorage();
       this.uiManager.showNotification('Look saved!');
       this.achievementSystem.track('customize');
+    this.challengeSystem.track('customize');
     }, () => {
       const rand = arr => arr[Math.floor(Math.random() * arr.length)];
       this.customize.skinColor = rand(['#F5CBA7','#E0AC69','#8D5524','#C68642','#FFDBAC','#AA7C58']);
@@ -840,6 +850,10 @@ export class Game {
     this.uiManager.renderStats(this.statsSystem.getStats());
   }
 
+  renderChallengesPanel() {
+    this.uiManager.renderChallenges(this.challengeSystem.getList());
+  }
+
   renderShortcutsPanel() {
     this.uiManager.renderShortcuts([
       { key: 'W / A / S / D', action: 'Walk around' },
@@ -961,6 +975,7 @@ export class Game {
       this.petSystem.tick(dt);
       this.statsSystem.tick(dt);
       this.eventSystem.update(dt);
+      this.challengeSystem._refreshIfNeeded();
       // Treasure spawning
       const treasureInterval = this.eventSystem ? this.eventSystem.getTreasureInterval() : 45;
       this.treasureTimer += dt;
@@ -1308,6 +1323,7 @@ export class Game {
     this.minigame = new MinigameClass(this);
     this.minigame.start();
     this.achievementSystem.track('minigame');
+    this.challengeSystem.track('win');
     this.statsSystem.inc('minigamesPlayed');
   }
 

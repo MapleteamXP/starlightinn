@@ -54,6 +54,27 @@ export class ChatManager {
           player.say('*stands up*', this.chatColor, 'emote');
           this.addHistory('You', '*stands up*', timeStr, 'emote');
           return;
+        case 'laugh':
+          player.say('😂 Hahaha!', this.chatColor, 'emote');
+          this.addHistory('You', '😂 Hahaha!', timeStr, 'emote');
+          return;
+        case 'cry':
+          player.say('😭 Aww...', this.chatColor, 'emote');
+          this.addHistory('You', '😭 Aww...', timeStr, 'emote');
+          return;
+        case 'angry':
+          player.say('😠 Grrr!', this.chatColor, 'emote');
+          this.addHistory('You', '😠 Grrr!', timeStr, 'emote');
+          return;
+        case 'sleep':
+          player.isSitting = true;
+          player.say('💤 Zzz...', this.chatColor, 'emote');
+          this.addHistory('You', '💤 Zzz...', timeStr, 'emote');
+          return;
+        case 'clap':
+          player.say('👏 *claps*', this.chatColor, 'emote');
+          this.addHistory('You', '👏 *claps*', timeStr, 'emote');
+          return;
         case 'me':
           if (args) {
             player.say(`*${args}*`, this.chatColor, 'emote');
@@ -214,6 +235,11 @@ export class ChatManager {
 /dance - Toggle dance
 /sit - Sit down
 /stand - Stand up
+/laugh - Laugh
+/cry - Cry
+/angry - Get angry
+/sleep - Sleep
+/clap - Clap
 /me <action> - Emote
 /whisper <msg> - Whisper
 /shout <msg> - Shout

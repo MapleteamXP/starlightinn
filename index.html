@@ -100,6 +100,7 @@ body {
 .catalog-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .catalog-item { background: rgba(0,0,0,0.2); border: 2px solid var(--habbo-panel-border); border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; transition: all 0.15s; }
 .catalog-item:hover { border-color: var(--habbo-accent); transform: scale(1.05); }
+.catalog-item .cat-rarity { font-size: 9px; margin-bottom: 2px; letter-spacing: 1px; }
 .catalog-item .cat-icon { font-size: 28px; margin-bottom: 4px; }
 .catalog-item .cat-name { font-size: 11px; font-weight: 600; }
 .catalog-item .cat-price { font-size: 11px; color: var(--habbo-accent); font-weight: 700; }
@@ -215,6 +216,16 @@ body {
 .npc-action { flex: 1; padding: 6px; border-radius: 6px; border: none; background: var(--habbo-light); color: white; font-family: inherit; font-weight: 700; font-size: 11px; cursor: pointer; }
 .npc-action:hover { background: var(--habbo-accent); color: var(--habbo-dark); }
 @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+/* Challenges */
+.challenge-item { background: rgba(0,0,0,0.15); border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+.challenge-item.done { opacity: 0.5; background: rgba(46,204,113,0.1); }
+.challenge-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.challenge-name { font-weight: 700; font-size: 13px; }
+.challenge-reward { font-size: 12px; color: var(--habbo-accent); font-weight: 700; }
+.challenge-desc { font-size: 11px; color: var(--habbo-text-dim); margin-bottom: 6px; }
+.challenge-bar { background: rgba(0,0,0,0.3); border-radius: 3px; height: 5px; margin-bottom: 2px; }
+.challenge-bar div { height: 100%; background: var(--habbo-accent); border-radius: 3px; transition: width 0.3s; }
 
 /* Shortcuts */
 .shortcut-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 13px; }
@@ -2792,6 +2803,27 @@ var StarlightEngine = (() => {
                 player.say("*stands up*", this.chatColor, "emote");
                 this.addHistory("You", "*stands up*", timeStr, "emote");
                 return;
+              case "laugh":
+                player.say("\u{1F602} Hahaha!", this.chatColor, "emote");
+                this.addHistory("You", "\u{1F602} Hahaha!", timeStr, "emote");
+                return;
+              case "cry":
+                player.say("\u{1F62D} Aww...", this.chatColor, "emote");
+                this.addHistory("You", "\u{1F62D} Aww...", timeStr, "emote");
+                return;
+              case "angry":
+                player.say("\u{1F620} Grrr!", this.chatColor, "emote");
+                this.addHistory("You", "\u{1F620} Grrr!", timeStr, "emote");
+                return;
+              case "sleep":
+                player.isSitting = true;
+                player.say("\u{1F4A4} Zzz...", this.chatColor, "emote");
+                this.addHistory("You", "\u{1F4A4} Zzz...", timeStr, "emote");
+                return;
+              case "clap":
+                player.say("\u{1F44F} *claps*", this.chatColor, "emote");
+                this.addHistory("You", "\u{1F44F} *claps*", timeStr, "emote");
+                return;
               case "me":
                 if (args) {
                   player.say(`*${args}*`, this.chatColor, "emote");
@@ -2949,6 +2981,11 @@ var StarlightEngine = (() => {
 /dance - Toggle dance
 /sit - Sit down
 /stand - Stand up
+/laugh - Laugh
+/cry - Cry
+/angry - Get angry
+/sleep - Sleep
+/clap - Clap
 /me <action> - Emote
 /whisper <msg> - Whisper
 /shout <msg> - Shout
@@ -3250,6 +3287,7 @@ var StarlightEngine = (() => {
           this._ensurePanel("craftingPanel", "Crafting Workshop", `<div class="craft-list" id="craftList"></div>`);
           this._ensurePanel("statsPanel", "Player Stats", `<div class="stats-list" id="statsList"></div>`);
           this._ensurePanel("shortcutsPanel", "Keyboard Shortcuts", `<div class="shortcuts-list" id="shortcutsList"></div>`);
+          this._ensurePanel("challengesPanel", "Daily Challenges", `<div class="challenge-list" id="challengeList"></div>`);
           if (!document.getElementById("chatColorPopover")) {
             const popover = document.createElement("div");
             popover.className = "chat-color-popover";
@@ -3365,7 +3403,9 @@ var StarlightEngine = (() => {
             const div = document.createElement("div");
             div.className = "catalog-item";
             div.title = item.desc;
-            div.innerHTML = `<div class="cat-icon">${item.icon}</div><div class="cat-name">${item.name}</div><div class="cat-price">\u2605 ${item.price}</div>`;
+            const rarity = item.price >= 500 ? "\u2605\u2605\u2605" : item.price >= 200 ? "\u2605\u2605" : "\u2605";
+            const rarityColor = item.price >= 500 ? "#f4d03f" : item.price >= 200 ? "#e67e22" : "#aaa";
+            div.innerHTML = `<div class="cat-rarity" style="color:${rarityColor}">${rarity}</div><div class="cat-icon">${item.icon}</div><div class="cat-name">${item.name}</div><div class="cat-price">\u2605 ${item.price}</div>`;
             div.addEventListener("click", () => onBuy && onBuy(item));
             grid.appendChild(div);
           });
@@ -3566,6 +3606,29 @@ var StarlightEngine = (() => {
           setTimeout(() => {
             if (div.parentNode) div.remove();
           }, 6e3);
+        }
+        renderChallenges(challenges) {
+          const list = document.getElementById("challengeList");
+          if (!list) return;
+          list.innerHTML = "";
+          if (challenges.length === 0) {
+            list.innerHTML = '<div style="text-align:center;color:var(--habbo-text-dim);padding:20px;">No active challenges.</div>';
+            return;
+          }
+          challenges.forEach((c) => {
+            const div = document.createElement("div");
+            div.className = "challenge-item" + (c.done ? " done" : "");
+            div.innerHTML = `
+        <div class="challenge-row">
+          <span class="challenge-name">${c.name}</span>
+          <span class="challenge-reward">\u2605${c.reward}</span>
+        </div>
+        <div class="challenge-desc">${c.desc}</div>
+        <div class="challenge-bar"><div style="width:${c.percent}%"></div></div>
+        <div style="font-size:10px;color:var(--habbo-text-dim);text-align:right;">${c.current}/${c.target}</div>
+      `;
+            list.appendChild(div);
+          });
         }
         renderShortcuts(shortcuts) {
           const list = document.getElementById("shortcutsList");
@@ -4880,6 +4943,97 @@ var StarlightEngine = (() => {
     }
   });
 
+  // src/economy/Challenges.js
+  var CHALLENGE_POOL, ChallengeSystem;
+  var init_Challenges = __esm({
+    "src/economy/Challenges.js"() {
+      CHALLENGE_POOL = [
+        { id: "walk_20", name: "Morning Stroll", desc: "Walk 20 tiles", type: "walk", target: 20, reward: 50 },
+        { id: "chat_5", name: "Social Butterfly", desc: "Send 5 chat messages", type: "chat", target: 5, reward: 75 },
+        { id: "place_3", name: "Interior Designer", desc: "Place 3 furniture items", type: "place", target: 3, reward: 100 },
+        { id: "buy_2", name: "Shopping Spree", desc: "Buy 2 furniture items", type: "buy", target: 2, reward: 100 },
+        { id: "win_game", name: "Champion", desc: "Win a minigame", type: "win", target: 1, reward: 150 },
+        { id: "visit_3", name: "World Traveler", desc: "Visit 3 different rooms", type: "visit", target: 3, reward: 100 },
+        { id: "find_treasure", name: "Treasure Hunter", desc: "Find 2 treasure chests", type: "treasure", target: 2, reward: 125 },
+        { id: "craft_1", name: "Crafty", desc: "Craft 1 item", type: "craft", target: 1, reward: 100 },
+        { id: "feed_pet", name: "Pet Parent", desc: "Feed your pet", type: "pet_feed", target: 1, reward: 75 },
+        { id: "customize", name: "New Look", desc: "Change your avatar look", type: "customize", target: 1, reward: 50 }
+      ];
+      ChallengeSystem = class {
+        constructor(game) {
+          this.game = game;
+          this.challenges = [];
+          this.progress = {};
+          this.completed = /* @__PURE__ */ new Set();
+          this.lastRefresh = 0;
+          this.load();
+          this._refreshIfNeeded();
+        }
+        load() {
+          try {
+            const data = JSON.parse(localStorage.getItem("starlight_challenges"));
+            if (data) {
+              this.challenges = data.challenges || [];
+              this.progress = data.progress || {};
+              this.completed = new Set(data.completed || []);
+              this.lastRefresh = data.lastRefresh || 0;
+            }
+          } catch (e) {
+          }
+        }
+        save() {
+          try {
+            localStorage.setItem("starlight_challenges", JSON.stringify({
+              challenges: this.challenges,
+              progress: this.progress,
+              completed: Array.from(this.completed),
+              lastRefresh: this.lastRefresh
+            }));
+          } catch (e) {
+          }
+        }
+        _refreshIfNeeded() {
+          const now = /* @__PURE__ */ new Date();
+          const last = new Date(this.lastRefresh);
+          const sameDay = now.getFullYear() === last.getFullYear() && now.getMonth() === last.getMonth() && now.getDate() === last.getDate();
+          if (!sameDay) {
+            this._generateChallenges();
+            this.lastRefresh = Date.now();
+            this.save();
+          }
+        }
+        _generateChallenges() {
+          const shuffled = [...CHALLENGE_POOL].sort(() => Math.random() - 0.5);
+          this.challenges = shuffled.slice(0, 3);
+          this.progress = {};
+          this.completed = /* @__PURE__ */ new Set();
+        }
+        track(type, amount = 1) {
+          this.challenges.forEach((c) => {
+            if (c.type !== type || this.completed.has(c.id)) return;
+            this.progress[c.id] = (this.progress[c.id] || 0) + amount;
+            if (this.progress[c.id] >= c.target) {
+              this.completed.add(c.id);
+              this.game.currencySystem.add(c.reward);
+              this.game.uiManager.showNotification(`Challenge complete: ${c.name}! +\u2605${c.reward}`, "success");
+              this.game.soundManager.play("win");
+            }
+          });
+          this.save();
+        }
+        getList() {
+          this._refreshIfNeeded();
+          return this.challenges.map((c) => ({
+            ...c,
+            current: Math.min(this.progress[c.id] || 0, c.target),
+            percent: Math.min(100, Math.floor((this.progress[c.id] || 0) / c.target * 100)),
+            done: this.completed.has(c.id)
+          }));
+        }
+      };
+    }
+  });
+
   // src/world/Pet.js
   var PET_TYPES, PET_EMOJIS, PET_NAMES, PetSystem;
   var init_Pet = __esm({
@@ -5007,6 +5161,7 @@ var StarlightEngine = (() => {
       init_Leaderboard();
       init_Stats();
       init_Events();
+      init_Challenges();
       init_Pet();
       Particle = class {
         constructor(x, y, color, life, vx, vy) {
@@ -5080,6 +5235,7 @@ var StarlightEngine = (() => {
           this.craftingSystem = new CraftingSystem(this.inventorySystem);
           this.statsSystem = new StatsSystem();
           this.eventSystem = new EventSystem(this);
+          this.challengeSystem = new ChallengeSystem(this);
           this.photoMode = false;
           this.setupInput();
           this.setupUI();
@@ -5088,6 +5244,7 @@ var StarlightEngine = (() => {
           this.applyAvatarToPlayer();
           this.spawnNPCs(this.settings.npcCount);
           this.achievementSystem.visitRoom(ROOM_TEMPLATES[0].id);
+          this.challengeSystem.track("visit");
           this.applyThemeToMyRoom();
           setTimeout(() => this.checkDailyRewards(), 1200);
           const inv = this.inventorySystem.getAll();
@@ -5215,6 +5372,7 @@ var StarlightEngine = (() => {
               this.uiManager.showNotification(`Placed ${type}!`);
               this.soundManager.play("place");
               this.achievementSystem.track("place");
+              this.challengeSystem.track("place");
               this.statsSystem.inc("furniturePlaced");
             } else {
               this.uiManager.showNotification("Cannot place there!", "error");
@@ -5337,6 +5495,7 @@ var StarlightEngine = (() => {
               this.uiManager.showNotification(`Found \u2605${treasure.coins} in a treasure chest!`, "success");
               this.soundManager.play("buy");
               this.statsSystem.inc("treasureChestsFound");
+              this.challengeSystem.track("treasure");
               this.treasures = this.treasures.filter((t) => t !== treasure);
               this.achievementSystem.track("walk");
               return;
@@ -5353,6 +5512,7 @@ var StarlightEngine = (() => {
             if (this.room.isWalkable(tx, ty)) {
               this.player.moveTo(tx, ty, this.room);
               this.achievementSystem.track("walk");
+              this.challengeSystem.track("walk");
               this.statsSystem.inc("stepsWalked");
               this.spawnParticles(tx, ty, "rgba(244,208,63,0.6)", 5);
             }
@@ -5420,6 +5580,10 @@ var StarlightEngine = (() => {
           document.getElementById("btnShortcuts")?.addEventListener("click", () => {
             this.uiManager.togglePanel("shortcutsPanel");
             this.renderShortcutsPanel();
+          });
+          document.getElementById("btnChallenges")?.addEventListener("click", () => {
+            this.uiManager.togglePanel("challengesPanel");
+            this.renderChallengesPanel();
           });
           document.getElementById("hairStyleSelect")?.addEventListener("change", (e) => {
             this.customize.hairStyle = e.target.value;
@@ -5494,6 +5658,7 @@ var StarlightEngine = (() => {
             this.chatManager.send(text);
             this.soundManager.play("chat");
             this.achievementSystem.track("chat");
+            this.challengeSystem.track("chat");
           };
           document.getElementById("chatSend")?.addEventListener("click", sendChat);
           document.getElementById("chatInput")?.addEventListener("keydown", (e) => {
@@ -5691,6 +5856,7 @@ var StarlightEngine = (() => {
                 this.soundManager.play("buy");
                 this.achievementSystem.track("buy");
                 this.statsSystem.inc("furnitureBought");
+                this.challengeSystem.track("buy");
                 this.statsSystem.inc("totalCoinsSpent", item.price);
                 this.renderCatalog();
               } else {
@@ -5761,6 +5927,7 @@ var StarlightEngine = (() => {
             this.saveAvatarToStorage();
             this.uiManager.showNotification("Look saved!");
             this.achievementSystem.track("customize");
+            this.challengeSystem.track("customize");
           }, () => {
             const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
             this.customize.skinColor = rand(["#F5CBA7", "#E0AC69", "#8D5524", "#C68642", "#FFDBAC", "#AA7C58"]);
@@ -5957,6 +6124,9 @@ var StarlightEngine = (() => {
         renderStatsPanel() {
           this.uiManager.renderStats(this.statsSystem.getStats());
         }
+        renderChallengesPanel() {
+          this.uiManager.renderChallenges(this.challengeSystem.getList());
+        }
         renderShortcutsPanel() {
           this.uiManager.renderShortcuts([
             { key: "W / A / S / D", action: "Walk around" },
@@ -6070,6 +6240,7 @@ var StarlightEngine = (() => {
             this.petSystem.tick(dt);
             this.statsSystem.tick(dt);
             this.eventSystem.update(dt);
+            this.challengeSystem._refreshIfNeeded();
             const treasureInterval = this.eventSystem ? this.eventSystem.getTreasureInterval() : 45;
             this.treasureTimer += dt;
             if (this.treasureTimer > treasureInterval && this.treasures.length < 3) {
@@ -6451,6 +6622,7 @@ var StarlightEngine = (() => {
           this.minigame = new MinigameClass(this);
           this.minigame.start();
           this.achievementSystem.track("minigame");
+          this.challengeSystem.track("win");
           this.statsSystem.inc("minigamesPlayed");
         }
         endMinigame() {
@@ -6492,6 +6664,7 @@ var StarlightEngine = (() => {
         <button class="top-btn" id="btnCrafting">&#128295; Craft</button>
         <button class="top-btn" id="btnStats">&#128202; Stats</button>
         <button class="top-btn" id="btnShortcuts">&#9000;&#65039; Keys</button>
+        <button class="top-btn" id="btnChallenges">&#128170; Quests</button>
       </div>
     </div>
     <div id="roomInfo">

@@ -79,6 +79,8 @@ export class UIManager {
     this._ensurePanel('statsPanel', 'Player Stats', `<div class="stats-list" id="statsList"></div>`);
     // Shortcuts
     this._ensurePanel('shortcutsPanel', 'Keyboard Shortcuts', `<div class="shortcuts-list" id="shortcutsList"></div>`);
+    // Challenges
+    this._ensurePanel('challengesPanel', 'Daily Challenges', `<div class="challenge-list" id="challengeList"></div>`);
     // Chat color popover
     if (!document.getElementById('chatColorPopover')) {
       const popover = document.createElement('div');
@@ -202,7 +204,9 @@ export class UIManager {
       const div = document.createElement('div');
       div.className = 'catalog-item';
       div.title = item.desc;
-      div.innerHTML = `<div class="cat-icon">${item.icon}</div><div class="cat-name">${item.name}</div><div class="cat-price">\u2605 ${item.price}</div>`;
+      const rarity = item.price >= 500 ? '★★★' : (item.price >= 200 ? '★★' : '★');
+      const rarityColor = item.price >= 500 ? '#f4d03f' : (item.price >= 200 ? '#e67e22' : '#aaa');
+      div.innerHTML = `<div class="cat-rarity" style="color:${rarityColor}">${rarity}</div><div class="cat-icon">${item.icon}</div><div class="cat-name">${item.name}</div><div class="cat-price">\u2605 ${item.price}</div>`;
       div.addEventListener('click', () => onBuy && onBuy(item));
       grid.appendChild(div);
     });
@@ -410,6 +414,30 @@ export class UIManager {
       div.remove();
     });
     setTimeout(() => { if (div.parentNode) div.remove(); }, 6000);
+  }
+
+  renderChallenges(challenges) {
+    const list = document.getElementById('challengeList');
+    if (!list) return;
+    list.innerHTML = '';
+    if (challenges.length === 0) {
+      list.innerHTML = '<div style="text-align:center;color:var(--habbo-text-dim);padding:20px;">No active challenges.</div>';
+      return;
+    }
+    challenges.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'challenge-item' + (c.done ? ' done' : '');
+      div.innerHTML = `
+        <div class="challenge-row">
+          <span class="challenge-name">${c.name}</span>
+          <span class="challenge-reward">★${c.reward}</span>
+        </div>
+        <div class="challenge-desc">${c.desc}</div>
+        <div class="challenge-bar"><div style="width:${c.percent}%"></div></div>
+        <div style="font-size:10px;color:var(--habbo-text-dim);text-align:right;">${c.current}/${c.target}</div>
+      `;
+      list.appendChild(div);
+    });
   }
 
   renderShortcuts(shortcuts) {
