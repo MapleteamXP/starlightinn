@@ -306,7 +306,7 @@ export class UIManager {
     });
   }
 
-  renderNavigator(rooms, recent, onSelect, onRenameMyRoom, myRoomPrivate, onTogglePrivacy, searchQuery = '', bookmarks, onToggleBookmark) {
+  renderNavigator(rooms, recent, onSelect, onRenameMyRoom, myRoomPrivate, onTogglePrivacy, searchQuery = '', bookmarks, onToggleBookmark, visitorLog = []) {
     const publicList = document.getElementById('publicRoomList');
     if (!publicList) return;
     publicList.innerHTML = '';
@@ -364,6 +364,11 @@ export class UIManager {
         if (input && input.value.trim()) { onRenameMyRoom(input.value.trim()); input.value = ''; }
       });
     }
+    // Layout export/import
+    const layoutDiv = document.createElement('div');
+    layoutDiv.style.cssText = 'margin-top:8px;display:flex;gap:6px;';
+    layoutDiv.innerHTML = `<button id="btnExportLayout" style="flex:1;padding:6px 8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-family:inherit;font-size:11px;cursor:pointer;font-weight:700;">\u{1F4BE} Export Layout</button><button id="btnImportLayout" style="flex:1;padding:6px 8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-family:inherit;font-size:11px;cursor:pointer;font-weight:700;">\u{1F4C1} Import Layout</button><input type="file" id="importLayoutFile" accept=".json" style="display:none;">`;
+    userList.appendChild(layoutDiv);
     if (recent && recent.length > 0) {
       const recentDiv = document.createElement('div');
       recentDiv.style.cssText = 'margin-top:12px;font-size:12px;color:var(--habbo-text-dim);';
@@ -377,6 +382,19 @@ export class UIManager {
           const room = rooms.find(x => x.id === r.id);
           if (room) onSelect && onSelect(room);
         });
+        userList.appendChild(div);
+      });
+    }
+    // Visitor log
+    if (visitorLog && visitorLog.length > 0) {
+      const visDiv = document.createElement('div');
+      visDiv.style.cssText = 'margin-top:12px;font-size:12px;color:var(--habbo-text-dim);';
+      visDiv.textContent = `Recent Visitors (${visitorLog.length})`;
+      userList.appendChild(visDiv);
+      visitorLog.slice(0, 5).forEach(v => {
+        const div = document.createElement('div');
+        div.className = 'room-item';
+        div.innerHTML = `<div class="room-name">${v.name}</div><div class="room-meta">${new Date(v.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>`;
         userList.appendChild(div);
       });
     }

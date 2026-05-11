@@ -112,6 +112,9 @@ export class Game {
     this.minigame = null;
     this.treasures = [];
     this.treasureTimer = 0;
+    this.autoSaveTimer = 0;
+    this.visitorLog = [];
+    this.loadVisitorLog();
     this.dailyRewards = new DailyRewardSystem(this);
     this.friendSystem = new FriendSystem(this);
     this.petSystem = new PetSystem(this);
@@ -378,9 +381,16 @@ export class Game {
           this.uiManager.togglePanel('questPanel');
           this.renderQuestPanel();
           break;
+        case 'e':
+          this.toggleEmoteWheel();
+          break;
         case 'escape':
           if (this.photoMode) { this.togglePhotoMode(); }
-          else { this.uiManager.closeAllPanels(); }
+          else {
+            const wheel = document.getElementById('emoteWheel');
+            if (wheel && wheel.style.display === 'block') { wheel.style.display = 'none'; document.getElementById('emoteWheelInner').innerHTML = ''; }
+            else { this.uiManager.closeAllPanels(); }
+          }
           break;
       }
       if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(e.key.toLowerCase())) {
@@ -465,7 +475,12 @@ export class Game {
         }
       }
     } else if (this.selectedTool === 'place' && this.selectedInventoryItem) {
-      if (this.room.placeFurniture(this.selectedInventoryItem, tx, ty)) {
+      if (this.room.furniture.length >= 30) {
+        this.uiManager.showNotification('Room is full! Max 30 furniture items.', 'error');
+        this.soundManager.play('error');
+        return;
+      }
+      if (this.room.placeFurniture(this.selectedInventoryItem, tx, ty, this.placementRotation)) {
         this.inventorySystem.remove(this.selectedInventoryItem, 1);
         this.spawnParticles(tx, ty, '#2ecc71', 10);
         this.uiManager.showNotification(`Placed ${this.selectedInventoryItem}!`);
@@ -577,6 +592,26 @@ export class Game {
       this._typingTimer = setTimeout(() => this.chatManager.updateTypingIndicator(false), 1500);
     });
 
+    const emojiBtn = document.getElementById('chatEmojiBtn');
+    const emojiPicker = document.getElementById('emojiPicker');
+    const emojiGrid = document.getElementById('emojiGrid');
+    if (emojiBtn && emojiPicker && emojiGrid) {
+      const emojis = ['\u{1F600}','\u{1F602}','\u{1F60D}','\u{1F44D}','\u{1F44F}','\u{1F525}','\u{1F389}','\u{1F496}','\u{1F31F}','\u{1F3AF}','\u{1F37A}','\u{1F354}','\u{1F338}','\u{1F308}','\u{26A1}','\u{1F480}','\u{1F47B}','\u{1F436}','\u{1F431}','\u{1F426}','\u{1F34E}','\u{1F349}','\u{1F381}','\u{1F4B0}'];
+      emojis.forEach(emoji => {
+        const span = document.createElement('span');
+        span.textContent = emoji;
+        span.style.cssText = 'cursor:pointer;font-size:18px;text-align:center;line-height:28px;user-select:none;';
+        span.addEventListener('click', () => {
+          const input = document.getElementById('chatInput');
+          if (input) { input.value += emoji; input.focus(); }
+          emojiPicker.style.display = 'none';
+        });
+        emojiGrid.appendChild(span);
+      });
+      emojiBtn.addEventListener('click', e => { e.stopPropagation(); emojiPicker.style.display = emojiPicker.style.display === 'none' ? 'block' : 'none'; });
+      document.addEventListener('click', e => { if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) emojiPicker.style.display = 'none'; });
+    }
+
     const colorBtn = document.getElementById('chatColorBtn');
     const colorPopover = document.getElementById('chatColorPopover');
     if (colorBtn) {
@@ -623,6 +658,9 @@ export class Game {
     document.getElementById('btnExportSave')?.addEventListener('click', () => this.exportSave());
     document.getElementById('btnImportSave')?.addEventListener('click', () => document.getElementById('importFileInput')?.click());
     document.getElementById('importFileInput')?.addEventListener('change', e => this.importSave(e));
+    document.getElementById('btnExportLayout')?.addEventListener('click', () => this.exportRoomLayout());
+    document.getElementById('btnImportLayout')?.addEventListener('click', () => document.getElementById('importLayoutFile')?.click());
+    document.getElementById('importLayoutFile')?.addEventListener('change', e => this.importRoomLayout(e));
 
     document.getElementById('minimap')?.classList.toggle('open', this.settings.showMinimap);
     const weatherCb = document.getElementById('settingWeather');
@@ -643,6 +681,36 @@ export class Game {
 
   setTool(tool) { this.selectedTool = tool; this.uiManager.updateToolButtons(this.selectedTool); }
   toggleMinimap() { this.settings.showMinimap = !this.settings.showMinimap; document.getElementById('minimap')?.classList.toggle('open', this.settings.showMinimap); const cb = document.getElementById('settingMinimap'); if (cb) cb.checked = this.settings.showMinimap; }
+  toggleEmoteWheel() {
+    const wheel = document.getElementById('emoteWheel');
+    const inner = document.getElementById('emoteWheelInner');
+    if (!wheel || !inner) return;
+    if (wheel.style.display === 'block') { wheel.style.display = 'none'; inner.innerHTML = ''; return; }
+    const emotes = [
+      { icon: '\u{1F44B}', action: () => { this.player.isWaving = true; this.player.waveTimer = 0; this.player.say('Hey!'); } },
+      { icon: '\u{1F483}', action: () => { this.player.isDancing = !this.player.isDancing; } },
+      { icon: '\u{1F602}', action: () => this.player.say('\u{1F602} Hahaha!', this.chatColor, 'emote') },
+      { icon: '\u{1F622}', action: () => this.player.say('\u{1F622} Aww...', this.chatColor, 'emote') },
+      { icon: '\u{1F60E}', action: () => this.player.say('\u{1F60E} Cool!', this.chatColor, 'emote') },
+      { icon: '\u{2764}', action: () => this.player.say('\u{2764} Love it!', this.chatColor, 'emote') },
+      { icon: '\u{1F4A4}', action: () => { this.player.isSitting = true; this.player.say('\u{1F4A4} Zzz...', this.chatColor, 'emote'); } },
+      { icon: '\u{1F44F}', action: () => this.player.say('\u{1F44F} *claps*', this.chatColor, 'emote') },
+    ];
+    inner.innerHTML = '';
+    const radius = 65;
+    emotes.forEach((emote, i) => {
+      const angle = (i / emotes.length) * Math.PI * 2 - Math.PI / 2;
+      const btn = document.createElement('button');
+      btn.textContent = emote.icon;
+      btn.style.cssText = `position:absolute;width:42px;height:42px;border-radius:50%;border:2px solid var(--habbo-panel-border);background:var(--habbo-panel);color:white;font-size:20px;cursor:pointer;pointer-events:auto;left:50%;top:50%;transform:translate(-50%,-50%) translate(${Math.cos(angle)*radius}px,${Math.sin(angle)*radius}px);transition:transform 0.1s;`;
+      btn.addEventListener('mouseenter', () => btn.style.transform = `translate(-50%,-50%) translate(${Math.cos(angle)*radius}px,${Math.sin(angle)*radius}px) scale(1.15)`);
+      btn.addEventListener('mouseleave', () => btn.style.transform = `translate(-50%,-50%) translate(${Math.cos(angle)*radius}px,${Math.sin(angle)*radius}px)`);
+      btn.addEventListener('click', () => { emote.action(); wheel.style.display = 'none'; inner.innerHTML = ''; });
+      inner.appendChild(btn);
+    });
+    wheel.style.display = 'block';
+    setTimeout(() => { if (wheel.style.display === 'block') { wheel.style.display = 'none'; inner.innerHTML = ''; } }, 5000);
+  }
   async takeScreenshot() {
     try {
       const dataUrl = this.canvas.toDataURL('image/png');
@@ -689,6 +757,17 @@ export class Game {
 
   saveLikedRooms() {
     try { localStorage.setItem('starlight_liked_rooms', JSON.stringify(Array.from(this.likedRooms))); } catch (e) {}
+  }
+
+  loadVisitorLog() {
+    try {
+      const data = JSON.parse(localStorage.getItem('starlight_visitors'));
+      if (data && Array.isArray(data)) this.visitorLog = data;
+    } catch (e) {}
+  }
+
+  saveVisitorLog() {
+    try { localStorage.setItem('starlight_visitors', JSON.stringify(this.visitorLog)); } catch (e) {}
   }
 
   loadRoomSize() {
@@ -843,7 +922,7 @@ export class Game {
       else this.bookmarkedRooms.add(id);
       this.saveBookmarks();
       this.renderNavigator();
-    });
+    }, this.visitorLog);
     this.uiManager.renderExpansions(ROOM_EXPANSIONS, this.myRoomSize, this.currencySystem.get(), expansion => {
       if (this.currencySystem.spend(expansion.price)) {
         this.expandMyRoom(expansion.size);
@@ -1110,7 +1189,7 @@ export class Game {
     if (!this.room || this.room.id !== 'myroom') return;
     try {
       const data = {
-        furniture: this.room.furniture.map(f => ({ type: f.type, x: f.x, y: f.y, z: f.z })),
+        furniture: this.room.furniture.map(f => ({ type: f.type, x: f.x, y: f.y, z: f.z, rotation: f.rotation || 0 })),
         floor: this.room.floorType,
         wall: this.room.wallColor
       };
@@ -1122,11 +1201,63 @@ export class Game {
     try {
       const data = JSON.parse(localStorage.getItem('starlight_myroom'));
       if (data && this.room && this.room.id === 'myroom') {
-        this.room.furniture = (data.furniture || []).map(f => new Furniture(f.type, f.x, f.y, f.z));
+        this.room.furniture = (data.furniture || []).map(f => new Furniture(f.type, f.x, f.y, f.z, f.rotation || 0));
         if (data.floor) this.room.floorType = data.floor;
         if (data.wall) this.room.wallColor = data.wall;
       }
     } catch (e) {}
+  }
+
+  exportRoomLayout() {
+    if (!this.room || this.room.id !== 'myroom') {
+      this.uiManager.showNotification('You can only export layouts from My Room!', 'error');
+      return;
+    }
+    const data = {
+      furniture: this.room.furniture.map(f => ({ type: f.type, x: f.x, y: f.y, z: f.z, rotation: f.rotation || 0 })),
+      floor: this.room.floorType,
+      wall: this.room.wallColor,
+      size: this.myRoomSize,
+      name: this.myRoomName,
+      version: '1.0'
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `starlight-layout-${this.myRoomName.replace(/\s+/g, '_')}-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.uiManager.showNotification('Room layout exported!', 'success');
+  }
+
+  importRoomLayout(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data.furniture || !Array.isArray(data.furniture)) {
+          this.uiManager.showNotification('Invalid layout file!', 'error');
+          return;
+        }
+        if (this.room && this.room.id === 'myroom') {
+          this.room.furniture = data.furniture.map(f => new Furniture(f.type, f.x, f.y, f.z || 0, f.rotation || 0));
+          if (data.floor) this.room.floorType = data.floor;
+          if (data.wall) this.room.wallColor = data.wall;
+          this.saveMyRoom();
+          this.uiManager.showNotification('Room layout imported!', 'success');
+          this.soundManager.play('place');
+        } else {
+          this.uiManager.showNotification('Go to My Room first to import a layout!', 'error');
+        }
+      } catch (err) {
+        this.uiManager.showNotification('Invalid layout file!', 'error');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   }
 
   renderFriendsPanel() {
@@ -1478,6 +1609,22 @@ export class Game {
         this.treasures[i].life -= dt;
         if (this.treasures[i].life <= 0) this.treasures.splice(i, 1);
       }
+      // Auto-save indicator
+      this.autoSaveTimer += dt;
+      if (this.autoSaveTimer > 60) {
+        this.autoSaveTimer = 0;
+        this.saveAllData();
+        this.uiManager.showNotification('Auto-saved', 'info', 1500);
+      }
+      // My Room visitor simulation
+      if (this.room.id === 'myroom' && Math.random() < 0.0005) {
+        const visitorNames = ['SkyWalker','PixelDream','LunaStar','CocoBean','OceanBreeze','TigerEye','NovaFlare','MistyRain'];
+        const vname = visitorNames[Math.floor(Math.random() * visitorNames.length)];
+        this.visitorLog.unshift({ name: vname, time: Date.now() });
+        if (this.visitorLog.length > 20) this.visitorLog.pop();
+        this.saveVisitorLog();
+        this.uiManager.showNotification(`${vname} visited your room!`, 'info', 2500);
+      }
     }
     for (let i = this.particles.length - 1; i >= 0; i--) {
       this.particles[i].update(dt);
@@ -1617,16 +1764,21 @@ export class Game {
       if (this.selectedTool === 'place' && this.selectedInventoryItem) {
         const cat = FURNITURE_CATALOG.find(c => c.id === this.selectedInventoryItem);
         if (cat) {
-          const canPlace = this.room.canPlaceFurniture(this.selectedInventoryItem, this.hoverTile.x, this.hoverTile.y);
+          const canPlace = this.room.canPlaceFurniture(this.selectedInventoryItem, this.hoverTile.x, this.hoverTile.y, this.placementRotation);
           ctx.globalAlpha = 0.55;
           const img = getFurnitureAsset(this.selectedInventoryItem);
           const fsp = isoToScreen(this.hoverTile.x, this.hoverTile.y);
-          ctx.drawImage(img, fsp.x - img.width / 2, fsp.y - img.height + TILE_H);
+          ctx.save();
+          ctx.translate(fsp.x, fsp.y - img.height / 2 + TILE_H / 2);
+          ctx.rotate(this.placementRotation * Math.PI / 2);
+          ctx.drawImage(img, -img.width / 2, -img.height / 2);
+          ctx.restore();
           ctx.globalAlpha = 1;
           ctx.strokeStyle = canPlace ? 'rgba(46, 204, 113, 0.8)' : 'rgba(231, 76, 60, 0.8)';
           ctx.lineWidth = 2;
-          for (let dx = 0; dx < cat.footprint[0]; dx++) {
-            for (let dy = 0; dy < cat.footprint[1]; dy++) {
+          const fp = this.placementRotation % 2 === 0 ? cat.footprint : [cat.footprint[1], cat.footprint[0]];
+          for (let dx = 0; dx < fp[0]; dx++) {
+            for (let dy = 0; dy < fp[1]; dy++) {
               const tsp = isoToScreen(this.hoverTile.x + dx, this.hoverTile.y + dy);
               ctx.beginPath();
               ctx.moveTo(tsp.x, tsp.y); ctx.lineTo(tsp.x + TILE_W / 2, tsp.y + TILE_H / 2);
@@ -1636,8 +1788,8 @@ export class Game {
           }
           if (!canPlace) {
             ctx.fillStyle = 'rgba(231, 76, 60, 0.12)';
-            for (let dx = 0; dx < cat.footprint[0]; dx++) {
-              for (let dy = 0; dy < cat.footprint[1]; dy++) {
+            for (let dx = 0; dx < fp[0]; dx++) {
+              for (let dy = 0; dy < fp[1]; dy++) {
                 const tsp = isoToScreen(this.hoverTile.x + dx, this.hoverTile.y + dy);
                 ctx.beginPath();
                 ctx.moveTo(tsp.x, tsp.y); ctx.lineTo(tsp.x + TILE_W / 2, tsp.y + TILE_H / 2);
@@ -1763,19 +1915,23 @@ export class Game {
     const sp = isoToScreen(f.x, f.y);
     const img = getFurnitureAsset(f.type);
     const time = Date.now();
-    ctx.drawImage(img, sp.x - img.width / 2, sp.y - img.height + TILE_H - f.z * (TILE_H / 2));
+    ctx.save();
+    ctx.translate(sp.x, sp.y - img.height / 2 + TILE_H / 2 - f.z * (TILE_H / 2));
+    ctx.rotate((f.rotation || 0) * Math.PI / 2);
+    ctx.drawImage(img, -img.width / 2, -img.height / 2);
+    ctx.restore();
 
     // Stack height indicator
     if (f.z > 0) {
       ctx.fillStyle = 'rgba(0,0,0,0.6)';
       ctx.beginPath();
-      ctx.arc(sp.x + img.width / 2 - 6, sp.y - img.height + TILE_H - f.z * (TILE_H / 2) + 8, 7, 0, Math.PI * 2);
+      ctx.arc(sp.x + 14, sp.y + 8, 7, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = '#fff';
       ctx.font = 'bold 8px Nunito, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(f.z + 1, sp.x + img.width / 2 - 6, sp.y - img.height + TILE_H - f.z * (TILE_H / 2) + 8);
+      ctx.fillText(f.z + 1, sp.x + 14, sp.y + 8);
     }
 
     // Animated overlays
@@ -1815,6 +1971,14 @@ export class Game {
     ctx.beginPath();
     const shadowSp = isoToScreen(avatar.x, avatar.y);
     ctx.ellipse(shadowSp.x, shadowSp.y + TILE_H / 2 - 2, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
+    // Spotlight glow for player
+    if (!avatar.isNPC) {
+      const gradient = ctx.createRadialGradient(sp.x, sp.y + 30, 5, sp.x, sp.y + 30, 50);
+      gradient.addColorStop(0, 'rgba(244,208,63,0.15)');
+      gradient.addColorStop(1, 'rgba(244,208,63,0)');
+      ctx.fillStyle = gradient;
+      ctx.beginPath(); ctx.arc(sp.x, sp.y + 30, 50, 0, Math.PI * 2); ctx.fill();
+    }
     ctx.save();
     if (avatar.isSitting) {
       const sitY = sp.y + 12;

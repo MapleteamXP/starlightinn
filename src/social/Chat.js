@@ -271,6 +271,9 @@ export class ChatManager {
         bubble.style.backgroundColor = avatar.chatColor;
         bubble.style.borderColor = this.darkenColor(avatar.chatColor, 20);
       }
+      const arrow = document.createElement('div');
+      arrow.style.cssText = 'position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:5px solid ' + (bubble.style.borderColor || 'rgba(255,255,255,0.25)') + ';';
+      bubble.appendChild(arrow);
       document.body.appendChild(bubble);
     });
   }

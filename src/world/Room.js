@@ -44,18 +44,20 @@ export class Room {
     return h;
   }
 
-  canPlaceFurniture(type, x, y) {
+  canPlaceFurniture(type, x, y, rotation = 0) {
+    if (this.furniture.length >= 30) return false;
     const cat = FURNITURE_CATALOG.find(c => c.id === type);
     if (!cat) return false;
-    if (x < 0 || y < 0 || x + cat.footprint[0] > this.width || y + cat.footprint[1] > this.height) return false;
-    for (let dx = 0; dx < cat.footprint[0]; dx++) {
-      for (let dy = 0; dy < cat.footprint[1]; dy++) {
+    const fp = rotation % 2 === 0 ? cat.footprint : [cat.footprint[1], cat.footprint[0]];
+    if (x < 0 || y < 0 || x + fp[0] > this.width || y + fp[1] > this.height) return false;
+    for (let dx = 0; dx < fp[0]; dx++) {
+      for (let dy = 0; dy < fp[1]; dy++) {
         if (!this.map[y + dy] || !this.map[y + dy][x + dx]) return false;
       }
     }
     for (const f of this.furniture) {
-      for (let dx = 0; dx < cat.footprint[0]; dx++) {
-        for (let dy = 0; dy < cat.footprint[1]; dy++) {
+      for (let dx = 0; dx < fp[0]; dx++) {
+        for (let dy = 0; dy < fp[1]; dy++) {
           if (f.occupies(x + dx, y + dy) && !f.stackable) return false;
         }
       }
@@ -63,11 +65,10 @@ export class Room {
     return true;
   }
 
-  placeFurniture(type, x, y) {
-    if (!this.canPlaceFurniture(type, x, y)) return false;
-    const cat = FURNITURE_CATALOG.find(c => c.id === type);
+  placeFurniture(type, x, y, rotation = 0) {
+    if (!this.canPlaceFurniture(type, x, y, rotation)) return false;
     const z = this.getStackHeight(x, y);
-    this.furniture.push(new Furniture(type, x, y, z));
+    this.furniture.push(new Furniture(type, x, y, z, rotation));
     return true;
   }
 

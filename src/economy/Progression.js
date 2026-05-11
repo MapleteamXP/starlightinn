@@ -67,7 +67,8 @@ export class ProgressionSystem {
   }
 
   addXP(amount) {
-    this.xp += amount;
+    const mult = this.game && this.game.eventSystem ? this.game.eventSystem.getXPMultiplier() : 1;
+    this.xp += Math.floor(amount * mult);
     this._recalc();
     this.save();
   }

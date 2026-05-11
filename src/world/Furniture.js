@@ -18,12 +18,18 @@ export class Furniture {
   }
 
   occupies(tx, ty) {
-    for (let dx = 0; dx < this.footprint[0]; dx++) {
-      for (let dy = 0; dy < this.footprint[1]; dy++) {
+    const fp = this.getRotatedFootprint();
+    for (let dx = 0; dx < fp[0]; dx++) {
+      for (let dy = 0; dy < fp[1]; dy++) {
         if (this.x + dx === tx && this.y + dy === ty) return true;
       }
     }
     return false;
+  }
+
+  getRotatedFootprint() {
+    if (this.rotation % 2 === 0) return this.footprint;
+    return [this.footprint[1], this.footprint[0]];
   }
 
   get screenPos() {

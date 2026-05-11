@@ -3,10 +3,11 @@
 // ============================================================
 
 const EVENT_TYPES = [
-  { id: 'double_coins', name: '💰 Coin Rush', desc: 'Double coins from all sources for 2 minutes!', duration: 120 },
-  { id: 'treasure_rush', name: '📦 Treasure Rush', desc: 'Treasure chests spawn 3x faster!', duration: 90 },
-  { id: 'happy_hour', name: '🎉 Happy Hour', desc: 'NPCs are extra chatty and friendly!', duration: 60 },
-  { id: 'lucky_find', name: '🍀 Lucky Find', desc: 'A random furniture item appeared in your inventory!', duration: 0 },
+  { id: 'double_coins', name: '\u{1F4B0} Coin Rush', desc: 'Double coins from all sources for 2 minutes!', duration: 120 },
+  { id: 'treasure_rush', name: '\u{1F4E6} Treasure Rush', desc: 'Treasure chests spawn 3x faster!', duration: 90 },
+  { id: 'happy_hour', name: '\u{1F389} Happy Hour', desc: 'NPCs are extra chatty and friendly!', duration: 60 },
+  { id: 'lucky_find', name: '\u{1F340} Lucky Find', desc: 'A random furniture item appeared in your inventory!', duration: 0 },
+  { id: 'dance_party', name: '\u{1F483} Dance Party', desc: 'Everyone is dancing! Double XP for 90 seconds!', duration: 90 },
 ];
 
 export class EventSystem {
@@ -18,6 +19,7 @@ export class EventSystem {
     this.doubleCoins = false;
     this.treasureRush = false;
     this.happyHour = false;
+    this.danceParty = false;
   }
 
   update(dt) {
@@ -41,6 +43,12 @@ export class EventSystem {
       case 'double_coins': this.doubleCoins = true; break;
       case 'treasure_rush': this.treasureRush = true; break;
       case 'happy_hour': this.happyHour = true; break;
+      case 'dance_party':
+        this.danceParty = true;
+        if (this.game.room) {
+          this.game.room.avatars.forEach(a => { a.isDancing = true; a.say('\u{1F483}', '#fffde7', 'emote'); });
+        }
+        break;
       case 'lucky_find':
         const items = ['plant','lamp','chair','vase','rug','barrel'];
         const item = items[Math.floor(Math.random() * items.length)];
@@ -58,6 +66,8 @@ export class EventSystem {
     this.doubleCoins = false;
     this.treasureRush = false;
     this.happyHour = false;
+    this.danceParty = false;
+    if (this.game.room) this.game.room.avatars.forEach(a => { if (!a.isNPC) a.isDancing = false; });
     this.activeEvent = null;
     this.nextEventIn = 180 + Math.random() * 300;
   }
@@ -68,5 +78,9 @@ export class EventSystem {
 
   getTreasureInterval() {
     return this.treasureRush ? 15 : 45;
+  }
+
+  getXPMultiplier() {
+    return this.danceParty ? 2 : 1;
   }
 }

@@ -48,8 +48,12 @@ function createUI() {
     <div id="minimap"><canvas id="minimapCanvas" width="140" height="140"></canvas></div>
     <div id="chatBar">
       <input type="text" id="chatInput" placeholder="Click here to chat..." maxlength="120" autocomplete="off">
+      <button id="chatEmojiBtn" title="Emoji" style="padding:0 8px;font-size:16px;background:transparent;border:none;color:var(--habbo-text);cursor:pointer;">&#128512;</button>
       <button id="chatColorBtn" title="Message Color"></button>
       <button id="chatSend">Send</button>
+    </div>
+    <div id="emojiPicker" style="display:none;position:absolute;bottom:56px;left:50%;transform:translateX(-50%);background:var(--habbo-panel);border:1px solid var(--habbo-panel-border);border-radius:8px;padding:8px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+      <div style="display:grid;grid-template-columns:repeat(8, 28px);gap:4px;" id="emojiGrid"></div>
     </div>
     <div id="typingIndicatorBar">You are typing...</div>
     <div id="toolbar">
@@ -64,6 +68,9 @@ function createUI() {
       <button class="tool-btn" id="toolMinigame" title="Minigames"><span class="icon">&#127918;</span><span>Games</span></button>
     </div>
     <div id="notificationArea"></div>
+    <div id="emoteWheel" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;z-index:300;pointer-events:none;">
+      <div id="emoteWheelInner" style="position:relative;width:100%;height:100%;"></div>
+    </div>
   `;
 }
 
