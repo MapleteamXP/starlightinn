@@ -128,6 +128,19 @@ export class Game {
     this.photoMode = false;
     this.simulatedPlayers = [];
     this.simPlayerTimer = 30 + Math.random() * 60;
+    this.globalChatTimer = 20 + Math.random() * 40;
+    this.globalChatMessages = [
+      { name: 'SkyWalker', text: 'Anyone want to play Ring Uppercut?' },
+      { name: 'LunaStar', text: 'Just got a dragon from the catalog!' },
+      { name: 'PixelDream', text: 'The beach room is so relaxing 🏖️' },
+      { name: 'CocoBean', text: 'Has anyone found a treasure today?' },
+      { name: 'OceanBreeze', text: 'Level 5 finally!' },
+      { name: 'TigerEye', text: 'Need more coins for the piano 😅' },
+      { name: 'NovaFlare', text: 'The garden is beautiful right now' },
+      { name: 'MistyRain', text: 'Just crafted a cool item!' },
+      { name: 'SolarWind', text: 'Anyone trading furniture?' },
+      { name: 'EchoWave', text: 'Love the new update!' },
+    ];
 
     this.setupInput();
     this.setupUI();
@@ -1367,6 +1380,14 @@ export class Game {
           this.uiManager.showNotification(`${name} left the room`, 'info', 2500);
         }
       }
+      // Simulated global chat
+      this.globalChatTimer -= dt;
+      if (this.globalChatTimer <= 0) {
+        this.globalChatTimer = 30 + Math.random() * 60;
+        const msg = this.globalChatMessages[Math.floor(Math.random() * this.globalChatMessages.length)];
+        this.chatManager.addHistory(msg.name, msg.text, new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 'normal');
+        if (document.getElementById('chatPanel')?.classList.contains('open')) this.chatManager.renderHistory();
+      }
       // Treasure spawning
       const treasureInterval = this.eventSystem ? this.eventSystem.getTreasureInterval() : 45;
       this.treasureTimer += dt;
@@ -1474,6 +1495,20 @@ export class Game {
       ctx.font = 'bold 9px Nunito, sans-serif';
       ctx.fillText(`★${t.coins}`, sp.x, sp.y + bob + 10);
     });
+
+    // Draw walking path dots
+    if (this.player && this.player.path.length > this.player.pathIndex) {
+      const pathColor = 'rgba(244, 208, 63, 0.4)';
+      for (let i = this.player.pathIndex; i < this.player.path.length; i++) {
+        const node = this.player.path[i];
+        const psp = isoToScreen(node.x, node.y);
+        const pulse = 1 + Math.sin(Date.now() / 200 + i) * 0.3;
+        ctx.fillStyle = pathColor;
+        ctx.beginPath();
+        ctx.arc(psp.x, psp.y + 4, 3 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
 
     const renderList = [];
     this.room.furniture.forEach(f => { renderList.push({ type: 'furniture', obj: f, zIndex: this.getZIndex(f.x, f.y, f.z + 0.5) }); });

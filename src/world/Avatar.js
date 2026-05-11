@@ -114,6 +114,13 @@ export class Avatar {
         const phrases = ['Hello there!', 'Nice room!', 'Anyone here?', 'Cool place!', 'lol', 'Hey!', 'This is fun', 'Where is everyone?', 'Love the decor!', 'Nice furniture!'];
         this.say(randChoice(phrases), '#fffde7', 'normal');
       }
+      // NPC idle emotes
+      if (!this.isWalking && !this.isSitting && Math.random() < 0.0005) {
+        const idle = randChoice(['wave', 'dance', 'sit']);
+        if (idle === 'wave') { this.isWaving = true; this.waveTimer = 0; }
+        else if (idle === 'dance') { this.isDancing = true; setTimeout(() => this.isDancing = false, 3000); }
+        else if (idle === 'sit') { this.isSitting = true; setTimeout(() => this.isSitting = false, 5000); }
+      }
     }
   }
 
@@ -149,8 +156,9 @@ export class Avatar {
     const sp = isoToScreen(this.x, this.y);
     let bob = 0;
     if (this.isWalking) bob = Math.sin(this.animFrame * Math.PI / 2) * 3;
-    if (this.isDancing) bob = Math.sin(Date.now() / 120) * 5;
-    if (this.isSitting) bob = 0;
+    else if (this.isDancing) bob = Math.sin(Date.now() / 120) * 5;
+    else if (this.isSitting) bob = 0;
+    else bob = Math.sin(Date.now() / 800) * 1.2; // idle breathing
     return { x: sp.x, y: sp.y - AVATAR_H / 2 - this.z * TILE_H / 2 + bob };
   }
 }
