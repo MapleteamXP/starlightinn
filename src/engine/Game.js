@@ -8,7 +8,7 @@ import {
 } from './Core.js';
 import {
   getAvatarAsset, getFurnitureAsset, getTilePattern, getWallPattern,
-  createAvatarCanvas, clearAvatarCache, createSceneryCanvas
+  createAvatarCanvas, clearAvatarCache, getSceneryAsset
 } from '../assets/Generator.js';
 import { FURNITURE_CATALOG, ROOM_TEMPLATES, ROOM_THEMES, CATALOG_CATEGORIES, ROOM_EXPANSIONS } from '../world/Data.js';
 import { Furniture } from '../world/Furniture.js';
@@ -23,6 +23,7 @@ import { ContentFilter } from '../security/Filter.js';
 import { RingUppercut } from '../minigames/RingUppercut.js';
 import { MemoryMatch } from '../minigames/MemoryMatch.js';
 import { TilePuzzle } from '../minigames/TilePuzzle.js';
+import { SimonSays } from '../minigames/SimonSays.js';
 import { SoundManager } from '../audio/SoundManager.js';
 import { DailyRewardSystem } from '../economy/DailyRewards.js';
 import { AchievementSystem } from '../economy/Achievements.js';
@@ -366,6 +367,41 @@ export class Game {
       }
       this.isDragging = false;
     });
+
+    // Touch support for mobile
+    this.canvas.addEventListener('touchstart', e => {
+      e.preventDefault();
+      this.lastInputTime = Date.now();
+      if (e.touches.length === 1) {
+        const t = e.touches[0];
+        this.isDragging = true;
+        this.dragStart = { x: t.clientX, y: t.clientY };
+        this.mouse.x = t.clientX;
+        this.mouse.y = t.clientY;
+      }
+    }, { passive: false });
+    this.canvas.addEventListener('touchmove', e => {
+      e.preventDefault();
+      if (e.touches.length === 1 && this.isDragging) {
+        const t = e.touches[0];
+        const dx = t.clientX - this.dragStart.x, dy = t.clientY - this.dragStart.y;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+          this.camera.x += dx; this.camera.y += dy;
+          this.dragStart = { x: t.clientX, y: t.clientY };
+        }
+        this.mouse.x = t.clientX; this.mouse.y = t.clientY;
+      }
+    }, { passive: false });
+    this.canvas.addEventListener('touchend', e => {
+      e.preventDefault();
+      if (this.isDragging && e.changedTouches.length > 0) {
+        const t = e.changedTouches[0];
+        const dx = t.clientX - this.dragStart.x, dy = t.clientY - this.dragStart.y;
+        if (Math.abs(dx) < 10 && Math.abs(dy) < 10) this.handleClick(t.clientX, t.clientY);
+      }
+      this.isDragging = false;
+    });
+
     this.zoom = 1;
     this.canvas.addEventListener('wheel', e => {
       e.preventDefault();
@@ -466,28 +502,31 @@ export class Game {
         this.achievementSystem.track('walk');
         return;
       }
-      // Check NPC click
-      const npc = this.room.avatars.find(a => a.isNPC && Math.round(a.x) === tx && Math.round(a.y) === ty);
-      if (npc) {
-        this.inboxSystem.maybeReceiveRandom();
-        this.questSystem.track('talk');
-        // NPC relationship
-        npc.relationship = Math.min(100, npc.relationship + 5);
-        // NPC occasional gift
-        if (Math.random() < 0.08) {
-          const giftCoins = 10 + Math.floor(Math.random() * 41);
-          this.currencySystem.add(giftCoins);
-          this.uiManager.showNotification(`${npc.name} gave you ★${giftCoins}!`, 'success');
-          this.spawnParticles(tx, ty, '#f4d03f', 8);
+      // Check avatar click (NPC or remote player)
+      const clickedAvatar = this.room.avatars.find(a => a !== this.player && Math.round(a.x) === tx && Math.round(a.y) === ty);
+      if (clickedAvatar) {
+        if (clickedAvatar.isNPC) {
+          this.inboxSystem.maybeReceiveRandom();
+          this.questSystem.track('talk');
+          clickedAvatar.relationship = Math.min(100, clickedAvatar.relationship + 5);
+          if (Math.random() < 0.08) {
+            const giftCoins = 10 + Math.floor(Math.random() * 41);
+            this.currencySystem.add(giftCoins);
+            this.uiManager.showNotification(`${clickedAvatar.name} gave you ★${giftCoins}!`, 'success');
+            this.spawnParticles(tx, ty, '#f4d03f', 8);
+          }
+          this.uiManager.showNPCProfile(clickedAvatar,
+            () => {
+              this.player.moveTo(tx, ty, this.room);
+              this.achievementSystem.track('walk');
+              this.statsSystem.inc('stepsWalked');
+            },
+            npc => this.openNPCTrade(npc)
+          );
+        } else {
+          // Remote player profile
+          this.showPlayerProfile(clickedAvatar);
         }
-        this.uiManager.showNPCProfile(npc,
-          () => {
-            this.player.moveTo(tx, ty, this.room);
-            this.achievementSystem.track('walk');
-            this.statsSystem.inc('stepsWalked');
-          },
-          npc => this.openNPCTrade(npc)
-        );
         return;
       }
       if (this.room.isWalkable(tx, ty)) {
@@ -1411,6 +1450,30 @@ export class Game {
     if (greeting) this.uiManager.showNotification(greeting, 'info');
   }
 
+  showPlayerProfile(avatar) {
+    const isRemote = avatar.id && avatar.id.startsWith('remote_');
+    const remoteId = isRemote ? avatar.id.slice(7) : null;
+    this.uiManager.showPlayerProfile(avatar, {
+      onWhisper: () => {
+        const input = document.getElementById('chatInput');
+        if (input) {
+          input.value = `/whisper ${avatar.name} `;
+          input.focus();
+        }
+      },
+      onFriend: () => {
+        // For remote players, we can't add them as friends without server support yet
+        this.uiManager.showNotification(`Friend request sent to ${avatar.name}!`, 'success');
+      },
+      onTrade: () => {
+        this.uiManager.showNotification(`Trade request sent to ${avatar.name}!`, 'info');
+      },
+      onWalk: () => {
+        this.player.moveTo(Math.round(avatar.x), Math.round(avatar.y), this.room);
+      }
+    }, isRemote, remoteId);
+  }
+
   openNPCTrade(npc) {
     const items = FURNITURE_CATALOG.filter(i => i.price < 400).sort(() => Math.random() - 0.5).slice(0, 4);
     this.uiManager.showNPCTrade(npc, items, item => {
@@ -1486,7 +1549,8 @@ export class Game {
     const games = [
       { name: 'Ring Uppercut', desc: 'Time your punches in the boxing ring!', reward: '200-500', class: RingUppercut },
       { name: 'Memory Match', desc: 'Flip cards and find matching pairs!', reward: '250', class: MemoryMatch },
-      { name: 'Tile Puzzle', desc: 'Slide tiles to solve the puzzle!', reward: '300', class: TilePuzzle }
+      { name: 'Tile Puzzle', desc: 'Slide tiles to solve the puzzle!', reward: '300', class: TilePuzzle },
+      { name: 'Simon Says', desc: 'Watch the pattern and repeat it!', reward: '150-500', class: SimonSays }
     ];
     this.uiManager.renderMinigamePanel(games, g => {
       this.startMinigame(g.class);
@@ -1730,8 +1794,7 @@ export class Game {
     if (this.room.scenery) {
       this.room.scenery.forEach(s => {
         const sp = isoToScreen(s.x, s.y);
-        // createSceneryCanvas is in Generator
-        const img = createSceneryCanvas(s.type);
+        const img = getSceneryAsset(s.type);
         if (img) ctx.drawImage(img, sp.x - img.width / 2, sp.y - img.height + TILE_H);
       });
     }

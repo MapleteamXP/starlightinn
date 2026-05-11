@@ -738,6 +738,58 @@ export class UIManager {
     setTimeout(() => { if (div.parentNode) div.remove(); }, 8000);
   }
 
+  showPlayerProfile(avatar, actions, isRemote = false, remoteId = null) {
+    const existing = document.getElementById('playerProfile');
+    if (existing) existing.remove();
+    const div = document.createElement('div');
+    div.id = 'playerProfile';
+    div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;background:var(--habbo-panel);border:1px solid var(--habbo-panel-border);border-radius:12px;padding:16px;z-index:400;box-shadow:0 8px 32px rgba(0,0,0,0.4);font-family:Nunito,sans-serif;';
+
+    const hatEmoji = { none: '', cap: '🧢', beanie: '🎩', crown: '👑', wizard: '🧙', bowler: '🎩' };
+    const glassesEmoji = { none: '', shades: '🕶️', round: '👓', heart: '💖' };
+    const hairEmoji = { short: '💇', spiky: '⚡', long: '💁', mohawk: '🎸', bald: '✨', curly: '🌀', bob: '💇‍♀️', ponytail: '🎀', buzz: '✂️' };
+
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div style="width:48px;height:48px;background:var(--habbo-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid var(--habbo-light);">
+            ${avatar.hatType !== 'none' ? hatEmoji[avatar.hatType] : (avatar.hairStyle ? hairEmoji[avatar.hairStyle] || '👤' : '👤')}
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:15px;color:white;">${avatar.name}</div>
+            <div style="font-size:11px;color:var(--habbo-text-dim);">${isRemote ? '🌐 Online Player' : (avatar.isNPC ? '🤖 NPC' : 'You')}</div>
+          </div>
+        </div>
+        <button id="ppClose" style="background:transparent;border:none;color:var(--habbo-text-dim);font-size:18px;cursor:pointer;padding:0;width:24px;height:24px;">&times;</button>
+      </div>
+      <div style="background:var(--habbo-dark);border-radius:8px;padding:10px;margin-bottom:12px;">
+        <div style="font-size:11px;color:var(--habbo-text-dim);margin-bottom:6px;">Outfit</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11px;">
+          <span style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">👕 ${avatar.shirtColor || '?'}</span>
+          <span style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">👖 ${avatar.pantsColor || '?'}</span>
+          <span style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">👟 ${avatar.shoeColor || '?'}</span>
+          ${avatar.hatType !== 'none' ? `<span style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">${hatEmoji[avatar.hatType]} ${avatar.hatType}</span>` : ''}
+          ${avatar.glassesType !== 'none' ? `<span style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">${glassesEmoji[avatar.glassesType]} ${avatar.glassesType}</span>` : ''}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button id="ppWalk" style="padding:8px;background:var(--habbo-light);color:white;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">🚶 Walk To</button>
+        ${isRemote ? `<button id="ppWhisper" style="padding:8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">💬 Whisper</button>` : ''}
+        ${isRemote ? `<button id="ppFriend" style="padding:8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">⭐ Add Friend</button>` : ''}
+        ${isRemote ? `<button id="ppTrade" style="padding:8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">🤝 Trade</button>` : ''}
+      </div>
+    `;
+    document.body.appendChild(div);
+    document.getElementById('ppClose')?.addEventListener('click', () => div.remove());
+    document.getElementById('ppWalk')?.addEventListener('click', () => { div.remove(); actions.onWalk && actions.onWalk(); });
+    if (isRemote) {
+      document.getElementById('ppWhisper')?.addEventListener('click', () => { div.remove(); actions.onWhisper && actions.onWhisper(); });
+      document.getElementById('ppFriend')?.addEventListener('click', () => { div.remove(); actions.onFriend && actions.onFriend(); });
+      document.getElementById('ppTrade')?.addEventListener('click', () => { div.remove(); actions.onTrade && actions.onTrade(); });
+    }
+    setTimeout(() => { if (div.parentNode) div.remove(); }, 12000);
+  }
+
   renderChallenges(challenges) {
     const list = document.getElementById('challengeList');
     if (!list) return;

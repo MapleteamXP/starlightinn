@@ -2222,6 +2222,11 @@ var StarlightEngine = (() => {
     }
     return c;
   }
+  function getSceneryAsset(type) {
+    const key = "scenery_" + type;
+    if (!Assets.furniture[key]) Assets.furniture[key] = createSceneryCanvas(type);
+    return Assets.furniture[key];
+  }
   var Assets;
   var init_Generator = __esm({
     "src/assets/Generator.js"() {
@@ -4440,6 +4445,69 @@ var StarlightEngine = (() => {
             if (div.parentNode) div.remove();
           }, 8e3);
         }
+        showPlayerProfile(avatar, actions, isRemote = false, remoteId = null) {
+          const existing = document.getElementById("playerProfile");
+          if (existing) existing.remove();
+          const div = document.createElement("div");
+          div.id = "playerProfile";
+          div.style.cssText = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;background:var(--habbo-panel);border:1px solid var(--habbo-panel-border);border-radius:12px;padding:16px;z-index:400;box-shadow:0 8px 32px rgba(0,0,0,0.4);font-family:Nunito,sans-serif;";
+          const hatEmoji = { none: "", cap: "\u{1F9E2}", beanie: "\u{1F3A9}", crown: "\u{1F451}", wizard: "\u{1F9D9}", bowler: "\u{1F3A9}" };
+          const glassesEmoji = { none: "", shades: "\u{1F576}\uFE0F", round: "\u{1F453}", heart: "\u{1F496}" };
+          const hairEmoji = { short: "\u{1F487}", spiky: "\u26A1", long: "\u{1F481}", mohawk: "\u{1F3B8}", bald: "\u2728", curly: "\u{1F300}", bob: "\u{1F487}\u200D\u2640\uFE0F", ponytail: "\u{1F380}", buzz: "\u2702\uFE0F" };
+          div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div style="width:48px;height:48px;background:var(--habbo-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid var(--habbo-light);">
+            ${avatar.hatType !== "none" ? hatEmoji[avatar.hatType] : avatar.hairStyle ? hairEmoji[avatar.hairStyle] || "\u{1F464}" : "\u{1F464}"}
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:15px;color:white;">${avatar.name}</div>
+            <div style="font-size:11px;color:var(--habbo-text-dim);">${isRemote ? "\u{1F310} Online Player" : avatar.isNPC ? "\u{1F916} NPC" : "You"}</div>
+          </div>
+        </div>
+        <button id="ppClose" style="background:transparent;border:none;color:var(--habbo-text-dim);font-size:18px;cursor:pointer;padding:0;width:24px;height:24px;">&times;</button>
+      </div>
+      <div style="background:var(--habbo-dark);border-radius:8px;padding:10px;margin-bottom:12px;">
+        <div style="font-size:11px;color:var(--habbo-text-dim);margin-bottom:6px;">Outfit</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:11px;">
+          <span style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">\u{1F455} ${avatar.shirtColor || "?"}</span>
+          <span style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">\u{1F456} ${avatar.pantsColor || "?"}</span>
+          <span style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">\u{1F45F} ${avatar.shoeColor || "?"}</span>
+          ${avatar.hatType !== "none" ? `<span style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">${hatEmoji[avatar.hatType]} ${avatar.hatType}</span>` : ""}
+          ${avatar.glassesType !== "none" ? `<span style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">${glassesEmoji[avatar.glassesType]} ${avatar.glassesType}</span>` : ""}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button id="ppWalk" style="padding:8px;background:var(--habbo-light);color:white;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">\u{1F6B6} Walk To</button>
+        ${isRemote ? `<button id="ppWhisper" style="padding:8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">\u{1F4AC} Whisper</button>` : ""}
+        ${isRemote ? `<button id="ppFriend" style="padding:8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">\u2B50 Add Friend</button>` : ""}
+        ${isRemote ? `<button id="ppTrade" style="padding:8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">\u{1F91D} Trade</button>` : ""}
+      </div>
+    `;
+          document.body.appendChild(div);
+          document.getElementById("ppClose")?.addEventListener("click", () => div.remove());
+          document.getElementById("ppWalk")?.addEventListener("click", () => {
+            div.remove();
+            actions.onWalk && actions.onWalk();
+          });
+          if (isRemote) {
+            document.getElementById("ppWhisper")?.addEventListener("click", () => {
+              div.remove();
+              actions.onWhisper && actions.onWhisper();
+            });
+            document.getElementById("ppFriend")?.addEventListener("click", () => {
+              div.remove();
+              actions.onFriend && actions.onFriend();
+            });
+            document.getElementById("ppTrade")?.addEventListener("click", () => {
+              div.remove();
+              actions.onTrade && actions.onTrade();
+            });
+          }
+          setTimeout(() => {
+            if (div.parentNode) div.remove();
+          }, 12e3);
+        }
         renderChallenges(challenges) {
           const list = document.getElementById("challengeList");
           if (!list) return;
@@ -5273,6 +5341,258 @@ var StarlightEngine = (() => {
     }
   });
 
+  // src/minigames/SimonSays.js
+  var SimonSays;
+  var init_SimonSays = __esm({
+    "src/minigames/SimonSays.js"() {
+      SimonSays = class {
+        constructor(game) {
+          this.game = game;
+          this.state = "intro";
+          this.sequence = [];
+          this.playerSequence = [];
+          this.round = 0;
+          this.maxRounds = 10;
+          this.colors = ["#E74C3C", "#2ECC71", "#3498DB", "#F1C40F"];
+          this.colorNames = ["Red", "Green", "Blue", "Yellow"];
+          this.highlighted = -1;
+          this.canClick = false;
+          this.score = 0;
+          this.result = null;
+          this.canvas = null;
+          this.ctx = null;
+          this._clickHandler = null;
+          this._keyHandler = null;
+        }
+        start() {
+          this.state = "intro";
+          this.sequence = [];
+          this.playerSequence = [];
+          this.round = 0;
+          this.score = 0;
+          this.result = null;
+          this._setupCanvas();
+          this._bindInput();
+          this._renderIntro();
+          setTimeout(() => this._startRound(), 2e3);
+        }
+        _setupCanvas() {
+          this.canvas = document.getElementById("gameCanvas");
+          this.ctx = this.canvas.getContext("2d");
+        }
+        _bindInput() {
+          this._clickHandler = (e) => this._handleClick(e);
+          this._keyHandler = (e) => this._handleKey(e);
+          this.canvas.addEventListener("click", this._clickHandler);
+          window.addEventListener("keydown", this._keyHandler);
+        }
+        _unbindInput() {
+          if (this._clickHandler) this.canvas.removeEventListener("click", this._clickHandler);
+          if (this._keyHandler) window.removeEventListener("keydown", this._keyHandler);
+        }
+        _handleClick(e) {
+          if (!this.canClick || this.state !== "playing") return;
+          const rect = this.canvas.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const w = this.canvas.width, h = this.canvas.height;
+          const cx = w / 2, cy = h / 2;
+          const size = Math.min(w, h) * 0.35;
+          let idx = -1;
+          if (x < cx && y < cy) idx = 0;
+          else if (x >= cx && y < cy) idx = 1;
+          else if (x < cx && y >= cy) idx = 2;
+          else idx = 3;
+          this._playerInput(idx);
+        }
+        _handleKey(e) {
+          if (!this.canClick || this.state !== "playing") return;
+          const keyMap = { "q": 0, "w": 1, "a": 2, "s": 3, "ArrowUp": 0, "ArrowRight": 1, "ArrowDown": 2, "ArrowLeft": 3 };
+          if (keyMap[e.key] !== void 0) {
+            e.preventDefault();
+            this._playerInput(keyMap[e.key]);
+          }
+        }
+        _playerInput(idx) {
+          this.playerSequence.push(idx);
+          this._flashColor(idx);
+          const currentStep = this.playerSequence.length - 1;
+          if (this.playerSequence[currentStep] !== this.sequence[currentStep]) {
+            this._gameOver();
+            return;
+          }
+          if (this.playerSequence.length === this.sequence.length) {
+            this.score += this.round * 10;
+            this.canClick = false;
+            setTimeout(() => this._startRound(), 800);
+          }
+        }
+        _startRound() {
+          if (this.round >= this.maxRounds) {
+            this._win();
+            return;
+          }
+          this.round++;
+          this.playerSequence = [];
+          this.sequence.push(Math.floor(Math.random() * 4));
+          this.state = "playing";
+          this._playSequence();
+        }
+        async _playSequence() {
+          this.canClick = false;
+          await this._delay(500);
+          for (let i = 0; i < this.sequence.length; i++) {
+            this._flashColor(this.sequence[i]);
+            await this._delay(600);
+          }
+          this.canClick = true;
+        }
+        _flashColor(idx) {
+          this.highlighted = idx;
+          this._drawBoard();
+          setTimeout(() => {
+            this.highlighted = -1;
+            this._drawBoard();
+          }, 300);
+          if (this.game && this.game.soundManager) {
+            const notes = [523, 659, 784, 1047];
+            this.game.soundManager.playTone(notes[idx], 0.15);
+          }
+        }
+        _delay(ms) {
+          return new Promise((r) => setTimeout(r, ms));
+        }
+        update(dt) {
+          if (this.state === "intro") {
+            this._renderIntro();
+          } else if (this.state === "playing") {
+            this._drawBoard();
+          }
+        }
+        _drawBoard() {
+          const ctx = this.ctx;
+          const w = this.canvas.width, h = this.canvas.height;
+          ctx.fillStyle = "#1a1a2e";
+          ctx.fillRect(0, 0, w, h);
+          const cx = w / 2, cy = h / 2;
+          const size = Math.min(w, h) * 0.35;
+          const gap = 8;
+          const positions = [
+            { x: cx - size - gap / 2, y: cy - size - gap / 2 },
+            // top-left
+            { x: cx + gap / 2, y: cy - size - gap / 2 },
+            // top-right
+            { x: cx - size - gap / 2, y: cy + gap / 2 },
+            // bottom-left
+            { x: cx + gap / 2, y: cy + gap / 2 }
+            // bottom-right
+          ];
+          for (let i = 0; i < 4; i++) {
+            const p = positions[i];
+            const isLit = this.highlighted === i;
+            ctx.fillStyle = isLit ? this._lighten(this.colors[i], 40) : this.colors[i];
+            ctx.shadowColor = isLit ? this.colors[i] : "transparent";
+            ctx.shadowBlur = isLit ? 30 : 0;
+            ctx.beginPath();
+            ctx.roundRect(p.x, p.y, size, size, 16);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = isLit ? "#fff" : "rgba(0,0,0,0.3)";
+            ctx.lineWidth = isLit ? 3 : 2;
+            ctx.stroke();
+            ctx.fillStyle = "rgba(255,255,255,0.6)";
+            ctx.font = "bold 14px Nunito, sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(["Q", "W", "A", "S"][i], p.x + size / 2, p.y + size - 12);
+          }
+          ctx.fillStyle = "rgba(0,0,0,0.6)";
+          ctx.beginPath();
+          ctx.arc(cx, cy, 50, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#fff";
+          ctx.font = "bold 18px Nunito, sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(`Round ${this.round}/${this.maxRounds}`, cx, cy - 8);
+          ctx.font = "14px Nunito, sans-serif";
+          ctx.fillStyle = "#f4d03f";
+          ctx.fillText(`Score: ${this.score}`, cx, cy + 12);
+          ctx.fillStyle = "rgba(255,255,255,0.5)";
+          ctx.font = "12px Nunito, sans-serif";
+          ctx.fillText(this.canClick ? "Your turn! Repeat the pattern." : "Watch the pattern...", cx, h - 30);
+        }
+        _renderIntro() {
+          const ctx = this.ctx;
+          const w = this.canvas.width, h = this.canvas.height;
+          ctx.fillStyle = "#1a1a2e";
+          ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = "#fff";
+          ctx.font = "bold 32px Nunito, sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("Simon Says", w / 2, h / 2 - 20);
+          ctx.fillStyle = "rgba(255,255,255,0.6)";
+          ctx.font = "16px Nunito, sans-serif";
+          ctx.fillText("Watch the pattern, then repeat it!", w / 2, h / 2 + 15);
+          ctx.font = "14px Nunito, sans-serif";
+          ctx.fillText("Use Q/W/A/S or click the colors", w / 2, h / 2 + 40);
+        }
+        _gameOver() {
+          this.state = "ended";
+          this.result = "lose";
+          this._unbindInput();
+          this._drawBoard();
+          const ctx = this.ctx;
+          ctx.fillStyle = "rgba(231, 76, 60, 0.85)";
+          ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+          ctx.fillStyle = "#fff";
+          ctx.font = "bold 36px Nunito, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("Game Over!", this.canvas.width / 2, this.canvas.height / 2 - 20);
+          ctx.font = "20px Nunito, sans-serif";
+          ctx.fillText(`Round ${this.round} | Score: ${this.score}`, this.canvas.width / 2, this.canvas.height / 2 + 15);
+          ctx.font = "14px Nunito, sans-serif";
+          ctx.fillText("Press ESC to exit", this.canvas.width / 2, this.canvas.height / 2 + 50);
+          if (this.game) {
+            this.game.currencySystem.add(Math.floor(this.score / 2));
+            this.game.uiManager?.showNotification(`Simon Says: +\u2605${Math.floor(this.score / 2)}`, "success");
+          }
+        }
+        _win() {
+          this.state = "ended";
+          this.result = "win";
+          this._unbindInput();
+          const ctx = this.ctx;
+          ctx.fillStyle = "rgba(46, 204, 113, 0.85)";
+          ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+          ctx.fillStyle = "#fff";
+          ctx.font = "bold 36px Nunito, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("Perfect Memory!", this.canvas.width / 2, this.canvas.height / 2 - 20);
+          ctx.font = "20px Nunito, sans-serif";
+          ctx.fillText(`Score: ${this.score}`, this.canvas.width / 2, this.canvas.height / 2 + 15);
+          ctx.font = "14px Nunito, sans-serif";
+          ctx.fillText("Press ESC to exit", this.canvas.width / 2, this.canvas.height / 2 + 50);
+          if (this.game) {
+            this.game.currencySystem.add(this.score);
+            this.game.uiManager?.showNotification(`Simon Says perfect! +\u2605${this.score}`, "success");
+          }
+        }
+        _lighten(hex, percent) {
+          const num = parseInt(hex.replace("#", ""), 16);
+          const amt = Math.round(2.55 * percent);
+          const R = Math.min((num >> 16) + amt, 255);
+          const G = Math.min((num >> 8 & 255) + amt, 255);
+          const B = Math.min((num & 255) + amt, 255);
+          return "#" + (16777216 + R * 65536 + G * 256 + B).toString(16).slice(1);
+        }
+        end() {
+          this._unbindInput();
+        }
+      };
+    }
+  });
+
   // src/audio/SoundManager.js
   var SoundManager;
   var init_SoundManager = __esm({
@@ -5459,6 +5779,25 @@ var StarlightEngine = (() => {
                 osc.stop(now + 0.4);
                 break;
             }
+          } catch (e) {
+          }
+        }
+        playTone(freq, duration = 0.15, type = "sine") {
+          if (!this.enabled) return;
+          this._ensureContext();
+          if (!this.ctx) return;
+          try {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, now);
+            gain.gain.setValueAtTime(0.1 * this.volume, now);
+            gain.gain.exponentialRampToValueAtTime(1e-3, now + duration);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + duration);
           } catch (e) {
           }
         }
@@ -6895,6 +7234,7 @@ var StarlightEngine = (() => {
       init_RingUppercut();
       init_MemoryMatch();
       init_TilePuzzle();
+      init_SimonSays();
       init_SoundManager();
       init_DailyRewards();
       init_Achievements();
@@ -7232,6 +7572,40 @@ var StarlightEngine = (() => {
             }
             this.isDragging = false;
           });
+          this.canvas.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            this.lastInputTime = Date.now();
+            if (e.touches.length === 1) {
+              const t = e.touches[0];
+              this.isDragging = true;
+              this.dragStart = { x: t.clientX, y: t.clientY };
+              this.mouse.x = t.clientX;
+              this.mouse.y = t.clientY;
+            }
+          }, { passive: false });
+          this.canvas.addEventListener("touchmove", (e) => {
+            e.preventDefault();
+            if (e.touches.length === 1 && this.isDragging) {
+              const t = e.touches[0];
+              const dx = t.clientX - this.dragStart.x, dy = t.clientY - this.dragStart.y;
+              if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+                this.camera.x += dx;
+                this.camera.y += dy;
+                this.dragStart = { x: t.clientX, y: t.clientY };
+              }
+              this.mouse.x = t.clientX;
+              this.mouse.y = t.clientY;
+            }
+          }, { passive: false });
+          this.canvas.addEventListener("touchend", (e) => {
+            e.preventDefault();
+            if (this.isDragging && e.changedTouches.length > 0) {
+              const t = e.changedTouches[0];
+              const dx = t.clientX - this.dragStart.x, dy = t.clientY - this.dragStart.y;
+              if (Math.abs(dx) < 10 && Math.abs(dy) < 10) this.handleClick(t.clientX, t.clientY);
+            }
+            this.isDragging = false;
+          });
           this.zoom = 1;
           this.canvas.addEventListener("wheel", (e) => {
             e.preventDefault();
@@ -7366,26 +7740,30 @@ var StarlightEngine = (() => {
               this.achievementSystem.track("walk");
               return;
             }
-            const npc = this.room.avatars.find((a) => a.isNPC && Math.round(a.x) === tx && Math.round(a.y) === ty);
-            if (npc) {
-              this.inboxSystem.maybeReceiveRandom();
-              this.questSystem.track("talk");
-              npc.relationship = Math.min(100, npc.relationship + 5);
-              if (Math.random() < 0.08) {
-                const giftCoins = 10 + Math.floor(Math.random() * 41);
-                this.currencySystem.add(giftCoins);
-                this.uiManager.showNotification(`${npc.name} gave you \u2605${giftCoins}!`, "success");
-                this.spawnParticles(tx, ty, "#f4d03f", 8);
+            const clickedAvatar = this.room.avatars.find((a) => a !== this.player && Math.round(a.x) === tx && Math.round(a.y) === ty);
+            if (clickedAvatar) {
+              if (clickedAvatar.isNPC) {
+                this.inboxSystem.maybeReceiveRandom();
+                this.questSystem.track("talk");
+                clickedAvatar.relationship = Math.min(100, clickedAvatar.relationship + 5);
+                if (Math.random() < 0.08) {
+                  const giftCoins = 10 + Math.floor(Math.random() * 41);
+                  this.currencySystem.add(giftCoins);
+                  this.uiManager.showNotification(`${clickedAvatar.name} gave you \u2605${giftCoins}!`, "success");
+                  this.spawnParticles(tx, ty, "#f4d03f", 8);
+                }
+                this.uiManager.showNPCProfile(
+                  clickedAvatar,
+                  () => {
+                    this.player.moveTo(tx, ty, this.room);
+                    this.achievementSystem.track("walk");
+                    this.statsSystem.inc("stepsWalked");
+                  },
+                  (npc) => this.openNPCTrade(npc)
+                );
+              } else {
+                this.showPlayerProfile(clickedAvatar);
               }
-              this.uiManager.showNPCProfile(
-                npc,
-                () => {
-                  this.player.moveTo(tx, ty, this.room);
-                  this.achievementSystem.track("walk");
-                  this.statsSystem.inc("stepsWalked");
-                },
-                (npc2) => this.openNPCTrade(npc2)
-              );
               return;
             }
             if (this.room.isWalkable(tx, ty)) {
@@ -8525,6 +8903,28 @@ var StarlightEngine = (() => {
           const greeting = greetings[month];
           if (greeting) this.uiManager.showNotification(greeting, "info");
         }
+        showPlayerProfile(avatar) {
+          const isRemote = avatar.id && avatar.id.startsWith("remote_");
+          const remoteId = isRemote ? avatar.id.slice(7) : null;
+          this.uiManager.showPlayerProfile(avatar, {
+            onWhisper: () => {
+              const input = document.getElementById("chatInput");
+              if (input) {
+                input.value = `/whisper ${avatar.name} `;
+                input.focus();
+              }
+            },
+            onFriend: () => {
+              this.uiManager.showNotification(`Friend request sent to ${avatar.name}!`, "success");
+            },
+            onTrade: () => {
+              this.uiManager.showNotification(`Trade request sent to ${avatar.name}!`, "info");
+            },
+            onWalk: () => {
+              this.player.moveTo(Math.round(avatar.x), Math.round(avatar.y), this.room);
+            }
+          }, isRemote, remoteId);
+        }
         openNPCTrade(npc) {
           const items = FURNITURE_CATALOG.filter((i) => i.price < 400).sort(() => Math.random() - 0.5).slice(0, 4);
           this.uiManager.showNPCTrade(npc, items, (item) => {
@@ -8595,7 +8995,8 @@ var StarlightEngine = (() => {
           const games = [
             { name: "Ring Uppercut", desc: "Time your punches in the boxing ring!", reward: "200-500", class: RingUppercut },
             { name: "Memory Match", desc: "Flip cards and find matching pairs!", reward: "250", class: MemoryMatch },
-            { name: "Tile Puzzle", desc: "Slide tiles to solve the puzzle!", reward: "300", class: TilePuzzle }
+            { name: "Tile Puzzle", desc: "Slide tiles to solve the puzzle!", reward: "300", class: TilePuzzle },
+            { name: "Simon Says", desc: "Watch the pattern and repeat it!", reward: "150-500", class: SimonSays }
           ];
           this.uiManager.renderMinigamePanel(games, (g) => {
             this.startMinigame(g.class);
@@ -8823,7 +9224,7 @@ var StarlightEngine = (() => {
           if (this.room.scenery) {
             this.room.scenery.forEach((s) => {
               const sp = isoToScreen(s.x, s.y);
-              const img = createSceneryCanvas(s.type);
+              const img = getSceneryAsset(s.type);
               if (img) ctx.drawImage(img, sp.x - img.width / 2, sp.y - img.height + TILE_H);
             });
           }
@@ -9454,6 +9855,7 @@ var StarlightEngine = (() => {
       init_RingUppercut();
       init_MemoryMatch();
       init_TilePuzzle();
+      init_SimonSays();
       function createUI() {
         const overlay = document.getElementById("uiOverlay");
         if (!overlay) return;
@@ -9526,6 +9928,7 @@ var StarlightEngine = (() => {
           window.RingUppercut = RingUppercut;
           window.MemoryMatch = MemoryMatch;
           window.TilePuzzle = TilePuzzle;
+          window.SimonSays = SimonSays;
         } catch (err) {
           console.error("Failed to initialize game:", err);
           const loading = document.getElementById("loadingScreen");
