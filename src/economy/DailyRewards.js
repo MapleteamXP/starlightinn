@@ -66,8 +66,10 @@ export class DailyRewardSystem {
 
     const day = this.getStreakDay();
     const reward = REWARDS[day - 1];
+    let coins = reward.coins;
+    if (this.game.eventSystem) coins *= this.game.eventSystem.getCoinMultiplier();
     if (reward) {
-      this.game.currencySystem.add(reward.coins);
+      this.game.currencySystem.add(coins);
       if (reward.item) this.game.inventorySystem.add(reward.item, 1);
     }
     return { day, ...reward };

@@ -30,6 +30,7 @@ import { CraftingSystem, CRAFTING_RECIPES } from '../economy/Crafting.js';
 import { FriendSystem } from '../social/Friends.js';
 import { LeaderboardSystem } from '../social/Leaderboard.js';
 import { StatsSystem } from '../social/Stats.js';
+import { EventSystem } from '../world/Events.js';
 import { PetSystem } from '../world/Pet.js';
 
 class Particle {
@@ -99,6 +100,7 @@ export class Game {
     this.leaderboardSystem = new LeaderboardSystem();
     this.craftingSystem = new CraftingSystem(this.inventorySystem);
     this.statsSystem = new StatsSystem();
+    this.eventSystem = new EventSystem(this);
     this.photoMode = false;
 
     this.setupInput();
@@ -326,7 +328,7 @@ export class Game {
       // Check treasure first
       const treasure = this.treasures.find(t => Math.floor(t.x) === tx && Math.floor(t.y) === ty);
       if (treasure) {
-        this.currencySystem.add(treasure.coins);
+        this.currencySystem.add(treasure.coins * this.eventSystem.getCoinMultiplier());
         this.spawnParticles(tx, ty, '#f4d03f', 12);
         this.uiManager.showNotification(`Found ★${treasure.coins} in a treasure chest!`, 'success');
         this.soundManager.play('buy');
@@ -335,10 +337,20 @@ export class Game {
         this.achievementSystem.track('walk');
         return;
       }
+      // Check NPC click
+      const npc = this.room.avatars.find(a => a.isNPC && Math.round(a.x) === tx && Math.round(a.y) === ty);
+      if (npc) {
+        this.uiManager.showNPCProfile(npc, () => {
+          this.player.moveTo(tx, ty, this.room);
+          this.achievementSystem.track('walk');
+          this.statsSystem.inc('stepsWalked');
+        });
+        return;
+      }
       if (this.room.isWalkable(tx, ty)) {
         this.player.moveTo(tx, ty, this.room);
         this.achievementSystem.track('walk');
-      this.statsSystem.inc('stepsWalked');
+        this.statsSystem.inc('stepsWalked');
         this.spawnParticles(tx, ty, 'rgba(244,208,63,0.6)', 5);
       }
     } else if (this.selectedTool === 'place' && this.selectedInventoryItem) {
@@ -383,6 +395,7 @@ export class Game {
     document.getElementById('btnLeaderboard')?.addEventListener('click', () => { this.uiManager.togglePanel('leaderboardPanel'); this.renderLeaderboardPanel(); });
     document.getElementById('btnCrafting')?.addEventListener('click', () => { this.uiManager.togglePanel('craftingPanel'); this.renderCraftingPanel(); });
     document.getElementById('btnStats')?.addEventListener('click', () => { this.uiManager.togglePanel('statsPanel'); this.renderStatsPanel(); });
+    document.getElementById('btnShortcuts')?.addEventListener('click', () => { this.uiManager.togglePanel('shortcutsPanel'); this.renderShortcutsPanel(); });
 
     document.getElementById('hairStyleSelect')?.addEventListener('change', e => { this.customize.hairStyle = e.target.value; this.renderCustomizePanel(); });
     document.getElementById('hatSelect')?.addEventListener('change', e => { this.customize.hatType = e.target.value; this.renderCustomizePanel(); });
@@ -604,13 +617,24 @@ export class Game {
   }
 
   renderInventory() {
-    this.uiManager.renderInventory(this.inventorySystem.getAll(), this.selectedInventoryItem, type => {
-      this.selectedInventoryItem = type;
-      this.selectedTool = 'place';
-      this.uiManager.updateToolButtons(this.selectedTool);
-      this.renderInventory();
-      this.uiManager.showNotification(`Selected ${type} — click a tile to place`);
-    });
+    this.uiManager.renderInventory(this.inventorySystem.getAll(), this.selectedInventoryItem,
+      type => {
+        this.selectedInventoryItem = type;
+        this.selectedTool = 'place';
+        this.uiManager.updateToolButtons(this.selectedTool);
+        this.renderInventory();
+        this.uiManager.showNotification(`Selected ${type} — click a tile to place`);
+      },
+      type => {
+        const item = FURNITURE_CATALOG.find(i => i.id === type);
+        const sellPrice = item ? Math.floor(item.price * 0.5) : 10;
+        this.inventorySystem.remove(type, 1);
+        this.currencySystem.add(sellPrice);
+        this.uiManager.showNotification(`Sold ${type} for ★${sellPrice}`, 'success');
+        this.soundManager.play('buy');
+        this.renderInventory();
+      }
+    );
   }
 
   loadAvatarFromStorage() {
@@ -816,6 +840,23 @@ export class Game {
     this.uiManager.renderStats(this.statsSystem.getStats());
   }
 
+  renderShortcutsPanel() {
+    this.uiManager.renderShortcuts([
+      { key: 'W / A / S / D', action: 'Walk around' },
+      { key: 'Arrows', action: 'Walk around' },
+      { key: 'Enter', action: 'Focus chat input' },
+      { key: 'W', action: 'Wave (when not typing)' },
+      { key: 'D', action: 'Toggle dance' },
+      { key: 'R', action: 'Rotate placement' },
+      { key: 'M', action: 'Toggle minimap' },
+      { key: 'P', action: 'Toggle photo mode' },
+      { key: 'ESC', action: 'Close panels / exit photo mode' },
+      { key: 'Space', action: 'Punch in minigames' },
+      { key: 'Click + Drag', action: 'Pan camera' },
+      { key: 'Right-click item', action: 'Sell from inventory' },
+    ]);
+  }
+
   renderCraftingPanel() {
     this.uiManager.renderCrafting(this.craftingSystem.getAvailableRecipes(), id => {
       const recipe = CRAFTING_RECIPES.find(r => r.id === id);
@@ -919,9 +960,11 @@ export class Game {
       this.friendSystem.update(dt);
       this.petSystem.tick(dt);
       this.statsSystem.tick(dt);
+      this.eventSystem.update(dt);
       // Treasure spawning
+      const treasureInterval = this.eventSystem ? this.eventSystem.getTreasureInterval() : 45;
       this.treasureTimer += dt;
-      if (this.treasureTimer > 45 && this.treasures.length < 3) {
+      if (this.treasureTimer > treasureInterval && this.treasures.length < 3) {
         this.treasureTimer = 0;
         for (let i = 0; i < 20; i++) {
           const tx = Math.floor(Math.random() * this.room.width);

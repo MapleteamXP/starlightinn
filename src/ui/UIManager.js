@@ -77,6 +77,8 @@ export class UIManager {
     this._ensurePanel('craftingPanel', 'Crafting Workshop', `<div class="craft-list" id="craftList"></div>`);
     // Stats
     this._ensurePanel('statsPanel', 'Player Stats', `<div class="stats-list" id="statsList"></div>`);
+    // Shortcuts
+    this._ensurePanel('shortcutsPanel', 'Keyboard Shortcuts', `<div class="shortcuts-list" id="shortcutsList"></div>`);
     // Chat color popover
     if (!document.getElementById('chatColorPopover')) {
       const popover = document.createElement('div');
@@ -206,7 +208,7 @@ export class UIManager {
     });
   }
 
-  renderInventory(inventory, selected, onSelect) {
+  renderInventory(inventory, selected, onSelect, onSell) {
     const grid = document.getElementById('inventoryGrid');
     if (!grid) return;
     grid.innerHTML = '';
@@ -224,6 +226,9 @@ export class UIManager {
         div.style.background = 'rgba(244,208,63,0.25)';
       }
       div.addEventListener('click', () => onSelect && onSelect(type));
+      if (onSell) {
+        div.addEventListener('contextmenu', e => { e.preventDefault(); e.stopPropagation(); onSell(type); });
+      }
       grid.appendChild(div);
     });
   }
@@ -375,6 +380,48 @@ export class UIManager {
     document.getElementById('petPlay')?.addEventListener('click', onPlay);
     document.getElementById('petRest')?.addEventListener('click', onRest);
     document.getElementById('petRelease')?.addEventListener('click', () => onAdopt && onAdopt(null));
+  }
+
+  showNPCProfile(npc, onWalk) {
+    const existing = document.getElementById('npcProfile');
+    if (existing) existing.remove();
+    const div = document.createElement('div');
+    div.id = 'npcProfile';
+    div.className = 'npc-profile';
+    div.innerHTML = `
+      <div class="npc-profile-header">
+        <span style="font-size:28px;">${npc.hatType !== 'none' ? '🎩' : '👤'}</span>
+        <div>
+          <div style="font-weight:700;font-size:15px;">${npc.name}</div>
+          <div style="font-size:11px;color:var(--habbo-text-dim);">${npc.isSitting ? 'Sitting' : (npc.isDancing ? 'Dancing' : 'Walking around')}</div>
+        </div>
+        <button class="npc-profile-close">&times;</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="npc-action" id="npcWalk">Walk Here</button>
+        <button class="npc-action" id="npcWave">Wave</button>
+      </div>
+    `;
+    document.body.appendChild(div);
+    div.querySelector('.npc-profile-close').addEventListener('click', () => div.remove());
+    div.querySelector('#npcWalk').addEventListener('click', () => { div.remove(); onWalk && onWalk(); });
+    div.querySelector('#npcWave').addEventListener('click', () => {
+      npc.say('Hey there! 👋', '#fffde7', 'normal');
+      div.remove();
+    });
+    setTimeout(() => { if (div.parentNode) div.remove(); }, 6000);
+  }
+
+  renderShortcuts(shortcuts) {
+    const list = document.getElementById('shortcutsList');
+    if (!list) return;
+    list.innerHTML = '';
+    shortcuts.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'shortcut-row';
+      div.innerHTML = `<span class="shortcut-key">${s.key}</span><span class="shortcut-action">${s.action}</span>`;
+      list.appendChild(div);
+    });
   }
 
   renderStats(stats) {

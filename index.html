@@ -208,6 +208,19 @@ body {
 /* Theme List */
 .theme-list { display: flex; flex-direction: column; gap: 6px; }
 
+/* NPC Profile */
+.npc-profile { position: absolute; background: var(--habbo-panel); border: 2px solid var(--habbo-panel-border); border-radius: 12px; padding: 12px; z-index: 300; box-shadow: 0 8px 32px rgba(0,0,0,0.5); min-width: 180px; animation: popIn 0.2s ease-out; }
+.npc-profile-header { display: flex; align-items: center; gap: 10px; }
+.npc-profile-close { background: var(--habbo-danger); border: none; color: white; width: 22px; height: 22px; border-radius: 5px; cursor: pointer; font-weight: 700; margin-left: auto; }
+.npc-action { flex: 1; padding: 6px; border-radius: 6px; border: none; background: var(--habbo-light); color: white; font-family: inherit; font-weight: 700; font-size: 11px; cursor: pointer; }
+.npc-action:hover { background: var(--habbo-accent); color: var(--habbo-dark); }
+@keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+/* Shortcuts */
+.shortcut-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 13px; }
+.shortcut-key { background: rgba(0,0,0,0.3); padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; font-family: monospace; border: 1px solid var(--habbo-panel-border); }
+.shortcut-action { color: var(--habbo-text-dim); }
+
 /* Stats */
 .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 13px; }
 .stat-label { color: var(--habbo-text-dim); }
@@ -3236,6 +3249,7 @@ var StarlightEngine = (() => {
           this._ensurePanel("leaderboardPanel", "High Scores", `<div id="leaderboardContent"></div>`);
           this._ensurePanel("craftingPanel", "Crafting Workshop", `<div class="craft-list" id="craftList"></div>`);
           this._ensurePanel("statsPanel", "Player Stats", `<div class="stats-list" id="statsList"></div>`);
+          this._ensurePanel("shortcutsPanel", "Keyboard Shortcuts", `<div class="shortcuts-list" id="shortcutsList"></div>`);
           if (!document.getElementById("chatColorPopover")) {
             const popover = document.createElement("div");
             popover.className = "chat-color-popover";
@@ -3356,7 +3370,7 @@ var StarlightEngine = (() => {
             grid.appendChild(div);
           });
         }
-        renderInventory(inventory, selected, onSelect) {
+        renderInventory(inventory, selected, onSelect, onSell) {
           const grid = document.getElementById("inventoryGrid");
           if (!grid) return;
           grid.innerHTML = "";
@@ -3374,6 +3388,13 @@ var StarlightEngine = (() => {
               div.style.background = "rgba(244,208,63,0.25)";
             }
             div.addEventListener("click", () => onSelect && onSelect(type));
+            if (onSell) {
+              div.addEventListener("contextmenu", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onSell(type);
+              });
+            }
             grid.appendChild(div);
           });
         }
@@ -3511,6 +3532,51 @@ var StarlightEngine = (() => {
           document.getElementById("petPlay")?.addEventListener("click", onPlay);
           document.getElementById("petRest")?.addEventListener("click", onRest);
           document.getElementById("petRelease")?.addEventListener("click", () => onAdopt && onAdopt(null));
+        }
+        showNPCProfile(npc, onWalk) {
+          const existing = document.getElementById("npcProfile");
+          if (existing) existing.remove();
+          const div = document.createElement("div");
+          div.id = "npcProfile";
+          div.className = "npc-profile";
+          div.innerHTML = `
+      <div class="npc-profile-header">
+        <span style="font-size:28px;">${npc.hatType !== "none" ? "\u{1F3A9}" : "\u{1F464}"}</span>
+        <div>
+          <div style="font-weight:700;font-size:15px;">${npc.name}</div>
+          <div style="font-size:11px;color:var(--habbo-text-dim);">${npc.isSitting ? "Sitting" : npc.isDancing ? "Dancing" : "Walking around"}</div>
+        </div>
+        <button class="npc-profile-close">&times;</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="npc-action" id="npcWalk">Walk Here</button>
+        <button class="npc-action" id="npcWave">Wave</button>
+      </div>
+    `;
+          document.body.appendChild(div);
+          div.querySelector(".npc-profile-close").addEventListener("click", () => div.remove());
+          div.querySelector("#npcWalk").addEventListener("click", () => {
+            div.remove();
+            onWalk && onWalk();
+          });
+          div.querySelector("#npcWave").addEventListener("click", () => {
+            npc.say("Hey there! \u{1F44B}", "#fffde7", "normal");
+            div.remove();
+          });
+          setTimeout(() => {
+            if (div.parentNode) div.remove();
+          }, 6e3);
+        }
+        renderShortcuts(shortcuts) {
+          const list = document.getElementById("shortcutsList");
+          if (!list) return;
+          list.innerHTML = "";
+          shortcuts.forEach((s) => {
+            const div = document.createElement("div");
+            div.className = "shortcut-row";
+            div.innerHTML = `<span class="shortcut-key">${s.key}</span><span class="shortcut-action">${s.action}</span>`;
+            list.appendChild(div);
+          });
         }
         renderStats(stats) {
           const list = document.getElementById("statsList");
@@ -3654,7 +3720,8 @@ var StarlightEngine = (() => {
         }
         end(won) {
           this.state = "ended";
-          const reward = won ? this.rewards.win : this.rewards.lose;
+          let reward = won ? this.rewards.win : this.rewards.lose;
+          if (this.game.eventSystem) reward *= this.game.eventSystem.getCoinMultiplier();
           if (this.game.currencySystem) {
             this.game.currencySystem.add(reward);
           }
@@ -4398,8 +4465,10 @@ var StarlightEngine = (() => {
           this.save();
           const day = this.getStreakDay();
           const reward = REWARDS[day - 1];
+          let coins = reward.coins;
+          if (this.game.eventSystem) coins *= this.game.eventSystem.getCoinMultiplier();
           if (reward) {
-            this.game.currencySystem.add(reward.coins);
+            this.game.currencySystem.add(coins);
             if (reward.item) this.game.inventorySystem.add(reward.item, 1);
           }
           return { day, ...reward };
@@ -4737,6 +4806,80 @@ var StarlightEngine = (() => {
     }
   });
 
+  // src/world/Events.js
+  var EVENT_TYPES, EventSystem;
+  var init_Events = __esm({
+    "src/world/Events.js"() {
+      EVENT_TYPES = [
+        { id: "double_coins", name: "\u{1F4B0} Coin Rush", desc: "Double coins from all sources for 2 minutes!", duration: 120 },
+        { id: "treasure_rush", name: "\u{1F4E6} Treasure Rush", desc: "Treasure chests spawn 3x faster!", duration: 90 },
+        { id: "happy_hour", name: "\u{1F389} Happy Hour", desc: "NPCs are extra chatty and friendly!", duration: 60 },
+        { id: "lucky_find", name: "\u{1F340} Lucky Find", desc: "A random furniture item appeared in your inventory!", duration: 0 }
+      ];
+      EventSystem = class {
+        constructor(game) {
+          this.game = game;
+          this.activeEvent = null;
+          this.eventTimer = 0;
+          this.nextEventIn = 120 + Math.random() * 180;
+          this.doubleCoins = false;
+          this.treasureRush = false;
+          this.happyHour = false;
+        }
+        update(dt) {
+          if (this.activeEvent) {
+            this.eventTimer -= dt;
+            if (this.eventTimer <= 0) this._endEvent();
+            return;
+          }
+          this.nextEventIn -= dt;
+          if (this.nextEventIn <= 0) this._triggerEvent();
+        }
+        _triggerEvent() {
+          const event = EVENT_TYPES[Math.floor(Math.random() * EVENT_TYPES.length)];
+          this.activeEvent = event;
+          this.eventTimer = event.duration;
+          this.game.uiManager.showNotification(`${event.name}: ${event.desc}`, "success");
+          this.game.soundManager.play("win");
+          switch (event.id) {
+            case "double_coins":
+              this.doubleCoins = true;
+              break;
+            case "treasure_rush":
+              this.treasureRush = true;
+              break;
+            case "happy_hour":
+              this.happyHour = true;
+              break;
+            case "lucky_find":
+              const items = ["plant", "lamp", "chair", "vase", "rug", "barrel"];
+              const item = items[Math.floor(Math.random() * items.length)];
+              this.game.inventorySystem.add(item, 1);
+              this.game.uiManager.showNotification(`You found a ${item}! Check your inventory.`, "success");
+              this.activeEvent = null;
+              this.nextEventIn = 120 + Math.random() * 180;
+              break;
+          }
+        }
+        _endEvent() {
+          if (!this.activeEvent) return;
+          this.game.uiManager.showNotification(`${this.activeEvent.name} has ended.`, "info");
+          this.doubleCoins = false;
+          this.treasureRush = false;
+          this.happyHour = false;
+          this.activeEvent = null;
+          this.nextEventIn = 180 + Math.random() * 300;
+        }
+        getCoinMultiplier() {
+          return this.doubleCoins ? 2 : 1;
+        }
+        getTreasureInterval() {
+          return this.treasureRush ? 15 : 45;
+        }
+      };
+    }
+  });
+
   // src/world/Pet.js
   var PET_TYPES, PET_EMOJIS, PET_NAMES, PetSystem;
   var init_Pet = __esm({
@@ -4863,6 +5006,7 @@ var StarlightEngine = (() => {
       init_Friends();
       init_Leaderboard();
       init_Stats();
+      init_Events();
       init_Pet();
       Particle = class {
         constructor(x, y, color, life, vx, vy) {
@@ -4935,6 +5079,7 @@ var StarlightEngine = (() => {
           this.leaderboardSystem = new LeaderboardSystem();
           this.craftingSystem = new CraftingSystem(this.inventorySystem);
           this.statsSystem = new StatsSystem();
+          this.eventSystem = new EventSystem(this);
           this.photoMode = false;
           this.setupInput();
           this.setupUI();
@@ -5187,13 +5332,22 @@ var StarlightEngine = (() => {
           if (this.selectedTool === "walk") {
             const treasure = this.treasures.find((t) => Math.floor(t.x) === tx && Math.floor(t.y) === ty);
             if (treasure) {
-              this.currencySystem.add(treasure.coins);
+              this.currencySystem.add(treasure.coins * this.eventSystem.getCoinMultiplier());
               this.spawnParticles(tx, ty, "#f4d03f", 12);
               this.uiManager.showNotification(`Found \u2605${treasure.coins} in a treasure chest!`, "success");
               this.soundManager.play("buy");
               this.statsSystem.inc("treasureChestsFound");
               this.treasures = this.treasures.filter((t) => t !== treasure);
               this.achievementSystem.track("walk");
+              return;
+            }
+            const npc = this.room.avatars.find((a) => a.isNPC && Math.round(a.x) === tx && Math.round(a.y) === ty);
+            if (npc) {
+              this.uiManager.showNPCProfile(npc, () => {
+                this.player.moveTo(tx, ty, this.room);
+                this.achievementSystem.track("walk");
+                this.statsSystem.inc("stepsWalked");
+              });
               return;
             }
             if (this.room.isWalkable(tx, ty)) {
@@ -5262,6 +5416,10 @@ var StarlightEngine = (() => {
           document.getElementById("btnStats")?.addEventListener("click", () => {
             this.uiManager.togglePanel("statsPanel");
             this.renderStatsPanel();
+          });
+          document.getElementById("btnShortcuts")?.addEventListener("click", () => {
+            this.uiManager.togglePanel("shortcutsPanel");
+            this.renderShortcutsPanel();
           });
           document.getElementById("hairStyleSelect")?.addEventListener("change", (e) => {
             this.customize.hairStyle = e.target.value;
@@ -5547,13 +5705,26 @@ var StarlightEngine = (() => {
           );
         }
         renderInventory() {
-          this.uiManager.renderInventory(this.inventorySystem.getAll(), this.selectedInventoryItem, (type) => {
-            this.selectedInventoryItem = type;
-            this.selectedTool = "place";
-            this.uiManager.updateToolButtons(this.selectedTool);
-            this.renderInventory();
-            this.uiManager.showNotification(`Selected ${type} \u2014 click a tile to place`);
-          });
+          this.uiManager.renderInventory(
+            this.inventorySystem.getAll(),
+            this.selectedInventoryItem,
+            (type) => {
+              this.selectedInventoryItem = type;
+              this.selectedTool = "place";
+              this.uiManager.updateToolButtons(this.selectedTool);
+              this.renderInventory();
+              this.uiManager.showNotification(`Selected ${type} \u2014 click a tile to place`);
+            },
+            (type) => {
+              const item = FURNITURE_CATALOG.find((i) => i.id === type);
+              const sellPrice = item ? Math.floor(item.price * 0.5) : 10;
+              this.inventorySystem.remove(type, 1);
+              this.currencySystem.add(sellPrice);
+              this.uiManager.showNotification(`Sold ${type} for \u2605${sellPrice}`, "success");
+              this.soundManager.play("buy");
+              this.renderInventory();
+            }
+          );
         }
         loadAvatarFromStorage() {
           try {
@@ -5786,6 +5957,22 @@ var StarlightEngine = (() => {
         renderStatsPanel() {
           this.uiManager.renderStats(this.statsSystem.getStats());
         }
+        renderShortcutsPanel() {
+          this.uiManager.renderShortcuts([
+            { key: "W / A / S / D", action: "Walk around" },
+            { key: "Arrows", action: "Walk around" },
+            { key: "Enter", action: "Focus chat input" },
+            { key: "W", action: "Wave (when not typing)" },
+            { key: "D", action: "Toggle dance" },
+            { key: "R", action: "Rotate placement" },
+            { key: "M", action: "Toggle minimap" },
+            { key: "P", action: "Toggle photo mode" },
+            { key: "ESC", action: "Close panels / exit photo mode" },
+            { key: "Space", action: "Punch in minigames" },
+            { key: "Click + Drag", action: "Pan camera" },
+            { key: "Right-click item", action: "Sell from inventory" }
+          ]);
+        }
         renderCraftingPanel() {
           this.uiManager.renderCrafting(this.craftingSystem.getAvailableRecipes(), (id) => {
             const recipe = CRAFTING_RECIPES.find((r) => r.id === id);
@@ -5882,8 +6069,10 @@ var StarlightEngine = (() => {
             this.friendSystem.update(dt);
             this.petSystem.tick(dt);
             this.statsSystem.tick(dt);
+            this.eventSystem.update(dt);
+            const treasureInterval = this.eventSystem ? this.eventSystem.getTreasureInterval() : 45;
             this.treasureTimer += dt;
-            if (this.treasureTimer > 45 && this.treasures.length < 3) {
+            if (this.treasureTimer > treasureInterval && this.treasures.length < 3) {
               this.treasureTimer = 0;
               for (let i = 0; i < 20; i++) {
                 const tx = Math.floor(Math.random() * this.room.width);
@@ -6302,6 +6491,7 @@ var StarlightEngine = (() => {
         <button class="top-btn" id="btnLeaderboard">&#128200; Scores</button>
         <button class="top-btn" id="btnCrafting">&#128295; Craft</button>
         <button class="top-btn" id="btnStats">&#128202; Stats</button>
+        <button class="top-btn" id="btnShortcuts">&#9000;&#65039; Keys</button>
       </div>
     </div>
     <div id="roomInfo">

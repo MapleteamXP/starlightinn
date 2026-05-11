@@ -25,7 +25,8 @@ export class BaseMinigame {
 
   end(won) {
     this.state = 'ended';
-    const reward = won ? this.rewards.win : this.rewards.lose;
+    let reward = won ? this.rewards.win : this.rewards.lose;
+    if (this.game.eventSystem) reward *= this.game.eventSystem.getCoinMultiplier();
     if (this.game.currencySystem) {
       this.game.currencySystem.add(reward);
     }
