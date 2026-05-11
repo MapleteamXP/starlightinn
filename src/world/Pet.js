@@ -109,6 +109,14 @@ export class PetSystem {
     return this.pet ? (PET_EMOJIS[this.pet.type] || '🐾') : '';
   }
 
+  getStage() {
+    if (!this.pet) return null;
+    if (this.pet.level >= 10) return { name: 'Legendary', icon: '👑' };
+    if (this.pet.level >= 7) return { name: 'Epic', icon: '⭐' };
+    if (this.pet.level >= 4) return { name: 'Rare', icon: '💎' };
+    return { name: 'Common', icon: '🥚' };
+  }
+
   getPosition(playerX, playerY) {
     if (!this.pet) return { x: playerX, y: playerY };
     const offset = { x: -0.6, y: 0.4 };

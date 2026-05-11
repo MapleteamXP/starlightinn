@@ -18,6 +18,7 @@ function createUI() {
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
           <div class="currency-badge" id="currencyDisplay">1,000</div>
           <div style="font-size:10px;color:var(--habbo-text-dim);font-weight:700;" id="levelDisplay">Lv. 1 Newcomer</div>
+          <div id="challengeBadge" style="font-size:9px;color:var(--habbo-accent);font-weight:700;display:none;"></div>
         </div>
         <button class="top-btn" id="btnNavigator">&#127757; Navigator</button>
         <button class="top-btn" id="btnCatalog">&#128722; Catalog</button>

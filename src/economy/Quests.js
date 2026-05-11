@@ -37,6 +37,7 @@ export class QuestSystem {
       if (this.active.progress >= this.active.amount) {
         this.active.progress = this.active.amount;
         this.game.uiManager?.showNotification(`Quest complete: ${this.active.name}! Claim your reward.`, 'success');
+        this.game.soundManager?.play('quest');
       }
       this.save();
     }

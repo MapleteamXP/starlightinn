@@ -52,6 +52,7 @@ export class ProgressionSystem {
           this.game.uiManager.showNotification(`Level Up! You are now Level ${this.level} — ${this.title}! +★${this.level * 50}`, 'success');
           this.game.currencySystem.add(this.level * 50);
           this.game.soundManager.play('win');
+          this.game.soundManager.play('levelup');
           this.game.shakeScreen(8, 0.5);
           // Particle burst at player position
           if (this.game.player) {

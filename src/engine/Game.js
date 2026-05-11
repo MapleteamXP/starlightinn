@@ -126,6 +126,7 @@ export class Game {
     this.tutorialSystem = new TutorialSystem();
     this.progressionSystem = new ProgressionSystem(this);
     this.photoMode = false;
+    this.zoom = 1;
     this.simulatedPlayers = [];
     this.simPlayerTimer = 30 + Math.random() * 60;
     this.screenShake = { x: 0, y: 0, intensity: 0 };
@@ -238,6 +239,8 @@ export class Game {
     }
     this.player.game = this;
     this.room.avatars.push(this.player);
+    this.statsSystem.enterRoom(template.name || template.id);
+    this.soundManager.playAmbient(template.id);
 
     this.npcManager.npcs.forEach(n => {
       n.path = [];
@@ -333,7 +336,12 @@ export class Game {
       }
       this.isDragging = false;
     });
-    this.canvas.addEventListener('wheel', e => { e.preventDefault(); }, { passive: false });
+    this.zoom = 1;
+    this.canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      this.zoom = clamp(this.zoom + delta, 0.5, 2.0);
+    }, { passive: false });
 
     window.addEventListener('keydown', e => {
       this.lastInputTime = Date.now();
@@ -412,7 +420,7 @@ export class Game {
         this.currencySystem.add(treasure.coins * this.eventSystem.getCoinMultiplier());
         this.spawnParticles(tx, ty, '#f4d03f', 12);
         this.uiManager.showNotification(`Found ★${treasure.coins} in a treasure chest!`, 'success');
-        this.soundManager.play('buy');
+        this.soundManager.play('treasure');
         this.statsSystem.inc('treasureChestsFound');
         this.challengeSystem.track('treasure');
         this.questSystem.track('treasure');
@@ -426,6 +434,8 @@ export class Game {
       if (npc) {
         this.inboxSystem.maybeReceiveRandom();
         this.questSystem.track('talk');
+        // NPC relationship
+        npc.relationship = Math.min(100, npc.relationship + 5);
         // NPC occasional gift
         if (Math.random() < 0.08) {
           const giftCoins = 10 + Math.floor(Math.random() * 41);
@@ -1411,6 +1421,13 @@ export class Game {
       this.statsSystem.tick(dt);
       this.eventSystem.update(dt);
       this.challengeSystem._refreshIfNeeded();
+      const challenges = this.challengeSystem.getList ? this.challengeSystem.getList() : [];
+      const active = challenges.find(c => !c.completed);
+      if (active) {
+        this.uiManager.updateChallengeBadge(`\u26a1 ${active.name}: ${active.progress}/${active.target}`);
+      } else {
+        this.uiManager.updateChallengeBadge(null);
+      }
       // AFK detection
       const afkTime = (Date.now() - this.lastInputTime) / 1000;
       if (afkTime > 60 && !this.player.isAFK) { this.player.isAFK = true; }
@@ -1494,7 +1511,10 @@ export class Game {
     }
 
     if (!this.room) return;
-    ctx.save(); ctx.translate(this.camera.x + this.screenShake.x, this.camera.y + this.screenShake.y);
+    ctx.save();
+    ctx.translate(this.width / 2, this.height / 2);
+    ctx.scale(this.zoom, this.zoom);
+    ctx.translate(-this.width / 2 + this.camera.x + this.screenShake.x, -this.height / 2 + this.camera.y + this.screenShake.y);
 
     // Day/night cycle overlay
     const hour = new Date().getHours();
@@ -1837,7 +1857,20 @@ export class Game {
       ctx.fillStyle = '#fff'; ctx.font = 'bold 9px Nunito, sans-serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(avatar.name, sp.x, sp.y - 8);
-      if (avatar.isNPC) { ctx.fillStyle = 'var(--habbo-accent)'; ctx.beginPath(); ctx.arc(sp.x + 22, sp.y - 12, 3, 0, Math.PI * 2); ctx.fill(); }
+      if (avatar.isNPC) {
+        ctx.fillStyle = 'var(--habbo-accent)';
+        ctx.beginPath(); ctx.arc(sp.x + 22, sp.y - 12, 3, 0, Math.PI * 2); ctx.fill();
+        // Relationship hearts
+        if (avatar.relationship > 20) {
+          const hearts = avatar.relationship >= 80 ? 3 : (avatar.relationship >= 50 ? 2 : 1);
+          ctx.fillStyle = '#e74c3c';
+          ctx.font = '8px Nunito, sans-serif';
+          ctx.textAlign = 'center';
+          let heartText = '';
+          for (let i = 0; i < hearts; i++) heartText += '\u2764';
+          ctx.fillText(heartText, sp.x - 28, sp.y - 8);
+        }
+      }
       // Player badge
       if (!avatar.isNPC && this.achievementSystem) {
         const badge = this.achievementSystem.getList().find(a => a.unlocked);
@@ -1846,6 +1879,15 @@ export class Game {
           ctx.fillStyle = 'var(--habbo-accent)';
           ctx.fillText(badge.icon, sp.x + 36, sp.y - 8);
         }
+      }
+      if (!avatar.isNPC && avatar.status) {
+        ctx.fillStyle = 'rgba(155,89,182,0.85)';
+        roundRect(ctx, sp.x - ctx.measureText(avatar.status).width / 2 - 4, sp.y - 30, ctx.measureText(avatar.status).width + 8, 12, 4);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 7px Nunito, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(avatar.status, sp.x, sp.y - 23);
       }
       if (avatar.isAFK) {
         ctx.fillStyle = 'var(--habbo-danger)';

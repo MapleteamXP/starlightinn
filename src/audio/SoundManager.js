@@ -22,7 +22,39 @@ export class SoundManager {
     }
   }
 
-  setEnabled(v) { this.enabled = v; }
+  setEnabled(v) { this.enabled = v; this.stopAmbient(); }
+
+  playAmbient(roomId) {
+    this.stopAmbient();
+    if (!this.enabled) return;
+    this._ensureContext();
+    if (!this.ctx) return;
+    const ambientConfigs = {
+      beach: { freq: 150, type: 'sine', vol: 0.015 },
+      forest: { freq: 80, type: 'triangle', vol: 0.012 },
+      club: { freq: 60, type: 'sawtooth', vol: 0.01 },
+      spa: { freq: 200, type: 'sine', vol: 0.01 },
+    };
+    const config = ambientConfigs[roomId];
+    if (!config) return;
+    try {
+      this.ambientOsc = this.ctx.createOscillator();
+      this.ambientGain = this.ctx.createGain();
+      this.ambientOsc.type = config.type;
+      this.ambientOsc.frequency.setValueAtTime(config.freq, this.ctx.currentTime);
+      this.ambientGain.gain.setValueAtTime(config.vol * this.volume, this.ctx.currentTime);
+      this.ambientOsc.connect(this.ambientGain);
+      this.ambientGain.connect(this.ctx.destination);
+      this.ambientOsc.start();
+    } catch (e) {}
+  }
+
+  stopAmbient() {
+    try {
+      if (this.ambientOsc) { this.ambientOsc.stop(); this.ambientOsc.disconnect(); this.ambientOsc = null; }
+      if (this.ambientGain) { this.ambientGain.disconnect(); this.ambientGain = null; }
+    } catch (e) {}
+  }
 
   play(type) {
     if (!this.enabled) return;
@@ -99,6 +131,36 @@ export class SoundManager {
           gain.gain.setValueAtTime(0.05 * this.volume, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
           osc.start(now); osc.stop(now + 0.04);
+          break;
+        case 'treasure':
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(400, now);
+          osc.frequency.setValueAtTime(600, now + 0.1);
+          osc.frequency.setValueAtTime(800, now + 0.2);
+          osc.frequency.setValueAtTime(1000, now + 0.3);
+          gain.gain.setValueAtTime(0.1 * this.volume, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+          osc.start(now); osc.stop(now + 0.5);
+          break;
+        case 'levelup':
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.setValueAtTime(554, now + 0.1);
+          osc.frequency.setValueAtTime(659, now + 0.2);
+          osc.frequency.setValueAtTime(880, now + 0.3);
+          osc.frequency.setValueAtTime(1100, now + 0.45);
+          gain.gain.setValueAtTime(0.1 * this.volume, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+          osc.start(now); osc.stop(now + 0.7);
+          break;
+        case 'quest':
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523, now);
+          osc.frequency.setValueAtTime(659, now + 0.12);
+          osc.frequency.setValueAtTime(784, now + 0.24);
+          gain.gain.setValueAtTime(0.1 * this.volume, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+          osc.start(now); osc.stop(now + 0.4);
           break;
       }
     } catch (e) {}

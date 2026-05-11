@@ -187,6 +187,16 @@ export class ChatManager {
             }
           }
           return;
+        case 'status':
+          if (args) {
+            player.status = args;
+            player.say(`Status: ${args}`, this.chatColor, 'emote');
+            this.addHistory('You', `Status set: ${args}`, timeStr, 'emote');
+          } else {
+            player.status = null;
+            this.game.uiManager.showNotification('Status cleared', 'info');
+          }
+          return;
         default:
           if (this.game.uiManager) this.game.uiManager.showNotification(`Unknown command: /${cmd}. Type /help for commands.`, 'error');
           return;

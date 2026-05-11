@@ -176,8 +176,10 @@ export class UIManager {
     let html = `<div class="npc-profile-header"><span style="font-size:24px;">💼</span><div><div style="font-weight:700;font-size:14px;">${npc.name}'s Shop</div><div style="font-size:11px;color:var(--habbo-text-dim);">Limited time offers!</div></div><button class="npc-profile-close">&times;</button></div>`;
     html += `<div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">`;
     items.forEach(item => {
-      html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px;background:rgba(0,0,0,0.15);border-radius:6px;">
-        <span style="font-size:12px;">${item.icon} ${item.name}</span>
+      const rarityColor = item.price >= 500 ? '#f4d03f' : (item.price >= 200 ? '#e67e22' : '#aaa');
+      const rarityStars = item.price >= 500 ? '★★★' : (item.price >= 200 ? '★★' : '★');
+      html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px;background:rgba(0,0,0,0.15);border-radius:6px;border-left:2px solid ${rarityColor};">
+        <span style="font-size:12px;">${item.icon} ${item.name} <span style="font-size:9px;color:${rarityColor};">${rarityStars}</span></span>
         <button class="trade-buy" data-id="${item.id}" style="padding:4px 10px;background:var(--habbo-accent);color:var(--habbo-dark);border:none;border-radius:5px;font-weight:700;font-size:11px;cursor:pointer;">★${item.price}</button>
       </div>`;
     });
@@ -207,8 +209,20 @@ export class UIManager {
     gallery.forEach((shot, i) => {
       const div = document.createElement('div');
       div.className = 'gallery-item';
-      div.innerHTML = `<img src="${shot.data}" style="width:100%;border-radius:6px;display:block;"><div style="font-size:10px;color:var(--habbo-text-dim);text-align:center;margin-top:4px;">#${i + 1} — ${new Date(shot.date).toLocaleDateString()}</div>`;
+      div.innerHTML = `<img src="${shot.data}" style="width:100%;border-radius:6px;display:block;"><div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;"><span style="font-size:10px;color:var(--habbo-text-dim);">#${i + 1} — ${new Date(shot.date).toLocaleDateString()}</span><button class="gallery-dl" data-idx="${i}" style="padding:2px 8px;background:var(--habbo-light);color:white;border:none;border-radius:4px;font-size:9px;cursor:pointer;font-family:inherit;">Download</button></div>`;
       grid.appendChild(div);
+    });
+    grid.querySelectorAll('.gallery-dl').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.idx);
+        const shot = gallery[idx];
+        if (shot) {
+          const a = document.createElement('a');
+          a.href = shot.data;
+          a.download = `starlight-screenshot-${idx + 1}.png`;
+          a.click();
+        }
+      });
     });
   }
 
@@ -559,6 +573,13 @@ export class UIManager {
     if (el) el.textContent = `Lv. ${prog.level} ${prog.title}`;
   }
 
+  updateChallengeBadge(text) {
+    const el = document.getElementById('challengeBadge');
+    if (!el) return;
+    if (text) { el.textContent = text; el.style.display = 'block'; }
+    else { el.style.display = 'none'; }
+  }
+
   updateToolButtons(selectedTool) {
     document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
     const map = { walk: 'toolWalk', place: 'toolPlace', pick: 'toolPick' };
@@ -640,7 +661,8 @@ export class UIManager {
       <div style="text-align:center;padding:12px;">
         <div style="font-size:56px;margin-bottom:4px;">${emoji}</div>
         <div style="font-weight:700;font-size:16px;">${pet.name}</div>
-        <div style="font-size:11px;color:var(--habbo-text-dim);margin-bottom:4px;">${pet.type.toUpperCase()} — Level ${pet.level}</div>
+        <div style="font-size:11px;color:var(--habbo-text-dim);margin-bottom:4px;">${pet.type.toUpperCase()} — Level ${pet.level} ${petSystem.getStage()?.icon || ''}</div>
+        <div style="font-size:10px;color:var(--habbo-accent);font-weight:700;margin-bottom:8px;">${petSystem.getStage()?.name || ''} Stage</div>
         <div class="pet-stat"><label>XP</label><div class="pet-bar"><div style="width:${(pet.xp / (pet.level * 100)) * 100}%;background:#9b59b6;"></div></div></div>
         <div class="pet-stat"><label>Hunger</label><div class="pet-bar"><div style="width:${pet.hunger}%;background:#e74c3c;"></div></div></div>
         <div class="pet-stat"><label>Happiness</label><div class="pet-bar"><div style="width:${pet.happiness}%;background:#f4d03f;"></div></div></div>

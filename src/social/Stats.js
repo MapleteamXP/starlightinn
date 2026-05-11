@@ -17,7 +17,10 @@ export class StatsSystem {
       totalCoinsEarned: 0,
       totalCoinsSpent: 0,
       stepsWalked: 0,
+      roomTime: {},
     };
+    this.currentRoom = null;
+    this.roomEnterTime = 0;
     this.load();
   }
 
@@ -34,7 +37,18 @@ export class StatsSystem {
 
   tick(dt) {
     this.data.totalPlayTime += dt;
+    if (this.currentRoom) {
+      this.data.roomTime[this.currentRoom] = (this.data.roomTime[this.currentRoom] || 0) + dt;
+    }
     if (Math.random() < 0.01) this.save();
+  }
+
+  enterRoom(roomId) {
+    if (this.currentRoom) {
+      this.data.roomTime[this.currentRoom] = (this.data.roomTime[this.currentRoom] || 0) + (Date.now() - this.roomEnterTime) / 1000;
+    }
+    this.currentRoom = roomId;
+    this.roomEnterTime = Date.now();
   }
 
   inc(key, amount = 1) {
@@ -45,8 +59,12 @@ export class StatsSystem {
   getStats() {
     const hours = Math.floor(this.data.totalPlayTime / 3600);
     const mins = Math.floor((this.data.totalPlayTime % 3600) / 60);
+    const roomEntries = Object.entries(this.data.roomTime || {});
+    const favRoom = roomEntries.sort((a, b) => b[1] - a[1])[0];
+    const favRoomName = favRoom ? `${favRoom[0]} (${Math.floor(favRoom[1] / 60)}m)` : 'None yet';
     return [
       { label: 'Play Time', value: `${hours}h ${mins}m` },
+      { label: 'Favorite Room', value: favRoomName },
       { label: 'Messages Sent', value: this.data.messagesSent },
       { label: 'Rooms Visited', value: this.data.roomsVisited },
       { label: 'Furniture Placed', value: this.data.furniturePlaced },

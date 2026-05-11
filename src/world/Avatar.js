@@ -38,6 +38,7 @@ export class Avatar {
     this.npcTimer = 0;
     this.waveTimer = 0;
     this.lastChatTime = 0;
+    this.relationship = 0;
     this.game = opts.game || null;
   }
 
