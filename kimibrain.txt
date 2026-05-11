@@ -5,130 +5,120 @@
 ================================================================================
 PROJECT OVERVIEW
 ================================================================================
-Starlight Inn is a Habbo-style isometric virtual world built as a single-file
-HTML5 Canvas game. It runs entirely client-side with localStorage persistence.
+Starlight Inn is a Habbo-style isometric virtual world.
 
 - Repo: https://github.com/MapleteamXP/starlightinn
 - Live site: https://mapleteamxp.github.io/starlightinn/
 - Deploys via GitHub Actions from ./docs folder to Pages on push to main
 - Local dev server: node server.js (port 8080)
+- Build: node build.js (esbuild bundles src/ into docs/index.html)
 
 ================================================================================
 CURRENT VERSION
 ================================================================================
-v1.2 DEPLOYED — v1.3 IN PROGRESS (agent building)
+v2.0 DEPLOYED — Starlight Engine with modular architecture
 
-v1.2 features (DEPLOYED):
-- Avatar Customization Panel with live preview
-- Hats (cap, beanie, crown, wizard) and glasses (shades, round) accessories
-- 7 hair styles (short, spiky, long, mohawk, bald, curly, bob)
-- 13 rooms total (lobby, beach, forest, game, rooftop, club + pool, restaurant,
-  library, spa, cinema, garden, arcade)
-- 13 furniture types + 3 extra (statue, clock, chest)
-- A* pathfinding with click-to-move
-- Furniture catalog, inventory, placement & stacking
-- NPCs with autonomous AI
-- Chat bubbles over avatars
-- Currency system (StarCoins)
+v2.0 features (DEPLOYED):
+- ES module architecture in src/ folder, bundled to single HTML by esbuild
+- StarlightEngine namespace with clean subsystem separation:
+  - engine/Core.js — Math, iso projection, A* pathfinding
+  - engine/Game.js — Main game loop, renderer, input, camera
+  - assets/Generator.js — Procedural canvas for avatars, furniture, tiles
+  - world/Avatar.js — Avatar with pathfinding, sitting, chat bubbles, NPC AI
+  - world/Furniture.js — Placement, footprint, stacking
+  - world/Room.js — Map grid, walkability, stack heights
+  - world/Data.js — 38 furniture items, 13 room templates
+  - social/Chat.js — ChatManager with commands, rate limiting, filtering
+  - social/NPC.js — NPCManager with spawning, AI, greetings
+  - economy/Currency.js + Inventory.js — Currency and inventory systems
+  - ui/UIManager.js — Panel creation, catalog, inventory, customize rendering
+  - security/Filter.js — Content filter, safe mode
+  - minigames/Framework.js — BaseMinigame state machine
+  - minigames/RingUppercut.js — Boxing minigame with timing mechanic
+- Habbo-style chat bubbles with color picker (12 colors)
+- Chat commands: /wave, /dance, /sit, /stand, /me, /whisper, /shout, /help
+- Avatar customization: 7 hair styles, 4 hats, 2 glasses, color pickers
+- 13 rooms with unique floor/wall types
+- 38 furniture types in catalog
+- NPCs with autonomous movement and proximity greetings
 - localStorage persistence for avatar appearance
-
-v1.3 features (IN PROGRESS — agent atatyu9w0 building):
-- 20+ new placeable furniture items (mirror, jukebox, arcade, barrel, bench,
-  fireplace, chandelier, neon_sign, window, door, stove, dresser, wardrobe,
-  sink, toilet, bathtub, pet_bed, food_bowl, laptop, phone, radio, guitar,
-  easel, etc.)
-- Room scenery system — unique decorative elements per room that can't be picked
-  up (palm trees, rocks, bushes, neon lights, bookshelves, etc.)
-- Room ambience effects (seagulls, water shimmer, pulsing lights, falling leaves)
-- Drag-and-drop inventory placement on canvas
-- Chat history panel with timestamps
-- Chat commands (/wave, /dance, /sit, /stand, /clear, /help, /rooms, /catalog, /me)
-- Content security: word filter, rate limiting, report player, safe mode toggle
+- Safe mode toggle
 
 ================================================================================
 FILE STRUCTURE
 ================================================================================
-./docs/index.html     — MAIN GAME FILE (deployed to GitHub Pages)
-./index.html          — Mirror copy (must stay identical to docs/index.html)
-./server.js           — Local static file server on port 8080
-./.github/workflows/static.yml — GitHub Actions Pages deploy workflow
+./src/                — ES module source files
+  engine/             — Core, Game
+  assets/             — Generator
+  world/              — Avatar, Furniture, Room, Data
+  social/             — Chat, NPC
+  economy/            — Currency, Inventory
+  ui/                 — UIManager
+  security/           — Filter
+  minigames/          — Framework, RingUppercut
+  main.js             — Entry point
+  style.css           — All styles
+  index.template.html — HTML shell
+./docs/index.html     — BUNDLED output (deployed to GitHub Pages)
+./index.html          — Mirror copy
+./build.js            — esbuild bundler script
+./package.json        — npm config (esbuild dev dependency)
+./server.js           — Local dev server
+./.github/workflows/static.yml — GitHub Actions deploy
 ./kimibrain.txt       — This file
 
-The game is a SINGLE HTML file (~2000+ lines) containing:
-- CSS styles (Habbo-inspired teal/gold color scheme)
-- HTML UI overlay (top bar, toolbar, panels, chat bar)
-- JavaScript game engine (~1500+ lines of JS inside <script>)
-
 ================================================================================
-ARCHITECTURE
+BUILD & DEPLOYMENT CHECKLIST
 ================================================================================
-
-CORE CONSTANTS:
-  TILE_W = 64, TILE_H = 32, WALL_H = 48, AVATAR_H = 52
-
-KEY FUNCTIONS:
-  isoToScreen(ix, iy)        — Isometric projection
-  screenToIso(sx, sy)        — Reverse projection
-  createAvatarCanvas(...)    — Procedural avatar renderer (with accessories)
-  createFurnitureCanvas(type)— Procedural furniture renderer
-  getTilePattern(type)       — Cached floor tile textures
-  getWallPattern(color)      — Cached wall textures
-  aStar(start, goal, walkFn) — A* pathfinding with diagonal support
-
-KEY CLASSES:
-  Avatar     — Position, path, appearance (skin/hair/shirt/pants/shoes/hat/glasses),
-               animations (walk/dance/wave/sit), chat bubbles, NPC AI
-  Furniture  — Type, position, footprint, stackable flag, rotation
-  Room       — Map grid, furniture list, avatar list, walkability, stack heights
-  Game       — Main loop, camera, rendering (z-sort), input, UI state, panels,
-               inventory, currency, settings, particles
-
-DATA STRUCTURES:
-  FURNITURE_CATALOG  — Array of buyable items {id, name, price, icon, footprint,
-                       stackable, desc}
-  ROOM_TEMPLATES     — Array of room configs {id, name, description, width,
-                       height, floor, wall, map, furniture, scenery}
-
-ASSET CACHING:
-  Assets = { avatars: {}, furniture: {}, tiles: {} }
-  Avatars cached by assetKey = "skin|hairColor|hairStyle|shirt|pants|shoes|hat|glasses"
-
-================================================================================
-DEPLOYMENT CHECKLIST
-================================================================================
-1. Make edits to docs/index.html
-2. Copy docs/index.html to index.html (root)
-3. git add docs/index.html index.html
-4. git commit -m "vX.Y: description"
-5. git push origin main
-6. Wait for GitHub Actions deploy (check: curl API or just wait ~60s)
-7. Verify live site: https://mapleteamxp.github.io/starlightinn/
+1. Make edits to src/ files
+2. Run: node build.js
+3. Verify: node -e "const fs=require('fs'); const h=fs.readFileSync('docs/index.html','utf8'); const m=h.match(/<script>([\s\S]*?)<\/script>/); new Function(m[1].slice(8,-9)); console.log('OK');"
+4. Copy docs/index.html to index.html (build.js does this automatically)
+5. git add -A
+6. git commit -m "vX.Y: description"
+7. git push origin main
+8. Wait for GitHub Actions deploy (~30s)
+9. Verify live site
 
 ================================================================================
 KNOWN ISSUES / TECH DEBT
 ================================================================================
-- File is very large (~2000+ lines single HTML file). Consider splitting into
-  modules if it grows much larger, though single-file is nice for Pages deploy.
-- Some extra code at end of file (keyboard help, touch controls, random events,
-  performance monitor, etc.) was added by earlier agent and uses prototype
-  monkey-patching. Consider integrating cleanly into Game class.
-- No server-side: all state is client-side. No real multiplayer.
-- Asset generation is procedural canvas — limits art quality vs pixel art sprites.
+- Generator.js only has art for ~13 furniture types; need art for all 38
+- Room scenery system defined in Data.js but not rendered
+- Drag-and-drop inventory not implemented
+- No sound effects or music
+- No server-side: all state is client-side
+- Asset generation is procedural canvas — limits art quality
+- Minigame panel HTML not in template (created dynamically?)
 
 ================================================================================
 USER PRIORITIES (from conversation history)
 ================================================================================
 1. "real habbo esque areas" ✅ (13 unique rooms)
-2. "multiple habbo style avatars" ⚠️ (one body type, but many customization combos)
-3. "clothes to wear and customize" ✅ (shirt/pants colors + hat/glasses accessories)
+2. "multiple habbo style avatars" ⚠️ (one body type, many customization combos)
+3. "clothes to wear and customize" ✅ (shirt/pants colors + hat/glasses)
 4. "all accessories and clothes must fit on characters properly" ✅
 5. "same structure for all characters (head, body, legs, arms)" ✅
 6. "changing hair colors and clothes and skin all working" ✅
-7. "placeable items" 🔄 (v1.3 agent adding 20+ new items)
-8. "all rooms look different" 🔄 (v1.3 agent adding scenery system)
-9. "click and drag items from bag to room" 🔄 (v1.3 agent adding drag-drop)
-10. "chatting system" 🔄 (v1.3 agent adding chat history + commands)
-11. "security" 🔄 (v1.3 agent adding filter, rate limit, report, safe mode)
+7. "placeable items" ✅ (38 in catalog, art needed for ~25)
+8. "all rooms look different" ⚠️ (different floors/walls, scenery not rendered)
+9. "click and drag items from bag to room" ❌ (not implemented)
+10. "chatting system" ✅ (bubbles, colors, commands, history, rate limit)
+11. "security" ✅ (filter, safe mode, rate limiting)
+12. "ring uppercut minigame" ✅ (built, needs gameplay polish)
+13. "solid engine integrity" ✅ (modular architecture)
+
+================================================================================
+NEXT UP (suggested improvements)
+================================================================================
+- Complete procedural art for all 38 furniture types
+- Render room scenery (palm trees, rocks, etc.)
+- Implement drag-and-drop inventory placement
+- Add sound effects
+- Polish Ring Uppercut gameplay (better UI, feedback)
+- Add more minigames
+- Mobile touch control polish
+- Server-side multiplayer (future)
 
 ================================================================================
 SESSION NOTES
