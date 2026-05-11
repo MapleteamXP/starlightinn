@@ -1,1198 +1,531 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Starlight Inn ✨</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=VT323&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg-deep: #1a1428; --bg-panel: #2a2040; --bg-panel-light: #3a3060;
-  --accent-gold: #ffd700; --accent-warm: #ff9f5e; --accent-cozy: #c78d6e;
-  --accent-mint: #7dd3c0; --accent-lavender: #b8a9d9;
-  --text-main: #f0e6ff; --text-muted: #a090c0;
-  --rare: #4fc3f7; --vrare: #ba68c8; --aunique: #ff8a65; --unique: #ffd54f; --ltd: #ff5252;
-  --pixel: 'VT323', monospace; --body: 'Nunito', sans-serif;
-}
-* { margin:0; padding:0; box-sizing:border-box; image-rendering: pixelated; }
-html, body { width:100%; height:100%; background: var(--bg-deep); color: var(--text-main); font-family: var(--body); overflow: hidden; touch-action: none; }
-
-/* LANDING */
-#landing { position: fixed; inset:0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  background: linear-gradient(180deg, #1a1428 0%, #2a1a40 40%, #3a2a50 100%); z-index: 1000;
-  transition: opacity 0.8s ease, transform 0.8s ease; }
-#landing.hidden { opacity:0; pointer-events:none; transform: scale(1.05); }
-.landing-stars { position: absolute; inset:0; overflow: hidden; }
-.star { position: absolute; width: 3px; height: 3px; background: white; border-radius: 50%; animation: twinkle 2s infinite ease-in-out alternate; }
-@keyframes twinkle { 0%{opacity:0.3; transform:scale(1);} 100%{opacity:1; transform:scale(1.5);} }
-.landing-logo { font-family: var(--pixel); font-size: clamp(2rem, 6vw, 4rem); color: var(--accent-gold);
-  text-shadow: 0 0 20px rgba(255,215,0,0.4), 0 4px 0 #8b6914; letter-spacing: 0.1em; margin-bottom: 0.5rem; z-index: 2; }
-.landing-sub { font-size: clamp(0.8rem, 2vw, 1.1rem); color: var(--text-muted); margin-bottom: 2rem; z-index: 2; letter-spacing: 0.05em; }
-.landing-card { background: var(--bg-panel); border: 2px solid var(--bg-panel-light); border-radius: 16px;
-  padding: 2rem; max-width: 420px; width: 90%; z-index: 2; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
-.landing-card h2 { font-family: var(--pixel); font-size: 1.5rem; color: var(--accent-warm); margin-bottom: 1rem; text-align: center; }
-.landing-input { width: 100%; padding: 0.75rem 1rem; border-radius: 10px; border: 2px solid var(--bg-panel-light);
-  background: var(--bg-deep); color: var(--text-main); font-family: var(--body); font-size: 1rem;
-  margin-bottom: 1rem; outline: none; transition: border-color 0.2s; }
-.landing-input:focus { border-color: var(--accent-gold); }
-.btn { display: inline-block; padding: 0.75rem 1.5rem; border-radius: 12px; border: none;
-  font-family: var(--body); font-weight: 800; font-size: 1rem; cursor: pointer; transition: all 0.2s; text-align: center; }
-.btn-primary { background: linear-gradient(135deg, var(--accent-gold), var(--accent-warm)); color: #2a1a00;
-  width: 100%; box-shadow: 0 4px 15px rgba(255,159,94,0.3); }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,159,94,0.4); }
-.btn-secondary { background: var(--bg-panel-light); color: var(--text-main); border: 2px solid var(--accent-lavender); }
-.btn-secondary:hover { background: var(--accent-lavender); color: var(--bg-deep); }
-.btn-danger { background: #5a2030; color: #ff9999; border: 2px solid #ff5252; }
-.btn-danger:hover { background: #ff5252; color: #fff; }
-.landing-footer { margin-top: 2rem; font-size: 0.75rem; color: var(--text-muted); z-index: 2; text-align: center; }
-
-/* GAME */
-#game-container { position: fixed; inset:0; display: none; }
-#game-container.active { display: block; }
-#game-canvas { position: absolute; inset:0; width: 100%; height: 100%; cursor: crosshair; }
-
-.ui-panel { position: absolute; background: rgba(26, 20, 40, 0.92); border: 2px solid var(--bg-panel-light);
-  border-radius: 12px; padding: 0.75rem; backdrop-filter: blur(8px); z-index: 100; }
-.ui-topbar { top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; align-items: center;
-  padding: 0.5rem 1rem; height: 52px; }
-.ui-topbar .player-info { display: flex; align-items: center; gap: 0.75rem; }
-.ui-topbar .avatar-mini { width: 36px; height: 36px; border-radius: 8px; border: 2px solid var(--accent-gold); background: var(--bg-panel); image-rendering: pixelated; }
-.ui-topbar .player-name { font-family: var(--pixel); font-size: 1.1rem; color: var(--accent-gold); }
-.ui-topbar .player-badges { display: flex; gap: 0.25rem; }
-.badge { font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 6px; font-weight: 700; font-family: var(--pixel); }
-.badge-rare { background: var(--rare); color: #001; } .badge-vrare { background: var(--vrare); color: #fff; }
-.badge-aunique { background: var(--aunique); color: #001; } .badge-unique { background: var(--unique); color: #001; }
-.badge-ltd { background: var(--ltd); color: #fff; }
-.ui-topbar .actions { display: flex; gap: 0.5rem; }
-.ui-btn { width: 38px; height: 38px; border-radius: 10px; border: 2px solid var(--bg-panel-light); background: var(--bg-panel);
-  color: var(--text-main); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-.ui-btn:hover { border-color: var(--accent-gold); background: var(--bg-panel-light); }
-.ui-btn.active { border-color: var(--accent-mint); background: rgba(125,211,192,0.15); }
-
-.ui-dock { bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 0.5rem; padding: 0.5rem; }
-.dock-btn { min-width: 64px; padding: 0.4rem 0.6rem; border-radius: 10px; border: 2px solid var(--bg-panel-light);
-  background: var(--bg-panel); color: var(--text-main); font-family: var(--pixel); font-size: 0.85rem;
-  cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; transition: all 0.2s; }
-.dock-btn .icon { font-size: 1.3rem; }
-.dock-btn:hover, .dock-btn.active { border-color: var(--accent-gold); background: var(--bg-panel-light); transform: translateY(-3px); }
-
-#chat-panel { bottom: 80px; left: 10px; width: 320px; max-height: 240px; display: flex; flex-direction: column; gap: 0.5rem; }
-#chat-messages { flex: 1; overflow-y: auto; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.3rem; max-height: 180px; }
-.chat-msg { padding: 0.3rem 0.5rem; border-radius: 6px; background: rgba(58,48,96,0.5); }
-.chat-msg .chat-name { font-family: var(--pixel); color: var(--accent-warm); font-weight: 700; }
-.chat-msg .chat-text { color: var(--text-main); }
-.chat-msg.system { background: rgba(255,215,0,0.1); } .chat-msg.system .chat-name { color: var(--accent-gold); }
-#chat-input-row { display: flex; gap: 0.4rem; }
-#chat-input { flex: 1; padding: 0.4rem 0.6rem; border-radius: 8px; border: 2px solid var(--bg-panel-light);
-  background: var(--bg-deep); color: var(--text-main); font-family: var(--body); outline: none; }
-#chat-input:focus { border-color: var(--accent-mint); }
-
-#trade-window { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 520px;
-  max-height: 80vh; display: none; flex-direction: column; z-index: 200; }
-#trade-window.active { display: flex; }
-.trade-header { display: flex; justify-content: space-between; align-items: center;
-  padding-bottom: 0.5rem; border-bottom: 2px solid var(--bg-panel-light); }
-.trade-header h3 { font-family: var(--pixel); font-size: 1.2rem; color: var(--accent-gold); }
-.trade-columns { display: flex; gap: 1rem; padding: 1rem 0; }
-.trade-column { flex: 1; background: var(--bg-deep); border-radius: 10px; padding: 0.75rem; min-height: 200px; }
-.trade-column h4 { font-family: var(--pixel); font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem; }
-.trade-slot { width: 56px; height: 56px; border-radius: 8px; border: 2px dashed var(--bg-panel-light);
-  background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer;
-  font-size: 1.5rem; position: relative; transition: all 0.2s; }
-.trade-slot:hover { border-color: var(--accent-gold); } .trade-slot.filled { border-style: solid; }
-.trade-slot.rare { border-color: var(--rare); box-shadow: 0 0 8px var(--rare); }
-.trade-slot.vrare { border-color: var(--vrare); box-shadow: 0 0 8px var(--vrare); }
-.trade-slot.aunique { border-color: var(--aunique); box-shadow: 0 0 10px var(--aunique); }
-.trade-slot.unique { border-color: var(--unique); box-shadow: 0 0 12px var(--unique); }
-.trade-slot.ltd { border-color: var(--ltd); box-shadow: 0 0 14px var(--ltd); animation: ltdPulse 1.5s infinite; }
-@keyframes ltdPulse { 0%,100%{box-shadow:0 0 10px var(--ltd);} 50%{box-shadow:0 0 20px var(--ltd);} }
-.trade-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; }
-.trade-actions { display: flex; gap: 0.5rem; justify-content: center; padding-top: 0.5rem; }
-
-#inventory-panel { top: 70px; right: 10px; width: 260px; display: none; flex-direction: column; max-height: 70vh; }
-#inventory-panel.active { display: flex; }
-.inv-header { font-family: var(--pixel); font-size: 1rem; color: var(--accent-gold);
-  padding-bottom: 0.5rem; border-bottom: 2px solid var(--bg-panel-light); display: flex; justify-content: space-between; }
-.inv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; padding-top: 0.5rem; }
-.inv-item { width: 48px; height: 48px; border-radius: 8px; border: 2px solid var(--bg-panel-light); background: var(--bg-deep);
-  display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.3rem;
-  position: relative; transition: all 0.15s; }
-.inv-item:hover { transform: scale(1.1); z-index: 10; }
-.inv-item.rare { border-color: var(--rare); } .inv-item.vrare { border-color: var(--vrare); }
-.inv-item.aunique { border-color: var(--aunique); } .inv-item.unique { border-color: var(--unique); }
-.inv-item.ltd { border-color: var(--ltd); animation: ltdPulse 2s infinite; }
-.inv-item.selected { border-color: var(--accent-gold); box-shadow: 0 0 10px var(--accent-gold); background: rgba(255,215,0,0.1); }
-
-#area-selector { top: 70px; left: 10px; width: 220px; display: none; flex-direction: column; }
-#area-selector.active { display: flex; }
-.area-list { display: flex; flex-direction: column; gap: 0.3rem; padding-top: 0.5rem; }
-.area-btn { padding: 0.5rem 0.75rem; border-radius: 8px; border: 2px solid var(--bg-panel-light); background: var(--bg-panel);
-  color: var(--text-main); font-family: var(--pixel); font-size: 0.9rem; cursor: pointer;
-  display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s; }
-.area-btn:hover, .area-btn.active { border-color: var(--accent-mint); background: rgba(125,211,192,0.1); }
-.area-btn .area-icon { font-size: 1.2rem; }
-
-#char-select-overlay { position: fixed; inset:0; background: linear-gradient(180deg, #1a1428 0%, #2a2040 100%);
-  z-index: 500; display: none; flex-direction: column; align-items: center; padding: 2rem; overflow-y: auto; }
-#char-select-overlay.active { display: flex; }
-.char-select-title { font-family: var(--pixel); font-size: 2rem; color: var(--accent-gold);
-  margin-bottom: 1.5rem; text-shadow: 0 0 15px rgba(255,215,0,0.3); }
-.char-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; max-width: 700px; width: 100%; }
-.char-card { background: var(--bg-panel); border: 3px solid var(--bg-panel-light); border-radius: 14px;
-  padding: 1rem; cursor: pointer; display: flex; flex-direction: column; align-items: center;
-  gap: 0.5rem; transition: all 0.25s; }
-.char-card:hover { border-color: var(--accent-gold); transform: translateY(-5px); }
-.char-card.selected { border-color: var(--accent-mint); background: rgba(125,211,192,0.1); box-shadow: 0 0 20px rgba(125,211,192,0.2); }
-.char-canvas { width: 80px; height: 80px; border-radius: 10px; background: var(--bg-deep); image-rendering: pixelated; }
-.char-name { font-family: var(--pixel); font-size: 1rem; color: var(--accent-warm); }
-.char-desc { font-size: 0.7rem; color: var(--text-muted); text-align: center; }
-
-#toast-container { position: fixed; top: 70px; right: 10px; display: flex; flex-direction: column; gap: 0.4rem; z-index: 300; pointer-events: none; }
-.toast { background: var(--bg-panel); border: 2px solid var(--bg-panel-light); border-radius: 10px;
-  padding: 0.6rem 1rem; font-size: 0.85rem; color: var(--text-main);
-  animation: toastIn 0.4s ease, toastOut 0.4s ease 2.6s forwards; pointer-events: auto; max-width: 260px; }
-.toast.success { border-color: var(--accent-mint); } .toast.warning { border-color: var(--accent-warm); }
-.toast.rare { border-color: var(--rare); } .toast.vrare { border-color: var(--vrare); } .toast.unique { border-color: var(--unique); }
-@keyframes toastIn { from{opacity:0; transform:translateX(30px);} to{opacity:1; transform:translateX(0);} }
-@keyframes toastOut { from{opacity:1; transform:translateX(0);} to{opacity:0; transform:translateX(30px);} }
-
-.daily-reward-popup { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
-  z-index: 600; animation: fadeIn 0.3s ease; }
-.reward-card { background: var(--bg-panel); border: 3px solid var(--accent-gold); border-radius: 20px;
-  padding: 2rem; text-align: center; max-width: 320px; animation: popIn 0.4s ease; box-shadow: 0 0 40px rgba(255,215,0,0.2); }
-.reward-title { font-family: var(--pixel); font-size: 1.3rem; color: var(--accent-gold); margin-bottom: 1rem; }
-.reward-item { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1rem;
-  border-radius: 12px; background: var(--bg-deep); margin-bottom: 1rem; }
-.reward-item .reward-emoji { font-size: 3rem; } .reward-item .reward-name { font-family: var(--pixel); font-size: 1.1rem; color: var(--text-main); }
-.reward-item .reward-rarity { font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 6px; }
-.reward-item.rare .reward-rarity { background: var(--rare); color: #001; } .reward-item.vrare .reward-rarity { background: var(--vrare); color: #fff; }
-.reward-item.aunique .reward-rarity { background: var(--aunique); color: #001; } .reward-item.unique .reward-rarity { background: var(--unique); color: #001; }
-.reward-item.ltd .reward-rarity { background: var(--ltd); color: #fff; }
-
-#profile-panel { display: none; z-index: 110; position: absolute; top: 70px; left: 50%; transform: translateX(-50%); width: 360px;
-  max-height: 70vh; flex-direction: column; background: rgba(26, 20, 40, 0.92); border: 2px solid var(--bg-panel-light);
-  border-radius: 12px; padding: 0.75rem; backdrop-filter: blur(8px); }
-#profile-panel.active { display: flex; }
-
-/* Customize Panel */
-#customize-panel { display: none; z-index: 110; position: absolute; top: 70px; right: 10px; width: 280px;
-  max-height: 70vh; flex-direction: column; background: rgba(26, 20, 40, 0.92); border: 2px solid var(--bg-panel-light);
-  border-radius: 12px; padding: 1rem; backdrop-filter: blur(8px); }
-#customize-panel.active { display: flex; }
-.color-row { display: flex; gap: 0.3rem; flex-wrap: wrap; margin: 0.5rem 0; }
-.color-swatch { width: 28px; height: 28px; border-radius: 6px; border: 2px solid transparent; cursor: pointer; transition: all 0.15s; }
-.color-swatch:hover { transform: scale(1.15); }
-.color-swatch.selected { border-color: var(--accent-gold); box-shadow: 0 0 8px var(--accent-gold); }
-.customize-preview { width: 100px; height: 100px; margin: 0.5rem auto; border-radius: 12px; background: var(--bg-deep); }
-
-/* Settings Panel */
-#settings-panel { display: none; z-index: 110; position: absolute; top: 70px; right: 10px; width: 280px;
-  flex-direction: column; background: rgba(26, 20, 40, 0.92); border: 2px solid var(--bg-panel-light);
-  border-radius: 12px; padding: 1rem; backdrop-filter: blur(8px); }
-#settings-panel.active { display: flex; }
-.setting-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--bg-panel-light); }
-.setting-row:last-child { border-bottom: none; }
-.toggle { width: 44px; height: 24px; border-radius: 12px; background: var(--bg-panel-light); position: relative; cursor: pointer; transition: background 0.2s; }
-.toggle.on { background: var(--accent-mint); }
-.toggle-knob { width: 20px; height: 20px; border-radius: 50%; background: #fff; position: absolute; top: 2px; left: 2px; transition: left 0.2s; }
-.toggle.on .toggle-knob { left: 22px; }
-
-/* Chat bubbles */
-.chat-bubble { position: absolute; background: rgba(26,20,40,0.95); border: 1px solid var(--bg-panel-light); border-radius: 10px;
-  padding: 0.3rem 0.6rem; font-size: 0.75rem; color: var(--text-main); pointer-events: none; z-index: 50;
-  max-width: 160px; text-align: center; animation: bubbleIn 0.3s ease; }
-.chat-bubble::after { content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
-  border-width: 6px 6px 0; border-style: solid; border-color: var(--bg-panel-light) transparent transparent; }
-@keyframes bubbleIn { from { opacity:0; transform: translateY(6px) scale(0.9); } to { opacity:1; transform: translateY(0) scale(1); } }
-
-/* Mobile controls */
-#mobile-controls { display: none; position: fixed; bottom: 80px; left: 10px; z-index: 150; }
-#mobile-controls.active { display: block; }
-.dpad { position: relative; width: 120px; height: 120px; }
-.dpad-btn { position: absolute; width: 40px; height: 40px; background: rgba(42,32,64,0.7); border: 2px solid var(--bg-panel-light);
-  border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--text-main);
-  user-select: none; touch-action: none; }
-.dpad-up { top: 0; left: 40px; } .dpad-down { bottom: 0; left: 40px; }
-.dpad-left { top: 40px; left: 0; } .dpad-right { top: 40px; right: 0; }
-
-@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
-@keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 80% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); } }
-
-@media (max-width: 640px) {
-  .ui-dock { gap: 0.3rem; } .dock-btn { min-width: 50px; font-size: 0.7rem; }
-  #chat-panel { width: calc(100% - 20px); bottom: 70px; } #trade-window { width: calc(100% - 20px); }
-  .trade-columns { flex-direction: column; } #profile-panel { width: calc(100% - 20px) !important; }
-  #customize-panel, #settings-panel { width: calc(100% - 20px); left: 10px; right: 10px; }
-  .reward-card { padding: 1.5rem; }
-  #mobile-controls { display: block; }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Starlight Inn - Virtual World</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --habbo-teal: #0e7c8a;
+      --habbo-dark: #073a42;
+      --habbo-light: #1a9aaa;
+      --habbo-accent: #f4d03f;
+      --habbo-bg: #0a3d44;
+      --habbo-panel: #0e5a63;
+      --habbo-panel-border: #178a99;
+      --habbo-text: #ffffff;
+      --habbo-text-dim: #a0d8e0;
+      --habbo-danger: #e74c3c;
+      --habbo-success: #2ecc71;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Nunito', sans-serif; background: var(--habbo-bg); color: var(--habbo-text);
+      overflow: hidden; width: 100vw; height: 100vh; user-select: none;
+    }
+    #gameCanvas { display: block; width: 100vw; height: 100vh; cursor: crosshair; }
+    .ui-overlay { position: absolute; pointer-events: none; top: 0; left: 0; right: 0; bottom: 0; }
+    .ui-overlay > * { pointer-events: auto; }
+    #topBar {
+      position: absolute; top: 0; left: 0; right: 0; height: 48px;
+      background: linear-gradient(180deg, var(--habbo-panel) 0%, var(--habbo-dark) 100%);
+      border-bottom: 3px solid var(--habbo-accent); display: flex;
+      align-items: center; justify-content: space-between; padding: 0 16px; z-index: 100;
+    }
+    #logo { font-size: 20px; font-weight: 800; color: var(--habbo-accent); text-shadow: 2px 2px 0 var(--habbo-dark); letter-spacing: 1px; }
+    #topBarRight { display: flex; align-items: center; gap: 12px; }
+    .currency-badge {
+      background: var(--habbo-accent); color: var(--habbo-dark); padding: 4px 12px;
+      border-radius: 16px; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 6px;
+    }
+    .currency-badge::before { content: "\2605"; font-size: 16px; }
+    .top-btn {
+      background: var(--habbo-light); border: 2px solid var(--habbo-panel-border); color: white;
+      padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: inherit;
+      font-weight: 600; font-size: 13px; transition: all 0.15s;
+    }
+    .top-btn:hover { background: var(--habbo-accent); color: var(--habbo-dark); transform: translateY(-1px); }
+    #toolbar {
+      position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); height: 64px;
+      background: linear-gradient(0deg, var(--habbo-panel) 0%, var(--habbo-dark) 100%);
+      border: 3px solid var(--habbo-panel-border); border-bottom: none;
+      border-radius: 16px 16px 0 0; display: flex; align-items: center;
+      padding: 0 12px; gap: 6px; z-index: 100; box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+    }
+    .tool-btn {
+      width: 52px; height: 52px; background: var(--habbo-light); border: 2px solid var(--habbo-panel-border);
+      border-radius: 10px; color: white; cursor: pointer; font-family: inherit; font-size: 11px;
+      font-weight: 700; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 2px; transition: all 0.15s; position: relative;
+    }
+    .tool-btn .icon { font-size: 20px; }
+    .tool-btn:hover { background: var(--habbo-accent); color: var(--habbo-dark); transform: translateY(-4px); }
+    .tool-btn.active { background: var(--habbo-accent); color: var(--habbo-dark); box-shadow: 0 0 10px rgba(244,208,63,0.5); }
+    .panel {
+      position: absolute; background: var(--habbo-panel); border: 3px solid var(--habbo-panel-border);
+      border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 200;
+      display: none; flex-direction: column; overflow: hidden; min-width: 280px;
+    }
+    .panel.open { display: flex; }
+    .panel-header {
+      background: linear-gradient(180deg, var(--habbo-light) 0%, var(--habbo-teal) 100%);
+      padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 2px solid var(--habbo-accent);
+    }
+    .panel-title { font-weight: 700; font-size: 15px; }
+    .panel-close { background: var(--habbo-danger); border: none; color: white; width: 24px; height: 24px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 14px; line-height: 1; }
+    .panel-body { padding: 12px; overflow-y: auto; max-height: 60vh; }
+    #navigatorPanel { top: 60px; left: 12px; width: 320px; }
+    .room-list { display: flex; flex-direction: column; gap: 6px; }
+    .room-item { background: rgba(0,0,0,0.2); border: 2px solid transparent; border-radius: 8px; padding: 10px 12px; cursor: pointer; transition: all 0.15s; }
+    .room-item:hover { border-color: var(--habbo-accent); background: rgba(244,208,63,0.1); }
+    .room-item .room-name { font-weight: 700; font-size: 14px; }
+    .room-item .room-desc { font-size: 12px; color: var(--habbo-text-dim); margin-top: 2px; }
+    .room-item .room-meta { font-size: 11px; color: var(--habbo-accent); margin-top: 4px; }
+    #catalogPanel { top: 60px; right: 12px; width: 360px; }
+    .catalog-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .catalog-item { background: rgba(0,0,0,0.2); border: 2px solid var(--habbo-panel-border); border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; transition: all 0.15s; }
+    .catalog-item:hover { border-color: var(--habbo-accent); transform: scale(1.05); }
+    .catalog-item .cat-icon { font-size: 28px; margin-bottom: 4px; }
+    .catalog-item .cat-name { font-size: 11px; font-weight: 600; }
+    .catalog-item .cat-price { font-size: 11px; color: var(--habbo-accent); font-weight: 700; }
+    #inventoryPanel { bottom: 76px; left: 50%; transform: translateX(-50%); width: 520px; }
+    .inv-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+    .inv-item { aspect-ratio: 1; background: rgba(0,0,0,0.2); border: 2px solid var(--habbo-panel-border); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; transition: all 0.15s; position: relative; }
+    .inv-item:hover { border-color: var(--habbo-accent); background: rgba(244,208,63,0.15); }
+    .inv-item .inv-count { position: absolute; bottom: 2px; right: 4px; font-size: 10px; font-weight: 700; color: var(--habbo-accent); }
+    #settingsPanel { top: 60px; right: 50%; transform: translateX(50%); width: 300px; }
+    .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .setting-row label { font-size: 13px; }
+    .setting-row input[type="range"] { width: 120px; }
+    .setting-row select { background: var(--habbo-dark); color: white; border: 1px solid var(--habbo-panel-border); border-radius: 4px; padding: 4px 8px; font-family: inherit; }
+    #chatBar { position: absolute; bottom: 76px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 100; background: var(--habbo-panel); padding: 6px 10px; border-radius: 8px; border: 2px solid var(--habbo-panel-border); }
+    #chatInput { width: 340px; padding: 8px 12px; border: 2px solid var(--habbo-panel-border); border-radius: 6px; background: var(--habbo-dark); color: white; font-family: inherit; font-size: 14px; outline: none; }
+    #chatInput::placeholder { color: var(--habbo-text-dim); }
+    #chatSend { background: var(--habbo-accent); border: none; color: var(--habbo-dark); padding: 8px 16px; border-radius: 6px; font-family: inherit; font-weight: 700; cursor: pointer; font-size: 13px; }
+    #chatSend:hover { filter: brightness(1.1); }
+    .chat-bubble { position: absolute; background: white; color: #333; padding: 6px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; max-width: 220px; word-wrap: break-word; box-shadow: 0 2px 8px rgba(0,0,0,0.3); pointer-events: none; z-index: 50; transform: translate(-50%, -100%); margin-top: -14px; animation: bubbleIn 0.2s ease-out; }
+    .chat-bubble::after { content: ""; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); border-width: 6px 6px 0; border-style: solid; border-color: white transparent transparent transparent; }
+    @keyframes bubbleIn { from { opacity: 0; transform: translate(-50%, -90%); } to { opacity: 1; transform: translate(-50%, -100%); } }
+    #notificationArea { position: absolute; top: 60px; right: 12px; display: flex; flex-direction: column; gap: 8px; z-index: 300; pointer-events: none; }
+    .notification { background: var(--habbo-panel); border-left: 4px solid var(--habbo-accent); padding: 10px 14px; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.4); font-size: 13px; font-weight: 600; animation: notifIn 0.3s ease-out; pointer-events: auto; min-width: 200px; }
+    @keyframes notifIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+    #roomInfo { position: absolute; top: 56px; left: 50%; transform: translateX(-50%); background: rgba(14, 92, 101, 0.92); border: 2px solid var(--habbo-accent); border-radius: 8px; padding: 8px 20px; text-align: center; z-index: 90; }
+    #roomInfo h2 { font-size: 16px; color: var(--habbo-accent); }
+    #roomInfo p { font-size: 12px; color: var(--habbo-text-dim); }
+    #minimap { position: absolute; top: 60px; right: 12px; width: 140px; height: 140px; background: rgba(7, 58, 66, 0.9); border: 2px solid var(--habbo-panel-border); border-radius: 8px; z-index: 90; display: none; }
+    #minimap.open { display: block; }
+    #minimapCanvas { width: 100%; height: 100%; border-radius: 6px; }
+    #loadingScreen { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--habbo-bg); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
+    #loadingScreen.hidden { opacity: 0; pointer-events: none; }
+    #loadingScreen h1 { font-size: 36px; color: var(--habbo-accent); margin-bottom: 20px; text-shadow: 3px 3px 0 var(--habbo-dark); }
+    .loader { width: 60px; height: 60px; border: 5px solid var(--habbo-panel-border); border-top-color: var(--habbo-accent); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loadingScreen p { margin-top: 16px; color: var(--habbo-text-dim); font-size: 14px; }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--habbo-dark); }
+    ::-webkit-scrollbar-thumb { background: var(--habbo-light); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--habbo-panel-border); }
+    @media (max-width: 768px) {
+      #toolbar { gap: 2px; padding: 0 4px; }
+      .tool-btn { width: 42px; height: 42px; font-size: 9px; }
+      .tool-btn .icon { font-size: 16px; }
+      #chatInput { width: 200px; }
+      #inventoryPanel { width: 340px; }
+      .inv-grid { grid-template-columns: repeat(5, 1fr); }
+    }
+  </style>
 </head>
 <body>
-
-<div id="landing">
-  <div class="landing-stars" id="landing-stars"></div>
-  <div class="landing-logo">✨ STARLIGHT INN ✨</div>
-  <div class="landing-sub">A cozy world of islands, trades, and starlit chats</div>
-  <div class="landing-card">
-    <h2>🌙 Enter the Inn</h2>
-    <input type="text" class="landing-input" id="username-input" placeholder="Your name..." maxlength="16" autocomplete="off">
-    <button class="btn btn-primary" id="btn-enter" onclick="enterGame()">Enter World</button>
-    <div style="margin-top:1rem; text-align:center; font-size:0.75rem; color:var(--text-muted);">No account needed. Your journey begins now.</div>
+  <div id="loadingScreen">
+    <h1>✦ STARLIGHT INN</h1>
+    <div class="loader"></div>
+    <p>Loading your virtual world...</p>
   </div>
-  <div class="landing-footer">Desktop Edition v0.2 · Works offline! · Made with 💜</div>
-</div>
-
-<div id="char-select-overlay">
-  <div class="char-select-title">Choose Your Starlight</div>
-  <div class="char-grid" id="char-grid"></div>
-  <div style="margin-top:1.5rem; display:flex; gap:1rem;">
-    <button class="btn btn-secondary" onclick="showLanding()">← Back</button>
-    <button class="btn btn-primary" style="min-width:160px;" id="btn-confirm-char" onclick="confirmChar()">Let's Go! ✨</button>
-  </div>
-</div>
-
-<div id="game-container">
-  <canvas id="game-canvas"></canvas>
-
-  <div class="ui-panel ui-topbar">
-    <div class="player-info">
-      <canvas class="avatar-mini" id="avatar-mini" width="36" height="36"></canvas>
-      <div>
-        <div class="player-name" id="ui-player-name">Guest</div>
-        <div class="player-badges" id="ui-badges"><span class="badge badge-rare">R1</span></div>
+  <canvas id="gameCanvas"></canvas>
+  <div class="ui-overlay">
+    <div id="topBar">
+      <div id="logo">✦ STARLIGHT INN</div>
+      <div id="topBarRight">
+        <div class="currency-badge" id="currencyDisplay">1,000</div>
+        <button class="top-btn" id="btnNavigator">🌍 Navigator</button>
+        <button class="top-btn" id="btnCatalog">🛒 Catalog</button>
+        <button class="top-btn" id="btnInventory">🎒 Inventory</button>
+        <button class="top-btn" id="btnSettings">⚙️ Settings</button>
       </div>
     </div>
-    <div class="actions">
-      <button class="ui-btn" id="btn-profile" onclick="toggleProfile()" title="Profile">👤</button>
-      <button class="ui-btn" id="btn-areas" onclick="toggleAreas()" title="Areas">🗺️</button>
-      <button class="ui-btn" id="btn-inventory" onclick="toggleInventory()" title="Inventory">🎒</button>
-      <button class="ui-btn" id="btn-trade" onclick="toggleTrade()" title="Trade">💱</button>
-      <button class="ui-btn" id="btn-customize" onclick="toggleCustomize()" title="Customize">🎨</button>
-      <button class="ui-btn" id="btn-settings" onclick="toggleSettings()" title="Settings">⚙️</button>
-      <button class="ui-btn" id="btn-publish" onclick="showPublishModal()" title="Publish Online">🌐</button>
+    <div id="roomInfo">
+      <h2 id="roomName">Lobby</h2>
+      <p id="roomDesc">Welcome to Starlight Inn!</p>
     </div>
-  </div>
-
-  <div class="ui-panel" id="area-selector">
-    <div class="inv-header">Areas</div>
-    <div class="area-list" id="area-list"></div>
-  </div>
-
-  <div class="ui-panel" id="inventory-panel">
-    <div class="inv-header"><span>🎒 Inventory</span><span style="font-size:0.75rem; color:var(--text-muted);" id="inv-count">0/40</span></div>
-    <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.3rem;">Click to select, then click island to place</div>
-    <div class="inv-grid" id="inv-grid"></div>
-  </div>
-
-  <div class="ui-panel" id="chat-panel">
-    <div id="chat-messages"></div>
-    <div id="chat-input-row">
-      <input type="text" id="chat-input" placeholder="Say something..." maxlength="120" autocomplete="off">
-      <button class="ui-btn" onclick="sendChat()">📤</button>
+    <div id="minimap"><canvas id="minimapCanvas" width="140" height="140"></canvas></div>
+    <div class="panel" id="navigatorPanel">
+      <div class="panel-header"><span class="panel-title">🌍 Room Navigator</span><button class="panel-close" data-panel="navigatorPanel">×</button></div>
+      <div class="panel-body">
+        <div style="margin-bottom:8px;font-size:12px;color:var(--habbo-text-dim);">Public Rooms</div>
+        <div class="room-list" id="publicRoomList"></div>
+        <div style="margin:12px 0 8px;font-size:12px;color:var(--habbo-text-dim);">Your Rooms</div>
+        <div class="room-list" id="userRoomList"></div>
+      </div>
     </div>
-  </div>
-
-  <div class="ui-panel" id="trade-window">
-    <div class="trade-header"><h3>💱 Trade</h3><button class="ui-btn" onclick="toggleTrade()" style="width:28px;height:28px;">✕</button></div>
-    <div class="trade-columns">
-      <div class="trade-column"><h4>Your Offer</h4><div class="trade-grid" id="trade-my-slots"></div></div>
-      <div class="trade-column"><h4>Their Offer</h4><div class="trade-grid" id="trade-their-slots"></div></div>
+    <div class="panel" id="catalogPanel">
+      <div class="panel-header"><span class="panel-title">🛒 Furniture Catalog</span><button class="panel-close" data-panel="catalogPanel">×</button></div>
+      <div class="panel-body"><div class="catalog-grid" id="catalogGrid"></div></div>
     </div>
-    <div class="trade-actions">
-      <button class="btn btn-secondary" onclick="addItemToTrade()">+ Add Item</button>
-      <button class="btn btn-primary" onclick="confirmTrade()">✅ Confirm</button>
-      <button class="btn btn-secondary" onclick="cancelTrade()">❌ Cancel</button>
+    <div class="panel" id="inventoryPanel">
+      <div class="panel-header"><span class="panel-title">🎒 My Inventory</span><button class="panel-close" data-panel="inventoryPanel">×</button></div>
+      <div class="panel-body">
+        <div class="inv-grid" id="inventoryGrid"></div>
+        <div style="margin-top:10px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Click an item to select it, then click a tile to place.</div>
+      </div>
     </div>
-  </div>
-
-  <div class="ui-panel" id="customize-panel">
-    <div class="inv-header"><span>🎨 Customize</span></div>
-    <canvas class="customize-preview" id="customize-preview" width="100" height="100"></canvas>
-    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">Skin Tone</div>
-    <div class="color-row" id="skin-colors"></div>
-    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">Hair Color</div>
-    <div class="color-row" id="hair-colors"></div>
-    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">Outfit Color</div>
-    <div class="color-row" id="outfit-colors"></div>
-    <button class="btn btn-primary" style="margin-top:1rem; width:100%;" onclick="saveCustomization()">Save Look ✨</button>
-  </div>
-
-  <div class="ui-panel" id="settings-panel">
-    <div class="inv-header"><span>⚙️ Settings</span></div>
-    <div class="setting-row"><span>Show Player Names</span><div class="toggle on" id="toggle-names" onclick="toggleSetting('showNames')"><div class="toggle-knob"></div></div></div>
-    <div class="setting-row"><span>Show Chat Bubbles</span><div class="toggle on" id="toggle-bubbles" onclick="toggleSetting('showBubbles')"><div class="toggle-knob"></div></div></div>
-    <div class="setting-row"><span>Particles</span><div class="toggle on" id="toggle-particles" onclick="toggleSetting('particles')"><div class="toggle-knob"></div></div></div>
-    <div class="setting-row"><span>Music</span><div class="toggle" id="toggle-music" onclick="toggleSetting('music')"><div class="toggle-knob"></div></div></div>
-    <div class="setting-row"><span>Mobile Controls</span><div class="toggle" id="toggle-mobile" onclick="toggleSetting('mobileControls')"><div class="toggle-knob"></div></div></div>
-    <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--bg-panel-light);">
-      <button class="btn btn-danger" style="width:100%;" onclick="clearSaveData()">🗑️ Clear Save Data</button>
+    <div class="panel" id="settingsPanel">
+      <div class="panel-header"><span class="panel-title">⚙️ Settings</span><button class="panel-close" data-panel="settingsPanel">×</button></div>
+      <div class="panel-body">
+        <div class="setting-row"><label>Show Minimap</label><input type="checkbox" id="settingMinimap" checked></div>
+        <div class="setting-row"><label>Show Names</label><input type="checkbox" id="settingNames" checked></div>
+        <div class="setting-row"><label>Chat Bubbles</label><input type="checkbox" id="settingChat" checked></div>
+        <div class="setting-row"><label>NPC Count</label><select id="settingNPCs"><option value="0">None</option><option value="3" selected>3</option><option value="5">5</option><option value="8">8</option></select></div>
+        <div class="setting-row"><label>Camera Speed</label><input type="range" id="settingCamSpeed" min="1" max="10" value="5"></div>
+        <div class="setting-row"><label>Sound Effects</label><input type="checkbox" id="settingSound"></div>
+        <div style="margin-top:12px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Starlight Inn v1.0<br>Built with HTML5 Canvas</div>
+      </div>
     </div>
-  </div>
-
-  <div class="ui-panel ui-dock">
-    <button class="dock-btn active" id="dock-hub" onclick="goToArea('hub')"><span class="icon">🏨</span><span>Inn</span></button>
-    <button class="dock-btn" id="dock-beach" onclick="goToArea('beach')"><span class="icon">🏖️</span><span>Beach</span></button>
-    <button class="dock-btn" id="dock-forest" onclick="goToArea('forest')"><span class="icon">🌲</span><span>Forest</span></button>
-    <button class="dock-btn" id="dock-treehouse" onclick="goToArea('treehouse')"><span class="icon">🏡</span><span>Treehouse</span></button>
-    <button class="dock-btn" id="dock-park" onclick="goToArea('park')"><span class="icon">🌸</span><span>Park</span></button>
-    <button class="dock-btn" id="dock-island" onclick="goToArea('island')"><span class="icon">🏝️</span><span>My Island</span></button>
-  </div>
-
-  <div id="mobile-controls">
-    <div class="dpad">
-      <div class="dpad-btn dpad-up" ontouchstart="setMobileKey('up',true)" ontouchend="setMobileKey('up',false)" onmousedown="setMobileKey('up',true)" onmouseup="setMobileKey('up',false)">▲</div>
-      <div class="dpad-btn dpad-down" ontouchstart="setMobileKey('down',true)" ontouchend="setMobileKey('down',false)" onmousedown="setMobileKey('down',true)" onmouseup="setMobileKey('down',false)">▼</div>
-      <div class="dpad-btn dpad-left" ontouchstart="setMobileKey('left',true)" ontouchend="setMobileKey('left',false)" onmousedown="setMobileKey('left',true)" onmouseup="setMobileKey('left',false)">◀</div>
-      <div class="dpad-btn dpad-right" ontouchstart="setMobileKey('right',true)" ontouchend="setMobileKey('right',false)" onmousedown="setMobileKey('right',true)" onmouseup="setMobileKey('right',false)">▶</div>
+    <div id="chatBar">
+      <input type="text" id="chatInput" placeholder="Click here to chat..." maxlength="100" autocomplete="off">
+      <button id="chatSend">Send</button>
     </div>
+    <div id="toolbar">
+      <button class="tool-btn" id="toolChat" title="Chat (Enter)"><span class="icon">💬</span><span>Chat</span></button>
+      <button class="tool-btn" id="toolWalk" title="Walk (Click tiles)"><span class="icon">🚶</span><span>Walk</span></button>
+      <button class="tool-btn" id="toolPlace" title="Place Furniture"><span class="icon">📦</span><span>Place</span></button>
+      <button class="tool-btn" id="toolPick" title="Pick Up"><span class="icon">✋</span><span>Pick</span></button>
+      <button class="tool-btn" id="toolRotate" title="Rotate (R)"><span class="icon">🔄</span><span>Rotate</span></button>
+      <button class="tool-btn" id="toolDance" title="Dance (D)"><span class="icon">💃</span><span>Dance</span></button>
+      <button class="tool-btn" id="toolWave" title="Wave (W)"><span class="icon">👋</span><span>Wave</span></button>
+      <button class="tool-btn" id="toolMinimap" title="Toggle Map (M)"><span class="icon">🗺️</span><span>Map</span></button>
+    </div>
+    <div id="notificationArea"></div>
   </div>
-
-  <div id="toast-container"></div>
-  <div id="profile-panel"></div>
-</div>
-
 <script>
-// ═══════════════════════════════════════════════════════════════
-// STARLIGHT INN — Polished Build v0.2
-// ═══════════════════════════════════════════════════════════════
 
-const PALETTES = {
-  skin: ['#f5d0b5','#e8b896','#d4a07a','#c28b65','#a06d4f','#7d5239','#5a3a28','#3d2719'],
-  hair: ['#1a1a1a','#4a3018','#8b6914','#c9a227','#e85d75','#7dd3c0','#b8a9d9','#ff9f5e','#ff5252','#4fc3f7'],
-  clothes: ['#ff9f5e','#7dd3c0','#b8a9d9','#ffd54f','#ff8a65','#ba68c8','#4fc3f7','#e0e0e0','#ff5252','#2a2040'],
-};
-const RARITY = {
-  common:{name:'Common',color:'#888',glow:null}, rare:{name:'Rare',color:'#4fc3f7',glow:'0 0 6px #4fc3f7'},
-  vrare:{name:'Very Rare',color:'#ba68c8',glow:'0 0 8px #ba68c8'}, aunique:{name:'Almost Unique',color:'#ff8a65',glow:'0 0 10px #ff8a65'},
-  unique:{name:'Unique',color:'#ffd54f',glow:'0 0 12px #ffd54f'}, ltd:{name:'LTD',color:'#ff5252',glow:'0 0 14px #ff5252'},
-};
-const CHARACTERS = [
-  {id:'catgirl',name:'Neko',desc:'Playful cat ears & soft purr',base:'catgirl',defaultHair:4,defaultSkin:1,defaultOutfit:0,accessories:['cat_ears','tail','bell']},
-  {id:'rasta',name:'Rasta',desc:'Chill vibes & golden dreads',base:'human',defaultHair:2,defaultSkin:4,defaultOutfit:5,accessories:['headband','sunglasses']},
-  {id:'mage',name:'Luna',desc:'Starlight sorceress',base:'human',defaultHair:6,defaultSkin:0,defaultOutfit:3,accessories:['witch_hat','staff','cape']},
-  {id:'pirate',name:'Cpt. Kiko',desc:'Treasure hunter of the Inn',base:'human',defaultHair:0,defaultSkin:2,defaultOutfit:8,accessories:['pirate_hat','eyepatch']},
-  {id:'bunny',name:'Bun-Bun',desc:'Hoppy and fluffy friend',base:'bunny',defaultHair:1,defaultSkin:0,defaultOutfit:1,accessories:['bunny_ears','carrot']},
-  {id:'robot',name:'Byte',desc:'Cute bot with a heart of gold',base:'robot',defaultHair:0,defaultSkin:0,defaultOutfit:6,accessories:['antenna','screen_face']},
-];
-const ITEMS = [
-  {id:'star_lamp',name:'Star Lamp',emoji:'🌟',rarity:'rare',type:'furniture',area:'all'},
-  {id:'cozy_bed',name:'Cozy Bed',emoji:'🛏️',rarity:'common',type:'furniture',area:'island'},
-  {id:'palm_tree',name:'Palm Tree',emoji:'🌴',rarity:'common',type:'furniture',area:'beach'},
-  {id:'crystal_chair',name:'Crystal Chair',emoji:'💎',rarity:'vrare',type:'furniture',area:'all'},
-  {id:'golden_throne',name:'Golden Throne',emoji:'👑',rarity:'unique',type:'furniture',area:'all'},
-  {id:'moon_rug',name:'Moon Rug',emoji:'🌙',rarity:'aunique',type:'furniture',area:'all'},
-  {id:'neon_sign',name:'Neon Sign',emoji:'📛',rarity:'rare',type:'furniture',area:'hub'},
-  {id:'campfire',name:'Campfire',emoji:'🔥',rarity:'common',type:'furniture',area:'forest'},
-  {id:'hammock',name:'Hammock',emoji:'🏖️',rarity:'common',type:'furniture',area:'beach'},
-  {id:'tree_swing',name:'Tree Swing',emoji:'🪵',rarity:'rare',type:'furniture',area:'treehouse'},
-  {id:'flower_pot',name:'Flower Pot',emoji:'🪴',rarity:'common',type:'furniture',area:'park'},
-  {id:'fountain',name:'Fountain',emoji:'⛲',rarity:'vrare',type:'furniture',area:'park'},
-  {id:'dj_booth',name:'DJ Booth',emoji:'🎧',rarity:'unique',type:'furniture',area:'hub'},
-  {id:'ltd_statue',name:'LTD Statue 2026',emoji:'🏆',rarity:'ltd',type:'furniture',area:'all'},
-  {id:'magic_chest',name:'Magic Chest',emoji:'📦',rarity:'vrare',type:'container',area:'all'},
-  {id:'starlight_hat',name:'Starlight Hat',emoji:'🎩',rarity:'rare',type:'wearable',area:'all'},
-  {id:'pixel_shades',name:'Pixel Shades',emoji:'🕶️',rarity:'common',type:'wearable',area:'all'},
-  {id:'angel_wings',name:'Angel Wings',emoji:'🪽',rarity:'aunique',type:'wearable',area:'all'},
-];
-const AREAS = {
-  hub:{name:'Starlight Inn Lobby',desc:'The heart of the world. Warm lights, soft music, friends everywhere.',bg:'#2a2040',floorColor:'#3d3060',accentColor:'#ffd700',emoji:'🏨',
-    npcs:[{name:'Innkeeper Elara',x:0.5,y:0.4,emoji:'🧙‍♀️',color:'#b8a9d9'},{name:'Barista Milo',x:0.3,y:0.5,emoji:'☕',color:'#c78d6e'}],
-    decorations:[{x:0.2,y:0.3,emoji:'🕯️'},{x:0.8,y:0.3,emoji:'🕯️'},{x:0.5,y:0.2,emoji:'🌟'},{x:0.1,y:0.6,emoji:'🪴'},{x:0.9,y:0.6,emoji:'🪴'},{x:0.5,y:0.7,emoji:'🔥'}],
-    size:{w:1200,h:800}, ambient:'stars'},
-  beach:{name:'Sunset Beach',desc:'Golden sands, gentle waves, and bonfire nights.',bg:'#1a3040',floorColor:'#d4a07a',accentColor:'#ff9f5e',emoji:'🏖️',
-    npcs:[{name:'Surfer Kai',x:0.7,y:0.5,emoji:'🏄',color:'#4fc3f7'},{name:'Shell Collector',x:0.2,y:0.7,emoji:'🐚',color:'#ffd54f'}],
-    decorations:[{x:0.1,y:0.2,emoji:'🌴'},{x:0.3,y:0.15,emoji:'🌴'},{x:0.9,y:0.3,emoji:'🌊'},{x:0.5,y:0.6,emoji:'🔥'},{x:0.7,y:0.4,emoji:'🏖️'},{x:0.2,y:0.5,emoji:'☂️'}],
-    size:{w:1400,h:800}, ambient:'waves'},
-  forest:{name:'Whisperwood Forest',desc:'Tall trees, firefly glades, and hidden paths.',bg:'#142818',floorColor:'#2a5018',accentColor:'#7dd3c0',emoji:'🌲',
-    npcs:[{name:'Ranger Oak',x:0.4,y:0.4,emoji:'🧝',color:'#7dd3c0'},{name:'Fox Spirit',x:0.7,y:0.6,emoji:'🦊',color:'#ff9f5e'}],
-    decorations:[{x:0.1,y:0.2,emoji:'🌲'},{x:0.3,y:0.15,emoji:'🌲'},{x:0.6,y:0.1,emoji:'🌲'},{x:0.9,y:0.2,emoji:'🌲'},{x:0.2,y:0.6,emoji:'🍄'},{x:0.8,y:0.5,emoji:'🦋'},{x:0.5,y:0.3,emoji:'✨'},{x:0.4,y:0.7,emoji:'🪵'}],
-    size:{w:1400,h:900}, ambient:'fireflies'},
-  treehouse:{name:'Canopy Treehouse',desc:'High above the forest, a cozy hideaway among the branches.',bg:'#1a2818',floorColor:'#5a3a28',accentColor:'#c78d6e',emoji:'🏡',
-    npcs:[{name:'Treekeeper Yew',x:0.5,y:0.4,emoji:'🧙‍♂️',color:'#7dd3c0'},{name:'Squirrel Friend',x:0.8,y:0.3,emoji:'🐿️',color:'#c78d6e'}],
-    decorations:[{x:0.05,y:0.5,emoji:'🌳'},{x:0.95,y:0.5,emoji:'🌳'},{x:0.3,y:0.2,emoji:'🍃'},{x:0.7,y:0.2,emoji:'🍃'},{x:0.5,y:0.3,emoji:'🏡'},{x:0.2,y:0.6,emoji:'🪜'},{x:0.8,y:0.7,emoji:'🐦'}],
-    size:{w:1200,h:700}, ambient:'leaves'},
-  park:{name:'Blossom Park',desc:'Cherry trees, gentle streams, and picnic spots.',bg:'#281830',floorColor:'#3a5030',accentColor:'#ff8a65',emoji:'🌸',
-    npcs:[{name:'Gardener Rose',x:0.3,y:0.5,emoji:'👩‍🌾',color:'#ff8a65'},{name:'Poet Willow',x:0.7,y:0.4,emoji:'📜',color:'#b8a9d9'}],
-    decorations:[{x:0.1,y:0.2,emoji:'🌸'},{x:0.4,y:0.1,emoji:'🌸'},{x:0.7,y:0.15,emoji:'🌸'},{x:0.9,y:0.2,emoji:'🌸'},{x:0.5,y:0.5,emoji:'⛲'},{x:0.2,y:0.7,emoji:'🧺'},{x:0.8,y:0.6,emoji:'🦆'},{x:0.5,y:0.8,emoji:'🌿'}],
-    size:{w:1300,h:800}, ambient:'petals'},
-  island:{name:'Your Island',desc:'Your personal paradise. Decorate, invite friends, make it yours.',bg:'#1a2040',floorColor:'#4a6a3a',accentColor:'#ffd700',emoji:'🏝️',
-    npcs:[],
-    decorations:[{x:0.1,y:0.1,emoji:'🌊'},{x:0.9,y:0.1,emoji:'🌊'},{x:0.1,y:0.9,emoji:'🌊'},{x:0.9,y:0.9,emoji:'🌊'},{x:0.5,y:0.2,emoji:'🏠'}],
-    size:{w:1000,h:800}, ambient:'waves'},
-};
+// ============================================================
+// STARLIGHT INN - ISOMETRIC VIRTUAL WORLD ENGINE
+// ============================================================
 
-// ─── LocalStorage ─────────────────────────────────────────────
-const SAVE_KEY = 'starlight_inn_v2';
-function loadSave() {
-  try { const data = JSON.parse(localStorage.getItem(SAVE_KEY)); if (data) return data; } catch(e){}
-  return null;
+const TILE_W = 64;
+const TILE_H = 32;
+const WALL_H = 48;
+const AVATAR_H = 52;
+
+function isoToScreen(ix, iy) {
+  return { x: (ix - iy) * (TILE_W / 2), y: (ix + iy) * (TILE_H / 2) };
 }
-function saveGame(state) {
-  const save = {
-    player: { name: state.player.name, charId: state.player.charId, skinColor: state.player.skinColor, hairColor: state.player.hairColor, outfitColor: state.player.outfitColor, accessories: state.player.accessories },
-    inventory: state.inventory, islandItems: state.islandItems,
-    settings: state.settings, lastLogin: Date.now(),
+
+function screenToIso(sx, sy) {
+  return {
+    x: (sx / (TILE_W / 2) + sy / (TILE_H / 2)) / 2,
+    y: (sy / (TILE_H / 2) - sx / (TILE_W / 2)) / 2
   };
-  localStorage.setItem(SAVE_KEY, JSON.stringify(save));
-}
-function clearSaveData() {
-  localStorage.removeItem(SAVE_KEY);
-  location.reload();
 }
 
-// ─── Engine ───────────────────────────────────────────────────
-class StarlightEngine {
-  constructor(canvasId) {
-    this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext('2d');
-    this.ctx.imageSmoothingEnabled = false;
-    const saved = loadSave();
-    this.state = {
-      screen: 'landing', area: 'hub',
-      player: { name: 'Guest', charId: null, skinColor: 0, hairColor: 0, outfitColor: 0, x: 0.5, y: 0.7, facing: 'down', moving: false, accessories: [] },
-      inventory: this.generateStarterInventory(),
-      islandItems: [],
-      chatMessages: [
-        { name: 'Innkeeper Elara', text: 'Welcome to Starlight Inn, traveler! ✨', system: true },
-        { name: 'Surfer Kai', text: 'Catch you at the beach! 🏄', system: false },
-      ],
-      activeBubbles: [],
-      tradeOffer: [],
-      otherOffer: [{ id: 'golden_throne', name: 'Golden Throne', emoji: '👑', rarity: 'unique' }],
-      onlinePlayers: [
-        { name: 'NekoStar', x: 0.3, y: 0.5, charId: 'catgirl', skinColor: 1, hairColor: 4, outfitColor: 0, walkFrame: 0 },
-        { name: 'RastaVibes', x: 0.7, y: 0.4, charId: 'rasta', skinColor: 4, hairColor: 2, outfitColor: 5, walkFrame: 0 },
-        { name: 'LunaMage', x: 0.5, y: 0.3, charId: 'mage', skinColor: 0, hairColor: 6, outfitColor: 3, walkFrame: 0 },
-      ],
-      selectedChar: null, areaSelectorOpen: false, inventoryOpen: false, tradeOpen: false,
-      customizeOpen: false, settingsOpen: false, frameCount: 0, lastTime: 0,
-      keys: {}, mouse: { x: 0, y: 0, down: false }, camera: { x: 0, y: 0 },
-      particles: [],
-      selectedInventoryItem: null,
-      settings: { showNames: true, showBubbles: true, particles: true, music: false, mobileControls: false },
-    };
-    if (saved) {
-      if (saved.player) Object.assign(this.state.player, saved.player);
-      if (saved.inventory) this.state.inventory = saved.inventory;
-      if (saved.islandItems) this.state.islandItems = saved.islandItems;
-      if (saved.settings) Object.assign(this.state.settings, saved.settings);
-    }
-    this.resize();
-    window.addEventListener('resize', () => this.resize());
-    this.setupInput();
-    this.populateCharSelect();
-    this.populateAreaList();
-    this.populateInventory();
-    this.populateTradeSlots();
-    this.populateCustomize();
-    this.applySettingsUI();
-    this.renderChat();
-    this.startBotChat();
-    this.startLoop();
-  }
-  resize() { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; this.W = this.canvas.width; this.H = this.canvas.height; }
-  setupInput() {
-    window.addEventListener('keydown', (e) => { this.state.keys[e.key.toLowerCase()] = true;
-      if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' '].includes(e.key.toLowerCase())) e.preventDefault(); });
-    window.addEventListener('keyup', (e) => this.state.keys[e.key.toLowerCase()] = false);
-    this.canvas.addEventListener('mousemove', (e) => { const rect = this.canvas.getBoundingClientRect(); this.state.mouse.x = e.clientX - rect.left; this.state.mouse.y = e.clientY - rect.top; });
-    this.canvas.addEventListener('mousedown', () => this.state.mouse.down = true);
-    this.canvas.addEventListener('mouseup', () => this.state.mouse.down = false);
-    this.canvas.addEventListener('touchstart', (e) => {
-      const rect = this.canvas.getBoundingClientRect();
-      this.state.mouse.x = e.touches[0].clientX - rect.left;
-      this.state.mouse.y = e.touches[0].clientY - rect.top;
-      this.state.mouse.down = true;
-    }, {passive:false});
-    this.canvas.addEventListener('touchend', () => this.state.mouse.down = false);
-    this.canvas.addEventListener('touchmove', (e) => {
-      const rect = this.canvas.getBoundingClientRect();
-      this.state.mouse.x = e.touches[0].clientX - rect.left;
-      this.state.mouse.y = e.touches[0].clientY - rect.top;
-    }, {passive:false});
-  }
-  generateStarterInventory() {
-    const items = [];
-    for (let i = 0; i < 8; i++) { const item = { ...ITEMS[Math.floor(Math.random() * ITEMS.length)] }; item.uid = `item_${Date.now()}_${i}`; items.push(item); }
-    return items;
-  }
-
-  enterGame() {
-    const name = document.getElementById('username-input').value.trim();
-    if (!name) { this.toast('Please enter your name first!', 'warning'); return; }
-    this.state.player.name = name;
-    document.getElementById('ui-player-name').textContent = name;
-    document.getElementById('landing').classList.add('hidden');
-    document.getElementById('char-select-overlay').classList.add('active');
-    this.state.screen = 'charselect';
-  }
-  showLanding() { document.getElementById('landing').classList.remove('hidden'); document.getElementById('char-select-overlay').classList.remove('active'); this.state.screen = 'landing'; }
-  confirmChar() {
-    if (this.state.selectedChar === null) { this.toast('Select a character first!', 'warning'); return; }
-    const char = CHARACTERS[this.state.selectedChar];
-    this.state.player.charId = char.id;
-    this.state.player.skinColor = char.defaultSkin;
-    this.state.player.hairColor = char.defaultHair;
-    this.state.player.outfitColor = char.defaultOutfit;
-    this.state.player.accessories = [...char.accessories];
-    document.getElementById('char-select-overlay').classList.remove('active');
-    document.getElementById('game-container').classList.add('active');
-    this.state.screen = 'game';
-    this.toast(`Welcome to Starlight Inn, ${this.state.player.name}! ✨`, 'success');
-    this.drawMiniAvatar();
-    this.showDailyReward();
-    saveGame(this.state);
-  }
-
-  populateCharSelect() {
-    const grid = document.getElementById('char-grid');
-    CHARACTERS.forEach((char, idx) => {
-      const card = document.createElement('div'); card.className = 'char-card'; card.dataset.idx = idx;
-      card.innerHTML = `<canvas class="char-canvas" id="char-preview-${idx}" width="80" height="80"></canvas><div class="char-name">${char.name}</div><div class="char-desc">${char.desc}</div>`;
-      card.addEventListener('click', () => this.selectChar(idx));
-      grid.appendChild(card);
-      setTimeout(() => this.drawCharPreview(idx, char), 50);
-    });
-  }
-  selectChar(idx) { document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected')); document.querySelector(`.char-card[data-idx="${idx}"]`).classList.add('selected'); this.state.selectedChar = idx; }
-
-  populateAreaList() {
-    const list = document.getElementById('area-list');
-    Object.entries(AREAS).forEach(([key, area]) => {
-      const btn = document.createElement('button'); btn.className = 'area-btn'; btn.dataset.area = key;
-      btn.innerHTML = `<span class="area-icon">${area.emoji}</span><span>${area.name}</span>`;
-      btn.addEventListener('click', () => this.goToArea(key));
-      list.appendChild(btn);
-    });
-  }
-  goToArea(areaId) {
-    if (!AREAS[areaId]) return;
-    this.state.area = areaId;
-    this.state.areaSelectorOpen = false;
-    document.getElementById('area-selector').classList.remove('active');
-    this.state.player.x = 0.5; this.state.player.y = areaId === 'island' ? 0.5 : 0.7;
-    document.querySelectorAll('.dock-btn').forEach(b => b.classList.remove('active'));
-    const dockBtn = document.getElementById(`dock-${areaId}`);
-    if (dockBtn) dockBtn.classList.add('active');
-    this.toast(`Arrived at ${AREAS[areaId].name} ${AREAS[areaId].emoji}`, 'success');
-  }
-  toggleAreas() { this.state.areaSelectorOpen = !this.state.areaSelectorOpen; document.getElementById('area-selector').classList.toggle('active', this.state.areaSelectorOpen); }
-
-  populateInventory() { this.renderInventory(); }
-  renderInventory() {
-    const grid = document.getElementById('inv-grid'); grid.innerHTML = '';
-    this.state.inventory.forEach((item, idx) => {
-      const el = document.createElement('div');
-      el.className = `inv-item ${item.rarity} ${this.state.selectedInventoryItem === idx ? 'selected' : ''}`;
-      el.innerHTML = item.emoji;
-      el.title = `${item.name} [${RARITY[item.rarity].name}]`;
-      el.addEventListener('click', () => {
-        this.state.selectedInventoryItem = (this.state.selectedInventoryItem === idx) ? null : idx;
-        this.renderInventory();
-        if (this.state.selectedInventoryItem !== null) this.toast(`Selected: ${item.name} — Click island to place`, 'success');
-      });
-      grid.appendChild(el);
-    });
-    document.getElementById('inv-count').textContent = `${this.state.inventory.length}/40`;
-  }
-  toggleInventory() { this.state.inventoryOpen = !this.state.inventoryOpen; document.getElementById('inventory-panel').classList.toggle('active', this.state.inventoryOpen); }
-
-  populateTradeSlots() {
-    const myGrid = document.getElementById('trade-my-slots'); const theirGrid = document.getElementById('trade-their-slots');
-    for (let i = 0; i < 8; i++) { myGrid.appendChild(document.createElement('div')).className = 'trade-slot'; }
-    for (let i = 0; i < 8; i++) { theirGrid.appendChild(document.createElement('div')).className = 'trade-slot'; }
-  }
-  toggleTrade() { this.state.tradeOpen = !this.state.tradeOpen; document.getElementById('trade-window').classList.toggle('active', this.state.tradeOpen); if (this.state.tradeOpen) this.renderTrade(); }
-  renderTrade() {
-    document.querySelectorAll('#trade-my-slots .trade-slot').forEach((slot, i) => {
-      slot.className = 'trade-slot'; slot.innerHTML = '';
-      if (this.state.tradeOffer[i]) { slot.classList.add('filled', this.state.tradeOffer[i].rarity); slot.innerHTML = this.state.tradeOffer[i].emoji; }
-    });
-    document.querySelectorAll('#trade-their-slots .trade-slot').forEach((slot, i) => {
-      slot.className = 'trade-slot'; slot.innerHTML = '';
-      if (this.state.otherOffer[i]) { slot.classList.add('filled', this.state.otherOffer[i].rarity); slot.innerHTML = this.state.otherOffer[i].emoji; }
-    });
-  }
-  addItemToTrade() {
-    if (this.state.inventory.length === 0) { this.toast('Your inventory is empty!', 'warning'); return; }
-    const item = this.state.inventory.pop(); this.state.tradeOffer.push(item); this.renderInventory(); this.renderTrade(); this.toast(`Added ${item.name} to trade`, item.rarity);
-  }
-  confirmTrade() {
-    if (this.state.tradeOffer.length === 0) { this.toast('Add items to your offer first!', 'warning'); return; }
-    const received = [...this.state.otherOffer]; this.state.inventory.push(...received); this.state.tradeOffer = []; this.state.otherOffer = [];
-    this.renderInventory(); this.renderTrade(); this.toggleTrade(); this.toast('Trade complete! 🎉 Check your inventory.', 'success'); saveGame(this.state);
-  }
-  cancelTrade() { this.state.inventory.push(...this.state.tradeOffer); this.state.tradeOffer = []; this.renderInventory(); this.renderTrade(); this.toggleTrade(); }
-
-  sendChat() {
-    const input = document.getElementById('chat-input'); const text = input.value.trim(); if (!text) return;
-    this.state.chatMessages.push({ name: this.state.player.name, text, system: false });
-    this.state.activeBubbles.push({ name: this.state.player.name, text, time: Date.now(), x: this.state.player.x, y: this.state.player.y });
-    input.value = ''; this.renderChat(); this.scrollChat(); saveGame(this.state);
-  }
-  renderChat() {
-    const container = document.getElementById('chat-messages'); container.innerHTML = '';
-    this.state.chatMessages.slice(-50).forEach(msg => {
-      const div = document.createElement('div'); div.className = `chat-msg ${msg.system ? 'system' : ''}`;
-      div.innerHTML = `<span class="chat-name">${msg.name}:</span> <span class="chat-text">${this.escapeHtml(msg.text)}</span>`;
-      container.appendChild(div);
-    });
-  }
-  scrollChat() { document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight; }
-  escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
-
-  toggleCustomize() {
-    this.state.customizeOpen = !this.state.customizeOpen;
-    document.getElementById('customize-panel').classList.toggle('active', this.state.customizeOpen);
-    if (this.state.customizeOpen) this.updateCustomizePreview();
-  }
-  populateCustomize() {
-    const skinRow = document.getElementById('skin-colors');
-    PALETTES.skin.forEach((c, i) => {
-      const sw = document.createElement('div'); sw.className = 'color-swatch'; sw.style.background = c;
-      sw.addEventListener('click', () => { this.state.player.skinColor = i; this.updateCustomizePreview(); this.updateSwatchSelection(skinRow, sw); });
-      skinRow.appendChild(sw);
-    });
-    const hairRow = document.getElementById('hair-colors');
-    PALETTES.hair.forEach((c, i) => {
-      const sw = document.createElement('div'); sw.className = 'color-swatch'; sw.style.background = c;
-      sw.addEventListener('click', () => { this.state.player.hairColor = i; this.updateCustomizePreview(); this.updateSwatchSelection(hairRow, sw); });
-      hairRow.appendChild(sw);
-    });
-    const outfitRow = document.getElementById('outfit-colors');
-    PALETTES.clothes.forEach((c, i) => {
-      const sw = document.createElement('div'); sw.className = 'color-swatch'; sw.style.background = c;
-      sw.addEventListener('click', () => { this.state.player.outfitColor = i; this.updateCustomizePreview(); this.updateSwatchSelection(outfitRow, sw); });
-      outfitRow.appendChild(sw);
-    });
-  }
-  updateSwatchSelection(row, selected) { row.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected')); selected.classList.add('selected'); }
-  updateCustomizePreview() {
-    const canvas = document.getElementById('customize-preview'); if (!canvas) return;
-    const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, 100, 100);
-    const char = CHARACTERS.find(c => c.id === this.state.player.charId) || CHARACTERS[0];
-    this.drawAvatar(ctx, 50, 60, 1.0, char.base, this.state.player.skinColor, this.state.player.hairColor, this.state.player.outfitColor, this.state.player.accessories);
-  }
-  saveCustomization() {
-    this.drawMiniAvatar(); this.toast('Look saved! ✨', 'success');
-    this.toggleCustomize(); saveGame(this.state);
-  }
-
-  toggleSettings() {
-    this.state.settingsOpen = !this.state.settingsOpen;
-    document.getElementById('settings-panel').classList.toggle('active', this.state.settingsOpen);
-  }
-  applySettingsUI() {
-    document.getElementById('mobile-controls').classList.toggle('active', this.state.settings.mobileControls);
-    ['showNames','showBubbles','particles','music','mobileControls'].forEach(k => {
-      const el = document.getElementById('toggle-' + k.replace('mobileControls','mobile'));
-      if (el) el.classList.toggle('on', this.state.settings[k]);
-    });
-  }
-
-  toggleProfile() {
-    let panel = document.getElementById('profile-panel');
-    if (!panel.innerHTML) {
-      panel.innerHTML = `
-        <div class="inv-header"><span>👤 ${this.state.player.name}</span><span style="font-size:0.75rem;color:var(--text-muted);">Lvl 1</span></div>
-        <div style="padding:1rem 0;display:flex;flex-direction:column;gap:0.75rem;">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;font-size:0.85rem;">
-            <div style="background:var(--bg-deep);padding:0.5rem;border-radius:8px;"><div style="color:var(--text-muted);font-size:0.7rem;">Items</div><div>${this.state.inventory.length}</div></div>
-            <div style="background:var(--bg-deep);padding:0.5rem;border-radius:8px;"><div style="color:var(--text-muted);font-size:0.7rem;">Area</div><div>${AREAS[this.state.area].name}</div></div>
-            <div style="background:var(--bg-deep);padding:0.5rem;border-radius:8px;"><div style="color:var(--text-muted);font-size:0.7rem;">Island Items</div><div>${this.state.islandItems.length}</div></div>
-            <div style="background:var(--bg-deep);padding:0.5rem;border-radius:8px;"><div style="color:var(--text-muted);font-size:0.7rem;">Character</div><div>${(CHARACTERS.find(c=>c.id===this.state.player.charId)||{}).name||'?'}</div></div>
-          </div>
-        </div>`;
-    }
-    panel.classList.toggle('active');
-  }
-
-  toast(message, type = '') {
-    const container = document.getElementById('toast-container');
-    const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.textContent = message;
-    container.appendChild(toast); setTimeout(() => toast.remove(), 3000);
-  }
-
-  showDailyReward() {
-    const rewards = [
-      { day: 1, item: { id: 'star_cookie', name: 'Star Cookie', emoji: '🍪', rarity: 'common', type: 'consumable' } },
-      { day: 2, item: { id: 'moon_lantern', name: 'Moon Lantern', emoji: '🏮', rarity: 'rare', type: 'furniture' } },
-    ];
-    const reward = rewards[0];
-    const div = document.createElement('div'); div.className = 'daily-reward-popup';
-    div.innerHTML = `<div class="reward-card"><div class="reward-title">✨ Day ${reward.day} Reward ✨</div><div class="reward-item ${reward.item.rarity}"><span class="reward-emoji">${reward.item.emoji}</span><span class="reward-name">${reward.item.name}</span><span class="reward-rarity">${reward.item.rarity.toUpperCase()}</span></div><button class="btn btn-primary" id="claim-reward">Claim</button></div>`;
-    document.body.appendChild(div);
-    document.getElementById('claim-reward').addEventListener('click', () => {
-      this.state.inventory.push({ ...reward.item, uid: `daily_${Date.now()}` }); this.renderInventory();
-      this.toast(`Claimed ${reward.item.name}! 🎉`, 'success'); div.remove(); saveGame(this.state);
-    });
-  }
-
-  startBotChat() {
-    const bots = [
-      { name: 'NekoStar', responses: ['mew~ anyone wanna trade? 🐱', 'just found a rare lamp!', 'the treehouse is so cozy'] },
-      { name: 'RastaVibes', responses: ['chill vibes only 🌿', 'the sunset here is beautiful mon', 'peace and love friends'] },
-      { name: 'LunaMage', responses: ['the stars align tonight ✨', 'I sense rare items in the forest...', 'any mages online?'] },
-    ];
-    setInterval(() => {
-      if (this.state.screen !== 'game') return; if (Math.random() > 0.25) return;
-      const bot = bots[Math.floor(Math.random() * bots.length)];
-      const msg = bot.responses[Math.floor(Math.random() * bot.responses.length)];
-      this.state.chatMessages.push({ name: bot.name, text: msg, system: false });
-      const bplayer = this.state.onlinePlayers.find(p => p.name === bot.name);
-      if (bplayer) this.state.activeBubbles.push({ name: bot.name, text: msg, time: Date.now(), x: bplayer.x, y: bplayer.y });
-      if (this.state.chatMessages.length > 50) this.state.chatMessages.shift();
-      this.renderChat(); this.scrollChat();
-    }, 8000);
-  }
-
-  drawCharPreview(idx, char) {
-    const canvas = document.getElementById(`char-preview-${idx}`); if (!canvas) return;
-    const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, 80, 80);
-    this.drawAvatar(ctx, 40, 50, 1.2, char.base, char.defaultSkin, char.defaultHair, char.defaultOutfit, char.accessories);
-  }
-  drawMiniAvatar() {
-    const canvas = document.getElementById('avatar-mini'); if (!canvas) return;
-    const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, 36, 36);
-    const char = CHARACTERS.find(c => c.id === this.state.player.charId) || CHARACTERS[0];
-    this.drawAvatar(ctx, 18, 24, 0.5, char.base, this.state.player.skinColor, this.state.player.hairColor, this.state.player.outfitColor, this.state.player.accessories);
-  }
-
-  // ─── Pixel-perfect avatar renderer ───────────────────────────
-  drawAvatar(ctx, cx, cy, scale, base, skinIdx, hairIdx, outfitIdx, accessories = []) {
-    const skin = PALETTES.skin[skinIdx % PALETTES.skin.length];
-    const hair = PALETTES.hair[hairIdx % PALETTES.hair.length];
-    const outfit = PALETTES.clothes[outfitIdx % PALETTES.clothes.length];
-    const s = scale * 4;
-    ctx.save(); ctx.translate(cx, cy);
-    ctx.imageSmoothingEnabled = false;
-
-    const roundRect = (x, y, w, h, r) => {
-      ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-      ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-      ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-      ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath(); ctx.fill();
-    };
-
-    // LEGS
-    ctx.fillStyle = skin;
-    roundRect(-2.5*s, 14*s, 3*s, 8*s, 0.5*s);
-    roundRect(0.5*s, 14*s, 3*s, 8*s, 0.5*s);
-    // FEET
-    ctx.fillStyle = '#3d2719';
-    roundRect(-3*s, 22*s, 4*s, 2*s, 0.3*s);
-    roundRect(1*s, 22*s, 4*s, 2*s, 0.3*s);
-    // TORSO
-    ctx.fillStyle = outfit;
-    roundRect(-3.5*s, 8*s, 9*s, 8*s, 0.5*s);
-    ctx.fillStyle = hairShadow(outfit, 15);
-    roundRect(-2.5*s, 16*s, 7*s, 2*s, 0.3*s);
-    // ARMS
-    ctx.fillStyle = skin;
-    roundRect(-5.5*s, 9*s, 2.5*s, 7*s, 0.4*s);
-    roundRect(4.5*s, 9*s, 2.5*s, 7*s, 0.4*s);
-    // HANDS
-    roundRect(-6*s, 16*s, 3*s, 2*s, 0.3*s);
-    roundRect(4.5*s, 16*s, 3*s, 2*s, 0.3*s);
-
-    // HEAD (oversized chibi)
-    ctx.fillStyle = skin;
-    roundRect(-6.5*s, -8*s, 15*s, 14*s, 2*s);
-    // Face highlight
-    ctx.fillStyle = lightenColor(skin, 12);
-    roundRect(-4.5*s, -6*s, 11*s, 10*s, 1.5*s);
-
-    // EYES
-    ctx.fillStyle = '#ffffff';
-    roundRect(-3.5*s, -2.5*s, 3.5*s, 3.5*s, 0.8*s);
-    roundRect(1.5*s, -2.5*s, 3.5*s, 3.5*s, 0.8*s);
-    ctx.fillStyle = '#1a1a1a';
-    roundRect(-2.5*s, -1.5*s, 2.5*s, 2.5*s, 0.5*s);
-    roundRect(2*s, -1.5*s, 2.5*s, 2.5*s, 0.5*s);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(-2*s, -1*s, 1*s, 1*s);
-    ctx.fillRect(2.5*s, -1*s, 1*s, 1*s);
-
-    // BLUSH
-    ctx.fillStyle = 'rgba(255,130,130,0.45)';
-    roundRect(-4.5*s, 2*s, 3.5*s, 1.2*s, 0.5*s);
-    roundRect(2.5*s, 2*s, 3.5*s, 1.2*s, 0.5*s);
-    // MOUTH
-    ctx.fillStyle = '#a06060';
-    roundRect(-1*s, 3*s, 2.5*s, 1*s, 0.3*s);
-
-    // HAIR
-    ctx.fillStyle = hair;
-    if (base === 'catgirl') {
-      ctx.fillRect(-8.5*s, -10*s, 6.5*s, 8*s);
-      ctx.fillRect(8*s, -10*s, 6.5*s, 8*s);
-      ctx.fillRect(-10.5*s, -6*s, 6.5*s, 18*s);
-      ctx.fillRect(10*s, -6*s, 6.5*s, 18*s);
-      ctx.fillRect(-4.5*s, -10*s, 11*s, 6*s);
-      ctx.fillStyle = hairShadow(hair, 20);
-      ctx.fillRect(-4.5*s, 4*s, 15*s, 2*s);
-      ctx.fillStyle = hair;
-      ctx.fillRect(-7*s, -14*s, 5.5*s, 6*s);
-      ctx.fillRect(6.5*s, -14*s, 5.5*s, 6*s);
-      ctx.fillStyle = '#ffb7c5';
-      ctx.fillRect(-6*s, -12*s, 3.5*s, 3.5*s);
-      ctx.fillRect(7.5*s, -12*s, 3.5*s, 3.5*s);
-    } else if (base === 'human') {
-      if (hairIdx % 3 === 0) {
-        ctx.fillRect(-7.5*s, -10*s, 6.5*s, 22*s);
-        ctx.fillRect(9.5*s, -10*s, 6.5*s, 22*s);
-        ctx.fillRect(-5.5*s, -10*s, 19*s, 6*s);
-      } else if (hairIdx % 3 === 1) {
-        ctx.fillRect(-5.5*s, -11*s, 8.5*s, 5*s);
-        ctx.fillRect(5.5*s, -11*s, 8.5*s, 5*s);
-        ctx.fillRect(-3.5*s, -12*s, 11*s, 5*s);
-      } else {
-        ctx.fillRect(-6.5*s, -10*s, 19*s, 5*s);
-        ctx.fillRect(-4.5*s, -8*s, 5.5*s, 12*s);
-        ctx.fillRect(11.5*s, -8*s, 5.5*s, 12*s);
-      }
-      ctx.fillStyle = hairShadow(hair, 20);
-      ctx.fillRect(-4.5*s, 4*s, 15*s, 2*s);
-    } else if (base === 'bunny') {
-      ctx.fillStyle = hair;
-      ctx.fillRect(-4*s, -22*s, 4.5*s, 20*s);
-      ctx.fillRect(8*s, -22*s, 4.5*s, 20*s);
-      ctx.fillStyle = '#ffb7c5';
-      ctx.fillRect(-3*s, -20*s, 2.5*s, 16*s);
-      ctx.fillRect(9*s, -20*s, 2.5*s, 16*s);
-      ctx.fillStyle = hair;
-      ctx.fillRect(-4*s, -8*s, 16.5*s, 8*s);
-    } else if (base === 'robot') {
-      ctx.fillStyle = outfit;
-      roundRect(-4.5*s, -10*s, 16.5*s, 12*s, 1*s);
-      ctx.fillStyle = '#1a1a2e';
-      roundRect(-2.5*s, -6*s, 12.5*s, 8*s, 0.5*s);
-      ctx.fillStyle = hair;
-      roundRect(0, -3*s, 2.5*s, 2.5*s, 0.3*s);
-      roundRect(5.5*s, -3*s, 2.5*s, 2.5*s, 0.3*s);
-      ctx.fillStyle = outfit;
-      roundRect(2*s, 0, 4.5*s, 1*s, 0.2*s);
-      ctx.fillStyle = '#ff5252';
-      roundRect(5*s, -16*s, 2*s, 8*s, 0.3*s);
-      roundRect(4*s, -18*s, 4.5*s, 3*s, 0.3*s);
-    }
-
-    // ACCESSORIES
-    ctx.fillStyle = outfit;
-    accessories.forEach(acc => {
-      if (acc === 'sunglasses') {
-        ctx.fillStyle = '#1a1a1a';
-        roundRect(-4.5*s, -2.5*s, 4.5*s, 3*s, 0.3*s);
-        roundRect(2.5*s, -2.5*s, 4.5*s, 3*s, 0.3*s);
-        ctx.fillRect(0, -1.5*s, 3*s, 1*s);
-      }
-      if (acc === 'headband') {
-        ctx.fillStyle = '#4a3018';
-        roundRect(-5.5*s, -9*s, 16.5*s, 2*s, 0.2*s);
-      }
-      if (acc === 'witch_hat') {
-        ctx.fillStyle = '#2a2040';
-        roundRect(-2.5*s, -18*s, 10.5*s, 14*s, 0.5*s);
-        roundRect(-6.5*s, -6*s, 18.5*s, 3*s, 0.3*s);
-        ctx.fillStyle = '#b8a9d9';
-        roundRect(2*s, -10*s, 4.5*s, 2*s, 0.2*s);
-      }
-      if (acc === 'staff') {
-        ctx.fillStyle = '#8b6914';
-        roundRect(8.5*s, 4*s, 2*s, 20*s, 0.3*s);
-        ctx.fillStyle = '#4fc3f7';
-        roundRect(7.5*s, 0, 4*s, 4*s, 0.3*s);
-      }
-      if (acc === 'cape') {
-        ctx.fillStyle = '#b8a9d9';
-        roundRect(-4.5*s, 8*s, 16.5*s, 16*s, 0.5*s);
-      }
-      if (acc === 'pirate_hat') {
-        ctx.fillStyle = '#1a1a1a';
-        roundRect(-4.5*s, -14*s, 16.5*s, 8*s, 0.3*s);
-        roundRect(-8.5*s, -8*s, 24.5*s, 3*s, 0.2*s);
-        ctx.fillStyle = '#ffd700';
-        roundRect(2*s, -10*s, 4.5*s, 2*s, 0.2*s);
-      }
-      if (acc === 'eyepatch') {
-        ctx.fillStyle = '#1a1a1a';
-        roundRect(2.5*s, -2.5*s, 4.5*s, 3*s, 0.3*s);
-      }
-      if (acc === 'carrot') {
-        ctx.fillStyle = '#ff9f5e';
-        roundRect(8.5*s, 12*s, 3*s, 8*s, 0.3*s);
-        ctx.fillStyle = '#7dd3c0';
-        roundRect(8.5*s, 8*s, 3*s, 4*s, 0.3*s);
-      }
-    });
-
-    // OUTLINE
-    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
-    ctx.lineWidth = Math.max(0.5, 0.5 * s);
-    ctx.strokeRect(-6.5*s, -8*s, 15*s, 30*s);
-    ctx.restore();
-  }
-
-  startLoop() {
-    const loop = (timestamp) => { this.update(timestamp); this.render(); requestAnimationFrame(loop); };
-    requestAnimationFrame(loop);
-  }
-  update(timestamp) {
-    if (this.state.screen !== 'game') return;
-    const dt = Math.min((timestamp - this.state.lastTime) / 1000, 0.05); this.state.lastTime = timestamp; this.state.frameCount++;
-    const speed = 0.35; let dx = 0, dy = 0;
-    if (this.state.keys['w'] || this.state.keys['arrowup']) dy -= speed;
-    if (this.state.keys['s'] || this.state.keys['arrowdown']) dy += speed;
-    if (this.state.keys['a'] || this.state.keys['arrowleft']) dx -= speed;
-    if (this.state.keys['d'] || this.state.keys['arrowright']) dx += speed;
-    if (dx !== 0 || dy !== 0) {
-      this.state.player.x = Math.max(0.02, Math.min(0.98, this.state.player.x + dx * dt));
-      this.state.player.y = Math.max(0.02, Math.min(0.98, this.state.player.y + dy * dt));
-      this.state.player.moving = true;
-      if (dx > 0) this.state.player.facing = 'right'; else if (dx < 0) this.state.player.facing = 'left'; else if (dy < 0) this.state.player.facing = 'up'; else this.state.player.facing = 'down';
-    } else { this.state.player.moving = false; }
-    this.state.onlinePlayers.forEach(p => {
-      if (Math.random() < 0.01) { p.tx = Math.max(0.1, Math.min(0.9, p.x + (Math.random() - 0.5) * 0.3)); p.ty = Math.max(0.1, Math.min(0.9, p.y + (Math.random() - 0.5) * 0.3)); }
-      if (p.tx != null) { p.x += (p.tx - p.x) * 0.02; p.y += (p.ty - p.y) * 0.02; if (Math.abs(p.tx - p.x) < 0.01) p.tx = null; }
-      p.walkFrame = (p.walkFrame || 0) + 0.15;
-    });
-    // Bubbles expire
-    this.state.activeBubbles = this.state.activeBubbles.filter(b => Date.now() - b.time < 5000);
-    if (this.state.settings.particles) {
-      const area = AREAS[this.state.area];
-      if (Math.random() < 0.06) {
-        const colors = area.ambient === 'fireflies' ? ['#7dd3c0','#ffd700'] : area.ambient === 'stars' ? ['#ffd700','#b8a9d9'] : area.ambient === 'petals' ? ['#ff8a65','#ffb7c5'] : ['#ffd700','#b8a9d9'];
-        this.state.particles.push({ x: Math.random() * this.W, y: Math.random() * this.H, vx: (Math.random() - 0.5) * 0.5, vy: -Math.random() * 0.8,
-          life: 1, color: colors[Math.floor(Math.random()*colors.length)], size: Math.random() * 2 + 1 });
-      }
-      this.state.particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life -= 0.006; });
-      this.state.particles = this.state.particles.filter(p => p.life > 0);
-    }
-  }
-
-  render() {
-    if (this.state.screen !== 'game') return;
-    const ctx = this.ctx; const W = this.W; const H = this.H; const area = AREAS[this.state.area];
-    ctx.clearRect(0, 0, W, H);
-    // Background gradient
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
-    bgGrad.addColorStop(0, area.bg);
-    bgGrad.addColorStop(1, lightenColor(area.bg, -10));
-    ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, W, H);
-
-    const groundY = H * 0.35;
-    // Floor gradient
-    const floorGrad = ctx.createLinearGradient(0, groundY, 0, H);
-    floorGrad.addColorStop(0, area.floorColor);
-    floorGrad.addColorStop(1, hairShadow(area.floorColor, 20));
-    ctx.fillStyle = floorGrad; ctx.fillRect(0, groundY, W, H - groundY);
-
-    // Grid
-    ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth = 1; const gridSize = 40;
-    for (let x = 0; x < W; x += gridSize) { ctx.beginPath(); ctx.moveTo(x, groundY); ctx.lineTo(x, H); ctx.stroke(); }
-    for (let y = groundY; y < H; y += gridSize) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
-
-    // Area name
-    ctx.save();
-    ctx.font = '16px "VT323", monospace'; ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.textAlign = 'left';
-    ctx.fillText(`${area.emoji} ${area.name}`, 20, H - 80);
-    ctx.restore();
-
-    // Decorations
-    ctx.save();
-    area.decorations.forEach(d => {
-      const x = d.x * W; const y = groundY + (d.y * (H - groundY)) * 0.7;
-      ctx.font = '28px serif'; ctx.textAlign = 'center'; ctx.globalAlpha = 0.75;
-      ctx.fillText(d.emoji, x, y); ctx.globalAlpha = 1;
-    });
-    ctx.restore();
-
-    // NPCs
-    ctx.save();
-    area.npcs.forEach(npc => {
-      const x = npc.x * W; const y = groundY + (npc.y * (H - groundY)) * 0.8;
-      ctx.font = '32px serif'; ctx.textAlign = 'center'; ctx.fillText(npc.emoji, x, y);
-      ctx.font = '12px "Nunito", sans-serif'; ctx.fillStyle = npc.color; ctx.fillText(npc.name, x, y + 22);
-    });
-    ctx.restore();
-
-    // Other players
-    this.state.onlinePlayers.forEach(p => {
-      const char = CHARACTERS.find(c => c.id === p.charId) || CHARACTERS[0];
-      const px = p.x * W; const py = groundY + (p.y * (H - groundY)) * 0.8;
-      const bob = Math.sin((p.walkFrame||0)) * 2;
-      this.drawAvatar(ctx, px, py + bob, 0.8, char.base, p.skinColor, p.hairColor, p.outfitColor, char.accessories);
-      if (this.state.settings.showNames) {
-        ctx.save(); ctx.font = '11px "Nunito", sans-serif'; ctx.fillStyle = '#b8a9d9'; ctx.textAlign = 'center'; ctx.fillText(p.name, px, py + 30); ctx.restore();
-      }
-    });
-
-    // Local player
-    const px = this.state.player.x * W; const py = groundY + (this.state.player.y * (H - groundY)) * 0.8;
-    const char = CHARACTERS.find(c => c.id === this.state.player.charId) || CHARACTERS[0];
-    const bob = this.state.player.moving ? Math.sin(this.state.frameCount * 0.15) * 3 : 0;
-    this.drawAvatar(ctx, px, py + bob, 1.0, char.base, this.state.player.skinColor, this.state.player.hairColor, this.state.player.outfitColor, this.state.player.accessories);
-    if (this.state.settings.showNames) {
-      ctx.save(); ctx.font = 'bold 13px "Nunito", sans-serif'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'center'; ctx.fillText(this.state.player.name, px, py + 38); ctx.restore();
-    }
-    ctx.save(); ctx.strokeStyle = 'rgba(255,215,0,0.25)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px, py + 4, 24, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
-
-    // Island items
-    if (this.state.area === 'island') {
-      this.state.islandItems.forEach(item => {
-        const ix = item.x * W; const iy = groundY + (item.y * (H - groundY)) * 0.7;
-        ctx.save(); ctx.font = '26px serif'; ctx.textAlign = 'center'; ctx.fillText(item.emoji, ix, iy); ctx.restore();
-      });
-      // Placement cursor
-      if (this.state.selectedInventoryItem !== null) {
-        const mx = this.state.mouse.x; const my = this.state.mouse.y;
-        ctx.save(); ctx.strokeStyle = 'rgba(255,215,0,0.6)'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
-        ctx.beginPath(); ctx.arc(mx, my, 18, 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
-      }
-    }
-
-    // Chat bubbles
-    if (this.state.settings.showBubbles) {
-      this.state.activeBubbles.forEach(b => {
-        const bx = b.x * W; const by = groundY + (b.y * (H - groundY)) * 0.8 - 50;
-        ctx.save(); ctx.fillStyle = 'rgba(26,20,40,0.9)'; ctx.strokeStyle = 'rgba(58,48,96,0.8)'; ctx.lineWidth = 1;
-        const tw = Math.min(180, Math.max(60, b.text.length * 7));
-        roundRectPath(ctx, bx - tw/2, by - 18, tw, 24, 6);
-        ctx.fill(); ctx.stroke();
-        ctx.font = '11px "Nunito", sans-serif'; ctx.fillStyle = '#f0e6ff'; ctx.textAlign = 'center';
-        ctx.fillText(b.text.substring(0, 28), bx, by - 2);
-        ctx.restore();
-      });
-    }
-
-    // Particles
-    if (this.state.settings.particles) {
-      ctx.save();
-      this.state.particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); });
-      ctx.restore();
-    }
-
-    // Vignette
-    ctx.save();
-    const grad = ctx.createRadialGradient(W / 2, H / 2, W * 0.3, W / 2, H / 2, W * 0.8);
-    grad.addColorStop(0, 'rgba(0,0,0,0)'); grad.addColorStop(1, 'rgba(0,0,0,0.4)');
-    ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H); ctx.restore();
-
-    // Island placement
-    if (this.state.area === 'island' && this.state.mouse.down) {
-      const mx = this.state.mouse.x / W; const my = (this.state.mouse.y - groundY) / (H - groundY);
-      if (my > 0.1 && my < 0.9 && mx > 0.05 && mx < 0.95) {
-        const idx = this.state.selectedInventoryItem;
-        if (idx !== null && idx >= 0 && idx < this.state.inventory.length) {
-          const selectedItem = this.state.inventory[idx];
-          if (selectedItem && selectedItem.type === 'furniture') {
-            this.state.islandItems.push({ ...selectedItem, x: mx, y: my * 1.2 });
-            this.state.inventory.splice(idx, 1);
-            this.state.selectedInventoryItem = null;
-            this.renderInventory(); this.toast(`Placed ${selectedItem.name}! 🏝️`, 'success'); saveGame(this.state);
-          } else { this.toast('Only furniture can be placed!', 'warning'); }
-        } else { this.toast('Select a furniture item first!', 'warning'); }
-      }
-      this.state.mouse.down = false;
-    }
-  }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+function dist(a, b) { return Math.abs(a.x - b.x) + Math.abs(a.y - b.y); }
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function randChoice(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
 
-function roundRectPath(ctx, x, y, w, h, r) {
-  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
+// --- Asset Cache ---
+const Assets = { avatars: {}, furniture: {}, tiles: {} };
+
+function createAvatarCanvas(skinColor, hairColor, hairStyle, shirtColor, pantsColor, shoeColor) {
+  const c = document.createElement('canvas');
+  c.width = 44; c.height = 64;
+  const ctx = c.getContext('2d');
+  const cx = 22, cy = 20;
+
+  // Legs
+  ctx.strokeStyle = pantsColor; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(cx - 4, 42); ctx.lineTo(cx - 5, 58); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx + 4, 42); ctx.lineTo(cx + 5, 58); ctx.stroke();
+
+  // Shoes
+  ctx.fillStyle = shoeColor || '#333';
+  ctx.beginPath(); ctx.ellipse(cx - 5, 59, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx + 5, 59, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Body
+  ctx.fillStyle = shirtColor;
+  ctx.beginPath();
+  ctx.moveTo(cx - 10, 32); ctx.lineTo(cx + 10, 32);
+  ctx.lineTo(cx + 8, 46); ctx.lineTo(cx - 8, 46);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 1; ctx.stroke();
+
+  // Arms
+  ctx.strokeStyle = skinColor; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(cx - 10, 34); ctx.lineTo(cx - 14, 44); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx + 10, 34); ctx.lineTo(cx + 14, 44); ctx.stroke();
+
+  // Head
+  ctx.fillStyle = skinColor;
+  ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI * 2); ctx.fill();
+
+  // Eyes
+  ctx.fillStyle = '#222';
+  ctx.beginPath(); ctx.arc(cx - 5, cy + 1, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 5, cy + 1, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(cx - 4, cy, 1, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 6, cy, 1, 0, Math.PI * 2); ctx.fill();
+
+  // Mouth
+  ctx.strokeStyle = '#a04040'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(cx, cy + 7, 4, 0.2, Math.PI - 0.2); ctx.stroke();
+
+  // Hair
+  ctx.fillStyle = hairColor;
+  if (hairStyle === 'spiky') {
+    ctx.beginPath();
+    ctx.moveTo(cx - 14, cy - 2); ctx.lineTo(cx - 10, cy - 18); ctx.lineTo(cx - 4, cy - 10);
+    ctx.lineTo(cx, cy - 20); ctx.lineTo(cx + 4, cy - 10); ctx.lineTo(cx + 10, cy - 18);
+    ctx.lineTo(cx + 14, cy - 2); ctx.lineTo(cx + 12, cy + 4); ctx.lineTo(cx - 12, cy + 4);
+    ctx.closePath(); ctx.fill();
+  } else if (hairStyle === 'long') {
+    ctx.beginPath(); ctx.arc(cx, cy - 2, 17, Math.PI, 0);
+    ctx.lineTo(cx + 17, cy + 14); ctx.lineTo(cx - 17, cy + 14); ctx.closePath(); ctx.fill();
+  } else if (hairStyle === 'mohawk') {
+    ctx.beginPath();
+    ctx.moveTo(cx - 3, cy - 14); ctx.lineTo(cx - 2, cy - 26);
+    ctx.lineTo(cx, cy - 28); ctx.lineTo(cx + 2, cy - 26); ctx.lineTo(cx + 3, cy - 14); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = skinColor;
+    ctx.beginPath(); ctx.arc(cx - 12, cy, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + 12, cy, 4, 0, Math.PI * 2); ctx.fill();
+  } else if (hairStyle === 'bald') {
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.beginPath(); ctx.arc(cx - 4, cy - 8, 4, 0, Math.PI * 2); ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.arc(cx, cy - 4, 16, Math.PI, 0);
+    ctx.lineTo(cx + 16, cy + 2); ctx.lineTo(cx - 16, cy + 2); ctx.closePath(); ctx.fill();
+  }
+
+  ctx.strokeStyle = 'rgba(0,0,0,0.08)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI * 2); ctx.stroke();
+  return c;
 }
 
-// ─── Init ─────────────────────────────────────────────────────
-const engine = new StarlightEngine('game-canvas');
-window.gameEngine = engine;
+function createFurnitureCanvas(type) {
+  const c = document.createElement('canvas');
+  c.width = 80; c.height = 80;
+  const ctx = c.getContext('2d');
 
-// Color helpers
-function lightenColor(color, percent) {
-  const num = parseInt(color.replace('#', ''), 16);
-  const amt = Math.round(2.55 * percent);
-  const R = Math.min(255, (num >> 16) + amt);
-  const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
-  const B = Math.min(255, (num & 0x0000FF) + amt);
-  return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
-}
-function hairShadow(color, percent) {
-  const num = parseInt(color.replace('#', ''), 16);
-  const amt = Math.round(2.55 * percent);
-  const R = Math.max(0, (num >> 16) - amt);
-  const G = Math.max(0, ((num >> 8) & 0x00FF) - amt);
-  const B = Math.max(0, (num & 0x0000FF) - amt);
-  return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+  if (type === 'chair') {
+    ctx.fillStyle = '#8B4513';
+    ctx.beginPath(); ctx.moveTo(20, 40); ctx.lineTo(40, 30); ctx.lineTo(60, 40); ctx.lineTo(40, 50); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#5D3A1A'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#A0522D';
+    ctx.beginPath(); ctx.moveTo(20, 40); ctx.lineTo(20, 18); ctx.lineTo(40, 8); ctx.lineTo(40, 30); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#5D3A1A'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(20, 50); ctx.lineTo(20, 64); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(40, 55); ctx.lineTo(40, 68); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(60, 50); ctx.lineTo(60, 64); ctx.stroke();
+  } else if (type === 'table') {
+    ctx.fillStyle = '#CD853F';
+    ctx.beginPath(); ctx.moveTo(8, 34); ctx.lineTo(40, 18); ctx.lineTo(72, 34); ctx.lineTo(40, 50); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(18, 42); ctx.lineTo(18, 66); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(40, 50); ctx.lineTo(40, 72); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(62, 42); ctx.lineTo(62, 66); ctx.stroke();
+  } else if (type === 'lamp') {
+    ctx.fillStyle = '#B8860B';
+    ctx.beginPath(); ctx.ellipse(40, 56, 12, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#B8860B'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(40, 56); ctx.lineTo(40, 24); ctx.stroke();
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath(); ctx.moveTo(26, 34); ctx.lineTo(54, 34); ctx.lineTo(50, 12); ctx.lineTo(30, 12); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#B8860B'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = 'rgba(255, 255, 200, 0.35)';
+    ctx.beginPath(); ctx.arc(40, 26, 20, 0, Math.PI * 2); ctx.fill();
+  } else if (type === 'bed') {
+    ctx.fillStyle = '#4682B4';
+    ctx.beginPath(); ctx.moveTo(12, 42); ctx.lineTo(56, 18); ctx.lineTo(76, 30); ctx.lineTo(32, 52); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#2E5C8A'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.ellipse(26, 30, 9, 5, -0.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#5F9EA0';
+    ctx.beginPath(); ctx.moveTo(34, 36); ctx.lineTo(68, 18); ctx.lineTo(74, 26); ctx.lineTo(38, 48); ctx.closePath(); ctx.fill();
+  } else if (type === 'plant') {
+    ctx.fillStyle = '#D2691E';
+    ctx.beginPath(); ctx.moveTo(30, 48); ctx.lineTo(50, 48); ctx.lineTo(48, 62); ctx.lineTo(32, 62); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#3E2723';
+    ctx.beginPath(); ctx.ellipse(40, 48, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#228B22';
+    ctx.beginPath(); ctx.ellipse(40, 28, 12, 18, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#32CD32';
+    ctx.beginPath(); ctx.ellipse(34, 22, 7, 12, -0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(46, 26, 6, 11, 0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#90EE90';
+    ctx.beginPath(); ctx.ellipse(40, 16, 4, 6, 0, 0, Math.PI * 2); ctx.fill();
+  } else if (type === 'tv') {
+    ctx.fillStyle = '#444';
+    ctx.beginPath(); ctx.moveTo(28, 48); ctx.lineTo(52, 48); ctx.lineTo(50, 60); ctx.lineTo(30, 60); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#222';
+    ctx.beginPath(); ctx.moveTo(22, 22); ctx.lineTo(58, 10); ctx.lineTo(54, 40); ctx.lineTo(26, 50); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#66ccff';
+    ctx.beginPath(); ctx.moveTo(26, 26); ctx.lineTo(54, 16); ctx.lineTo(51, 38); ctx.lineTo(28, 46); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#888'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(40, 10); ctx.lineTo(32, 0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(40, 10); ctx.lineTo(48, 0); ctx.stroke();
+  } else if (type === 'rug') {
+    ctx.fillStyle = '#C0392B';
+    ctx.beginPath(); ctx.moveTo(8, 28); ctx.lineTo(52, 6); ctx.lineTo(72, 22); ctx.lineTo(28, 46); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#922B21'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(20, 24); ctx.lineTo(44, 12); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(32, 34); ctx.lineTo(56, 20); ctx.stroke();
+  } else if (type === 'sofa') {
+    ctx.fillStyle = '#7D3C98';
+    ctx.beginPath(); ctx.moveTo(12, 38); ctx.lineTo(46, 20); ctx.lineTo(68, 32); ctx.lineTo(34, 50); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#6C3483';
+    ctx.beginPath(); ctx.moveTo(12, 38); ctx.lineTo(12, 20); ctx.lineTo(46, 4); ctx.lineTo(46, 20); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#5B2C6F';
+    ctx.beginPath(); ctx.moveTo(46, 20); ctx.lineTo(58, 12); ctx.lineTo(58, 28); ctx.lineTo(46, 36); ctx.closePath(); ctx.fill();
+  } else if (type === 'fridge') {
+    ctx.fillStyle = '#BDC3C7';
+    ctx.beginPath(); ctx.moveTo(28, 16); ctx.lineTo(52, 4); ctx.lineTo(52, 56); ctx.lineTo(28, 68); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#7F8C8D'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#7F8C8D';
+    ctx.fillRect(38, 26, 4, 2); ctx.fillRect(38, 42, 4, 2);
+    ctx.fillStyle = '#E74C3C';
+    ctx.beginPath(); ctx.ellipse(40, 18, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
+  } else if (type === 'bookshelf') {
+    ctx.fillStyle = '#8B4513';
+    ctx.beginPath(); ctx.moveTo(22, 12); ctx.lineTo(58, 0); ctx.lineTo(58, 56); ctx.lineTo(22, 68); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#5D3A1A'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(22, 28); ctx.lineTo(58, 16); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(22, 44); ctx.lineTo(58, 32); ctx.stroke();
+    ctx.fillStyle = '#E74C3C'; ctx.fillRect(30, 16, 4, 10);
+    ctx.fillStyle = '#3498DB'; ctx.fillRect(36, 14, 4, 12);
+    ctx.fillStyle = '#2ECC71'; ctx.fillRect(42, 17, 4, 9);
+    ctx.fillStyle = '#F1C40F'; ctx.fillRect(48, 15, 3, 11);
+  } else if (type === 'fountain') {
+    ctx.fillStyle = '#7f8c8d';
+    ctx.beginPath(); ctx.ellipse(40, 56, 22, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#3498db';
+    ctx.beginPath(); ctx.ellipse(40, 54, 16, 6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#95a5a6';
+    ctx.fillRect(36, 28, 8, 26);
+    ctx.fillStyle = '#7f8c8d';
+    ctx.beginPath(); ctx.ellipse(40, 28, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#85c1e9';
+    ctx.beginPath(); ctx.arc(40, 22, 4, 0, Math.PI * 2); ctx.fill();
+  } else if (type === 'piano') {
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.moveTo(16, 36); ctx.lineTo(56, 16); ctx.lineTo(72, 28); ctx.lineTo(32, 48); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.moveTo(20, 38); ctx.lineTo(52, 20); ctx.lineTo(56, 24); ctx.lineTo(24, 42); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#111'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(24, 44); ctx.lineTo(24, 64); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(56, 24); ctx.lineTo(56, 44); ctx.stroke();
+  } else if (type === 'dragon') {
+    ctx.fillStyle = '#2ecc71';
+    ctx.beginPath(); ctx.ellipse(40, 40, 14, 10, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#27ae60';
+    ctx.beginPath(); ctx.arc(28, 32, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(24, 30, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#c0392b';
+    ctx.beginPath(); ctx.arc(24, 30, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#229954';
+    ctx.beginPath(); ctx.moveTo(38, 34); ctx.lineTo(56, 20); ctx.lineTo(58, 36); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#27ae60'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(52, 42); ctx.quadraticCurveTo(64, 48, 60, 56); ctx.stroke();
+  }
+  return c;
 }
 
-// Global handlers
-function enterGame() { engine.enterGame(); }
-function showLanding() { engine.showLanding(); }
-function confirmChar() { engine.confirmChar(); }
-function toggleAreas() { engine.toggleAreas(); }
-function toggleInventory() { engine.toggleInventory(); }
-function toggleTrade() { engine.toggleTrade(); }
-function toggleCustomize() { engine.toggleCustomize(); }
-function toggleSettings() { engine.toggleSettings(); }
-function toggleProfile() { engine.toggleProfile(); }
-function goToArea(area) { engine.goToArea(area); }
-function sendChat() { engine.sendChat(); }
-function addItemToTrade() { engine.addItemToTrade(); }
-function confirmTrade() { engine.confirmTrade(); }
-function cancelTrade() { engine.cancelTrade(); }
-function saveCustomization() { engine.saveCustomization(); }
-function setMobileKey(dir, pressed) {
-  const map = { up:'w', down:'s', left:'a', right:'d' };
-  engine.state.keys[map[dir]] = pressed;
-}
-function toggleSetting(key) {
-  engine.state.settings[key] = !engine.state.settings[key];
-  const elId = 'toggle-' + key.replace('mobileControls','mobile').replace('showNames','names').replace('showBubbles','bubbles');
-  const el = document.getElementById(elId) || document.getElementById('toggle-' + key);
-  if (el) el.classList.toggle('on', engine.state.settings[key]);
-  if (key === 'mobileControls') document.getElementById('mobile-controls').classList.toggle('active', engine.state.settings[key]);
-  saveGame(engine.state);
+function getTilePattern(type) {
+  if (Assets.tiles[type]) return Assets.tiles[type];
+  const c = document.createElement('canvas');
+  c.width = TILE_W + 2; c.height = TILE_H + 2;
+  const ctx = c.getContext('2d');
+  const colors = {
+    wood: { top: '#C19A6B' }, tile: { top: '#ECF0F1' }, carpet: { top: '#A93226' },
+    grass: { top: '#58D68D' }, sand: { top: '#F9E79F' }, stone: { top: '#AAB7B8' },
+    water: { top: '#5DADE2' }, marble: { top: '#F4F6F7' },
+    darkwood: { top: '#5D4037' }, checkered: { top: '#E74C3C' }
+  };
+  const p = colors[type] || colors.wood;
+  ctx.fillStyle = p.top;
+  ctx.beginPath();
+  ctx.moveTo(1, TILE_H / 2 + 1);
+  ctx.lineTo(TILE_W / 2 + 1, 1);
+  ctx.lineTo(TILE_W + 1, TILE_H / 2 + 1);
+  ctx.lineTo(TILE_W / 2 + 1, TILE_H + 1);
+  ctx.closePath(); ctx.fill();
+
+  if (type === 'wood') {
+    ctx.strokeStyle = 'rgba(139,105,20,0.25)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(TILE_W / 2, 4); ctx.lineTo(TILE_W / 2, TILE_H - 2); ctx.stroke();
+  } else if (type === 'tile') {
+    ctx.strokeStyle = 'rgba(149,165,166,0.35)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(TILE_W / 4, TILE_H / 4); ctx.lineTo(TILE_W * 3 / 4, TILE_H * 3 / 4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(TILE_W * 3 / 4, TILE_H / 4); ctx.lineTo(TILE_W / 4, TILE_H * 3 / 4); ctx.stroke();
+  } else if (type === 'checkered') {
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.beginPath(); ctx.moveTo(TILE_W / 2 + 1, 1); ctx.lineTo(TILE_W * 3 / 4, TILE_H / 4);
+    ctx.lineTo(TILE_W / 2 + 1, TILE_H / 2); ctx.lineTo(TILE_W / 4, TILE_H / 4); ctx.closePath(); ctx.fill();
+  } else if (type === 'marble') {
+    ctx.strokeStyle = 'rgba(0,0,0,0.06)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(TILE_W / 3, TILE_H / 3); ctx.lineTo(TILE_W * 2 / 3, TILE_H / 3); ctx.stroke();
+  }
+  Assets.tiles[type] = c;
+  return c;
 }
 
-function showPublishModal() {
-  const modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:600;';
-  modal.innerHTML = `
-    <div style="background:#2a2040;border:3px solid #ffd700;border-radius:20px;padding:2rem;max-width:420px;text-align:center;box-shadow:0 0 40px rgba(255,215,0,0.2);">
-      <div style="font-family:VT323,monospace;font-size:1.5rem;color:#ffd700;margin-bottom:1rem;">🌐 Publish Starlight Inn</div>
-      <p style="color:#f0e6ff;font-size:0.9rem;margin-bottom:1rem;">Your game is ready to share with the world!</p>
-      <div style="background:#1a1428;border-radius:12px;padding:1rem;margin-bottom:1rem;text-align:left;">
-        <div style="font-size:0.8rem;color:#a090c0;margin-bottom:0.5rem;">📦 Deploy Package:</div>
-        <div style="font-family:VT323,monospace;font-size:0.85rem;color:#7dd3c0;">starlight-inn-desktop.zip</div>
-        <div style="font-size:0.75rem;color:#a090c0;margin-top:0.5rem;">Contains: index.html + server.js + launcher</div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:0.5rem;">
-        <a href="https://app.netlify.com/drop" target="_blank" style="display:block;padding:0.75rem;border-radius:10px;background:linear-gradient(135deg,#ffd700,#ff9f5e);color:#2a1a00;font-weight:800;text-decoration:none;">📤 Deploy to Netlify Drop</a>
-        <a href="https://tiiny.host" target="_blank" style="display:block;padding:0.75rem;border-radius:10px;background:#3a3060;color:#f0e6ff;text-decoration:none;border:2px solid #b8a9d9;">🚀 Deploy to Tiiny.host</a>
-        <a href="https://github.com/new" target="_blank" style="display:block;padding:0.75rem;border-radius:10px;background:#3a3060;color:#f0e6ff;text-decoration:none;border:2px solid #b8a9d9;">🐙 Create GitHub Repo + Pages</a>
-      </div>
-      <button class="btn btn-secondary" style="margin-top:1rem;" onclick="this.closest('div[style*=\"position:fixed\"]').remove()">Close</button>
-    </div>
-  `;
-  document.body.appendChild(modal);
+function getWallPattern(color) {
+  const key = 'wall_' + color;
+  if (Assets.tiles[key]) return Assets.tiles[key];
+  const c = document.createElement('canvas');
+  c.width = TILE_W / 2 + 2; c.height = WALL_H + TILE_H / 2 + 2;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(1, WALL_H + 1); ctx.lineTo(1, 1);
+  ctx.lineTo(TILE_W / 2 + 1, TILE_H / 2 + 1);
+  ctx.lineTo(TILE_W / 2 + 1, WALL_H + TILE_H / 2 + 1);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(1, 1); ctx.lineTo(TILE_W / 2 + 1, TILE_H / 2 + 1); ctx.stroke();
+  Assets.tiles[key] = c;
+  return c;
 }
 
-// Starfield
-const starContainer = document.getElementById('landing-stars');
-for (let i = 0; i < 60; i++) {
-  const star = document.createElement('div'); star.className = 'star';
-  star.style.left = Math.random() * 100 + '%'; star.style.top = Math.random() * 100 + '%';
-  star.style.animationDelay = Math.random() * 2 + 's'; starContainer.appendChild(star);
+function getFurnitureAsset(type) {
+  if (!Assets.furniture[type]) Assets.furniture[type] = createFurnitureCanvas(type);
+  return Assets.furniture[type];
 }
 
-const nameInput = document.getElementById('username-input');
-if (nameInput) nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') engine.enterGame(); });
-const chatInput = document.getElementById('chat-input');
-if (chatInput) chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') engine.sendChat(); });
-</script>
-</body>
-</html>
+function getAvatarAsset(key) {
+  if (!Assets.avatars[key]) {
+    const parts = key.split('|');
+    Assets.avatars[key] = createAvatarCanvas(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]);
+  }
+  return Assets.avatars[key];
+}
