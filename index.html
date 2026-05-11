@@ -2966,6 +2966,28 @@ var StarlightEngine = (() => {
                 this.game.saveAllData();
                 this.game.uiManager.showNotification("Game saved!", "success");
                 return;
+              case "coords":
+                player.say(`\u{1F4CD} ${Math.round(player.x)}, ${Math.round(player.y)}`, this.chatColor, "normal");
+                this.addHistory("You", `\u{1F4CD} ${Math.round(player.x)}, ${Math.round(player.y)}`, timeStr, "normal");
+                return;
+              case "time":
+                const nowTime = (/* @__PURE__ */ new Date()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                player.say(`\u{1F550} ${nowTime}`, this.chatColor, "normal");
+                this.addHistory("You", `\u{1F550} ${nowTime}`, timeStr, "normal");
+                return;
+              case "tp":
+                if (this.game.room) {
+                  const tpx = Math.floor(Math.random() * this.game.room.width);
+                  const tpy = Math.floor(Math.random() * this.game.room.height);
+                  if (this.game.room.isWalkable(tpx, tpy)) {
+                    player.moveTo(tpx, tpy, this.game.room);
+                    player.say(`*poof* \u{1F31F}`, this.chatColor, "emote");
+                    this.addHistory("You", `*poof* \u{1F31F} Teleported to ${tpx}, ${tpy}`, timeStr, "emote");
+                  } else {
+                    this.game.uiManager.showNotification("Cannot teleport there!", "error");
+                  }
+                }
+                return;
               default:
                 if (this.game.uiManager) this.game.uiManager.showNotification(`Unknown command: /${cmd}. Type /help for commands.`, "error");
                 return;
@@ -3830,13 +3852,20 @@ var StarlightEngine = (() => {
             list.appendChild(div);
           });
         }
-        renderFriends(friends, onGift) {
+        renderFriends(friends, onGift, onGiftAll) {
           const list = document.getElementById("friendList");
           if (!list) return;
           list.innerHTML = "";
           if (friends.length === 0) {
             list.innerHTML = '<div style="text-align:center;color:var(--habbo-text-dim);padding:20px;">No friends yet. Visit rooms to meet people!</div>';
             return;
+          }
+          if (onGiftAll) {
+            const header = document.createElement("div");
+            header.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;";
+            header.innerHTML = `<span style="font-size:12px;color:var(--habbo-text-dim);">${friends.length} friends</span><button id="btnGiftAll" style="padding:4px 10px;background:var(--habbo-accent);color:var(--habbo-dark);border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">Gift All \u{1F381}</button>`;
+            list.appendChild(header);
+            document.getElementById("btnGiftAll")?.addEventListener("click", () => onGiftAll());
           }
           friends.forEach((f) => {
             const div = document.createElement("div");
@@ -7256,6 +7285,24 @@ var StarlightEngine = (() => {
             } else {
               this.uiManager.showNotification("Cannot send gift!", "error");
             }
+          }, () => {
+            const inv = Object.entries(this.inventorySystem.getAll());
+            if (inv.length === 0) {
+              this.uiManager.showNotification("Your inventory is empty!", "error");
+              return;
+            }
+            const [itemType] = inv[Math.floor(Math.random() * inv.length)];
+            let sent = 0;
+            this.friendSystem.friends.forEach((f) => {
+              if (this.friendSystem.giftFriend(f.id, itemType)) sent++;
+            });
+            if (sent > 0) {
+              this.uiManager.showNotification(`Gifted ${itemType} to ${sent} friends!`, "success");
+              this.renderFriendsPanel();
+              this.renderInventory();
+            } else {
+              this.uiManager.showNotification("Could not gift anyone!", "error");
+            }
           });
         }
         renderPetPanel() {
@@ -7540,6 +7587,8 @@ var StarlightEngine = (() => {
                 const ty = Math.floor(Math.random() * this.room.height);
                 if (this.room.isWalkable(tx, ty)) {
                   this.treasures.push({ x: tx, y: ty, coins: 25 + Math.floor(Math.random() * 76), life: 30 });
+                  this.spawnParticles(tx, ty, "#f4d03f", 10);
+                  this.spawnParticles(tx, ty, "#fff", 6);
                   break;
                 }
               }
@@ -7820,6 +7869,17 @@ var StarlightEngine = (() => {
           const img = getFurnitureAsset(f.type);
           const time = Date.now();
           ctx.drawImage(img, sp.x - img.width / 2, sp.y - img.height + TILE_H - f.z * (TILE_H / 2));
+          if (f.z > 0) {
+            ctx.fillStyle = "rgba(0,0,0,0.6)";
+            ctx.beginPath();
+            ctx.arc(sp.x + img.width / 2 - 6, sp.y - img.height + TILE_H - f.z * (TILE_H / 2) + 8, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 8px Nunito, sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(f.z + 1, sp.x + img.width / 2 - 6, sp.y - img.height + TILE_H - f.z * (TILE_H / 2) + 8);
+          }
           if (f.type === "lamp" || f.type === "chandelier") {
             ctx.fillStyle = `rgba(255,255,200,${0.15 + Math.sin(time / 300) * 0.08})`;
             ctx.beginPath();
@@ -7963,6 +8023,13 @@ var StarlightEngine = (() => {
               }
             }
           }
+          mmCtx.fillStyle = "rgba(0,0,0,0.5)";
+          mmCtx.fillRect(0, 0, w, 16);
+          mmCtx.fillStyle = "#fff";
+          mmCtx.font = "bold 9px Nunito, sans-serif";
+          mmCtx.textAlign = "center";
+          mmCtx.textBaseline = "middle";
+          mmCtx.fillText(this.room.name, w / 2, 8);
           mmCtx.fillStyle = "rgba(244, 208, 63, 0.7)";
           this.room.furniture.forEach((f) => {
             mmCtx.fillRect(offX + f.x * scale, offY + f.y * scale, scale * f.footprint[0] - 1, scale * f.footprint[1] - 1);

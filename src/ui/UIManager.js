@@ -574,13 +574,20 @@ export class UIManager {
     });
   }
 
-  renderFriends(friends, onGift) {
+  renderFriends(friends, onGift, onGiftAll) {
     const list = document.getElementById('friendList');
     if (!list) return;
     list.innerHTML = '';
     if (friends.length === 0) {
       list.innerHTML = '<div style="text-align:center;color:var(--habbo-text-dim);padding:20px;">No friends yet. Visit rooms to meet people!</div>';
       return;
+    }
+    if (onGiftAll) {
+      const header = document.createElement('div');
+      header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;';
+      header.innerHTML = `<span style="font-size:12px;color:var(--habbo-text-dim);">${friends.length} friends</span><button id="btnGiftAll" style="padding:4px 10px;background:var(--habbo-accent);color:var(--habbo-dark);border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">Gift All 🎁</button>`;
+      list.appendChild(header);
+      document.getElementById('btnGiftAll')?.addEventListener('click', () => onGiftAll());
     }
     friends.forEach(f => {
       const div = document.createElement('div');

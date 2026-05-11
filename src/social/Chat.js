@@ -165,6 +165,28 @@ export class ChatManager {
           this.game.saveAllData();
           this.game.uiManager.showNotification('Game saved!', 'success');
           return;
+        case 'coords':
+          player.say(`📍 ${Math.round(player.x)}, ${Math.round(player.y)}`, this.chatColor, 'normal');
+          this.addHistory('You', `📍 ${Math.round(player.x)}, ${Math.round(player.y)}`, timeStr, 'normal');
+          return;
+        case 'time':
+          const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          player.say(`🕐 ${nowTime}`, this.chatColor, 'normal');
+          this.addHistory('You', `🕐 ${nowTime}`, timeStr, 'normal');
+          return;
+        case 'tp':
+          if (this.game.room) {
+            const tpx = Math.floor(Math.random() * this.game.room.width);
+            const tpy = Math.floor(Math.random() * this.game.room.height);
+            if (this.game.room.isWalkable(tpx, tpy)) {
+              player.moveTo(tpx, tpy, this.game.room);
+              player.say(`*poof* 🌟`, this.chatColor, 'emote');
+              this.addHistory('You', `*poof* 🌟 Teleported to ${tpx}, ${tpy}`, timeStr, 'emote');
+            } else {
+              this.game.uiManager.showNotification('Cannot teleport there!', 'error');
+            }
+          }
+          return;
         default:
           if (this.game.uiManager) this.game.uiManager.showNotification(`Unknown command: /${cmd}. Type /help for commands.`, 'error');
           return;

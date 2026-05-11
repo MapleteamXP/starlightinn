@@ -1101,6 +1101,21 @@ export class Game {
       } else {
         this.uiManager.showNotification('Cannot send gift!', 'error');
       }
+    }, () => {
+      const inv = Object.entries(this.inventorySystem.getAll());
+      if (inv.length === 0) { this.uiManager.showNotification('Your inventory is empty!', 'error'); return; }
+      const [itemType] = inv[Math.floor(Math.random() * inv.length)];
+      let sent = 0;
+      this.friendSystem.friends.forEach(f => {
+        if (this.friendSystem.giftFriend(f.id, itemType)) sent++;
+      });
+      if (sent > 0) {
+        this.uiManager.showNotification(`Gifted ${itemType} to ${sent} friends!`, 'success');
+        this.renderFriendsPanel();
+        this.renderInventory();
+      } else {
+        this.uiManager.showNotification('Could not gift anyone!', 'error');
+      }
     });
   }
 
@@ -1398,6 +1413,8 @@ export class Game {
           const ty = Math.floor(Math.random() * this.room.height);
           if (this.room.isWalkable(tx, ty)) {
             this.treasures.push({ x: tx, y: ty, coins: 25 + Math.floor(Math.random() * 76), life: 30 });
+            this.spawnParticles(tx, ty, '#f4d03f', 10);
+            this.spawnParticles(tx, ty, '#fff', 6);
             break;
           }
         }
@@ -1680,6 +1697,19 @@ export class Game {
     const time = Date.now();
     ctx.drawImage(img, sp.x - img.width / 2, sp.y - img.height + TILE_H - f.z * (TILE_H / 2));
 
+    // Stack height indicator
+    if (f.z > 0) {
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.beginPath();
+      ctx.arc(sp.x + img.width / 2 - 6, sp.y - img.height + TILE_H - f.z * (TILE_H / 2) + 8, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 8px Nunito, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(f.z + 1, sp.x + img.width / 2 - 6, sp.y - img.height + TILE_H - f.z * (TILE_H / 2) + 8);
+    }
+
     // Animated overlays
     if (f.type === 'lamp' || f.type === 'chandelier') {
       ctx.fillStyle = `rgba(255,255,200,${0.15 + Math.sin(time/300)*0.08})`;
@@ -1793,6 +1823,15 @@ export class Game {
         if (this.room.map[y]?.[x]) { mmCtx.fillStyle = 'rgba(26, 154, 170, 0.5)'; mmCtx.fillRect(offX + x * scale, offY + y * scale, scale - 1, scale - 1); }
       }
     }
+    // Room name label
+    mmCtx.fillStyle = 'rgba(0,0,0,0.5)';
+    mmCtx.fillRect(0, 0, w, 16);
+    mmCtx.fillStyle = '#fff';
+    mmCtx.font = 'bold 9px Nunito, sans-serif';
+    mmCtx.textAlign = 'center';
+    mmCtx.textBaseline = 'middle';
+    mmCtx.fillText(this.room.name, w / 2, 8);
+
     mmCtx.fillStyle = 'rgba(244, 208, 63, 0.7)';
     this.room.furniture.forEach(f => { mmCtx.fillRect(offX + f.x * scale, offY + f.y * scale, scale * f.footprint[0] - 1, scale * f.footprint[1] - 1); });
     this.room.avatars.forEach(a => {
