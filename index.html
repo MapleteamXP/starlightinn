@@ -43,6 +43,8 @@ html, body { width:100%; height:100%; background: var(--bg-deep); color: var(--t
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,159,94,0.4); }
 .btn-secondary { background: var(--bg-panel-light); color: var(--text-main); border: 2px solid var(--accent-lavender); }
 .btn-secondary:hover { background: var(--accent-lavender); color: var(--bg-deep); }
+.btn-danger { background: #5a2030; color: #ff9999; border: 2px solid #ff5252; }
+.btn-danger:hover { background: #ff5252; color: #fff; }
 .landing-footer { margin-top: 2rem; font-size: 0.75rem; color: var(--text-muted); z-index: 2; text-align: center; }
 
 /* GAME */
@@ -108,7 +110,7 @@ html, body { width:100%; height:100%; background: var(--bg-deep); color: var(--t
 .trade-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; }
 .trade-actions { display: flex; gap: 0.5rem; justify-content: center; padding-top: 0.5rem; }
 
-#inventory-panel { top: 70px; right: 10px; width: 240px; display: none; flex-direction: column; max-height: 70vh; }
+#inventory-panel { top: 70px; right: 10px; width: 260px; display: none; flex-direction: column; max-height: 70vh; }
 #inventory-panel.active { display: flex; }
 .inv-header { font-family: var(--pixel); font-size: 1rem; color: var(--accent-gold);
   padding-bottom: 0.5rem; border-bottom: 2px solid var(--bg-panel-light); display: flex; justify-content: space-between; }
@@ -120,8 +122,9 @@ html, body { width:100%; height:100%; background: var(--bg-deep); color: var(--t
 .inv-item.rare { border-color: var(--rare); } .inv-item.vrare { border-color: var(--vrare); }
 .inv-item.aunique { border-color: var(--aunique); } .inv-item.unique { border-color: var(--unique); }
 .inv-item.ltd { border-color: var(--ltd); animation: ltdPulse 2s infinite; }
+.inv-item.selected { border-color: var(--accent-gold); box-shadow: 0 0 10px var(--accent-gold); background: rgba(255,215,0,0.1); }
 
-#area-selector { top: 70px; left: 10px; width: 200px; display: none; flex-direction: column; }
+#area-selector { top: 70px; left: 10px; width: 220px; display: none; flex-direction: column; }
 #area-selector.active { display: flex; }
 .area-list { display: flex; flex-direction: column; gap: 0.3rem; padding-top: 0.5rem; }
 .area-btn { padding: 0.5rem 0.75rem; border-radius: 8px; border: 2px solid var(--bg-panel-light); background: var(--bg-panel);
@@ -172,14 +175,57 @@ html, body { width:100%; height:100%; background: var(--bg-deep); color: var(--t
   border-radius: 12px; padding: 0.75rem; backdrop-filter: blur(8px); }
 #profile-panel.active { display: flex; }
 
+/* Customize Panel */
+#customize-panel { display: none; z-index: 110; position: absolute; top: 70px; right: 10px; width: 280px;
+  max-height: 70vh; flex-direction: column; background: rgba(26, 20, 40, 0.92); border: 2px solid var(--bg-panel-light);
+  border-radius: 12px; padding: 1rem; backdrop-filter: blur(8px); }
+#customize-panel.active { display: flex; }
+.color-row { display: flex; gap: 0.3rem; flex-wrap: wrap; margin: 0.5rem 0; }
+.color-swatch { width: 28px; height: 28px; border-radius: 6px; border: 2px solid transparent; cursor: pointer; transition: all 0.15s; }
+.color-swatch:hover { transform: scale(1.15); }
+.color-swatch.selected { border-color: var(--accent-gold); box-shadow: 0 0 8px var(--accent-gold); }
+.customize-preview { width: 100px; height: 100px; margin: 0.5rem auto; border-radius: 12px; background: var(--bg-deep); }
+
+/* Settings Panel */
+#settings-panel { display: none; z-index: 110; position: absolute; top: 70px; right: 10px; width: 280px;
+  flex-direction: column; background: rgba(26, 20, 40, 0.92); border: 2px solid var(--bg-panel-light);
+  border-radius: 12px; padding: 1rem; backdrop-filter: blur(8px); }
+#settings-panel.active { display: flex; }
+.setting-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--bg-panel-light); }
+.setting-row:last-child { border-bottom: none; }
+.toggle { width: 44px; height: 24px; border-radius: 12px; background: var(--bg-panel-light); position: relative; cursor: pointer; transition: background 0.2s; }
+.toggle.on { background: var(--accent-mint); }
+.toggle-knob { width: 20px; height: 20px; border-radius: 50%; background: #fff; position: absolute; top: 2px; left: 2px; transition: left 0.2s; }
+.toggle.on .toggle-knob { left: 22px; }
+
+/* Chat bubbles */
+.chat-bubble { position: absolute; background: rgba(26,20,40,0.95); border: 1px solid var(--bg-panel-light); border-radius: 10px;
+  padding: 0.3rem 0.6rem; font-size: 0.75rem; color: var(--text-main); pointer-events: none; z-index: 50;
+  max-width: 160px; text-align: center; animation: bubbleIn 0.3s ease; }
+.chat-bubble::after { content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+  border-width: 6px 6px 0; border-style: solid; border-color: var(--bg-panel-light) transparent transparent; }
+@keyframes bubbleIn { from { opacity:0; transform: translateY(6px) scale(0.9); } to { opacity:1; transform: translateY(0) scale(1); } }
+
+/* Mobile controls */
+#mobile-controls { display: none; position: fixed; bottom: 80px; left: 10px; z-index: 150; }
+#mobile-controls.active { display: block; }
+.dpad { position: relative; width: 120px; height: 120px; }
+.dpad-btn { position: absolute; width: 40px; height: 40px; background: rgba(42,32,64,0.7); border: 2px solid var(--bg-panel-light);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--text-main);
+  user-select: none; touch-action: none; }
+.dpad-up { top: 0; left: 40px; } .dpad-down { bottom: 0; left: 40px; }
+.dpad-left { top: 40px; left: 0; } .dpad-right { top: 40px; right: 0; }
+
 @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
 @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 80% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); } }
 
 @media (max-width: 640px) {
   .ui-dock { gap: 0.3rem; } .dock-btn { min-width: 50px; font-size: 0.7rem; }
-  #chat-panel { width: calc(100% - 20px); } #trade-window { width: calc(100% - 20px); }
+  #chat-panel { width: calc(100% - 20px); bottom: 70px; } #trade-window { width: calc(100% - 20px); }
   .trade-columns { flex-direction: column; } #profile-panel { width: calc(100% - 20px) !important; }
+  #customize-panel, #settings-panel { width: calc(100% - 20px); left: 10px; right: 10px; }
   .reward-card { padding: 1.5rem; }
+  #mobile-controls { display: block; }
 }
 </style>
 </head>
@@ -195,7 +241,7 @@ html, body { width:100%; height:100%; background: var(--bg-deep); color: var(--t
     <button class="btn btn-primary" id="btn-enter" onclick="enterGame()">Enter World</button>
     <div style="margin-top:1rem; text-align:center; font-size:0.75rem; color:var(--text-muted);">No account needed. Your journey begins now.</div>
   </div>
-  <div class="landing-footer">Desktop Edition v0.1 · Works offline! · Made with 💜</div>
+  <div class="landing-footer">Desktop Edition v0.2 · Works offline! · Made with 💜</div>
 </div>
 
 <div id="char-select-overlay">
@@ -236,6 +282,7 @@ html, body { width:100%; height:100%; background: var(--bg-deep); color: var(--t
 
   <div class="ui-panel" id="inventory-panel">
     <div class="inv-header"><span>🎒 Inventory</span><span style="font-size:0.75rem; color:var(--text-muted);" id="inv-count">0/40</span></div>
+    <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.3rem;">Click to select, then click island to place</div>
     <div class="inv-grid" id="inv-grid"></div>
   </div>
 
@@ -260,6 +307,30 @@ html, body { width:100%; height:100%; background: var(--bg-deep); color: var(--t
     </div>
   </div>
 
+  <div class="ui-panel" id="customize-panel">
+    <div class="inv-header"><span>🎨 Customize</span></div>
+    <canvas class="customize-preview" id="customize-preview" width="100" height="100"></canvas>
+    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">Skin Tone</div>
+    <div class="color-row" id="skin-colors"></div>
+    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">Hair Color</div>
+    <div class="color-row" id="hair-colors"></div>
+    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">Outfit Color</div>
+    <div class="color-row" id="outfit-colors"></div>
+    <button class="btn btn-primary" style="margin-top:1rem; width:100%;" onclick="saveCustomization()">Save Look ✨</button>
+  </div>
+
+  <div class="ui-panel" id="settings-panel">
+    <div class="inv-header"><span>⚙️ Settings</span></div>
+    <div class="setting-row"><span>Show Player Names</span><div class="toggle on" id="toggle-names" onclick="toggleSetting('showNames')"><div class="toggle-knob"></div></div></div>
+    <div class="setting-row"><span>Show Chat Bubbles</span><div class="toggle on" id="toggle-bubbles" onclick="toggleSetting('showBubbles')"><div class="toggle-knob"></div></div></div>
+    <div class="setting-row"><span>Particles</span><div class="toggle on" id="toggle-particles" onclick="toggleSetting('particles')"><div class="toggle-knob"></div></div></div>
+    <div class="setting-row"><span>Music</span><div class="toggle" id="toggle-music" onclick="toggleSetting('music')"><div class="toggle-knob"></div></div></div>
+    <div class="setting-row"><span>Mobile Controls</span><div class="toggle" id="toggle-mobile" onclick="toggleSetting('mobileControls')"><div class="toggle-knob"></div></div></div>
+    <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--bg-panel-light);">
+      <button class="btn btn-danger" style="width:100%;" onclick="clearSaveData()">🗑️ Clear Save Data</button>
+    </div>
+  </div>
+
   <div class="ui-panel ui-dock">
     <button class="dock-btn active" id="dock-hub" onclick="goToArea('hub')"><span class="icon">🏨</span><span>Inn</span></button>
     <button class="dock-btn" id="dock-beach" onclick="goToArea('beach')"><span class="icon">🏖️</span><span>Beach</span></button>
@@ -269,16 +340,24 @@ html, body { width:100%; height:100%; background: var(--bg-deep); color: var(--t
     <button class="dock-btn" id="dock-island" onclick="goToArea('island')"><span class="icon">🏝️</span><span>My Island</span></button>
   </div>
 
+  <div id="mobile-controls">
+    <div class="dpad">
+      <div class="dpad-btn dpad-up" ontouchstart="setMobileKey('up',true)" ontouchend="setMobileKey('up',false)" onmousedown="setMobileKey('up',true)" onmouseup="setMobileKey('up',false)">▲</div>
+      <div class="dpad-btn dpad-down" ontouchstart="setMobileKey('down',true)" ontouchend="setMobileKey('down',false)" onmousedown="setMobileKey('down',true)" onmouseup="setMobileKey('down',false)">▼</div>
+      <div class="dpad-btn dpad-left" ontouchstart="setMobileKey('left',true)" ontouchend="setMobileKey('left',false)" onmousedown="setMobileKey('left',true)" onmouseup="setMobileKey('left',false)">◀</div>
+      <div class="dpad-btn dpad-right" ontouchstart="setMobileKey('right',true)" ontouchend="setMobileKey('right',false)" onmousedown="setMobileKey('right',true)" onmouseup="setMobileKey('right',false)">▶</div>
+    </div>
+  </div>
+
   <div id="toast-container"></div>
   <div id="profile-panel"></div>
 </div>
 
 <script>
 // ═══════════════════════════════════════════════════════════════
-// STARLIGHT INN — Monolithic Build (single-file deployment)
+// STARLIGHT INN — Polished Build v0.2
 // ═══════════════════════════════════════════════════════════════
 
-// ─── Data ─────────────────────────────────────────────────────
 const PALETTES = {
   skin: ['#f5d0b5','#e8b896','#d4a07a','#c28b65','#a06d4f','#7d5239','#5a3a28','#3d2719'],
   hair: ['#1a1a1a','#4a3018','#8b6914','#c9a227','#e85d75','#7dd3c0','#b8a9d9','#ff9f5e','#ff5252','#4fc3f7'],
@@ -292,8 +371,8 @@ const RARITY = {
 const CHARACTERS = [
   {id:'catgirl',name:'Neko',desc:'Playful cat ears & soft purr',base:'catgirl',defaultHair:4,defaultSkin:1,defaultOutfit:0,accessories:['cat_ears','tail','bell']},
   {id:'rasta',name:'Rasta',desc:'Chill vibes & golden dreads',base:'human',defaultHair:2,defaultSkin:4,defaultOutfit:5,accessories:['headband','sunglasses']},
-  {id:'mage',name:'Luna',desc:'Starlight sorceress',base:'human',defaultHair:6,defaultSkin:0,defaultOutfit:3,accessories:['hat_witch','staff','cape']},
-  {id:'pirate',name:'Cpt. Kiko',desc:'Treasure hunter of the Inn',base:'human',defaultHair:0,defaultSkin:2,defaultOutfit:8,accessories:['hat_pirate','eyepatch']},
+  {id:'mage',name:'Luna',desc:'Starlight sorceress',base:'human',defaultHair:6,defaultSkin:0,defaultOutfit:3,accessories:['witch_hat','staff','cape']},
+  {id:'pirate',name:'Cpt. Kiko',desc:'Treasure hunter of the Inn',base:'human',defaultHair:0,defaultSkin:2,defaultOutfit:8,accessories:['pirate_hat','eyepatch']},
   {id:'bunny',name:'Bun-Bun',desc:'Hoppy and fluffy friend',base:'bunny',defaultHair:1,defaultSkin:0,defaultOutfit:1,accessories:['bunny_ears','carrot']},
   {id:'robot',name:'Byte',desc:'Cute bot with a heart of gold',base:'robot',defaultHair:0,defaultSkin:0,defaultOutfit:6,accessories:['antenna','screen_face']},
 ];
@@ -321,35 +400,55 @@ const AREAS = {
   hub:{name:'Starlight Inn Lobby',desc:'The heart of the world. Warm lights, soft music, friends everywhere.',bg:'#2a2040',floorColor:'#3d3060',accentColor:'#ffd700',emoji:'🏨',
     npcs:[{name:'Innkeeper Elara',x:0.5,y:0.4,emoji:'🧙‍♀️',color:'#b8a9d9'},{name:'Barista Milo',x:0.3,y:0.5,emoji:'☕',color:'#c78d6e'}],
     decorations:[{x:0.2,y:0.3,emoji:'🕯️'},{x:0.8,y:0.3,emoji:'🕯️'},{x:0.5,y:0.2,emoji:'🌟'},{x:0.1,y:0.6,emoji:'🪴'},{x:0.9,y:0.6,emoji:'🪴'},{x:0.5,y:0.7,emoji:'🔥'}],
-    size:{w:1200,h:800}},
+    size:{w:1200,h:800}, ambient:'stars'},
   beach:{name:'Sunset Beach',desc:'Golden sands, gentle waves, and bonfire nights.',bg:'#1a3040',floorColor:'#d4a07a',accentColor:'#ff9f5e',emoji:'🏖️',
     npcs:[{name:'Surfer Kai',x:0.7,y:0.5,emoji:'🏄',color:'#4fc3f7'},{name:'Shell Collector',x:0.2,y:0.7,emoji:'🐚',color:'#ffd54f'}],
     decorations:[{x:0.1,y:0.2,emoji:'🌴'},{x:0.3,y:0.15,emoji:'🌴'},{x:0.9,y:0.3,emoji:'🌊'},{x:0.5,y:0.6,emoji:'🔥'},{x:0.7,y:0.4,emoji:'🏖️'},{x:0.2,y:0.5,emoji:'☂️'}],
-    size:{w:1400,h:800}},
+    size:{w:1400,h:800}, ambient:'waves'},
   forest:{name:'Whisperwood Forest',desc:'Tall trees, firefly glades, and hidden paths.',bg:'#142818',floorColor:'#2a5018',accentColor:'#7dd3c0',emoji:'🌲',
     npcs:[{name:'Ranger Oak',x:0.4,y:0.4,emoji:'🧝',color:'#7dd3c0'},{name:'Fox Spirit',x:0.7,y:0.6,emoji:'🦊',color:'#ff9f5e'}],
     decorations:[{x:0.1,y:0.2,emoji:'🌲'},{x:0.3,y:0.15,emoji:'🌲'},{x:0.6,y:0.1,emoji:'🌲'},{x:0.9,y:0.2,emoji:'🌲'},{x:0.2,y:0.6,emoji:'🍄'},{x:0.8,y:0.5,emoji:'🦋'},{x:0.5,y:0.3,emoji:'✨'},{x:0.4,y:0.7,emoji:'🪵'}],
-    size:{w:1400,h:900}},
+    size:{w:1400,h:900}, ambient:'fireflies'},
   treehouse:{name:'Canopy Treehouse',desc:'High above the forest, a cozy hideaway among the branches.',bg:'#1a2818',floorColor:'#5a3a28',accentColor:'#c78d6e',emoji:'🏡',
     npcs:[{name:'Treekeeper Yew',x:0.5,y:0.4,emoji:'🧙‍♂️',color:'#7dd3c0'},{name:'Squirrel Friend',x:0.8,y:0.3,emoji:'🐿️',color:'#c78d6e'}],
     decorations:[{x:0.05,y:0.5,emoji:'🌳'},{x:0.95,y:0.5,emoji:'🌳'},{x:0.3,y:0.2,emoji:'🍃'},{x:0.7,y:0.2,emoji:'🍃'},{x:0.5,y:0.3,emoji:'🏡'},{x:0.2,y:0.6,emoji:'🪜'},{x:0.8,y:0.7,emoji:'🐦'}],
-    size:{w:1200,h:700}},
+    size:{w:1200,h:700}, ambient:'leaves'},
   park:{name:'Blossom Park',desc:'Cherry trees, gentle streams, and picnic spots.',bg:'#281830',floorColor:'#3a5030',accentColor:'#ff8a65',emoji:'🌸',
     npcs:[{name:'Gardener Rose',x:0.3,y:0.5,emoji:'👩‍🌾',color:'#ff8a65'},{name:'Poet Willow',x:0.7,y:0.4,emoji:'📜',color:'#b8a9d9'}],
     decorations:[{x:0.1,y:0.2,emoji:'🌸'},{x:0.4,y:0.1,emoji:'🌸'},{x:0.7,y:0.15,emoji:'🌸'},{x:0.9,y:0.2,emoji:'🌸'},{x:0.5,y:0.5,emoji:'⛲'},{x:0.2,y:0.7,emoji:'🧺'},{x:0.8,y:0.6,emoji:'🦆'},{x:0.5,y:0.8,emoji:'🌿'}],
-    size:{w:1300,h:800}},
+    size:{w:1300,h:800}, ambient:'petals'},
   island:{name:'Your Island',desc:'Your personal paradise. Decorate, invite friends, make it yours.',bg:'#1a2040',floorColor:'#4a6a3a',accentColor:'#ffd700',emoji:'🏝️',
     npcs:[],
     decorations:[{x:0.1,y:0.1,emoji:'🌊'},{x:0.9,y:0.1,emoji:'🌊'},{x:0.1,y:0.9,emoji:'🌊'},{x:0.9,y:0.9,emoji:'🌊'},{x:0.5,y:0.2,emoji:'🏠'}],
-    size:{w:1000,h:800}},
+    size:{w:1000,h:800}, ambient:'waves'},
 };
 
-// ─── Engine ─────────────────────────────────────────────────────
+// ─── LocalStorage ─────────────────────────────────────────────
+const SAVE_KEY = 'starlight_inn_v2';
+function loadSave() {
+  try { const data = JSON.parse(localStorage.getItem(SAVE_KEY)); if (data) return data; } catch(e){}
+  return null;
+}
+function saveGame(state) {
+  const save = {
+    player: { name: state.player.name, charId: state.player.charId, skinColor: state.player.skinColor, hairColor: state.player.hairColor, outfitColor: state.player.outfitColor, accessories: state.player.accessories },
+    inventory: state.inventory, islandItems: state.islandItems,
+    settings: state.settings, lastLogin: Date.now(),
+  };
+  localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+}
+function clearSaveData() {
+  localStorage.removeItem(SAVE_KEY);
+  location.reload();
+}
+
+// ─── Engine ───────────────────────────────────────────────────
 class StarlightEngine {
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas.getContext('2d');
     this.ctx.imageSmoothingEnabled = false;
+    const saved = loadSave();
     this.state = {
       screen: 'landing', area: 'hub',
       player: { name: 'Guest', charId: null, skinColor: 0, hairColor: 0, outfitColor: 0, x: 0.5, y: 0.7, facing: 'down', moving: false, accessories: [] },
@@ -359,18 +458,27 @@ class StarlightEngine {
         { name: 'Innkeeper Elara', text: 'Welcome to Starlight Inn, traveler! ✨', system: true },
         { name: 'Surfer Kai', text: 'Catch you at the beach! 🏄', system: false },
       ],
+      activeBubbles: [],
       tradeOffer: [],
       otherOffer: [{ id: 'golden_throne', name: 'Golden Throne', emoji: '👑', rarity: 'unique' }],
       onlinePlayers: [
-        { name: 'NekoStar', x: 0.3, y: 0.5, charId: 'catgirl', skinColor: 1, hairColor: 4, outfitColor: 0 },
-        { name: 'RastaVibes', x: 0.7, y: 0.4, charId: 'rasta', skinColor: 4, hairColor: 2, outfitColor: 5 },
-        { name: 'LunaMage', x: 0.5, y: 0.3, charId: 'mage', skinColor: 0, hairColor: 6, outfitColor: 3 },
+        { name: 'NekoStar', x: 0.3, y: 0.5, charId: 'catgirl', skinColor: 1, hairColor: 4, outfitColor: 0, walkFrame: 0 },
+        { name: 'RastaVibes', x: 0.7, y: 0.4, charId: 'rasta', skinColor: 4, hairColor: 2, outfitColor: 5, walkFrame: 0 },
+        { name: 'LunaMage', x: 0.5, y: 0.3, charId: 'mage', skinColor: 0, hairColor: 6, outfitColor: 3, walkFrame: 0 },
       ],
       selectedChar: null, areaSelectorOpen: false, inventoryOpen: false, tradeOpen: false,
       customizeOpen: false, settingsOpen: false, frameCount: 0, lastTime: 0,
       keys: {}, mouse: { x: 0, y: 0, down: false }, camera: { x: 0, y: 0 },
       particles: [],
+      selectedInventoryItem: null,
+      settings: { showNames: true, showBubbles: true, particles: true, music: false, mobileControls: false },
     };
+    if (saved) {
+      if (saved.player) Object.assign(this.state.player, saved.player);
+      if (saved.inventory) this.state.inventory = saved.inventory;
+      if (saved.islandItems) this.state.islandItems = saved.islandItems;
+      if (saved.settings) Object.assign(this.state.settings, saved.settings);
+    }
     this.resize();
     window.addEventListener('resize', () => this.resize());
     this.setupInput();
@@ -378,17 +486,32 @@ class StarlightEngine {
     this.populateAreaList();
     this.populateInventory();
     this.populateTradeSlots();
+    this.populateCustomize();
+    this.applySettingsUI();
+    this.renderChat();
     this.startBotChat();
     this.startLoop();
   }
   resize() { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; this.W = this.canvas.width; this.H = this.canvas.height; }
   setupInput() {
     window.addEventListener('keydown', (e) => { this.state.keys[e.key.toLowerCase()] = true;
-      if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(e.key.toLowerCase())) e.preventDefault(); });
+      if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d',' '].includes(e.key.toLowerCase())) e.preventDefault(); });
     window.addEventListener('keyup', (e) => this.state.keys[e.key.toLowerCase()] = false);
     this.canvas.addEventListener('mousemove', (e) => { const rect = this.canvas.getBoundingClientRect(); this.state.mouse.x = e.clientX - rect.left; this.state.mouse.y = e.clientY - rect.top; });
     this.canvas.addEventListener('mousedown', () => this.state.mouse.down = true);
     this.canvas.addEventListener('mouseup', () => this.state.mouse.down = false);
+    this.canvas.addEventListener('touchstart', (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      this.state.mouse.x = e.touches[0].clientX - rect.left;
+      this.state.mouse.y = e.touches[0].clientY - rect.top;
+      this.state.mouse.down = true;
+    }, {passive:false});
+    this.canvas.addEventListener('touchend', () => this.state.mouse.down = false);
+    this.canvas.addEventListener('touchmove', (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      this.state.mouse.x = e.touches[0].clientX - rect.left;
+      this.state.mouse.y = e.touches[0].clientY - rect.top;
+    }, {passive:false});
   }
   generateStarterInventory() {
     const items = [];
@@ -420,6 +543,7 @@ class StarlightEngine {
     this.toast(`Welcome to Starlight Inn, ${this.state.player.name}! ✨`, 'success');
     this.drawMiniAvatar();
     this.showDailyReward();
+    saveGame(this.state);
   }
 
   populateCharSelect() {
@@ -459,10 +583,16 @@ class StarlightEngine {
   populateInventory() { this.renderInventory(); }
   renderInventory() {
     const grid = document.getElementById('inv-grid'); grid.innerHTML = '';
-    this.state.inventory.forEach((item) => {
-      const el = document.createElement('div'); el.className = `inv-item ${item.rarity}`; el.innerHTML = item.emoji;
+    this.state.inventory.forEach((item, idx) => {
+      const el = document.createElement('div');
+      el.className = `inv-item ${item.rarity} ${this.state.selectedInventoryItem === idx ? 'selected' : ''}`;
+      el.innerHTML = item.emoji;
       el.title = `${item.name} [${RARITY[item.rarity].name}]`;
-      el.addEventListener('click', () => this.toast(`${item.name} — ${RARITY[item.rarity].name}`, item.rarity));
+      el.addEventListener('click', () => {
+        this.state.selectedInventoryItem = (this.state.selectedInventoryItem === idx) ? null : idx;
+        this.renderInventory();
+        if (this.state.selectedInventoryItem !== null) this.toast(`Selected: ${item.name} — Click island to place`, 'success');
+      });
       grid.appendChild(el);
     });
     document.getElementById('inv-count').textContent = `${this.state.inventory.length}/40`;
@@ -492,18 +622,19 @@ class StarlightEngine {
   confirmTrade() {
     if (this.state.tradeOffer.length === 0) { this.toast('Add items to your offer first!', 'warning'); return; }
     const received = [...this.state.otherOffer]; this.state.inventory.push(...received); this.state.tradeOffer = []; this.state.otherOffer = [];
-    this.renderInventory(); this.renderTrade(); this.toggleTrade(); this.toast('Trade complete! 🎉 Check your inventory.', 'success');
+    this.renderInventory(); this.renderTrade(); this.toggleTrade(); this.toast('Trade complete! 🎉 Check your inventory.', 'success'); saveGame(this.state);
   }
   cancelTrade() { this.state.inventory.push(...this.state.tradeOffer); this.state.tradeOffer = []; this.renderInventory(); this.renderTrade(); this.toggleTrade(); }
 
   sendChat() {
     const input = document.getElementById('chat-input'); const text = input.value.trim(); if (!text) return;
-    this.state.chatMessages.push({ name: this.state.player.name, text, system: false }); input.value = '';
-    this.renderChat(); this.scrollChat();
+    this.state.chatMessages.push({ name: this.state.player.name, text, system: false });
+    this.state.activeBubbles.push({ name: this.state.player.name, text, time: Date.now(), x: this.state.player.x, y: this.state.player.y });
+    input.value = ''; this.renderChat(); this.scrollChat(); saveGame(this.state);
   }
   renderChat() {
     const container = document.getElementById('chat-messages'); container.innerHTML = '';
-    this.state.chatMessages.slice(-30).forEach(msg => {
+    this.state.chatMessages.slice(-50).forEach(msg => {
       const div = document.createElement('div'); div.className = `chat-msg ${msg.system ? 'system' : ''}`;
       div.innerHTML = `<span class="chat-name">${msg.name}:</span> <span class="chat-text">${this.escapeHtml(msg.text)}</span>`;
       container.appendChild(div);
@@ -512,8 +643,55 @@ class StarlightEngine {
   scrollChat() { document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight; }
   escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
 
-  toggleCustomize() { this.toast('Character customization coming in next update! 🎨', 'warning'); }
-  toggleSettings() { this.toast('Settings panel coming soon! ⚙️', 'warning'); }
+  toggleCustomize() {
+    this.state.customizeOpen = !this.state.customizeOpen;
+    document.getElementById('customize-panel').classList.toggle('active', this.state.customizeOpen);
+    if (this.state.customizeOpen) this.updateCustomizePreview();
+  }
+  populateCustomize() {
+    const skinRow = document.getElementById('skin-colors');
+    PALETTES.skin.forEach((c, i) => {
+      const sw = document.createElement('div'); sw.className = 'color-swatch'; sw.style.background = c;
+      sw.addEventListener('click', () => { this.state.player.skinColor = i; this.updateCustomizePreview(); this.updateSwatchSelection(skinRow, sw); });
+      skinRow.appendChild(sw);
+    });
+    const hairRow = document.getElementById('hair-colors');
+    PALETTES.hair.forEach((c, i) => {
+      const sw = document.createElement('div'); sw.className = 'color-swatch'; sw.style.background = c;
+      sw.addEventListener('click', () => { this.state.player.hairColor = i; this.updateCustomizePreview(); this.updateSwatchSelection(hairRow, sw); });
+      hairRow.appendChild(sw);
+    });
+    const outfitRow = document.getElementById('outfit-colors');
+    PALETTES.clothes.forEach((c, i) => {
+      const sw = document.createElement('div'); sw.className = 'color-swatch'; sw.style.background = c;
+      sw.addEventListener('click', () => { this.state.player.outfitColor = i; this.updateCustomizePreview(); this.updateSwatchSelection(outfitRow, sw); });
+      outfitRow.appendChild(sw);
+    });
+  }
+  updateSwatchSelection(row, selected) { row.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected')); selected.classList.add('selected'); }
+  updateCustomizePreview() {
+    const canvas = document.getElementById('customize-preview'); if (!canvas) return;
+    const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, 100, 100);
+    const char = CHARACTERS.find(c => c.id === this.state.player.charId) || CHARACTERS[0];
+    this.drawAvatar(ctx, 50, 60, 1.0, char.base, this.state.player.skinColor, this.state.player.hairColor, this.state.player.outfitColor, this.state.player.accessories);
+  }
+  saveCustomization() {
+    this.drawMiniAvatar(); this.toast('Look saved! ✨', 'success');
+    this.toggleCustomize(); saveGame(this.state);
+  }
+
+  toggleSettings() {
+    this.state.settingsOpen = !this.state.settingsOpen;
+    document.getElementById('settings-panel').classList.toggle('active', this.state.settingsOpen);
+  }
+  applySettingsUI() {
+    document.getElementById('mobile-controls').classList.toggle('active', this.state.settings.mobileControls);
+    ['showNames','showBubbles','particles','music','mobileControls'].forEach(k => {
+      const el = document.getElementById('toggle-' + k.replace('mobileControls','mobile'));
+      if (el) el.classList.toggle('on', this.state.settings[k]);
+    });
+  }
+
   toggleProfile() {
     let panel = document.getElementById('profile-panel');
     if (!panel.innerHTML) {
@@ -522,7 +700,9 @@ class StarlightEngine {
         <div style="padding:1rem 0;display:flex;flex-direction:column;gap:0.75rem;">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;font-size:0.85rem;">
             <div style="background:var(--bg-deep);padding:0.5rem;border-radius:8px;"><div style="color:var(--text-muted);font-size:0.7rem;">Items</div><div>${this.state.inventory.length}</div></div>
-            <div style="background:var(--bg-deep);padding:0.5rem;border-radius:8px;"><div style="color:var(--text-muted);font-size:0.7rem;">Area</div><div>${this.state.area}</div></div>
+            <div style="background:var(--bg-deep);padding:0.5rem;border-radius:8px;"><div style="color:var(--text-muted);font-size:0.7rem;">Area</div><div>${AREAS[this.state.area].name}</div></div>
+            <div style="background:var(--bg-deep);padding:0.5rem;border-radius:8px;"><div style="color:var(--text-muted);font-size:0.7rem;">Island Items</div><div>${this.state.islandItems.length}</div></div>
+            <div style="background:var(--bg-deep);padding:0.5rem;border-radius:8px;"><div style="color:var(--text-muted);font-size:0.7rem;">Character</div><div>${(CHARACTERS.find(c=>c.id===this.state.player.charId)||{}).name||'?'}</div></div>
           </div>
         </div>`;
     }
@@ -546,7 +726,7 @@ class StarlightEngine {
     document.body.appendChild(div);
     document.getElementById('claim-reward').addEventListener('click', () => {
       this.state.inventory.push({ ...reward.item, uid: `daily_${Date.now()}` }); this.renderInventory();
-      this.toast(`Claimed ${reward.item.name}! 🎉`, 'success'); div.remove();
+      this.toast(`Claimed ${reward.item.name}! 🎉`, 'success'); div.remove(); saveGame(this.state);
     });
   }
 
@@ -557,10 +737,12 @@ class StarlightEngine {
       { name: 'LunaMage', responses: ['the stars align tonight ✨', 'I sense rare items in the forest...', 'any mages online?'] },
     ];
     setInterval(() => {
-      if (this.state.screen !== 'game') return; if (Math.random() > 0.3) return;
+      if (this.state.screen !== 'game') return; if (Math.random() > 0.25) return;
       const bot = bots[Math.floor(Math.random() * bots.length)];
       const msg = bot.responses[Math.floor(Math.random() * bot.responses.length)];
       this.state.chatMessages.push({ name: bot.name, text: msg, system: false });
+      const bplayer = this.state.onlinePlayers.find(p => p.name === bot.name);
+      if (bplayer) this.state.activeBubbles.push({ name: bot.name, text: msg, time: Date.now(), x: bplayer.x, y: bplayer.y });
       if (this.state.chatMessages.length > 50) this.state.chatMessages.shift();
       this.renderChat(); this.scrollChat();
     }, 8000);
@@ -577,201 +759,179 @@ class StarlightEngine {
     const char = CHARACTERS.find(c => c.id === this.state.player.charId) || CHARACTERS[0];
     this.drawAvatar(ctx, 18, 24, 0.5, char.base, this.state.player.skinColor, this.state.player.hairColor, this.state.player.outfitColor, this.state.player.accessories);
   }
+
+  // ─── Pixel-perfect avatar renderer ───────────────────────────
   drawAvatar(ctx, cx, cy, scale, base, skinIdx, hairIdx, outfitIdx, accessories = []) {
     const skin = PALETTES.skin[skinIdx % PALETTES.skin.length];
     const hair = PALETTES.hair[hairIdx % PALETTES.hair.length];
     const outfit = PALETTES.clothes[outfitIdx % PALETTES.clothes.length];
-    const s = scale * 4; // Scale up 4x for chibi proportions
-    
-    // Use SpriteForge-style pixel-perfect drawing
+    const s = scale * 4;
     ctx.save(); ctx.translate(cx, cy);
     ctx.imageSmoothingEnabled = false;
-    
-    // ─── DRAW PROPER CHIBI SPRITE (32×48 grid, scaled) ───────────
-    
-    // 1. LEGS (behind everything)
+
+    const roundRect = (x, y, w, h, r) => {
+      ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath(); ctx.fill();
+    };
+
+    // LEGS
     ctx.fillStyle = skin;
-    ctx.fillRect(-2*s, 14*s, 3*s, 8*s); // left leg
-    ctx.fillRect(1*s, 14*s, 3*s, 8*s);  // right leg
-    
-    // 2. FEET
+    roundRect(-2.5*s, 14*s, 3*s, 8*s, 0.5*s);
+    roundRect(0.5*s, 14*s, 3*s, 8*s, 0.5*s);
+    // FEET
     ctx.fillStyle = '#3d2719';
-    ctx.fillRect(-3*s, 22*s, 4*s, 2*s);
-    ctx.fillRect(1*s, 22*s, 4*s, 2*s);
-    
-    // 3. TORSO (outfit)
+    roundRect(-3*s, 22*s, 4*s, 2*s, 0.3*s);
+    roundRect(1*s, 22*s, 4*s, 2*s, 0.3*s);
+    // TORSO
     ctx.fillStyle = outfit;
-    ctx.fillRect(-3*s, 8*s, 8*s, 8*s); // main torso
-    ctx.fillRect(-2*s, 16*s, 6*s, 2*s); // hem
-    
-    // 4. ARMS
+    roundRect(-3.5*s, 8*s, 9*s, 8*s, 0.5*s);
+    ctx.fillStyle = hairShadow(outfit, 15);
+    roundRect(-2.5*s, 16*s, 7*s, 2*s, 0.3*s);
+    // ARMS
     ctx.fillStyle = skin;
-    ctx.fillRect(-5*s, 9*s, 2*s, 7*s);  // left arm
-    ctx.fillRect(5*s, 9*s, 2*s, 7*s);   // right arm
-    
-    // 5. HANDS
+    roundRect(-5.5*s, 9*s, 2.5*s, 7*s, 0.4*s);
+    roundRect(4.5*s, 9*s, 2.5*s, 7*s, 0.4*s);
+    // HANDS
+    roundRect(-6*s, 16*s, 3*s, 2*s, 0.3*s);
+    roundRect(4.5*s, 16*s, 3*s, 2*s, 0.3*s);
+
+    // HEAD (oversized chibi)
     ctx.fillStyle = skin;
-    ctx.fillRect(-6*s, 16*s, 3*s, 2*s);
-    ctx.fillRect(5*s, 16*s, 3*s, 2*s);
-    
-    // 6. HEAD (oversized chibi! 60% of sprite)
-    ctx.fillStyle = skin;
-    ctx.fillRect(-6*s, -8*s, 14*s, 14*s); // main head block
-    // Round corners for circle feel
-    ctx.clearRect(-6*s, -8*s, 2*s, 2*s);
-    ctx.clearRect(6*s, -8*s, 2*s, 2*s);
-    ctx.fillRect(-5*s, -7*s, 12*s, 13*s);
-    
-    // 7. FACE (highlight area)
-    ctx.fillStyle = lightenColor(skin, 10);
-    ctx.fillRect(-4*s, -6*s, 10*s, 10*s);
-    
-    // 8. EYES (large, expressive — signature chibi feature)
-    // Sclera (white)
+    roundRect(-6.5*s, -8*s, 15*s, 14*s, 2*s);
+    // Face highlight
+    ctx.fillStyle = lightenColor(skin, 12);
+    roundRect(-4.5*s, -6*s, 11*s, 10*s, 1.5*s);
+
+    // EYES
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(-3*s, -2*s, 3*s, 3*s);  // left eye
-    ctx.fillRect(2*s, -2*s, 3*s, 3*s);   // right eye
-    
-    // Pupils (dark, slightly offset down-right for cuteness)
+    roundRect(-3.5*s, -2.5*s, 3.5*s, 3.5*s, 0.8*s);
+    roundRect(1.5*s, -2.5*s, 3.5*s, 3.5*s, 0.8*s);
     ctx.fillStyle = '#1a1a1a';
-    ctx.fillRect(-2*s, -1*s, 2*s, 2*s);
-    ctx.fillRect(3*s, -1*s, 2*s, 2*s);
-    
-    // Highlights (1×1 sparkle)
+    roundRect(-2.5*s, -1.5*s, 2.5*s, 2.5*s, 0.5*s);
+    roundRect(2*s, -1.5*s, 2.5*s, 2.5*s, 0.5*s);
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(-2*s, -1*s, 1*s, 1*s);
-    ctx.fillRect(3*s, -1*s, 1*s, 1*s);
-    
-    // 9. BLUSH (soft pink under eyes)
-    ctx.fillStyle = 'rgba(255,150,150,0.5)';
-    ctx.fillRect(-4*s, 2*s, 3*s, 1*s);
-    ctx.fillRect(3*s, 2*s, 3*s, 1*s);
-    
-    // 10. MOUTH (tiny, happy)
+    ctx.fillRect(2.5*s, -1*s, 1*s, 1*s);
+
+    // BLUSH
+    ctx.fillStyle = 'rgba(255,130,130,0.45)';
+    roundRect(-4.5*s, 2*s, 3.5*s, 1.2*s, 0.5*s);
+    roundRect(2.5*s, 2*s, 3.5*s, 1.2*s, 0.5*s);
+    // MOUTH
     ctx.fillStyle = '#a06060';
-    ctx.fillRect(-1*s, 3*s, 2*s, 1*s);
-    
-    // 11. HAIR (style varies by character)
+    roundRect(-1*s, 3*s, 2.5*s, 1*s, 0.3*s);
+
+    // HAIR
     ctx.fillStyle = hair;
-    
     if (base === 'catgirl') {
-      // Twintails + cat ears
-      ctx.fillRect(-8*s, -10*s, 6*s, 8*s);  // left tail base
-      ctx.fillRect(8*s, -10*s, 6*s, 8*s);   // right tail base
-      ctx.fillRect(-10*s, -6*s, 6*s, 18*s); // left tail flow
-      ctx.fillRect(10*s, -6*s, 6*s, 18*s);  // right tail flow
-      ctx.fillRect(-4*s, -10*s, 10*s, 6*s); // bangs
-      ctx.fillStyle = hairShadow(hair, 20); // shadow
-      ctx.fillRect(-4*s, 4*s, 14*s, 2*s);
-      // Cat ears
-      ctx.fillStyle = hair;
-      ctx.fillRect(-7*s, -14*s, 5*s, 6*s);
-      ctx.fillRect(6*s, -14*s, 5*s, 6*s);
-      ctx.fillStyle = '#ffb7c5'; // inner ear
-      ctx.fillRect(-6*s, -12*s, 3*s, 3*s);
-      ctx.fillRect(7*s, -12*s, 3*s, 3*s);
-    } else if (base === 'human') {
-      // Standard hair with variations by hairIdx
-      if (hairIdx % 3 === 0) {
-        // Long flowing
-        ctx.fillRect(-7*s, -10*s, 6*s, 22*s);
-        ctx.fillRect(9*s, -10*s, 6*s, 22*s);
-        ctx.fillRect(-5*s, -10*s, 18*s, 6*s);
-      } else if (hairIdx % 3 === 1) {
-        // Short spiky
-        ctx.fillRect(-5*s, -11*s, 8*s, 5*s);
-        ctx.fillRect(5*s, -11*s, 8*s, 5*s);
-        ctx.fillRect(-3*s, -12*s, 10*s, 5*s);
-      } else {
-        // Medium wavy
-        ctx.fillRect(-6*s, -10*s, 18*s, 5*s);
-        ctx.fillRect(-4*s, -8*s, 5*s, 12*s);
-        ctx.fillRect(11*s, -8*s, 5*s, 12*s);
-      }
-      // Hair shadow
+      ctx.fillRect(-8.5*s, -10*s, 6.5*s, 8*s);
+      ctx.fillRect(8*s, -10*s, 6.5*s, 8*s);
+      ctx.fillRect(-10.5*s, -6*s, 6.5*s, 18*s);
+      ctx.fillRect(10*s, -6*s, 6.5*s, 18*s);
+      ctx.fillRect(-4.5*s, -10*s, 11*s, 6*s);
       ctx.fillStyle = hairShadow(hair, 20);
-      ctx.fillRect(-4*s, 4*s, 14*s, 2*s);
+      ctx.fillRect(-4.5*s, 4*s, 15*s, 2*s);
+      ctx.fillStyle = hair;
+      ctx.fillRect(-7*s, -14*s, 5.5*s, 6*s);
+      ctx.fillRect(6.5*s, -14*s, 5.5*s, 6*s);
+      ctx.fillStyle = '#ffb7c5';
+      ctx.fillRect(-6*s, -12*s, 3.5*s, 3.5*s);
+      ctx.fillRect(7.5*s, -12*s, 3.5*s, 3.5*s);
+    } else if (base === 'human') {
+      if (hairIdx % 3 === 0) {
+        ctx.fillRect(-7.5*s, -10*s, 6.5*s, 22*s);
+        ctx.fillRect(9.5*s, -10*s, 6.5*s, 22*s);
+        ctx.fillRect(-5.5*s, -10*s, 19*s, 6*s);
+      } else if (hairIdx % 3 === 1) {
+        ctx.fillRect(-5.5*s, -11*s, 8.5*s, 5*s);
+        ctx.fillRect(5.5*s, -11*s, 8.5*s, 5*s);
+        ctx.fillRect(-3.5*s, -12*s, 11*s, 5*s);
+      } else {
+        ctx.fillRect(-6.5*s, -10*s, 19*s, 5*s);
+        ctx.fillRect(-4.5*s, -8*s, 5.5*s, 12*s);
+        ctx.fillRect(11.5*s, -8*s, 5.5*s, 12*s);
+      }
+      ctx.fillStyle = hairShadow(hair, 20);
+      ctx.fillRect(-4.5*s, 4*s, 15*s, 2*s);
     } else if (base === 'bunny') {
-      // Bunny ears
       ctx.fillStyle = hair;
-      ctx.fillRect(-4*s, -22*s, 4*s, 20*s);
-      ctx.fillRect(8*s, -22*s, 4*s, 20*s);
-      ctx.fillStyle = '#ffb7c5'; // inner ear
-      ctx.fillRect(-3*s, -20*s, 2*s, 16*s);
-      ctx.fillRect(9*s, -20*s, 2*s, 16*s);
-      // Head fluff
+      ctx.fillRect(-4*s, -22*s, 4.5*s, 20*s);
+      ctx.fillRect(8*s, -22*s, 4.5*s, 20*s);
+      ctx.fillStyle = '#ffb7c5';
+      ctx.fillRect(-3*s, -20*s, 2.5*s, 16*s);
+      ctx.fillRect(9*s, -20*s, 2.5*s, 16*s);
       ctx.fillStyle = hair;
-      ctx.fillRect(-4*s, -8*s, 16*s, 8*s);
+      ctx.fillRect(-4*s, -8*s, 16.5*s, 8*s);
     } else if (base === 'robot') {
-      // Dome + antenna
-      ctx.fillStyle = '#888888';
-      ctx.fillRect(-4*s, -10*s, 16*s, 12*s);
-      ctx.fillStyle = '#1a1a2e'; // face screen
-      ctx.fillRect(-2*s, -6*s, 12*s, 8*s);
-      ctx.fillStyle = '#4fc3f7'; // screen eyes
-      ctx.fillRect(0, -3*s, 2*s, 2*s);
-      ctx.fillRect(5*s, -3*s, 2*s, 2*s);
-      ctx.fillStyle = '#7dd3c0'; // screen mouth
-      ctx.fillRect(2*s, 0, 4*s, 1*s);
-      // Antenna
+      ctx.fillStyle = outfit;
+      roundRect(-4.5*s, -10*s, 16.5*s, 12*s, 1*s);
+      ctx.fillStyle = '#1a1a2e';
+      roundRect(-2.5*s, -6*s, 12.5*s, 8*s, 0.5*s);
+      ctx.fillStyle = hair;
+      roundRect(0, -3*s, 2.5*s, 2.5*s, 0.3*s);
+      roundRect(5.5*s, -3*s, 2.5*s, 2.5*s, 0.3*s);
+      ctx.fillStyle = outfit;
+      roundRect(2*s, 0, 4.5*s, 1*s, 0.2*s);
       ctx.fillStyle = '#ff5252';
-      ctx.fillRect(5*s, -16*s, 2*s, 8*s);
-      ctx.fillRect(4*s, -18*s, 4*s, 3*s);
+      roundRect(5*s, -16*s, 2*s, 8*s, 0.3*s);
+      roundRect(4*s, -18*s, 4.5*s, 3*s, 0.3*s);
     }
-    
-    // 12. ACCESSORIES
+
+    // ACCESSORIES
+    ctx.fillStyle = outfit;
     accessories.forEach(acc => {
       if (acc === 'sunglasses') {
         ctx.fillStyle = '#1a1a1a';
-        ctx.fillRect(-4*s, -2*s, 4*s, 3*s);
-        ctx.fillRect(3*s, -2*s, 4*s, 3*s);
-        ctx.fillRect(0, -1*s, 3*s, 1*s);
+        roundRect(-4.5*s, -2.5*s, 4.5*s, 3*s, 0.3*s);
+        roundRect(2.5*s, -2.5*s, 4.5*s, 3*s, 0.3*s);
+        ctx.fillRect(0, -1.5*s, 3*s, 1*s);
       }
       if (acc === 'headband') {
         ctx.fillStyle = '#4a3018';
-        ctx.fillRect(-5*s, -9*s, 16*s, 2*s);
+        roundRect(-5.5*s, -9*s, 16.5*s, 2*s, 0.2*s);
       }
       if (acc === 'witch_hat') {
         ctx.fillStyle = '#2a2040';
-        ctx.fillRect(-2*s, -18*s, 10*s, 14*s);
-        ctx.fillRect(-6*s, -6*s, 18*s, 3*s);
+        roundRect(-2.5*s, -18*s, 10.5*s, 14*s, 0.5*s);
+        roundRect(-6.5*s, -6*s, 18.5*s, 3*s, 0.3*s);
         ctx.fillStyle = '#b8a9d9';
-        ctx.fillRect(2*s, -10*s, 4*s, 2*s);
+        roundRect(2*s, -10*s, 4.5*s, 2*s, 0.2*s);
       }
       if (acc === 'staff') {
         ctx.fillStyle = '#8b6914';
-        ctx.fillRect(8*s, 4*s, 2*s, 20*s);
+        roundRect(8.5*s, 4*s, 2*s, 20*s, 0.3*s);
         ctx.fillStyle = '#4fc3f7';
-        ctx.fillRect(7*s, 0, 4*s, 4*s);
+        roundRect(7.5*s, 0, 4*s, 4*s, 0.3*s);
       }
       if (acc === 'cape') {
         ctx.fillStyle = '#b8a9d9';
-        ctx.fillRect(-4*s, 8*s, 16*s, 16*s);
+        roundRect(-4.5*s, 8*s, 16.5*s, 16*s, 0.5*s);
       }
       if (acc === 'pirate_hat') {
         ctx.fillStyle = '#1a1a1a';
-        ctx.fillRect(-4*s, -14*s, 16*s, 8*s);
-        ctx.fillRect(-8*s, -8*s, 24*s, 3*s);
+        roundRect(-4.5*s, -14*s, 16.5*s, 8*s, 0.3*s);
+        roundRect(-8.5*s, -8*s, 24.5*s, 3*s, 0.2*s);
         ctx.fillStyle = '#ffd700';
-        ctx.fillRect(2*s, -10*s, 4*s, 2*s);
+        roundRect(2*s, -10*s, 4.5*s, 2*s, 0.2*s);
       }
       if (acc === 'eyepatch') {
         ctx.fillStyle = '#1a1a1a';
-        ctx.fillRect(3*s, -2*s, 4*s, 3*s);
+        roundRect(2.5*s, -2.5*s, 4.5*s, 3*s, 0.3*s);
       }
       if (acc === 'carrot') {
         ctx.fillStyle = '#ff9f5e';
-        ctx.fillRect(8*s, 12*s, 3*s, 8*s);
+        roundRect(8.5*s, 12*s, 3*s, 8*s, 0.3*s);
         ctx.fillStyle = '#7dd3c0';
-        ctx.fillRect(8*s, 8*s, 3*s, 4*s);
+        roundRect(8.5*s, 8*s, 3*s, 4*s, 0.3*s);
       }
     });
-    
-    // 13. OUTLINE (subtle dark edge for pop)
-    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-    ctx.lineWidth = 0.5 * s;
-    ctx.strokeRect(-6*s, -8*s, 14*s, 30*s);
-    
+
+    // OUTLINE
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+    ctx.lineWidth = Math.max(0.5, 0.5 * s);
+    ctx.strokeRect(-6.5*s, -8*s, 15*s, 30*s);
     ctx.restore();
   }
 
@@ -781,7 +941,7 @@ class StarlightEngine {
   }
   update(timestamp) {
     if (this.state.screen !== 'game') return;
-    const dt = (timestamp - this.state.lastTime) / 1000; this.state.lastTime = timestamp; this.state.frameCount++;
+    const dt = Math.min((timestamp - this.state.lastTime) / 1000, 0.05); this.state.lastTime = timestamp; this.state.frameCount++;
     const speed = 0.35; let dx = 0, dy = 0;
     if (this.state.keys['w'] || this.state.keys['arrowup']) dy -= speed;
     if (this.state.keys['s'] || this.state.keys['arrowdown']) dy += speed;
@@ -796,75 +956,162 @@ class StarlightEngine {
     this.state.onlinePlayers.forEach(p => {
       if (Math.random() < 0.01) { p.tx = Math.max(0.1, Math.min(0.9, p.x + (Math.random() - 0.5) * 0.3)); p.ty = Math.max(0.1, Math.min(0.9, p.y + (Math.random() - 0.5) * 0.3)); }
       if (p.tx != null) { p.x += (p.tx - p.x) * 0.02; p.y += (p.ty - p.y) * 0.02; if (Math.abs(p.tx - p.x) < 0.01) p.tx = null; }
+      p.walkFrame = (p.walkFrame || 0) + 0.15;
     });
-    if (Math.random() < 0.05) {
-      this.state.particles.push({ x: Math.random() * this.W, y: Math.random() * this.H, vx: (Math.random() - 0.5) * 0.5, vy: -Math.random() * 1,
-        life: 1, color: Math.random() > 0.5 ? '#ffd700' : '#b8a9d9', size: Math.random() * 2 + 1 });
+    // Bubbles expire
+    this.state.activeBubbles = this.state.activeBubbles.filter(b => Date.now() - b.time < 5000);
+    if (this.state.settings.particles) {
+      const area = AREAS[this.state.area];
+      if (Math.random() < 0.06) {
+        const colors = area.ambient === 'fireflies' ? ['#7dd3c0','#ffd700'] : area.ambient === 'stars' ? ['#ffd700','#b8a9d9'] : area.ambient === 'petals' ? ['#ff8a65','#ffb7c5'] : ['#ffd700','#b8a9d9'];
+        this.state.particles.push({ x: Math.random() * this.W, y: Math.random() * this.H, vx: (Math.random() - 0.5) * 0.5, vy: -Math.random() * 0.8,
+          life: 1, color: colors[Math.floor(Math.random()*colors.length)], size: Math.random() * 2 + 1 });
+      }
+      this.state.particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life -= 0.006; });
+      this.state.particles = this.state.particles.filter(p => p.life > 0);
     }
-    this.state.particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life -= 0.008; });
-    this.state.particles = this.state.particles.filter(p => p.life > 0);
   }
+
   render() {
     if (this.state.screen !== 'game') return;
     const ctx = this.ctx; const W = this.W; const H = this.H; const area = AREAS[this.state.area];
     ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = area.bg; ctx.fillRect(0, 0, W, H);
-    const groundY = H * 0.35; ctx.fillStyle = area.floorColor; ctx.fillRect(0, groundY, W, H - groundY);
+    // Background gradient
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+    bgGrad.addColorStop(0, area.bg);
+    bgGrad.addColorStop(1, lightenColor(area.bg, -10));
+    ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, W, H);
+
+    const groundY = H * 0.35;
+    // Floor gradient
+    const floorGrad = ctx.createLinearGradient(0, groundY, 0, H);
+    floorGrad.addColorStop(0, area.floorColor);
+    floorGrad.addColorStop(1, hairShadow(area.floorColor, 20));
+    ctx.fillStyle = floorGrad; ctx.fillRect(0, groundY, W, H - groundY);
+
+    // Grid
     ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth = 1; const gridSize = 40;
     for (let x = 0; x < W; x += gridSize) { ctx.beginPath(); ctx.moveTo(x, groundY); ctx.lineTo(x, H); ctx.stroke(); }
     for (let y = groundY; y < H; y += gridSize) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
-    ctx.font = '16px "VT323", monospace'; ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fillText(`${area.emoji} ${area.name}`, 20, H - 80);
+
+    // Area name
+    ctx.save();
+    ctx.font = '16px "VT323", monospace'; ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.textAlign = 'left';
+    ctx.fillText(`${area.emoji} ${area.name}`, 20, H - 80);
+    ctx.restore();
+
+    // Decorations
+    ctx.save();
     area.decorations.forEach(d => {
       const x = d.x * W; const y = groundY + (d.y * (H - groundY)) * 0.7;
-      ctx.font = '28px serif'; ctx.textAlign = 'center'; ctx.globalAlpha = 0.7; ctx.fillText(d.emoji, x, y); ctx.globalAlpha = 1;
+      ctx.font = '28px serif'; ctx.textAlign = 'center'; ctx.globalAlpha = 0.75;
+      ctx.fillText(d.emoji, x, y); ctx.globalAlpha = 1;
     });
+    ctx.restore();
+
+    // NPCs
+    ctx.save();
     area.npcs.forEach(npc => {
       const x = npc.x * W; const y = groundY + (npc.y * (H - groundY)) * 0.8;
       ctx.font = '32px serif'; ctx.textAlign = 'center'; ctx.fillText(npc.emoji, x, y);
-      ctx.font = '12px "Nunito", sans-serif'; ctx.fillStyle = npc.color; ctx.fillText(npc.name, x, y + 20);
+      ctx.font = '12px "Nunito", sans-serif'; ctx.fillStyle = npc.color; ctx.fillText(npc.name, x, y + 22);
     });
+    ctx.restore();
+
+    // Other players
     this.state.onlinePlayers.forEach(p => {
       const char = CHARACTERS.find(c => c.id === p.charId) || CHARACTERS[0];
       const px = p.x * W; const py = groundY + (p.y * (H - groundY)) * 0.8;
-      this.drawAvatar(ctx, px, py, 0.8, char.base, p.skinColor, p.hairColor, p.outfitColor, char.accessories);
-      ctx.font = '11px "Nunito", sans-serif'; ctx.fillStyle = '#b8a9d9'; ctx.textAlign = 'center'; ctx.fillText(p.name, px, py + 28);
+      const bob = Math.sin((p.walkFrame||0)) * 2;
+      this.drawAvatar(ctx, px, py + bob, 0.8, char.base, p.skinColor, p.hairColor, p.outfitColor, char.accessories);
+      if (this.state.settings.showNames) {
+        ctx.save(); ctx.font = '11px "Nunito", sans-serif'; ctx.fillStyle = '#b8a9d9'; ctx.textAlign = 'center'; ctx.fillText(p.name, px, py + 30); ctx.restore();
+      }
     });
+
+    // Local player
     const px = this.state.player.x * W; const py = groundY + (this.state.player.y * (H - groundY)) * 0.8;
     const char = CHARACTERS.find(c => c.id === this.state.player.charId) || CHARACTERS[0];
-    const bob = this.state.player.moving ? Math.sin(this.state.frameCount * 0.15) * 2 : 0;
+    const bob = this.state.player.moving ? Math.sin(this.state.frameCount * 0.15) * 3 : 0;
     this.drawAvatar(ctx, px, py + bob, 1.0, char.base, this.state.player.skinColor, this.state.player.hairColor, this.state.player.outfitColor, this.state.player.accessories);
-    ctx.font = 'bold 13px "Nunito", sans-serif'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'center'; ctx.fillText(this.state.player.name, px, py + 36);
-    ctx.strokeStyle = 'rgba(255,215,0,0.3)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px, py + 4, 22, 0, Math.PI * 2); ctx.stroke();
+    if (this.state.settings.showNames) {
+      ctx.save(); ctx.font = 'bold 13px "Nunito", sans-serif'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'center'; ctx.fillText(this.state.player.name, px, py + 38); ctx.restore();
+    }
+    ctx.save(); ctx.strokeStyle = 'rgba(255,215,0,0.25)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px, py + 4, 24, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+
+    // Island items
     if (this.state.area === 'island') {
       this.state.islandItems.forEach(item => {
         const ix = item.x * W; const iy = groundY + (item.y * (H - groundY)) * 0.7;
-        ctx.font = '24px serif'; ctx.textAlign = 'center'; ctx.fillText(item.emoji, ix, iy);
+        ctx.save(); ctx.font = '26px serif'; ctx.textAlign = 'center'; ctx.fillText(item.emoji, ix, iy); ctx.restore();
+      });
+      // Placement cursor
+      if (this.state.selectedInventoryItem !== null) {
+        const mx = this.state.mouse.x; const my = this.state.mouse.y;
+        ctx.save(); ctx.strokeStyle = 'rgba(255,215,0,0.6)'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+        ctx.beginPath(); ctx.arc(mx, my, 18, 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+      }
+    }
+
+    // Chat bubbles
+    if (this.state.settings.showBubbles) {
+      this.state.activeBubbles.forEach(b => {
+        const bx = b.x * W; const by = groundY + (b.y * (H - groundY)) * 0.8 - 50;
+        ctx.save(); ctx.fillStyle = 'rgba(26,20,40,0.9)'; ctx.strokeStyle = 'rgba(58,48,96,0.8)'; ctx.lineWidth = 1;
+        const tw = Math.min(180, Math.max(60, b.text.length * 7));
+        roundRectPath(ctx, bx - tw/2, by - 18, tw, 24, 6);
+        ctx.fill(); ctx.stroke();
+        ctx.font = '11px "Nunito", sans-serif'; ctx.fillStyle = '#f0e6ff'; ctx.textAlign = 'center';
+        ctx.fillText(b.text.substring(0, 28), bx, by - 2);
+        ctx.restore();
       });
     }
-    this.state.particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); });
-    ctx.globalAlpha = 1;
+
+    // Particles
+    if (this.state.settings.particles) {
+      ctx.save();
+      this.state.particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); });
+      ctx.restore();
+    }
+
+    // Vignette
+    ctx.save();
     const grad = ctx.createRadialGradient(W / 2, H / 2, W * 0.3, W / 2, H / 2, W * 0.8);
     grad.addColorStop(0, 'rgba(0,0,0,0)'); grad.addColorStop(1, 'rgba(0,0,0,0.4)');
-    ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H); ctx.restore();
+
+    // Island placement
     if (this.state.area === 'island' && this.state.mouse.down) {
       const mx = this.state.mouse.x / W; const my = (this.state.mouse.y - groundY) / (H - groundY);
       if (my > 0.1 && my < 0.9 && mx > 0.05 && mx < 0.95) {
-        const selectedItem = this.state.inventory[0];
-        if (selectedItem && selectedItem.type === 'furniture') {
-          this.state.islandItems.push({ ...selectedItem, x: mx, y: my * 1.2 });
-          this.state.inventory.shift(); this.renderInventory(); this.toast(`Placed ${selectedItem.name}! 🏝️`, 'success');
-        }
+        const idx = this.state.selectedInventoryItem;
+        if (idx !== null && idx >= 0 && idx < this.state.inventory.length) {
+          const selectedItem = this.state.inventory[idx];
+          if (selectedItem && selectedItem.type === 'furniture') {
+            this.state.islandItems.push({ ...selectedItem, x: mx, y: my * 1.2 });
+            this.state.inventory.splice(idx, 1);
+            this.state.selectedInventoryItem = null;
+            this.renderInventory(); this.toast(`Placed ${selectedItem.name}! 🏝️`, 'success'); saveGame(this.state);
+          } else { this.toast('Only furniture can be placed!', 'warning'); }
+        } else { this.toast('Select a furniture item first!', 'warning'); }
       }
       this.state.mouse.down = false;
     }
   }
 }
 
+function roundRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
+}
+
 // ─── Init ─────────────────────────────────────────────────────
 const engine = new StarlightEngine('game-canvas');
 window.gameEngine = engine;
 
-// Color helpers for pixel art shading
+// Color helpers
 function lightenColor(color, percent) {
   const num = parseInt(color.replace('#', ''), 16);
   const amt = Math.round(2.55 * percent);
@@ -882,6 +1129,7 @@ function hairShadow(color, percent) {
   return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
 }
 
+// Global handlers
 function enterGame() { engine.enterGame(); }
 function showLanding() { engine.showLanding(); }
 function confirmChar() { engine.confirmChar(); }
@@ -896,6 +1144,20 @@ function sendChat() { engine.sendChat(); }
 function addItemToTrade() { engine.addItemToTrade(); }
 function confirmTrade() { engine.confirmTrade(); }
 function cancelTrade() { engine.cancelTrade(); }
+function saveCustomization() { engine.saveCustomization(); }
+function setMobileKey(dir, pressed) {
+  const map = { up:'w', down:'s', left:'a', right:'d' };
+  engine.state.keys[map[dir]] = pressed;
+}
+function toggleSetting(key) {
+  engine.state.settings[key] = !engine.state.settings[key];
+  const elId = 'toggle-' + key.replace('mobileControls','mobile').replace('showNames','names').replace('showBubbles','bubbles');
+  const el = document.getElementById(elId) || document.getElementById('toggle-' + key);
+  if (el) el.classList.toggle('on', engine.state.settings[key]);
+  if (key === 'mobileControls') document.getElementById('mobile-controls').classList.toggle('active', engine.state.settings[key]);
+  saveGame(engine.state);
+}
+
 function showPublishModal() {
   const modal = document.createElement('div');
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:600;';
