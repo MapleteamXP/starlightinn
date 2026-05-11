@@ -88,6 +88,8 @@ export class Game {
     this.soundManager = new SoundManager(this.settings.sound);
 
     this.minigame = null;
+    this.treasures = [];
+    this.treasureTimer = 0;
     this.dailyRewards = new DailyRewardSystem(this);
     this.friendSystem = new FriendSystem(this);
     this.petSystem = new PetSystem(this);
@@ -316,6 +318,17 @@ export class Game {
     const tx = Math.floor(iso.x), ty = Math.floor(iso.y);
     if (tx < 0 || ty < 0 || tx >= this.room.width || ty >= this.room.height) return;
     if (this.selectedTool === 'walk') {
+      // Check treasure first
+      const treasure = this.treasures.find(t => Math.floor(t.x) === tx && Math.floor(t.y) === ty);
+      if (treasure) {
+        this.currencySystem.add(treasure.coins);
+        this.spawnParticles(tx, ty, '#f4d03f', 12);
+        this.uiManager.showNotification(`Found ★${treasure.coins} in a treasure chest!`, 'success');
+        this.soundManager.play('buy');
+        this.treasures = this.treasures.filter(t => t !== treasure);
+        this.achievementSystem.track('walk');
+        return;
+      }
       if (this.room.isWalkable(tx, ty)) {
         this.player.moveTo(tx, ty, this.room);
         this.achievementSystem.track('walk');
@@ -461,6 +474,9 @@ export class Game {
     document.getElementById('settingSound')?.addEventListener('change', e => { this.settings.sound = e.target.checked; });
     document.getElementById('settingSound')?.addEventListener('change', e => { this.settings.sound = e.target.checked; this.soundManager.setEnabled(e.target.checked); this.uiManager.showNotification(e.target.checked ? 'Sound enabled' : 'Sound muted'); });
     document.getElementById('settingSafeMode')?.addEventListener('change', e => { this.settings.safeMode = e.target.checked; this.uiManager.showNotification(e.target.checked ? 'Safe Mode enabled' : 'Safe Mode disabled'); });
+    document.getElementById('btnExportSave')?.addEventListener('click', () => this.exportSave());
+    document.getElementById('btnImportSave')?.addEventListener('click', () => document.getElementById('importFileInput')?.click());
+    document.getElementById('importFileInput')?.addEventListener('change', e => this.importSave(e));
 
     document.getElementById('minimap')?.classList.toggle('open', this.settings.showMinimap);
 
@@ -634,6 +650,69 @@ export class Game {
       this.customize[k] = v;
       this.renderCustomizePanel();
     });
+  }
+
+  exportSave() {
+    const data = {
+      currency: this.currencySystem.get(),
+      inventory: this.inventorySystem.getAll(),
+      avatar: this.customize,
+      themes: { owned: this.ownedThemes, current: this.currentTheme },
+      achievements: { progress: this.achievementSystem.progress, claimed: Array.from(this.achievementSystem.claimed), totalEarned: this.achievementSystem.totalEarned, visitedRooms: Array.from(this.achievementSystem.visitedRooms) },
+      friends: this.friendSystem.friends,
+      pet: this.petSystem.pet,
+      daily: { streak: this.dailyRewards.streak, lastClaim: this.dailyRewards.lastClaim },
+      leaderboard: this.leaderboardSystem.scores,
+      myroom: localStorage.getItem('starlight_myroom'),
+      version: '2.1'
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `starlight-inn-save-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.uiManager.showNotification('Save exported!', 'success');
+  }
+
+  importSave(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.currency !== undefined) { this.currencySystem.amount = data.currency; this.currencySystem.save(); }
+        if (data.inventory) { this.inventorySystem.items = data.inventory; this.inventorySystem.save(); }
+        if (data.avatar) { this.customize = data.avatar; this.saveAvatarToStorage(); this.applyAvatarToPlayer(); }
+        if (data.themes) { this.ownedThemes = data.themes.owned || ['classic']; this.currentTheme = data.themes.current || 'classic'; this.saveThemes(); this.applyThemeToMyRoom(); }
+        if (data.achievements) { this.achievementSystem.progress = data.achievements.progress || {}; this.achievementSystem.claimed = new Set(data.achievements.claimed || []); this.achievementSystem.totalEarned = data.achievements.totalEarned || 0; this.achievementSystem.visitedRooms = new Set(data.achievements.visitedRooms || []); this.achievementSystem.save(); }
+        if (data.friends) { this.friendSystem.friends = data.friends; this.friendSystem.save(); }
+        if (data.pet) { this.petSystem.pet = data.pet; this.petSystem.save(); }
+        if (data.daily) { this.dailyRewards.streak = data.daily.streak || 0; this.dailyRewards.lastClaim = data.daily.lastClaim || 0; this.dailyRewards.save(); }
+        if (data.leaderboard) { this.leaderboardSystem.scores = data.leaderboard; this.leaderboardSystem.save(); }
+        if (data.myroom) { localStorage.setItem('starlight_myroom', data.myroom); }
+        this.uiManager.showNotification('Save imported! Reloading...', 'success');
+        setTimeout(() => location.reload(), 1200);
+      } catch (err) {
+        this.uiManager.showNotification('Invalid save file!', 'error');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  }
+
+  saveAllData() {
+    this.currencySystem.save();
+    this.inventorySystem.save();
+    this.saveAvatarToStorage();
+    this.saveThemes();
+    this.saveMyRoom();
+    this.achievementSystem.save();
+    this.friendSystem.save();
+    this.petSystem.save();
+    this.leaderboardSystem.save();
   }
 
   saveMyRoom() {
@@ -817,8 +896,25 @@ export class Game {
     if (this.room) {
       this.room.avatars.forEach(a => a.update(dt, this.room));
       this.npcManager.update(dt, this.room);
-    this.friendSystem.update(dt);
-    this.petSystem.tick(dt);
+      this.friendSystem.update(dt);
+      this.petSystem.tick(dt);
+      // Treasure spawning
+      this.treasureTimer += dt;
+      if (this.treasureTimer > 45 && this.treasures.length < 3) {
+        this.treasureTimer = 0;
+        for (let i = 0; i < 20; i++) {
+          const tx = Math.floor(Math.random() * this.room.width);
+          const ty = Math.floor(Math.random() * this.room.height);
+          if (this.room.isWalkable(tx, ty)) {
+            this.treasures.push({ x: tx, y: ty, coins: 25 + Math.floor(Math.random() * 76), life: 30 });
+            break;
+          }
+        }
+      }
+      for (let i = this.treasures.length - 1; i >= 0; i--) {
+        this.treasures[i].life -= dt;
+        if (this.treasures[i].life <= 0) this.treasures.splice(i, 1);
+      }
     }
     for (let i = this.particles.length - 1; i >= 0; i--) {
       this.particles[i].update(dt);
@@ -872,6 +968,19 @@ export class Game {
     }
 
     this.renderAmbience(ctx);
+
+    // Render treasures
+    this.treasures.forEach(t => {
+      const sp = isoToScreen(t.x, t.y);
+      const bob = Math.sin(Date.now() / 300) * 3;
+      ctx.font = '20px Nunito, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('📦', sp.x, sp.y + bob - 8);
+      ctx.fillStyle = 'rgba(244,208,63,0.8)';
+      ctx.font = 'bold 9px Nunito, sans-serif';
+      ctx.fillText(`★${t.coins}`, sp.x, sp.y + bob + 10);
+    });
 
     const renderList = [];
     this.room.furniture.forEach(f => { renderList.push({ type: 'furniture', obj: f, zIndex: this.getZIndex(f.x, f.y, f.z + 0.5) }); });
@@ -1011,7 +1120,37 @@ export class Game {
   drawFurniture(ctx, f) {
     const sp = isoToScreen(f.x, f.y);
     const img = getFurnitureAsset(f.type);
+    const time = Date.now();
     ctx.drawImage(img, sp.x - img.width / 2, sp.y - img.height + TILE_H - f.z * (TILE_H / 2));
+
+    // Animated overlays
+    if (f.type === 'lamp' || f.type === 'chandelier') {
+      ctx.fillStyle = `rgba(255,255,200,${0.15 + Math.sin(time/300)*0.08})`;
+      ctx.beginPath();
+      ctx.arc(sp.x, sp.y - 20, 18, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (f.type === 'fountain') {
+      ctx.fillStyle = `rgba(135,206,235,${0.3 + Math.sin(time/250)*0.15})`;
+      ctx.beginPath();
+      ctx.arc(sp.x, sp.y - 35, 4 + Math.sin(time/200)*2, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (f.type === 'neon_sign') {
+      ctx.shadowColor = '#ff00ff';
+      ctx.shadowBlur = 8 + Math.sin(time/150)*4;
+      ctx.fillStyle = `rgba(255,0,255,${0.4 + Math.sin(time/200)*0.2})`;
+      ctx.font = 'bold 8px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('OPEN', sp.x, sp.y - 25);
+      ctx.shadowBlur = 0;
+    } else if (f.type === 'fireplace') {
+      ctx.fillStyle = `rgba(231,76,60,${0.25 + Math.sin(time/180)*0.1})`;
+      ctx.beginPath();
+      ctx.arc(sp.x, sp.y - 15, 12, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (f.type === 'tv') {
+      ctx.fillStyle = `rgba(102,204,255,${0.2 + Math.sin(time/400)*0.1})`;
+      ctx.fillRect(sp.x - 10, sp.y - 30, 20, 14);
+    }
   }
 
   drawAvatar(ctx, avatar) {
@@ -1064,6 +1203,15 @@ export class Game {
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(avatar.name, sp.x, sp.y - 8);
       if (avatar.isNPC) { ctx.fillStyle = 'var(--habbo-accent)'; ctx.beginPath(); ctx.arc(sp.x + 22, sp.y - 12, 3, 0, Math.PI * 2); ctx.fill(); }
+      // Player badge
+      if (!avatar.isNPC && this.achievementSystem) {
+        const badge = this.achievementSystem.getList().find(a => a.unlocked);
+        if (badge) {
+          ctx.font = 'bold 7px Nunito, sans-serif';
+          ctx.fillStyle = 'var(--habbo-accent)';
+          ctx.fillText(badge.icon, sp.x + 36, sp.y - 8);
+        }
+      }
     }
   }
 

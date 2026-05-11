@@ -35,7 +35,10 @@ export class UIManager {
       <div class="setting-row"><label>Camera Speed</label><input type="range" id="settingCamSpeed" min="1" max="10" value="5"></div>
       <div class="setting-row"><label>Sound Effects</label><input type="checkbox" id="settingSound"></div>
       <div class="setting-row"><label>Safe Mode</label><input type="checkbox" id="settingSafeMode"></div>
-      <div style="margin-top:12px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Starlight Inn v2.0<br>Built with Starlight Engine</div>
+      <div class="setting-row"><label>Export Save</label><button id="btnExportSave" style="padding:4px 10px;background:var(--habbo-light);color:white;border:1px solid var(--habbo-panel-border);border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;">Download</button></div>
+      <div class="setting-row"><label>Import Save</label><button id="btnImportSave" style="padding:4px 10px;background:var(--habbo-light);color:white;border:1px solid var(--habbo-panel-border);border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;">Upload</button></div>
+      <input type="file" id="importFileInput" style="display:none;" accept=".json">
+      <div style="margin-top:12px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Starlight Inn v2.1<br>Built with Starlight Engine</div>
     `);
     // Customize
     this._ensurePanel('customizePanel', 'Customize Avatar', `

@@ -102,6 +102,31 @@ export class ChatManager {
             this.game.renderCustomizePanel();
           }
           return;
+        case 'dice':
+        case 'roll':
+          const roll = Math.floor(Math.random() * 6) + 1;
+          player.say(`🎲 Rolled a ${roll}!`, this.chatColor, 'normal');
+          this.addHistory('You', `🎲 Rolled a ${roll}!`, timeStr, 'normal');
+          return;
+        case 'coin':
+        case 'flip':
+          const flip = Math.random() < 0.5 ? 'Heads' : 'Tails';
+          player.say(`🪙 ${flip}!`, this.chatColor, 'normal');
+          this.addHistory('You', `🪙 ${flip}!`, timeStr, 'normal');
+          return;
+        case 'trade':
+          if (this.game.uiManager) this.game.uiManager.showNotification('Trading: Walk up to a friend and use the Friends panel to gift items!', 'info');
+          return;
+        case 'gift':
+          if (this.game.uiManager) { this.game.uiManager.togglePanel('friendsPanel'); this.game.renderFriendsPanel(); }
+          return;
+        case 'pet':
+          if (this.game.uiManager) { this.game.uiManager.togglePanel('petPanel'); this.game.renderPetPanel(); }
+          return;
+        case 'save':
+          this.game.saveAllData();
+          this.game.uiManager.showNotification('Game saved!', 'success');
+          return;
         default:
           if (this.game.uiManager) this.game.uiManager.showNotification(`Unknown command: /${cmd}. Type /help for commands.`, 'error');
           return;
@@ -196,7 +221,13 @@ export class ChatManager {
 /rooms - Room navigator
 /catalog - Furniture catalog
 /inventory - Your inventory
-/customize - Avatar customization`;
+/customize - Avatar customization
+/dice or /roll - Roll a die
+/coin or /flip - Flip a coin
+/trade - Trading info
+/gift - Open friends panel
+/pet - Open pet panel
+/save - Force save game`;
     if (this.game.uiManager) this.game.uiManager.showNotification(helpText, 'info');
   }
 
