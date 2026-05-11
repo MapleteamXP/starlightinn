@@ -95,6 +95,7 @@ export class Game {
     this.selectedInventoryItem = null;
     this.placementRotation = 0;
     this.catalogCategory = 'all';
+    this.inventorySort = 'default';
     this.customize = { skinColor: '#F5CBA7', hairColor: '#5D4037', hairStyle: 'short', shirtColor: '#3498DB', pantsColor: '#2C3E50', shoeColor: '#555555', hatType: 'none', glassesType: 'none' };
 
     this.currencySystem = new CurrencySystem(1000);
@@ -121,6 +122,8 @@ export class Game {
     this.tutorialSystem = new TutorialSystem();
     this.progressionSystem = new ProgressionSystem(this);
     this.photoMode = false;
+    this.simulatedPlayers = [];
+    this.simPlayerTimer = 30 + Math.random() * 60;
 
     this.setupInput();
     this.setupUI();
@@ -868,6 +871,11 @@ export class Game {
         else this.favorites.add(type);
         this.saveFavorites();
         this.renderInventory();
+      },
+      this.inventorySort,
+      sortBy => {
+        this.inventorySort = this.inventorySort === sortBy ? 'default' : sortBy;
+        this.renderInventory();
       }
     );
   }
@@ -1272,6 +1280,23 @@ export class Game {
       const afkTime = (Date.now() - this.lastInputTime) / 1000;
       if (afkTime > 60 && !this.player.isAFK) { this.player.isAFK = true; }
       else if (afkTime < 60 && this.player.isAFK) { this.player.isAFK = false; }
+      // Simulated player join/leave
+      this.simPlayerTimer -= dt;
+      if (this.simPlayerTimer <= 0) {
+        this.simPlayerTimer = 25 + Math.random() * 50;
+        const fakeNames = ['SkyWalker','PixelDream','LunaStar','CocoBean','OceanBreeze','TigerEye','NovaFlare','MistyRain','SolarWind','EchoWave'];
+        if (Math.random() < 0.5 && this.simulatedPlayers.length < 6) {
+          const name = fakeNames[Math.floor(Math.random() * fakeNames.length)];
+          if (!this.simulatedPlayers.includes(name)) {
+            this.simulatedPlayers.push(name);
+            this.uiManager.showNotification(`${name} entered the room`, 'info', 2500);
+          }
+        } else if (this.simulatedPlayers.length > 0) {
+          const idx = Math.floor(Math.random() * this.simulatedPlayers.length);
+          const name = this.simulatedPlayers.splice(idx, 1)[0];
+          this.uiManager.showNotification(`${name} left the room`, 'info', 2500);
+        }
+      }
       // Treasure spawning
       const treasureInterval = this.eventSystem ? this.eventSystem.getTreasureInterval() : 45;
       this.treasureTimer += dt;
@@ -1298,6 +1323,19 @@ export class Game {
     const worldX = this.mouse.x - this.camera.x, worldY = this.mouse.y - this.camera.y;
     const iso = screenToIso(worldX, worldY + TILE_H / 2);
     this.hoverTile = { x: Math.floor(iso.x), y: Math.floor(iso.y) };
+    // Furniture hover detection
+    this.hoverFurniture = null;
+    if (this.room && this.room.furniture) {
+      for (const f of this.room.furniture) {
+        const fsp = isoToScreen(f.x, f.y);
+        const img = getFurnitureAsset(f.type);
+        const fx = fsp.x - img.width / 2, fy = fsp.y - img.height + TILE_H - f.z * (TILE_H / 2);
+        if (worldX >= fx && worldX <= fx + img.width && worldY >= fy && worldY <= fy + img.height) {
+          this.hoverFurniture = f;
+          break;
+        }
+      }
+    }
   }
 
   render() {
@@ -1422,6 +1460,21 @@ export class Game {
     this.particles.forEach(p => p.draw(ctx));
     if (this.player && this.petSystem) {
       this.petSystem.draw(ctx, this.player.x, this.player.y, this.camera);
+    }
+    // Furniture hover tooltip
+    if (this.hoverFurniture) {
+      const fsp = isoToScreen(this.hoverFurniture.x, this.hoverFurniture.y);
+      const sx = fsp.x + this.camera.x, sy = fsp.y + this.camera.y - 50;
+      ctx.fillStyle = 'rgba(0,0,0,0.75)';
+      const text = this.hoverFurniture.type.replace(/_/g, ' ');
+      const tw = ctx.measureText(text).width;
+      roundRect(ctx, sx - tw / 2 - 8, sy - 10, tw + 16, 22, 4);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 11px Nunito, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, sx, sy);
     }
     this.renderMinimap();
   }

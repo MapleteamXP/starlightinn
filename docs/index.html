@@ -2983,7 +2983,12 @@ var StarlightEngine = (() => {
             const div = document.createElement("div");
             div.className = "chat-msg" + (msg.type === "whisper" ? " whisper" : "") + (msg.type === "shout" ? " shout" : "");
             const nameColor = msg.name === "You" ? "var(--habbo-accent)" : "#a0d8e0";
-            div.innerHTML = `<span class="msg-name" style="color:${nameColor}">${msg.name}</span><span class="msg-time">${msg.time}</span><div class="msg-text">${msg.text}</div>`;
+            let textHtml = msg.text;
+            if (msg.name !== "You" && /\b(you|your|u\b)/i.test(msg.text)) {
+              div.style.background = "rgba(244,208,63,0.15)";
+              div.style.borderLeft = "2px solid var(--habbo-accent)";
+            }
+            div.innerHTML = `<span class="msg-name" style="color:${nameColor}">${msg.name}</span><span class="msg-time">${msg.time}</span><div class="msg-text">${textHtml}</div>`;
             container.appendChild(div);
           });
           container.scrollTop = container.scrollHeight;
@@ -3298,6 +3303,10 @@ var StarlightEngine = (() => {
         <button id="btnSellAll" style="padding:4px 10px;background:var(--habbo-danger);color:white;border:none;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;">Sell All</button>
       </div>
       <div id="favBar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;min-height:0;"></div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <button id="invSortName" style="padding:3px 8px;background:var(--habbo-dark);color:var(--habbo-text-dim);border:1px solid var(--habbo-panel-border);border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit;">A-Z</button>
+        <button id="invSortCount" style="padding:3px 8px;background:var(--habbo-dark);color:var(--habbo-text-dim);border:1px solid var(--habbo-panel-border);border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit;">Count</button>
+      </div>
       <div class="inv-grid" id="inventoryGrid"></div>
       <div style="margin-top:10px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Click an item to select it, then click a tile to place. Star items to quick-access them.</div>
     `);
@@ -3613,7 +3622,7 @@ var StarlightEngine = (() => {
             grid.appendChild(div);
           });
         }
-        renderInventory(inventory, selected, onSelect, onSell, onSellAll, favorites, onToggleFavorite) {
+        renderInventory(inventory, selected, onSelect, onSell, onSellAll, favorites, onToggleFavorite, sortBy, onSort) {
           const grid = document.getElementById("inventoryGrid");
           const favBar = document.getElementById("favBar");
           if (!grid) return;
@@ -3633,7 +3642,23 @@ var StarlightEngine = (() => {
               favBar.innerHTML = '<span style="font-size:11px;color:var(--habbo-text-dim);">Star items to quick-access them here</span>';
             }
           }
-          const items = Object.entries(inventory);
+          const sortNameBtn = document.getElementById("invSortName");
+          const sortCountBtn = document.getElementById("invSortCount");
+          if (sortNameBtn) {
+            sortNameBtn.style.color = sortBy === "name" ? "var(--habbo-accent)" : "var(--habbo-text-dim)";
+            const newBtn = sortNameBtn.cloneNode(true);
+            sortNameBtn.parentNode.replaceChild(newBtn, sortNameBtn);
+            newBtn.addEventListener("click", () => onSort && onSort("name"));
+          }
+          if (sortCountBtn) {
+            sortCountBtn.style.color = sortBy === "count" ? "var(--habbo-accent)" : "var(--habbo-text-dim)";
+            const newBtn = sortCountBtn.cloneNode(true);
+            sortCountBtn.parentNode.replaceChild(newBtn, sortCountBtn);
+            newBtn.addEventListener("click", () => onSort && onSort("count"));
+          }
+          let items = Object.entries(inventory);
+          if (sortBy === "name") items.sort((a, b) => a[0].localeCompare(b[0]));
+          else if (sortBy === "count") items.sort((a, b) => b[1] - a[1]);
           if (items.length === 0) {
             grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--habbo-text-dim);padding:20px;">Your inventory is empty. Visit the catalog to buy furniture!</div>';
             return;
@@ -5817,6 +5842,7 @@ var StarlightEngine = (() => {
           this.selectedInventoryItem = null;
           this.placementRotation = 0;
           this.catalogCategory = "all";
+          this.inventorySort = "default";
           this.customize = { skinColor: "#F5CBA7", hairColor: "#5D4037", hairStyle: "short", shirtColor: "#3498DB", pantsColor: "#2C3E50", shoeColor: "#555555", hatType: "none", glassesType: "none" };
           this.currencySystem = new CurrencySystem(1e3);
           this.inventorySystem = new InventorySystem();
@@ -5841,6 +5867,8 @@ var StarlightEngine = (() => {
           this.tutorialSystem = new TutorialSystem();
           this.progressionSystem = new ProgressionSystem(this);
           this.photoMode = false;
+          this.simulatedPlayers = [];
+          this.simPlayerTimer = 30 + Math.random() * 60;
           this.setupInput();
           this.setupUI();
           const myRoom = ROOM_TEMPLATES.find((r) => r.id === "myroom");
@@ -6733,6 +6761,11 @@ var StarlightEngine = (() => {
               else this.favorites.add(type);
               this.saveFavorites();
               this.renderInventory();
+            },
+            this.inventorySort,
+            (sortBy) => {
+              this.inventorySort = this.inventorySort === sortBy ? "default" : sortBy;
+              this.renderInventory();
             }
           );
         }
@@ -7168,6 +7201,22 @@ var StarlightEngine = (() => {
             } else if (afkTime < 60 && this.player.isAFK) {
               this.player.isAFK = false;
             }
+            this.simPlayerTimer -= dt;
+            if (this.simPlayerTimer <= 0) {
+              this.simPlayerTimer = 25 + Math.random() * 50;
+              const fakeNames = ["SkyWalker", "PixelDream", "LunaStar", "CocoBean", "OceanBreeze", "TigerEye", "NovaFlare", "MistyRain", "SolarWind", "EchoWave"];
+              if (Math.random() < 0.5 && this.simulatedPlayers.length < 6) {
+                const name = fakeNames[Math.floor(Math.random() * fakeNames.length)];
+                if (!this.simulatedPlayers.includes(name)) {
+                  this.simulatedPlayers.push(name);
+                  this.uiManager.showNotification(`${name} entered the room`, "info", 2500);
+                }
+              } else if (this.simulatedPlayers.length > 0) {
+                const idx = Math.floor(Math.random() * this.simulatedPlayers.length);
+                const name = this.simulatedPlayers.splice(idx, 1)[0];
+                this.uiManager.showNotification(`${name} left the room`, "info", 2500);
+              }
+            }
             const treasureInterval = this.eventSystem ? this.eventSystem.getTreasureInterval() : 45;
             this.treasureTimer += dt;
             if (this.treasureTimer > treasureInterval && this.treasures.length < 3) {
@@ -7193,6 +7242,18 @@ var StarlightEngine = (() => {
           const worldX = this.mouse.x - this.camera.x, worldY = this.mouse.y - this.camera.y;
           const iso = screenToIso(worldX, worldY + TILE_H / 2);
           this.hoverTile = { x: Math.floor(iso.x), y: Math.floor(iso.y) };
+          this.hoverFurniture = null;
+          if (this.room && this.room.furniture) {
+            for (const f of this.room.furniture) {
+              const fsp = isoToScreen(f.x, f.y);
+              const img = getFurnitureAsset(f.type);
+              const fx = fsp.x - img.width / 2, fy = fsp.y - img.height + TILE_H - f.z * (TILE_H / 2);
+              if (worldX >= fx && worldX <= fx + img.width && worldY >= fy && worldY <= fy + img.height) {
+                this.hoverFurniture = f;
+                break;
+              }
+            }
+          }
         }
         render() {
           const ctx = this.ctx;
@@ -7321,6 +7382,20 @@ var StarlightEngine = (() => {
           this.particles.forEach((p) => p.draw(ctx));
           if (this.player && this.petSystem) {
             this.petSystem.draw(ctx, this.player.x, this.player.y, this.camera);
+          }
+          if (this.hoverFurniture) {
+            const fsp = isoToScreen(this.hoverFurniture.x, this.hoverFurniture.y);
+            const sx = fsp.x + this.camera.x, sy = fsp.y + this.camera.y - 50;
+            ctx.fillStyle = "rgba(0,0,0,0.75)";
+            const text = this.hoverFurniture.type.replace(/_/g, " ");
+            const tw = ctx.measureText(text).width;
+            roundRect(ctx, sx - tw / 2 - 8, sy - 10, tw + 16, 22, 4);
+            ctx.fill();
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 11px Nunito, sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(text, sx, sy);
           }
           this.renderMinimap();
         }

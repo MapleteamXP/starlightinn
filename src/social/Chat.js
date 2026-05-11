@@ -207,7 +207,13 @@ export class ChatManager {
       const div = document.createElement('div');
       div.className = 'chat-msg' + (msg.type === 'whisper' ? ' whisper' : '') + (msg.type === 'shout' ? ' shout' : '');
       const nameColor = msg.name === 'You' ? 'var(--habbo-accent)' : '#a0d8e0';
-      div.innerHTML = `<span class="msg-name" style="color:${nameColor}">${msg.name}</span><span class="msg-time">${msg.time}</span><div class="msg-text">${msg.text}</div>`;
+      let textHtml = msg.text;
+      // Highlight mentions
+      if (msg.name !== 'You' && /\b(you|your|u\b)/i.test(msg.text)) {
+        div.style.background = 'rgba(244,208,63,0.15)';
+        div.style.borderLeft = '2px solid var(--habbo-accent)';
+      }
+      div.innerHTML = `<span class="msg-name" style="color:${nameColor}">${msg.name}</span><span class="msg-time">${msg.time}</span><div class="msg-text">${textHtml}</div>`;
       container.appendChild(div);
     });
     container.scrollTop = container.scrollHeight;

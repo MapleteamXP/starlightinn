@@ -35,6 +35,10 @@ export class UIManager {
         <button id="btnSellAll" style="padding:4px 10px;background:var(--habbo-danger);color:white;border:none;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;">Sell All</button>
       </div>
       <div id="favBar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;min-height:0;"></div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <button id="invSortName" style="padding:3px 8px;background:var(--habbo-dark);color:var(--habbo-text-dim);border:1px solid var(--habbo-panel-border);border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit;">A-Z</button>
+        <button id="invSortCount" style="padding:3px 8px;background:var(--habbo-dark);color:var(--habbo-text-dim);border:1px solid var(--habbo-panel-border);border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit;">Count</button>
+      </div>
       <div class="inv-grid" id="inventoryGrid"></div>
       <div style="margin-top:10px;font-size:11px;color:var(--habbo-text-dim);text-align:center;">Click an item to select it, then click a tile to place. Star items to quick-access them.</div>
     `);
@@ -369,7 +373,7 @@ export class UIManager {
     });
   }
 
-  renderInventory(inventory, selected, onSelect, onSell, onSellAll, favorites, onToggleFavorite) {
+  renderInventory(inventory, selected, onSelect, onSell, onSellAll, favorites, onToggleFavorite, sortBy, onSort) {
     const grid = document.getElementById('inventoryGrid');
     const favBar = document.getElementById('favBar');
     if (!grid) return;
@@ -389,7 +393,24 @@ export class UIManager {
         favBar.innerHTML = '<span style="font-size:11px;color:var(--habbo-text-dim);">Star items to quick-access them here</span>';
       }
     }
-    const items = Object.entries(inventory);
+    // Sort buttons
+    const sortNameBtn = document.getElementById('invSortName');
+    const sortCountBtn = document.getElementById('invSortCount');
+    if (sortNameBtn) {
+      sortNameBtn.style.color = sortBy === 'name' ? 'var(--habbo-accent)' : 'var(--habbo-text-dim)';
+      const newBtn = sortNameBtn.cloneNode(true);
+      sortNameBtn.parentNode.replaceChild(newBtn, sortNameBtn);
+      newBtn.addEventListener('click', () => onSort && onSort('name'));
+    }
+    if (sortCountBtn) {
+      sortCountBtn.style.color = sortBy === 'count' ? 'var(--habbo-accent)' : 'var(--habbo-text-dim)';
+      const newBtn = sortCountBtn.cloneNode(true);
+      sortCountBtn.parentNode.replaceChild(newBtn, sortCountBtn);
+      newBtn.addEventListener('click', () => onSort && onSort('count'));
+    }
+    let items = Object.entries(inventory);
+    if (sortBy === 'name') items.sort((a, b) => a[0].localeCompare(b[0]));
+    else if (sortBy === 'count') items.sort((a, b) => b[1] - a[1]);
     if (items.length === 0) {
       grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--habbo-text-dim);padding:20px;">Your inventory is empty. Visit the catalog to buy furniture!</div>';
       return;
