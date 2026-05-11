@@ -362,6 +362,10 @@ export class Game {
           this.uiManager.togglePanel('galleryPanel');
           this.uiManager.renderGallery();
           break;
+        case 'c':
+          this.uiManager.togglePanel('collectionPanel');
+          this.renderCollectionPanel();
+          break;
         case 'q':
           this.uiManager.togglePanel('questPanel');
           this.renderQuestPanel();
@@ -422,6 +426,13 @@ export class Game {
       if (npc) {
         this.inboxSystem.maybeReceiveRandom();
         this.questSystem.track('talk');
+        // NPC occasional gift
+        if (Math.random() < 0.08) {
+          const giftCoins = 10 + Math.floor(Math.random() * 41);
+          this.currencySystem.add(giftCoins);
+          this.uiManager.showNotification(`${npc.name} gave you ★${giftCoins}!`, 'success');
+          this.spawnParticles(tx, ty, '#f4d03f', 8);
+        }
         this.uiManager.showNPCProfile(npc,
           () => {
             this.player.moveTo(tx, ty, this.room);
@@ -475,6 +486,7 @@ export class Game {
 
     document.getElementById('btnNavigator')?.addEventListener('click', () => this.uiManager.togglePanel('navigatorPanel'));
     document.getElementById('btnCatalog')?.addEventListener('click', () => this.uiManager.togglePanel('catalogPanel'));
+    document.getElementById('catalogSearchInput')?.addEventListener('input', () => { if (document.getElementById('catalogPanel')?.classList.contains('open')) this.renderCatalog(); });
     document.getElementById('btnInventory')?.addEventListener('click', () => this.uiManager.togglePanel('inventoryPanel'));
     document.getElementById('btnSettings')?.addEventListener('click', () => this.uiManager.togglePanel('settingsPanel'));
     document.getElementById('btnCustomize')?.addEventListener('click', () => { this.uiManager.togglePanel('customizePanel'); this.renderCustomizePanel(); });
@@ -861,19 +873,22 @@ export class Game {
   }
 
   renderCatalog() {
-    const items = this.catalogCategory === 'all' ? FURNITURE_CATALOG : FURNITURE_CATALOG.filter(i => i.category === this.catalogCategory);
+    const searchInput = document.getElementById('catalogSearchInput');
+    const searchQuery = searchInput ? searchInput.value : '';
+    let items = this.catalogCategory === 'all' ? FURNITURE_CATALOG : FURNITURE_CATALOG.filter(i => i.category === this.catalogCategory);
+    if (searchQuery) items = items.filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase()) || i.id.toLowerCase().includes(searchQuery.toLowerCase()));
     this.uiManager.renderCatalog(items, CATALOG_CATEGORIES, this.catalogCategory, this.currencySystem.get(),
       item => {
         if (this.currencySystem.spend(item.price)) {
           this.inventorySystem.add(item.id, 1);
           this.uiManager.updateCurrency(this.currencySystem.get());
-    this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
+          this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
           this.uiManager.showNotification(`Purchased ${item.name}!`);
           this.soundManager.play('buy');
           this.achievementSystem.track('buy');
           this.statsSystem.inc('furnitureBought');
-        this.challengeSystem.track('buy');
-        this.progressionSystem.addXP(10);
+          this.challengeSystem.track('buy');
+          this.progressionSystem.addXP(10);
           this.statsSystem.inc('totalCoinsSpent', item.price);
           this.renderCatalog();
         } else {
@@ -881,7 +896,8 @@ export class Game {
           this.soundManager.play('error');
         }
       },
-      catId => { this.catalogCategory = catId; this.renderCatalog(); }
+      catId => { this.catalogCategory = catId; this.renderCatalog(); },
+      searchQuery
     );
   }
 
@@ -1269,6 +1285,7 @@ export class Game {
       { key: 'M', action: 'Toggle minimap' },
       { key: 'P', action: 'Toggle photo mode' },
       { key: 'Q', action: 'Toggle quest panel' },
+      { key: 'C', action: 'Collection panel' },
       { key: 'N', action: 'Screenshot gallery' },
       { key: 'ESC', action: 'Close panels / exit photo mode' },
       { key: 'Space', action: 'Punch in minigames' },
@@ -1875,6 +1892,14 @@ export class Game {
         mmCtx.beginPath(); mmCtx.arc(offX + a.x * scale + scale / 2, offY + a.y * scale + scale / 2, radius + 1, 0, Math.PI * 2); mmCtx.stroke();
       }
     });
+    // Pet dot
+    if (this.petSystem && this.petSystem.pet && this.player) {
+      const petPos = this.petSystem.getPosition(this.player.x, this.player.y);
+      mmCtx.fillStyle = '#9b59b6';
+      mmCtx.beginPath();
+      mmCtx.arc(offX + petPos.x * scale + scale / 2, offY + petPos.y * scale + scale / 2, scale / 3, 0, Math.PI * 2);
+      mmCtx.fill();
+    }
   }
 
   startMinigame(MinigameClass) {

@@ -3338,6 +3338,7 @@ var StarlightEngine = (() => {
       <div class="theme-list" id="expansionList"></div>
     `);
           this._ensurePanel("catalogPanel", "Furniture Catalog", `
+      <input type="text" id="catalogSearchInput" placeholder="Search catalog..." style="width:100%;padding:6px 10px;margin-bottom:10px;border:1px solid var(--habbo-panel-border);border-radius:6px;background:var(--habbo-dark);color:white;font-family:inherit;font-size:12px;box-sizing:border-box;">
       <div class="catalog-tabs" id="catalogTabs"></div>
       <div class="catalog-grid" id="catalogGrid"></div>
     `);
@@ -3660,7 +3661,7 @@ var StarlightEngine = (() => {
             });
           }
         }
-        renderCatalog(items, categories, activeCategory, currency, onBuy, onCategory) {
+        renderCatalog(items, categories, activeCategory, currency, onBuy, onCategory, searchQuery = "") {
           const tabs = document.getElementById("catalogTabs");
           if (tabs) {
             tabs.innerHTML = "";
@@ -3675,7 +3676,13 @@ var StarlightEngine = (() => {
           const grid = document.getElementById("catalogGrid");
           if (!grid) return;
           grid.innerHTML = "";
-          items.forEach((item) => {
+          const q = searchQuery.toLowerCase();
+          const filtered = q ? items.filter((i) => i.name.toLowerCase().includes(q) || i.id.toLowerCase().includes(q)) : items;
+          if (filtered.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--habbo-text-dim);padding:20px;">No items match your search.</div>';
+            return;
+          }
+          filtered.forEach((item) => {
             const div = document.createElement("div");
             div.className = "catalog-item";
             div.title = item.desc;
@@ -5787,6 +5794,11 @@ var StarlightEngine = (() => {
         getEmoji() {
           return this.pet ? PET_EMOJIS[this.pet.type] || "\u{1F43E}" : "";
         }
+        getPosition(playerX, playerY) {
+          if (!this.pet) return { x: playerX, y: playerY };
+          const offset = { x: -0.6, y: 0.4 };
+          return { x: playerX + offset.x + Math.sin(Date.now() / 400) * 0.08, y: playerY + offset.y };
+        }
         draw(ctx, playerX, playerY, camera) {
           if (!this.pet) return;
           const offset = { x: -0.6, y: 0.4 };
@@ -6355,6 +6367,10 @@ var StarlightEngine = (() => {
                 this.uiManager.togglePanel("galleryPanel");
                 this.uiManager.renderGallery();
                 break;
+              case "c":
+                this.uiManager.togglePanel("collectionPanel");
+                this.renderCollectionPanel();
+                break;
               case "q":
                 this.uiManager.togglePanel("questPanel");
                 this.renderQuestPanel();
@@ -6429,6 +6445,12 @@ var StarlightEngine = (() => {
             if (npc) {
               this.inboxSystem.maybeReceiveRandom();
               this.questSystem.track("talk");
+              if (Math.random() < 0.08) {
+                const giftCoins = 10 + Math.floor(Math.random() * 41);
+                this.currencySystem.add(giftCoins);
+                this.uiManager.showNotification(`${npc.name} gave you \u2605${giftCoins}!`, "success");
+                this.spawnParticles(tx, ty, "#f4d03f", 8);
+              }
               this.uiManager.showNPCProfile(
                 npc,
                 () => {
@@ -6481,6 +6503,9 @@ var StarlightEngine = (() => {
           this.uiManager.createPanels();
           document.getElementById("btnNavigator")?.addEventListener("click", () => this.uiManager.togglePanel("navigatorPanel"));
           document.getElementById("btnCatalog")?.addEventListener("click", () => this.uiManager.togglePanel("catalogPanel"));
+          document.getElementById("catalogSearchInput")?.addEventListener("input", () => {
+            if (document.getElementById("catalogPanel")?.classList.contains("open")) this.renderCatalog();
+          });
           document.getElementById("btnInventory")?.addEventListener("click", () => this.uiManager.togglePanel("inventoryPanel"));
           document.getElementById("btnSettings")?.addEventListener("click", () => this.uiManager.togglePanel("settingsPanel"));
           document.getElementById("btnCustomize")?.addEventListener("click", () => {
@@ -6996,7 +7021,10 @@ var StarlightEngine = (() => {
           );
         }
         renderCatalog() {
-          const items = this.catalogCategory === "all" ? FURNITURE_CATALOG : FURNITURE_CATALOG.filter((i) => i.category === this.catalogCategory);
+          const searchInput = document.getElementById("catalogSearchInput");
+          const searchQuery = searchInput ? searchInput.value : "";
+          let items = this.catalogCategory === "all" ? FURNITURE_CATALOG : FURNITURE_CATALOG.filter((i) => i.category === this.catalogCategory);
+          if (searchQuery) items = items.filter((i) => i.name.toLowerCase().includes(searchQuery.toLowerCase()) || i.id.toLowerCase().includes(searchQuery.toLowerCase()));
           this.uiManager.renderCatalog(
             items,
             CATALOG_CATEGORIES,
@@ -7023,7 +7051,8 @@ var StarlightEngine = (() => {
             (catId) => {
               this.catalogCategory = catId;
               this.renderCatalog();
-            }
+            },
+            searchQuery
           );
         }
         renderInventory() {
@@ -7459,6 +7488,7 @@ var StarlightEngine = (() => {
             { key: "M", action: "Toggle minimap" },
             { key: "P", action: "Toggle photo mode" },
             { key: "Q", action: "Toggle quest panel" },
+            { key: "C", action: "Collection panel" },
             { key: "N", action: "Screenshot gallery" },
             { key: "ESC", action: "Close panels / exit photo mode" },
             { key: "Space", action: "Punch in minigames" },
@@ -8087,6 +8117,13 @@ var StarlightEngine = (() => {
               mmCtx.stroke();
             }
           });
+          if (this.petSystem && this.petSystem.pet && this.player) {
+            const petPos = this.petSystem.getPosition(this.player.x, this.player.y);
+            mmCtx.fillStyle = "#9b59b6";
+            mmCtx.beginPath();
+            mmCtx.arc(offX + petPos.x * scale + scale / 2, offY + petPos.y * scale + scale / 2, scale / 3, 0, Math.PI * 2);
+            mmCtx.fill();
+          }
         }
         startMinigame(MinigameClass) {
           this.uiManager.closeAllPanels();

@@ -109,6 +109,12 @@ export class PetSystem {
     return this.pet ? (PET_EMOJIS[this.pet.type] || '🐾') : '';
   }
 
+  getPosition(playerX, playerY) {
+    if (!this.pet) return { x: playerX, y: playerY };
+    const offset = { x: -0.6, y: 0.4 };
+    return { x: playerX + offset.x + Math.sin(Date.now() / 400) * 0.08, y: playerY + offset.y };
+  }
+
   draw(ctx, playerX, playerY, camera) {
     if (!this.pet) return;
     const offset = { x: -0.6, y: 0.4 };

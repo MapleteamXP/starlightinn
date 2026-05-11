@@ -25,6 +25,7 @@ export class UIManager {
     `);
     // Catalog
     this._ensurePanel('catalogPanel', 'Furniture Catalog', `
+      <input type="text" id="catalogSearchInput" placeholder="Search catalog..." style="width:100%;padding:6px 10px;margin-bottom:10px;border:1px solid var(--habbo-panel-border);border-radius:6px;background:var(--habbo-dark);color:white;font-family:inherit;font-size:12px;box-sizing:border-box;">
       <div class="catalog-tabs" id="catalogTabs"></div>
       <div class="catalog-grid" id="catalogGrid"></div>
     `);
@@ -367,7 +368,7 @@ export class UIManager {
     }
   }
 
-  renderCatalog(items, categories, activeCategory, currency, onBuy, onCategory) {
+  renderCatalog(items, categories, activeCategory, currency, onBuy, onCategory, searchQuery = '') {
     const tabs = document.getElementById('catalogTabs');
     if (tabs) {
       tabs.innerHTML = '';
@@ -382,7 +383,13 @@ export class UIManager {
     const grid = document.getElementById('catalogGrid');
     if (!grid) return;
     grid.innerHTML = '';
-    items.forEach(item => {
+    const q = searchQuery.toLowerCase();
+    const filtered = q ? items.filter(i => i.name.toLowerCase().includes(q) || i.id.toLowerCase().includes(q)) : items;
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--habbo-text-dim);padding:20px;">No items match your search.</div>';
+      return;
+    }
+    filtered.forEach(item => {
       const div = document.createElement('div');
       div.className = 'catalog-item';
       div.title = item.desc;
