@@ -39,6 +39,7 @@ import { ProgressionSystem } from '../economy/Progression.js';
 import { PetSystem } from '../world/Pet.js';
 import { InboxSystem } from '../social/Inbox.js';
 import { ClubSystem } from '../social/ClubSystem.js';
+import { RoomRatingSystem } from '../social/RoomRatings.js';
 import { QuestSystem } from '../economy/Quests.js';
 import { NetworkManager } from '../network/NetworkManager.js';
 import { WardrobeSystem } from '../customization/WardrobeSystem.js';
@@ -83,6 +84,8 @@ export class Game {
     this.loadBookmarks();
     this.favorites = new Set();
     this.loadFavorites();
+    this.ignoredPlayers = new Set();
+    this.loadIgnoredPlayers();
     this.myRoomSize = 10;
     this.myRoomName = 'My Room';
     this.recentRooms = [];
@@ -126,6 +129,7 @@ export class Game {
     this.petSystem = new PetSystem(this);
     this.inboxSystem = new InboxSystem(this);
     this.clubSystem = new ClubSystem();
+    this.roomRatingSystem = new RoomRatingSystem();
     this.questSystem = new QuestSystem(this);
     this.achievementSystem = new AchievementSystem(this);
     this.leaderboardSystem = new LeaderboardSystem();
@@ -743,6 +747,7 @@ export class Game {
     document.getElementById('settingTimestamps')?.addEventListener('change', e => { this.settings.showTimestamps = e.target.checked; this.chatManager.showTimestamps = e.target.checked; this.saveSettings(); this.chatManager.renderHistory(); this.uiManager.showNotification(e.target.checked ? 'Timestamps on' : 'Timestamps off'); });
     document.getElementById('settingBubbleDuration')?.addEventListener('input', e => { this.settings.chatBubbleDuration = parseFloat(e.target.value); this.saveSettings(); });
     document.getElementById('btnLikeRoom')?.addEventListener('click', () => this.toggleLikeRoom());
+    document.getElementById('btnRateRoom')?.addEventListener('click', () => this.uiManager.showRateRoomDialog((stars, review) => this.rateCurrentRoom(stars, review)));
     document.getElementById('btnExportSave')?.addEventListener('click', () => this.exportSave());
     document.getElementById('btnImportSave')?.addEventListener('click', () => document.getElementById('importFileInput')?.click());
     document.getElementById('importFileInput')?.addEventListener('change', e => this.importSave(e));
@@ -783,6 +788,12 @@ export class Game {
       { icon: '\u{2764}', action: () => this.player.say('\u{2764} Love it!', this.chatColor, 'emote') },
       { icon: '\u{1F4A4}', action: () => { this.player.isSitting = true; this.player.say('\u{1F4A4} Zzz...', this.chatColor, 'emote'); } },
       { icon: '\u{1F44F}', action: () => this.player.say('\u{1F44F} *claps*', this.chatColor, 'emote') },
+      { icon: '\u{1F647}', action: () => { this.player.isBowing = true; setTimeout(() => this.player.isBowing = false, 1500); this.player.say('\u{1F647} *bows*', this.chatColor, 'emote'); } },
+      { icon: '\u{1F389}', action: () => { this.player.isCheering = true; setTimeout(() => this.player.isCheering = false, 1500); this.player.say('\u{1F389} Woohoo!', this.chatColor, 'emote'); } },
+      { icon: '\u{1F62E}', action: () => this.player.say('\u{1F62E} Wow!', this.chatColor, 'emote') },
+      { icon: '\u{1F624}', action: () => this.player.say('\u{1F624} Grrr!', this.chatColor, 'emote') },
+      { icon: '\u{1F914}', action: () => this.player.say('\u{1F914} Hmm...', this.chatColor, 'emote') },
+      { icon: '\u{1F525}', action: () => this.player.say('\u{1F525} Too hot!', this.chatColor, 'emote') },
     ];
     inner.innerHTML = '';
     const radius = 65;
@@ -907,6 +918,29 @@ export class Game {
     try { localStorage.setItem('starlight_favorites', JSON.stringify(Array.from(this.favorites))); } catch (e) {}
   }
 
+  loadIgnoredPlayers() {
+    try {
+      const data = JSON.parse(localStorage.getItem('starlight_ignored'));
+      if (data && Array.isArray(data)) this.ignoredPlayers = new Set(data);
+    } catch (e) {}
+  }
+
+  saveIgnoredPlayers() {
+    try { localStorage.setItem('starlight_ignored', JSON.stringify(Array.from(this.ignoredPlayers))); } catch (e) {}
+  }
+
+  ignorePlayer(name) {
+    this.ignoredPlayers.add(name);
+    this.saveIgnoredPlayers();
+    this.uiManager.showNotification(`Ignored ${name}.`, 'info');
+  }
+
+  unignorePlayer(name) {
+    this.ignoredPlayers.delete(name);
+    this.saveIgnoredPlayers();
+    this.uiManager.showNotification(`Unignored ${name}.`, 'info');
+  }
+
   loadBookmarks() {
     try {
       const data = JSON.parse(localStorage.getItem('starlight_bookmarks'));
@@ -950,6 +984,12 @@ export class Game {
       this.soundManager.play('click');
     }
     this.saveLikedRooms();
+  }
+
+  rateCurrentRoom(stars, review) {
+    if (!this.room) return;
+    this.roomRatingSystem.rate(this.room.id, stars, review);
+    this.uiManager.showNotification(`Rated ${this.room.name} ${stars} stars!`, 'success');
   }
 
   loadThemes() {
@@ -1024,7 +1064,7 @@ export class Game {
       else this.bookmarkedRooms.add(id);
       this.saveBookmarks();
       this.renderNavigator();
-    }, this.visitorLog);
+    }, this.visitorLog, roomId => this.roomRatingSystem.getAverage(roomId));
     this.uiManager.renderExpansions(ROOM_EXPANSIONS, this.myRoomSize, this.currencySystem.get(), expansion => {
       if (this.currencySystem.spend(expansion.price)) {
         this.expandMyRoom(expansion.size);
@@ -1189,6 +1229,26 @@ export class Game {
     }
   }
 
+  exportOutfitCode() {
+    const code = this.wardrobeSystem.exportOutfit(this.customize);
+    if (code) {
+      this.uiManager.showOutfitCode(code);
+    }
+  }
+
+  importOutfitCode(code) {
+    const outfit = this.wardrobeSystem.importOutfit(code);
+    if (outfit) {
+      Object.assign(this.customize, outfit);
+      this.applyAvatarToPlayer();
+      this.saveAvatarToStorage();
+      this.renderCustomizePanel();
+      this.uiManager.showNotification('Outfit imported!', 'success');
+    } else {
+      this.uiManager.showNotification('Invalid outfit code.', 'error');
+    }
+  }
+
   applyAvatarToPlayer() {
     if (!this.player) return;
     const c = this.customize;
@@ -1232,7 +1292,9 @@ export class Game {
     }, this.wardrobeSystem.getAll(),
     idx => this.saveWardrobePreset(idx),
     idx => this.applyWardrobePreset(idx),
-    idx => this.deleteWardrobePreset(idx)
+    idx => this.deleteWardrobePreset(idx),
+    () => this.exportOutfitCode(),
+    code => this.importOutfitCode(code)
     );
   }
 
@@ -1258,6 +1320,8 @@ export class Game {
       inbox: { messages: this.inboxSystem.messages, unreadCount: this.inboxSystem.unreadCount },
       settings: { showWeather: this.settings.showWeather, myRoomPrivate: this.settings.myRoomPrivate, showTimestamps: this.settings.showTimestamps, chatBubbleDuration: this.settings.chatBubbleDuration },
       bookmarks: Array.from(this.bookmarkedRooms),
+      ignored: Array.from(this.ignoredPlayers),
+      roomRatings: this.roomRatingSystem.ratings,
       quests: { active: this.questSystem.active, completed: this.questSystem.completed },
       version: '2.3'
     };
@@ -1292,6 +1356,8 @@ export class Game {
         if (data.settings) { this.settings.showWeather = data.settings.showWeather !== false; this.settings.myRoomPrivate = data.settings.myRoomPrivate === true; this.settings.showTimestamps = data.settings.showTimestamps !== false; this.settings.chatBubbleDuration = data.settings.chatBubbleDuration || 4.5; this.saveSettings(); }
         if (data.quests) { this.questSystem.active = data.quests.active || null; this.questSystem.completed = data.quests.completed || []; this.questSystem.save(); }
         if (data.bookmarks) { this.bookmarkedRooms = new Set(data.bookmarks); this.saveBookmarks(); }
+      if (data.ignored) { this.ignoredPlayers = new Set(data.ignored); this.saveIgnoredPlayers(); }
+      if (data.roomRatings) { this.roomRatingSystem.ratings = data.roomRatings; this.roomRatingSystem.save(); }
         this.uiManager.showNotification('Save imported! Reloading...', 'success');
         setTimeout(() => location.reload(), 1200);
       } catch (err) {
@@ -1535,8 +1601,15 @@ export class Game {
       },
       onWalk: () => {
         this.player.moveTo(Math.round(avatar.x), Math.round(avatar.y), this.room);
+      },
+      onIgnore: () => {
+        if (this.ignoredPlayers.has(avatar.name)) {
+          this.unignorePlayer(avatar.name);
+        } else {
+          this.ignorePlayer(avatar.name);
+        }
       }
-    }, isRemote, remoteId);
+    }, isRemote, remoteId, this.ignoredPlayers.has(avatar.name));
   }
 
   openJukebox() {
@@ -2325,6 +2398,54 @@ export class Game {
     } else if (f.type === 'tv') {
       ctx.fillStyle = `rgba(102,204,255,${0.2 + Math.sin(time/400)*0.1})`;
       ctx.fillRect(sp.x - 10, sp.y - 30, 20, 14);
+    } else if (f.type === 'candle' || f.type === 'cake') {
+      ctx.fillStyle = `rgba(255,180,50,${0.4 + Math.sin(time/120)*0.2})`;
+      ctx.beginPath(); ctx.arc(sp.x, sp.y - 35, 4 + Math.sin(time/100), 0, Math.PI * 2); ctx.fill();
+    } else if (f.type === 'telescope') {
+      ctx.fillStyle = `rgba(100,200,255,${0.15 + Math.sin(time/500)*0.08})`;
+      ctx.beginPath(); ctx.arc(sp.x + 8, sp.y - 22, 6, 0, Math.PI * 2); ctx.fill();
+    } else if (f.type === 'popcorn') {
+      ctx.fillStyle = `rgba(255,255,220,${0.2 + Math.sin(time/300)*0.1})`;
+      ctx.beginPath(); ctx.arc(sp.x, sp.y - 38, 3, 0, Math.PI * 2); ctx.fill();
+    } else if (f.type === 'ice_cream') {
+      ctx.fillStyle = `rgba(255,200,220,${0.25 + Math.sin(time/350)*0.12})`;
+      ctx.beginPath(); ctx.arc(sp.x + 6, sp.y - 32, 4, 0, Math.PI * 2); ctx.fill();
+    } else if (f.type === 'arcade') {
+      ctx.fillStyle = `rgba(50,255,100,${0.2 + Math.sin(time/250)*0.1})`;
+      ctx.fillRect(sp.x - 8, sp.y - 28, 16, 10);
+    } else if (f.type === 'jukebox') {
+      const noteY = sp.y - 30 + Math.sin(time/400) * 4;
+      ctx.fillStyle = `rgba(244,208,63,${0.4 + Math.sin(time/200)*0.2})`;
+      ctx.font = '10px Nunito, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('♪', sp.x + 10, noteY);
+    } else if (f.type === 'dragon') {
+      ctx.fillStyle = `rgba(231,76,60,${0.2 + Math.sin(time/200)*0.1})`;
+      ctx.beginPath(); ctx.arc(sp.x + 10, sp.y - 20, 8, 0, Math.PI * 2); ctx.fill();
+    } else if (f.type === 'fish_tank') {
+      ctx.fillStyle = `rgba(135,206,235,${0.3 + Math.sin(time/300)*0.15})`;
+      ctx.beginPath(); ctx.arc(sp.x + Math.sin(time/500)*6, sp.y - 20, 3, 0, Math.PI * 2); ctx.fill();
+    } else if (f.type === 'plant' || f.type === 'bonsai' || f.type === 'flower') {
+      const sway = Math.sin(time/800) * 2;
+      ctx.fillStyle = `rgba(100,220,100,${0.15 + Math.sin(time/600)*0.08})`;
+      ctx.beginPath(); ctx.arc(sp.x + sway, sp.y - 28, 5, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Photo frame - render gallery screenshot
+    if (f.type === 'photo_frame') {
+      try {
+        const gallery = JSON.parse(localStorage.getItem('starlight_gallery')) || [];
+        if (gallery.length > 0) {
+          const img = new Image();
+          img.src = gallery[0].data;
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(sp.x - 14, sp.y - 20, 28, 16);
+          ctx.clip();
+          ctx.drawImage(img, sp.x - 14, sp.y - 20, 28, 16);
+          ctx.restore();
+        }
+      } catch (e) {}
     }
   }
 
@@ -2422,6 +2543,18 @@ export class Game {
         ctx.font = 'bold 8px Nunito, sans-serif';
         ctx.fillText('AFK', sp.x, sp.y - 22);
       }
+      // Level badge
+      const level = avatar.isNPC ? (avatar.npcLevel || Math.floor(Math.random() * 8) + 1) : (this.progressionSystem?.getProgress()?.level || 1);
+      const lvlColors = ['#95a5a6', '#2ecc71', '#3498db', '#9b59b6', '#f1c40f', '#e67e22', '#e74c3c'];
+      const lvlColor = lvlColors[Math.min(level - 1, lvlColors.length - 1)];
+      const badgeW = ctx.measureText('Lv.' + level).width + 8;
+      ctx.fillStyle = lvlColor;
+      roundRect(ctx, sp.x - badgeW / 2, sp.y - 44, badgeW, 14, 7);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 7px Nunito, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Lv.' + level, sp.x, sp.y - 36);
     }
   }
 

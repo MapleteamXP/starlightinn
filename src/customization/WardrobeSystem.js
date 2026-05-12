@@ -61,4 +61,24 @@ export class WardrobeSystem {
   getAll() {
     return this.presets.map((p, i) => p ? { ...p, slot: i + 1 } : null);
   }
+
+  exportOutfit(outfit) {
+    const data = {
+      s: outfit.skinColor, h: outfit.hairColor, y: outfit.hairStyle,
+      t: outfit.shirtColor, p: outfit.pantsColor, o: outfit.shoeColor,
+      a: outfit.hatType, g: outfit.glassesType
+    };
+    try { return btoa(JSON.stringify(data)); } catch (e) { return null; }
+  }
+
+  importOutfit(code) {
+    try {
+      const data = JSON.parse(atob(code));
+      return {
+        skinColor: data.s, hairColor: data.h, hairStyle: data.y,
+        shirtColor: data.t, pantsColor: data.p, shoeColor: data.o,
+        hatType: data.a, glassesType: data.g
+      };
+    } catch (e) { return null; }
+  }
 }

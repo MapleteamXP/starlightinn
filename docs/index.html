@@ -2217,6 +2217,28 @@ var StarlightEngine = (() => {
         ctx.arc(40 + Math.cos(a) * 8, 34 + Math.sin(a) * 8, 3, 0, Math.PI * 2);
         ctx.fill();
       }
+    } else if (type === "photo_frame") {
+      ctx.fillStyle = "#8B4513";
+      ctx.beginPath();
+      ctx.moveTo(22, 28);
+      ctx.lineTo(58, 28);
+      ctx.lineTo(58, 52);
+      ctx.lineTo(22, 52);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#F5F5DC";
+      ctx.fillRect(26, 32, 28, 16);
+      ctx.strokeStyle = "#5D3A1A";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(22, 28, 36, 24);
+      ctx.fillStyle = "#5D3A1A";
+      ctx.beginPath();
+      ctx.moveTo(36, 24);
+      ctx.lineTo(44, 24);
+      ctx.lineTo(42, 28);
+      ctx.lineTo(38, 28);
+      ctx.closePath();
+      ctx.fill();
     }
     ctx.strokeStyle = "rgba(0,0,0,0.08)";
     ctx.lineWidth = 1;
@@ -2496,7 +2518,8 @@ var StarlightEngine = (() => {
         { id: "bbq", name: "BBQ Grill", price: 220, icon: "\u{1F356}", footprint: [1, 1], stackable: false, desc: "Summer cookouts.", category: "kitchen" },
         { id: "pizza", name: "Pizza Box", price: 35, icon: "\u{1F355}", footprint: [1, 1], stackable: true, desc: "Everyone loves pizza.", category: "kitchen" },
         { id: "globe", name: "World Globe", price: 180, icon: "\u{1F30D}", footprint: [1, 1], stackable: true, desc: "Travel the world.", category: "decor" },
-        { id: "disco_ball", name: "Disco Ball", price: 400, icon: "\u{1F57A}", footprint: [1, 1], stackable: true, desc: "Party time!", category: "lighting" }
+        { id: "disco_ball", name: "Disco Ball", price: 400, icon: "\u{1F57A}", footprint: [1, 1], stackable: true, desc: "Party time!", category: "lighting" },
+        { id: "photo_frame", name: "Photo Frame", price: 150, icon: "\u{1F5BC}\uFE0F", footprint: [1, 1], stackable: false, desc: "Display your screenshots.", category: "decor" }
       ];
       CATALOG_CATEGORIES = [
         { id: "all", name: "All", icon: "\u{1F4E6}" },
@@ -3163,6 +3186,8 @@ var StarlightEngine = (() => {
           this.isDancing = opts.isDancing || false;
           this.isWaving = opts.isWaving || false;
           this.isSitting = opts.isSitting || false;
+          this.isBowing = false;
+          this.isCheering = false;
           this.z = 0;
           this.chatBubble = null;
           this.chatTimer = 0;
@@ -3194,6 +3219,14 @@ var StarlightEngine = (() => {
             if (this.waveTimer > 1.5) {
               this.isWaving = false;
               this.waveTimer = 0;
+            }
+          }
+          if (this.isBowing || this.isCheering) {
+            this.emoteTimer = (this.emoteTimer || 0) + dt;
+            if (this.emoteTimer > 1.5) {
+              this.isBowing = false;
+              this.isCheering = false;
+              this.emoteTimer = 0;
             }
           }
           if (this.path.length > 0 && this.pathIndex < this.path.length) {
@@ -3257,7 +3290,7 @@ var StarlightEngine = (() => {
               this.say(randChoice(phrases), "#fffde7", "normal");
             }
             if (!this.isWalking && !this.isSitting && Math.random() < 5e-4) {
-              const idle = randChoice(["wave", "dance", "sit"]);
+              const idle = randChoice(["wave", "dance", "sit", "bow", "cheer"]);
               if (idle === "wave") {
                 this.isWaving = true;
                 this.waveTimer = 0;
@@ -3267,6 +3300,12 @@ var StarlightEngine = (() => {
               } else if (idle === "sit") {
                 this.isSitting = true;
                 setTimeout(() => this.isSitting = false, 5e3);
+              } else if (idle === "bow") {
+                this.isBowing = true;
+                this.emoteTimer = 0;
+              } else if (idle === "cheer") {
+                this.isCheering = true;
+                this.emoteTimer = 0;
               }
             }
           }
@@ -3309,6 +3348,10 @@ var StarlightEngine = (() => {
             bob = Math.sin(Date.now() / 120) * 5;
           } else if (this.isSitting) {
             bob = 0;
+          } else if (this.isBowing) {
+            bob = Math.abs(Math.sin(Date.now() / 150)) * 8;
+          } else if (this.isCheering) {
+            bob = -Math.abs(Math.sin(Date.now() / 100)) * 6;
           } else {
             bob = Math.sin(Date.now() / 800) * 1.2;
           }
@@ -3642,6 +3685,7 @@ var StarlightEngine = (() => {
           }
         }
         addHistory(name, text, time, type) {
+          if (this.game && this.game.ignoredPlayers && this.game.ignoredPlayers.has(name)) return;
           this.history.push({ name, text, time, type });
           if (this.history.length > 50) this.history.shift();
           this.renderHistory();
@@ -4180,6 +4224,71 @@ var StarlightEngine = (() => {
           const timeMod = hour >= 18 || hour <= 2 ? 1.4 : hour >= 9 && hour <= 17 ? 1 : 0.6;
           return Math.floor((base + variance) * timeMod);
         }
+        showRateRoomDialog(onRate) {
+          const overlay = document.createElement("div");
+          overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:3000;";
+          const panel = document.createElement("div");
+          panel.style.cssText = "background:var(--habbo-dark);border:2px solid var(--habbo-accent);border-radius:12px;padding:20px;width:260px;text-align:center;color:#fff;font-family:inherit;";
+          let selected = 0;
+          const renderStars = () => {
+            let stars = "";
+            for (let i = 1; i <= 5; i++) {
+              stars += `<span class="rate-star" data-val="${i}" style="font-size:28px;cursor:pointer;color:${i <= selected ? "var(--habbo-accent)" : "#555"};">\u2605</span>`;
+            }
+            return stars;
+          };
+          panel.innerHTML = `
+      <div style="font-size:28px;margin-bottom:6px;">\u2B50</div>
+      <div style="font-weight:700;margin-bottom:12px;">Rate This Room</div>
+      <div id="rateStars" style="margin-bottom:12px;">${renderStars()}</div>
+      <textarea id="rateReview" placeholder="Write a quick review... (optional)" maxlength="80" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--habbo-panel-border);background:var(--habbo-dark);color:#fff;font-family:inherit;font-size:12px;resize:none;box-sizing:border-box;margin-bottom:12px;"></textarea>
+      <div style="display:flex;gap:8px;">
+        <button id="rateCancel" style="flex:1;padding:8px;border:none;border-radius:8px;background:#555;color:#fff;cursor:pointer;font-family:inherit;">Cancel</button>
+        <button id="rateSubmit" style="flex:1;padding:8px;border:none;border-radius:8px;background:var(--habbo-accent);color:var(--habbo-dark);cursor:pointer;font-family:inherit;font-weight:700;">Submit</button>
+      </div>
+    `;
+          overlay.appendChild(panel);
+          document.body.appendChild(overlay);
+          panel.querySelectorAll(".rate-star").forEach((star) => {
+            star.addEventListener("click", () => {
+              selected = parseInt(star.dataset.val);
+              document.getElementById("rateStars").innerHTML = renderStars();
+            });
+          });
+          panel.querySelector("#rateCancel")?.addEventListener("click", () => overlay.remove());
+          panel.querySelector("#rateSubmit")?.addEventListener("click", () => {
+            if (selected > 0) {
+              const review = document.getElementById("rateReview")?.value || "";
+              onRate && onRate(selected, review);
+            }
+            overlay.remove();
+          });
+          overlay.addEventListener("click", (e) => {
+            if (e.target === overlay) overlay.remove();
+          });
+        }
+        showOutfitCode(code) {
+          const overlay = document.createElement("div");
+          overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:3000;";
+          const panel = document.createElement("div");
+          panel.style.cssText = "background:var(--habbo-dark);border:2px solid var(--habbo-accent);border-radius:12px;padding:20px;width:320px;text-align:center;color:#fff;font-family:inherit;";
+          panel.innerHTML = `
+      <div style="font-size:24px;margin-bottom:8px;">\u{1F4CB}</div>
+      <div style="font-weight:700;margin-bottom:8px;">Outfit Code</div>
+      <div style="background:rgba(0,0,0,0.3);padding:10px;border-radius:8px;font-size:11px;word-break:break-all;margin-bottom:12px;font-family:monospace;color:var(--habbo-accent);">${code}</div>
+      <button id="btnCopyCode" style="padding:8px 16px;background:var(--habbo-accent);color:var(--habbo-dark);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;">Copy to Clipboard</button>
+      <button id="btnCloseCode" style="margin-left:8px;padding:8px 16px;background:#555;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;">Close</button>
+    `;
+          overlay.appendChild(panel);
+          document.body.appendChild(overlay);
+          panel.querySelector("#btnCloseCode")?.addEventListener("click", () => overlay.remove());
+          panel.querySelector("#btnCopyCode")?.addEventListener("click", () => {
+            navigator.clipboard?.writeText(code).then(() => this.showNotification("Copied!", "success")).catch(() => this.showNotification("Copy failed", "error"));
+          });
+          overlay.addEventListener("click", (e) => {
+            if (e.target === overlay) overlay.remove();
+          });
+        }
         showDoorbell(roomName, onKnock) {
           const overlay = document.createElement("div");
           overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:3000;";
@@ -4258,7 +4367,7 @@ var StarlightEngine = (() => {
             list.appendChild(div);
           });
         }
-        renderNavigator(rooms, recent, onSelect, onRenameMyRoom, myRoomPrivate, onTogglePrivacy, searchQuery = "", bookmarks, onToggleBookmark, visitorLog = []) {
+        renderNavigator(rooms, recent, onSelect, onRenameMyRoom, myRoomPrivate, onTogglePrivacy, searchQuery = "", bookmarks, onToggleBookmark, visitorLog = [], getRoomRating = null) {
           const publicList = document.getElementById("publicRoomList");
           if (!publicList) return;
           publicList.innerHTML = "";
@@ -4276,7 +4385,9 @@ var StarlightEngine = (() => {
             div.className = "room-item";
             const occupancy = this._getRoomOccupancy(room.id);
             const isBookmarked = bookmarks && bookmarks.has(room.id);
-            div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;"><span class="room-name">${room.name}</span><span class="bookmark-star" data-id="${room.id}" style="cursor:pointer;font-size:14px;color:${isBookmarked ? "var(--habbo-accent)" : "var(--habbo-text-dim)"};">${isBookmarked ? "\u2605" : "\u2606"}</span></div><div class="room-desc">${room.description}</div><div class="room-meta">${occupancy} users online ${occupancy > 15 ? "\u{1F525}" : ""}</div>`;
+            const avg = getRoomRating ? getRoomRating(room.id) : 0;
+            const stars = avg > 0 ? "\u2605".repeat(Math.round(avg)) + "\u2606".repeat(5 - Math.round(avg)) + ` ${avg.toFixed(1)}` : "";
+            div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;"><span class="room-name">${room.name}</span><span class="bookmark-star" data-id="${room.id}" style="cursor:pointer;font-size:14px;color:${isBookmarked ? "var(--habbo-accent)" : "var(--habbo-text-dim)"};">${isBookmarked ? "\u2605" : "\u2606"}</span></div><div class="room-desc">${room.description}</div><div class="room-meta">${occupancy} users online ${occupancy > 15 ? "\u{1F525}" : ""} <span style="color:var(--habbo-accent);">${stars}</span></div>`;
             div.addEventListener("click", (e) => {
               if (e.target.classList.contains("bookmark-star")) {
                 e.stopPropagation();
@@ -4517,7 +4628,7 @@ var StarlightEngine = (() => {
             });
           }
         }
-        renderCustomizePanel(customize, onChange, onSave, onRandom, titles, currentTitle, onTitleChange, wardrobePresets, onWardrobeSave, onWardrobeApply, onWardrobeDelete) {
+        renderCustomizePanel(customize, onChange, onSave, onRandom, titles, currentTitle, onTitleChange, wardrobePresets, onWardrobeSave, onWardrobeApply, onWardrobeDelete, onExport, onImport) {
           const hairStyleSelect = document.getElementById("hairStyleSelect");
           const hatSelect = document.getElementById("hatSelect");
           const glassesSelect = document.getElementById("glassesSelect");
@@ -4558,6 +4669,15 @@ var StarlightEngine = (() => {
           this.renderCustomizePreview(customize);
           const wardrobeContainer = document.getElementById("wardrobeSlots");
           if (wardrobeContainer && wardrobePresets) {
+            const exportRow = document.createElement("div");
+            exportRow.style.cssText = "display:flex;gap:6px;margin-bottom:8px;";
+            exportRow.innerHTML = `<button id="btnExportOutfit" style="flex:1;padding:5px 8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;">\u{1F4CB} Export Code</button><button id="btnImportOutfit" style="flex:1;padding:5px 8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;">\u{1F4E5} Import Code</button>`;
+            wardrobeContainer.parentNode.insertBefore(exportRow, wardrobeContainer);
+            document.getElementById("btnExportOutfit")?.addEventListener("click", () => onExport && onExport());
+            document.getElementById("btnImportOutfit")?.addEventListener("click", () => {
+              const code = prompt("Paste outfit code:");
+              if (code) onImport && onImport(code);
+            });
             wardrobeContainer.innerHTML = "";
             wardrobePresets.forEach((preset, idx) => {
               const slot = document.createElement("div");
@@ -4770,7 +4890,7 @@ var StarlightEngine = (() => {
             if (div.parentNode) div.remove();
           }, 8e3);
         }
-        showPlayerProfile(avatar, actions, isRemote = false, remoteId = null) {
+        showPlayerProfile(avatar, actions, isRemote = false, remoteId = null, isIgnored = false) {
           const existing = document.getElementById("playerProfile");
           if (existing) existing.remove();
           const div = document.createElement("div");
@@ -4807,6 +4927,7 @@ var StarlightEngine = (() => {
         ${isRemote ? `<button id="ppWhisper" style="padding:8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">\u{1F4AC} Whisper</button>` : ""}
         ${isRemote ? `<button id="ppFriend" style="padding:8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">\u2B50 Add Friend</button>` : ""}
         ${isRemote ? `<button id="ppTrade" style="padding:8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">\u{1F91D} Trade</button>` : ""}
+        ${isRemote ? `<button id="ppIgnore" style="padding:8px;background:${isIgnored ? "#e74c3c" : "var(--habbo-dark)"};color:#fff;border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">${isIgnored ? "Unignore" : "\u{1F6AB} Ignore"}</button>` : ""}
       </div>
     `;
           document.body.appendChild(div);
@@ -4827,6 +4948,10 @@ var StarlightEngine = (() => {
             document.getElementById("ppTrade")?.addEventListener("click", () => {
               div.remove();
               actions.onTrade && actions.onTrade();
+            });
+            document.getElementById("ppIgnore")?.addEventListener("click", () => {
+              div.remove();
+              actions.onIgnore && actions.onIgnore();
             });
           }
           setTimeout(() => {
@@ -6718,7 +6843,14 @@ var StarlightEngine = (() => {
         { id: "fountain", name: "Water Fountain", ingredients: { plant: 3, lamp: 2 }, output: "fountain", outputCount: 1 },
         { id: "dragon", name: "Toy Dragon", ingredients: { statue: 1, trophy: 1 }, output: "dragon", outputCount: 1 },
         { id: "arcade", name: "Arcade Machine", ingredients: { tv: 1, jukebox: 1 }, output: "arcade", outputCount: 1 },
-        { id: "fireplace", name: "Stone Fireplace", ingredients: { barrel: 2, bench: 1 }, output: "fireplace", outputCount: 1 }
+        { id: "fireplace", name: "Stone Fireplace", ingredients: { barrel: 2, bench: 1 }, output: "fireplace", outputCount: 1 },
+        { id: "chandelier", name: "Crystal Chandelier", ingredients: { lamp: 2, crystal_ball: 1 }, output: "chandelier", outputCount: 1 },
+        { id: "neon_sign", name: "Neon Sign", ingredients: { lamp: 1, guitar: 1 }, output: "neon_sign", outputCount: 1 },
+        { id: "jukebox", name: "Jukebox", ingredients: { tv: 1, guitar: 1 }, output: "jukebox", outputCount: 1 },
+        { id: "telescope", name: "Stargazer Telescope", ingredients: { crystal_ball: 1, globe: 1 }, output: "telescope", outputCount: 1 },
+        { id: "disco_ball", name: "Disco Ball", ingredients: { crystal_ball: 1, lamp: 1 }, output: "disco_ball", outputCount: 1 },
+        { id: "photo_frame", name: "Photo Frame", ingredients: { easel: 1, plant: 1 }, output: "photo_frame", outputCount: 1 },
+        { id: "crystal_ball", name: "Crystal Ball", ingredients: { lamp: 1, globe: 1 }, output: "crystal_ball", outputCount: 1 }
       ];
       CraftingSystem = class {
         constructor(inventorySystem) {
@@ -7638,6 +7770,55 @@ var StarlightEngine = (() => {
     }
   });
 
+  // src/social/RoomRatings.js
+  var STORAGE_KEY2, RoomRatingSystem;
+  var init_RoomRatings = __esm({
+    "src/social/RoomRatings.js"() {
+      STORAGE_KEY2 = "starlight_room_ratings";
+      RoomRatingSystem = class {
+        constructor() {
+          this.ratings = {};
+          this.load();
+        }
+        load() {
+          try {
+            const data = JSON.parse(localStorage.getItem(STORAGE_KEY2));
+            if (data) this.ratings = data;
+          } catch (e) {
+          }
+        }
+        save() {
+          try {
+            localStorage.setItem(STORAGE_KEY2, JSON.stringify(this.ratings));
+          } catch (e) {
+          }
+        }
+        rate(roomId, stars, review = "") {
+          if (!this.ratings[roomId]) this.ratings[roomId] = { scores: [], reviews: [] };
+          this.ratings[roomId].scores.push({ stars, date: Date.now() });
+          if (review.trim()) this.ratings[roomId].reviews.push({ text: review.trim(), date: Date.now() });
+          if (this.ratings[roomId].scores.length > 20) this.ratings[roomId].scores.shift();
+          if (this.ratings[roomId].reviews.length > 10) this.ratings[roomId].reviews.shift();
+          this.save();
+        }
+        getAverage(roomId) {
+          const data = this.ratings[roomId];
+          if (!data || data.scores.length === 0) return 0;
+          return data.scores.reduce((sum, s) => sum + s.stars, 0) / data.scores.length;
+        }
+        getRatingCount(roomId) {
+          return this.ratings[roomId]?.scores?.length || 0;
+        }
+        getReviews(roomId) {
+          return this.ratings[roomId]?.reviews || [];
+        }
+        hasRated(roomId) {
+          return !!this.ratings[roomId];
+        }
+      };
+    }
+  });
+
   // src/economy/Quests.js
   var QUEST_TEMPLATES, QuestSystem;
   var init_Quests = __esm({
@@ -8077,10 +8258,10 @@ var StarlightEngine = (() => {
   });
 
   // src/customization/WardrobeSystem.js
-  var STORAGE_KEY2, MAX_PRESETS, WardrobeSystem;
+  var STORAGE_KEY3, MAX_PRESETS, WardrobeSystem;
   var init_WardrobeSystem = __esm({
     "src/customization/WardrobeSystem.js"() {
-      STORAGE_KEY2 = "starlight_wardrobe";
+      STORAGE_KEY3 = "starlight_wardrobe";
       MAX_PRESETS = 5;
       WardrobeSystem = class {
         constructor() {
@@ -8089,7 +8270,7 @@ var StarlightEngine = (() => {
         }
         load() {
           try {
-            const raw = localStorage.getItem(STORAGE_KEY2);
+            const raw = localStorage.getItem(STORAGE_KEY3);
             if (raw) this.presets = JSON.parse(raw);
           } catch (e) {
           }
@@ -8097,7 +8278,7 @@ var StarlightEngine = (() => {
         }
         save() {
           try {
-            localStorage.setItem(STORAGE_KEY2, JSON.stringify(this.presets));
+            localStorage.setItem(STORAGE_KEY3, JSON.stringify(this.presets));
           } catch (e) {
           }
         }
@@ -8134,6 +8315,40 @@ var StarlightEngine = (() => {
         }
         getAll() {
           return this.presets.map((p, i) => p ? { ...p, slot: i + 1 } : null);
+        }
+        exportOutfit(outfit) {
+          const data = {
+            s: outfit.skinColor,
+            h: outfit.hairColor,
+            y: outfit.hairStyle,
+            t: outfit.shirtColor,
+            p: outfit.pantsColor,
+            o: outfit.shoeColor,
+            a: outfit.hatType,
+            g: outfit.glassesType
+          };
+          try {
+            return btoa(JSON.stringify(data));
+          } catch (e) {
+            return null;
+          }
+        }
+        importOutfit(code) {
+          try {
+            const data = JSON.parse(atob(code));
+            return {
+              skinColor: data.s,
+              hairColor: data.h,
+              hairStyle: data.y,
+              shirtColor: data.t,
+              pantsColor: data.p,
+              shoeColor: data.o,
+              hatType: data.a,
+              glassesType: data.g
+            };
+          } catch (e) {
+            return null;
+          }
         }
       };
     }
@@ -8174,6 +8389,7 @@ var StarlightEngine = (() => {
       init_Pet();
       init_Inbox();
       init_ClubSystem();
+      init_RoomRatings();
       init_Quests();
       init_NetworkManager();
       init_WardrobeSystem();
@@ -8223,6 +8439,8 @@ var StarlightEngine = (() => {
           this.loadBookmarks();
           this.favorites = /* @__PURE__ */ new Set();
           this.loadFavorites();
+          this.ignoredPlayers = /* @__PURE__ */ new Set();
+          this.loadIgnoredPlayers();
           this.myRoomSize = 10;
           this.myRoomName = "My Room";
           this.recentRooms = [];
@@ -8264,6 +8482,7 @@ var StarlightEngine = (() => {
           this.petSystem = new PetSystem(this);
           this.inboxSystem = new InboxSystem(this);
           this.clubSystem = new ClubSystem();
+          this.roomRatingSystem = new RoomRatingSystem();
           this.questSystem = new QuestSystem(this);
           this.achievementSystem = new AchievementSystem(this);
           this.leaderboardSystem = new LeaderboardSystem();
@@ -9020,6 +9239,7 @@ var StarlightEngine = (() => {
             this.saveSettings();
           });
           document.getElementById("btnLikeRoom")?.addEventListener("click", () => this.toggleLikeRoom());
+          document.getElementById("btnRateRoom")?.addEventListener("click", () => this.uiManager.showRateRoomDialog((stars, review) => this.rateCurrentRoom(stars, review)));
           document.getElementById("btnExportSave")?.addEventListener("click", () => this.exportSave());
           document.getElementById("btnImportSave")?.addEventListener("click", () => document.getElementById("importFileInput")?.click());
           document.getElementById("importFileInput")?.addEventListener("change", (e) => this.importSave(e));
@@ -9080,7 +9300,21 @@ var StarlightEngine = (() => {
               this.player.isSitting = true;
               this.player.say("\u{1F4A4} Zzz...", this.chatColor, "emote");
             } },
-            { icon: "\u{1F44F}", action: () => this.player.say("\u{1F44F} *claps*", this.chatColor, "emote") }
+            { icon: "\u{1F44F}", action: () => this.player.say("\u{1F44F} *claps*", this.chatColor, "emote") },
+            { icon: "\u{1F647}", action: () => {
+              this.player.isBowing = true;
+              setTimeout(() => this.player.isBowing = false, 1500);
+              this.player.say("\u{1F647} *bows*", this.chatColor, "emote");
+            } },
+            { icon: "\u{1F389}", action: () => {
+              this.player.isCheering = true;
+              setTimeout(() => this.player.isCheering = false, 1500);
+              this.player.say("\u{1F389} Woohoo!", this.chatColor, "emote");
+            } },
+            { icon: "\u{1F62E}", action: () => this.player.say("\u{1F62E} Wow!", this.chatColor, "emote") },
+            { icon: "\u{1F624}", action: () => this.player.say("\u{1F624} Grrr!", this.chatColor, "emote") },
+            { icon: "\u{1F914}", action: () => this.player.say("\u{1F914} Hmm...", this.chatColor, "emote") },
+            { icon: "\u{1F525}", action: () => this.player.say("\u{1F525} Too hot!", this.chatColor, "emote") }
           ];
           inner.innerHTML = "";
           const radius = 65;
@@ -9232,6 +9466,29 @@ var StarlightEngine = (() => {
           } catch (e) {
           }
         }
+        loadIgnoredPlayers() {
+          try {
+            const data = JSON.parse(localStorage.getItem("starlight_ignored"));
+            if (data && Array.isArray(data)) this.ignoredPlayers = new Set(data);
+          } catch (e) {
+          }
+        }
+        saveIgnoredPlayers() {
+          try {
+            localStorage.setItem("starlight_ignored", JSON.stringify(Array.from(this.ignoredPlayers)));
+          } catch (e) {
+          }
+        }
+        ignorePlayer(name) {
+          this.ignoredPlayers.add(name);
+          this.saveIgnoredPlayers();
+          this.uiManager.showNotification(`Ignored ${name}.`, "info");
+        }
+        unignorePlayer(name) {
+          this.ignoredPlayers.delete(name);
+          this.saveIgnoredPlayers();
+          this.uiManager.showNotification(`Unignored ${name}.`, "info");
+        }
         loadBookmarks() {
           try {
             const data = JSON.parse(localStorage.getItem("starlight_bookmarks"));
@@ -9275,6 +9532,11 @@ var StarlightEngine = (() => {
             this.soundManager.play("click");
           }
           this.saveLikedRooms();
+        }
+        rateCurrentRoom(stars, review) {
+          if (!this.room) return;
+          this.roomRatingSystem.rate(this.room.id, stars, review);
+          this.uiManager.showNotification(`Rated ${this.room.name} ${stars} stars!`, "success");
         }
         loadThemes() {
           try {
@@ -9347,7 +9609,7 @@ var StarlightEngine = (() => {
             else this.bookmarkedRooms.add(id);
             this.saveBookmarks();
             this.renderNavigator();
-          }, this.visitorLog);
+          }, this.visitorLog, (roomId) => this.roomRatingSystem.getAverage(roomId));
           this.uiManager.renderExpansions(ROOM_EXPANSIONS, this.myRoomSize, this.currencySystem.get(), (expansion) => {
             if (this.currencySystem.spend(expansion.price)) {
               this.expandMyRoom(expansion.size);
@@ -9521,6 +9783,24 @@ var StarlightEngine = (() => {
             this.renderCustomizePanel();
           }
         }
+        exportOutfitCode() {
+          const code = this.wardrobeSystem.exportOutfit(this.customize);
+          if (code) {
+            this.uiManager.showOutfitCode(code);
+          }
+        }
+        importOutfitCode(code) {
+          const outfit = this.wardrobeSystem.importOutfit(code);
+          if (outfit) {
+            Object.assign(this.customize, outfit);
+            this.applyAvatarToPlayer();
+            this.saveAvatarToStorage();
+            this.renderCustomizePanel();
+            this.uiManager.showNotification("Outfit imported!", "success");
+          } else {
+            this.uiManager.showNotification("Invalid outfit code.", "error");
+          }
+        }
         applyAvatarToPlayer() {
           if (!this.player) return;
           const c = this.customize;
@@ -9571,7 +9851,9 @@ var StarlightEngine = (() => {
             this.wardrobeSystem.getAll(),
             (idx) => this.saveWardrobePreset(idx),
             (idx) => this.applyWardrobePreset(idx),
-            (idx) => this.deleteWardrobePreset(idx)
+            (idx) => this.deleteWardrobePreset(idx),
+            () => this.exportOutfitCode(),
+            (code) => this.importOutfitCode(code)
           );
         }
         renderColorPresets(containerId, colors, current, key) {
@@ -9595,6 +9877,8 @@ var StarlightEngine = (() => {
             inbox: { messages: this.inboxSystem.messages, unreadCount: this.inboxSystem.unreadCount },
             settings: { showWeather: this.settings.showWeather, myRoomPrivate: this.settings.myRoomPrivate, showTimestamps: this.settings.showTimestamps, chatBubbleDuration: this.settings.chatBubbleDuration },
             bookmarks: Array.from(this.bookmarkedRooms),
+            ignored: Array.from(this.ignoredPlayers),
+            roomRatings: this.roomRatingSystem.ratings,
             quests: { active: this.questSystem.active, completed: this.questSystem.completed },
             version: "2.3"
           };
@@ -9680,6 +9964,14 @@ var StarlightEngine = (() => {
               if (data.bookmarks) {
                 this.bookmarkedRooms = new Set(data.bookmarks);
                 this.saveBookmarks();
+              }
+              if (data.ignored) {
+                this.ignoredPlayers = new Set(data.ignored);
+                this.saveIgnoredPlayers();
+              }
+              if (data.roomRatings) {
+                this.roomRatingSystem.ratings = data.roomRatings;
+                this.roomRatingSystem.save();
               }
               this.uiManager.showNotification("Save imported! Reloading...", "success");
               setTimeout(() => location.reload(), 1200);
@@ -9921,8 +10213,15 @@ var StarlightEngine = (() => {
             },
             onWalk: () => {
               this.player.moveTo(Math.round(avatar.x), Math.round(avatar.y), this.room);
+            },
+            onIgnore: () => {
+              if (this.ignoredPlayers.has(avatar.name)) {
+                this.unignorePlayer(avatar.name);
+              } else {
+                this.ignorePlayer(avatar.name);
+              }
             }
-          }, isRemote, remoteId);
+          }, isRemote, remoteId, this.ignoredPlayers.has(avatar.name));
         }
         openJukebox() {
           const tracks = [
@@ -10695,6 +10994,67 @@ var StarlightEngine = (() => {
           } else if (f.type === "tv") {
             ctx.fillStyle = `rgba(102,204,255,${0.2 + Math.sin(time / 400) * 0.1})`;
             ctx.fillRect(sp.x - 10, sp.y - 30, 20, 14);
+          } else if (f.type === "candle" || f.type === "cake") {
+            ctx.fillStyle = `rgba(255,180,50,${0.4 + Math.sin(time / 120) * 0.2})`;
+            ctx.beginPath();
+            ctx.arc(sp.x, sp.y - 35, 4 + Math.sin(time / 100), 0, Math.PI * 2);
+            ctx.fill();
+          } else if (f.type === "telescope") {
+            ctx.fillStyle = `rgba(100,200,255,${0.15 + Math.sin(time / 500) * 0.08})`;
+            ctx.beginPath();
+            ctx.arc(sp.x + 8, sp.y - 22, 6, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (f.type === "popcorn") {
+            ctx.fillStyle = `rgba(255,255,220,${0.2 + Math.sin(time / 300) * 0.1})`;
+            ctx.beginPath();
+            ctx.arc(sp.x, sp.y - 38, 3, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (f.type === "ice_cream") {
+            ctx.fillStyle = `rgba(255,200,220,${0.25 + Math.sin(time / 350) * 0.12})`;
+            ctx.beginPath();
+            ctx.arc(sp.x + 6, sp.y - 32, 4, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (f.type === "arcade") {
+            ctx.fillStyle = `rgba(50,255,100,${0.2 + Math.sin(time / 250) * 0.1})`;
+            ctx.fillRect(sp.x - 8, sp.y - 28, 16, 10);
+          } else if (f.type === "jukebox") {
+            const noteY = sp.y - 30 + Math.sin(time / 400) * 4;
+            ctx.fillStyle = `rgba(244,208,63,${0.4 + Math.sin(time / 200) * 0.2})`;
+            ctx.font = "10px Nunito, sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("\u266A", sp.x + 10, noteY);
+          } else if (f.type === "dragon") {
+            ctx.fillStyle = `rgba(231,76,60,${0.2 + Math.sin(time / 200) * 0.1})`;
+            ctx.beginPath();
+            ctx.arc(sp.x + 10, sp.y - 20, 8, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (f.type === "fish_tank") {
+            ctx.fillStyle = `rgba(135,206,235,${0.3 + Math.sin(time / 300) * 0.15})`;
+            ctx.beginPath();
+            ctx.arc(sp.x + Math.sin(time / 500) * 6, sp.y - 20, 3, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (f.type === "plant" || f.type === "bonsai" || f.type === "flower") {
+            const sway = Math.sin(time / 800) * 2;
+            ctx.fillStyle = `rgba(100,220,100,${0.15 + Math.sin(time / 600) * 0.08})`;
+            ctx.beginPath();
+            ctx.arc(sp.x + sway, sp.y - 28, 5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          if (f.type === "photo_frame") {
+            try {
+              const gallery = JSON.parse(localStorage.getItem("starlight_gallery")) || [];
+              if (gallery.length > 0) {
+                const img2 = new Image();
+                img2.src = gallery[0].data;
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(sp.x - 14, sp.y - 20, 28, 16);
+                ctx.clip();
+                ctx.drawImage(img2, sp.x - 14, sp.y - 20, 28, 16);
+                ctx.restore();
+              }
+            } catch (e) {
+            }
           }
         }
         drawAvatar(ctx, avatar) {
@@ -10817,6 +11177,17 @@ var StarlightEngine = (() => {
               ctx.font = "bold 8px Nunito, sans-serif";
               ctx.fillText("AFK", sp.x, sp.y - 22);
             }
+            const level = avatar.isNPC ? avatar.npcLevel || Math.floor(Math.random() * 8) + 1 : this.progressionSystem?.getProgress()?.level || 1;
+            const lvlColors = ["#95a5a6", "#2ecc71", "#3498db", "#9b59b6", "#f1c40f", "#e67e22", "#e74c3c"];
+            const lvlColor = lvlColors[Math.min(level - 1, lvlColors.length - 1)];
+            const badgeW = ctx.measureText("Lv." + level).width + 8;
+            ctx.fillStyle = lvlColor;
+            roundRect(ctx, sp.x - badgeW / 2, sp.y - 44, badgeW, 14, 7);
+            ctx.fill();
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 7px Nunito, sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("Lv." + level, sp.x, sp.y - 36);
           }
         }
         renderMinimap() {
@@ -10940,6 +11311,7 @@ var StarlightEngine = (() => {
       <h2 id="roomName">Lobby</h2>
       <p id="roomDesc">Welcome to Starlight Inn!</p>
       <button id="btnLikeRoom" style="margin-top:6px;padding:4px 12px;background:rgba(0,0,0,0.3);border:1px solid var(--habbo-panel-border);border-radius:12px;color:white;font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s;">\u2764\uFE0F Like Room</button>
+      <button id="btnRateRoom" style="margin-top:6px;margin-left:6px;padding:4px 12px;background:rgba(0,0,0,0.3);border:1px solid var(--habbo-panel-border);border-radius:12px;color:white;font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s;">\u2B50 Rate Room</button>
     </div>
     <div id="minimap"><canvas id="minimapCanvas" width="140" height="140"></canvas></div>
     <div id="chatBar">

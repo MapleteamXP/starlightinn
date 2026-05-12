@@ -256,6 +256,66 @@ export class UIManager {
     return Math.floor((base + variance) * timeMod);
   }
 
+  showRateRoomDialog(onRate) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:3000;';
+    const panel = document.createElement('div');
+    panel.style.cssText = 'background:var(--habbo-dark);border:2px solid var(--habbo-accent);border-radius:12px;padding:20px;width:260px;text-align:center;color:#fff;font-family:inherit;';
+    let selected = 0;
+    const renderStars = () => {
+      let stars = '';
+      for (let i = 1; i <= 5; i++) {
+        stars += `<span class="rate-star" data-val="${i}" style="font-size:28px;cursor:pointer;color:${i <= selected ? 'var(--habbo-accent)' : '#555'};">★</span>`;
+      }
+      return stars;
+    };
+    panel.innerHTML = `
+      <div style="font-size:28px;margin-bottom:6px;">⭐</div>
+      <div style="font-weight:700;margin-bottom:12px;">Rate This Room</div>
+      <div id="rateStars" style="margin-bottom:12px;">${renderStars()}</div>
+      <textarea id="rateReview" placeholder="Write a quick review... (optional)" maxlength="80" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--habbo-panel-border);background:var(--habbo-dark);color:#fff;font-family:inherit;font-size:12px;resize:none;box-sizing:border-box;margin-bottom:12px;"></textarea>
+      <div style="display:flex;gap:8px;">
+        <button id="rateCancel" style="flex:1;padding:8px;border:none;border-radius:8px;background:#555;color:#fff;cursor:pointer;font-family:inherit;">Cancel</button>
+        <button id="rateSubmit" style="flex:1;padding:8px;border:none;border-radius:8px;background:var(--habbo-accent);color:var(--habbo-dark);cursor:pointer;font-family:inherit;font-weight:700;">Submit</button>
+      </div>
+    `;
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    panel.querySelectorAll('.rate-star').forEach(star => {
+      star.addEventListener('click', () => { selected = parseInt(star.dataset.val); document.getElementById('rateStars').innerHTML = renderStars(); });
+    });
+    panel.querySelector('#rateCancel')?.addEventListener('click', () => overlay.remove());
+    panel.querySelector('#rateSubmit')?.addEventListener('click', () => {
+      if (selected > 0) {
+        const review = document.getElementById('rateReview')?.value || '';
+        onRate && onRate(selected, review);
+      }
+      overlay.remove();
+    });
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  }
+
+  showOutfitCode(code) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:3000;';
+    const panel = document.createElement('div');
+    panel.style.cssText = 'background:var(--habbo-dark);border:2px solid var(--habbo-accent);border-radius:12px;padding:20px;width:320px;text-align:center;color:#fff;font-family:inherit;';
+    panel.innerHTML = `
+      <div style="font-size:24px;margin-bottom:8px;">📋</div>
+      <div style="font-weight:700;margin-bottom:8px;">Outfit Code</div>
+      <div style="background:rgba(0,0,0,0.3);padding:10px;border-radius:8px;font-size:11px;word-break:break-all;margin-bottom:12px;font-family:monospace;color:var(--habbo-accent);">${code}</div>
+      <button id="btnCopyCode" style="padding:8px 16px;background:var(--habbo-accent);color:var(--habbo-dark);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;">Copy to Clipboard</button>
+      <button id="btnCloseCode" style="margin-left:8px;padding:8px 16px;background:#555;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;">Close</button>
+    `;
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    panel.querySelector('#btnCloseCode')?.addEventListener('click', () => overlay.remove());
+    panel.querySelector('#btnCopyCode')?.addEventListener('click', () => {
+      navigator.clipboard?.writeText(code).then(() => this.showNotification('Copied!', 'success')).catch(() => this.showNotification('Copy failed', 'error'));
+    });
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  }
+
   showDoorbell(roomName, onKnock) {
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:3000;';
@@ -331,7 +391,7 @@ export class UIManager {
     });
   }
 
-  renderNavigator(rooms, recent, onSelect, onRenameMyRoom, myRoomPrivate, onTogglePrivacy, searchQuery = '', bookmarks, onToggleBookmark, visitorLog = []) {
+  renderNavigator(rooms, recent, onSelect, onRenameMyRoom, myRoomPrivate, onTogglePrivacy, searchQuery = '', bookmarks, onToggleBookmark, visitorLog = [], getRoomRating = null) {
     const publicList = document.getElementById('publicRoomList');
     if (!publicList) return;
     publicList.innerHTML = '';
@@ -350,7 +410,9 @@ export class UIManager {
       div.className = 'room-item';
       const occupancy = this._getRoomOccupancy(room.id);
       const isBookmarked = bookmarks && bookmarks.has(room.id);
-      div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;"><span class="room-name">${room.name}</span><span class="bookmark-star" data-id="${room.id}" style="cursor:pointer;font-size:14px;color:${isBookmarked ? 'var(--habbo-accent)' : 'var(--habbo-text-dim)'};">${isBookmarked ? '\u2605' : '\u2606'}</span></div><div class="room-desc">${room.description}</div><div class="room-meta">${occupancy} users online ${occupancy > 15 ? '🔥' : ''}</div>`;
+      const avg = getRoomRating ? getRoomRating(room.id) : 0;
+      const stars = avg > 0 ? '★'.repeat(Math.round(avg)) + '☆'.repeat(5 - Math.round(avg)) + ` ${avg.toFixed(1)}` : '';
+      div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;"><span class="room-name">${room.name}</span><span class="bookmark-star" data-id="${room.id}" style="cursor:pointer;font-size:14px;color:${isBookmarked ? 'var(--habbo-accent)' : 'var(--habbo-text-dim)'};">${isBookmarked ? '\u2605' : '\u2606'}</span></div><div class="room-desc">${room.description}</div><div class="room-meta">${occupancy} users online ${occupancy > 15 ? '🔥' : ''} <span style="color:var(--habbo-accent);">${stars}</span></div>`;
       div.addEventListener('click', e => {
         if (e.target.classList.contains('bookmark-star')) {
           e.stopPropagation();
@@ -574,7 +636,7 @@ export class UIManager {
     }
   }
 
-  renderCustomizePanel(customize, onChange, onSave, onRandom, titles, currentTitle, onTitleChange, wardrobePresets, onWardrobeSave, onWardrobeApply, onWardrobeDelete) {
+  renderCustomizePanel(customize, onChange, onSave, onRandom, titles, currentTitle, onTitleChange, wardrobePresets, onWardrobeSave, onWardrobeApply, onWardrobeDelete, onExport, onImport) {
     // Update selects
     const hairStyleSelect = document.getElementById('hairStyleSelect');
     const hatSelect = document.getElementById('hatSelect');
@@ -623,6 +685,17 @@ export class UIManager {
     // Wardrobe presets
     const wardrobeContainer = document.getElementById('wardrobeSlots');
     if (wardrobeContainer && wardrobePresets) {
+      // Export/import row
+      const exportRow = document.createElement('div');
+      exportRow.style.cssText = 'display:flex;gap:6px;margin-bottom:8px;';
+      exportRow.innerHTML = `<button id="btnExportOutfit" style="flex:1;padding:5px 8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;">📋 Export Code</button><button id="btnImportOutfit" style="flex:1;padding:5px 8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;">📥 Import Code</button>`;
+      wardrobeContainer.parentNode.insertBefore(exportRow, wardrobeContainer);
+      document.getElementById('btnExportOutfit')?.addEventListener('click', () => onExport && onExport());
+      document.getElementById('btnImportOutfit')?.addEventListener('click', () => {
+        const code = prompt('Paste outfit code:');
+        if (code) onImport && onImport(code);
+      });
+      
       wardrobeContainer.innerHTML = '';
       wardrobePresets.forEach((preset, idx) => {
         const slot = document.createElement('div');
@@ -829,7 +902,7 @@ export class UIManager {
     setTimeout(() => { if (div.parentNode) div.remove(); }, 8000);
   }
 
-  showPlayerProfile(avatar, actions, isRemote = false, remoteId = null) {
+  showPlayerProfile(avatar, actions, isRemote = false, remoteId = null, isIgnored = false) {
     const existing = document.getElementById('playerProfile');
     if (existing) existing.remove();
     const div = document.createElement('div');
@@ -868,6 +941,7 @@ export class UIManager {
         ${isRemote ? `<button id="ppWhisper" style="padding:8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">💬 Whisper</button>` : ''}
         ${isRemote ? `<button id="ppFriend" style="padding:8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">⭐ Add Friend</button>` : ''}
         ${isRemote ? `<button id="ppTrade" style="padding:8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">🤝 Trade</button>` : ''}
+        ${isRemote ? `<button id="ppIgnore" style="padding:8px;background:${isIgnored ? '#e74c3c' : 'var(--habbo-dark)'};color:#fff;border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">${isIgnored ? 'Unignore' : '🚫 Ignore'}</button>` : ''}
       </div>
     `;
     document.body.appendChild(div);
@@ -877,6 +951,7 @@ export class UIManager {
       document.getElementById('ppWhisper')?.addEventListener('click', () => { div.remove(); actions.onWhisper && actions.onWhisper(); });
       document.getElementById('ppFriend')?.addEventListener('click', () => { div.remove(); actions.onFriend && actions.onFriend(); });
       document.getElementById('ppTrade')?.addEventListener('click', () => { div.remove(); actions.onTrade && actions.onTrade(); });
+      document.getElementById('ppIgnore')?.addEventListener('click', () => { div.remove(); actions.onIgnore && actions.onIgnore(); });
     }
     setTimeout(() => { if (div.parentNode) div.remove(); }, 12000);
   }

@@ -52,7 +52,8 @@ export const FURNITURE_CATALOG = [
   { id: 'bbq', name: 'BBQ Grill', price: 220, icon: '\uD83C\uDF56', footprint: [1, 1], stackable: false, desc: 'Summer cookouts.', category: 'kitchen' },
   { id: 'pizza', name: 'Pizza Box', price: 35, icon: '\uD83C\uDF55', footprint: [1, 1], stackable: true, desc: 'Everyone loves pizza.', category: 'kitchen' },
   { id: 'globe', name: 'World Globe', price: 180, icon: '\uD83C\uDF0D', footprint: [1, 1], stackable: true, desc: 'Travel the world.', category: 'decor' },
-  { id: 'disco_ball', name: 'Disco Ball', price: 400, icon: '\uD83D\uDD7A', footprint: [1, 1], stackable: true, desc: 'Party time!', category: 'lighting' }
+  { id: 'disco_ball', name: 'Disco Ball', price: 400, icon: '\uD83D\uDD7A', footprint: [1, 1], stackable: true, desc: 'Party time!', category: 'lighting' },
+  { id: 'photo_frame', name: 'Photo Frame', price: 150, icon: '\uD83D\uDDBC\uFE0F', footprint: [1, 1], stackable: false, desc: 'Display your screenshots.', category: 'decor' }
 ];
 
 export const CATALOG_CATEGORIES = [

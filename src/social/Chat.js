@@ -223,6 +223,7 @@ export class ChatManager {
   }
 
   addHistory(name, text, time, type) {
+    if (this.game && this.game.ignoredPlayers && this.game.ignoredPlayers.has(name)) return;
     this.history.push({ name, text, time, type });
     if (this.history.length > 50) this.history.shift();
     this.renderHistory();

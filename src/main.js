@@ -47,6 +47,7 @@ function createUI() {
       <h2 id="roomName">Lobby</h2>
       <p id="roomDesc">Welcome to Starlight Inn!</p>
       <button id="btnLikeRoom" style="margin-top:6px;padding:4px 12px;background:rgba(0,0,0,0.3);border:1px solid var(--habbo-panel-border);border-radius:12px;color:white;font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s;">❤️ Like Room</button>
+      <button id="btnRateRoom" style="margin-top:6px;margin-left:6px;padding:4px 12px;background:rgba(0,0,0,0.3);border:1px solid var(--habbo-panel-border);border-radius:12px;color:white;font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s;">⭐ Rate Room</button>
     </div>
     <div id="minimap"><canvas id="minimapCanvas" width="140" height="140"></canvas></div>
     <div id="chatBar">

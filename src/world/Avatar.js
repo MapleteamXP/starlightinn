@@ -28,6 +28,8 @@ export class Avatar {
     this.isDancing = opts.isDancing || false;
     this.isWaving = opts.isWaving || false;
     this.isSitting = opts.isSitting || false;
+    this.isBowing = false;
+    this.isCheering = false;
     this.z = 0;
     this.chatBubble = null;
     this.chatTimer = 0;
@@ -61,6 +63,14 @@ export class Avatar {
       if (this.waveTimer > 1.5) {
         this.isWaving = false;
         this.waveTimer = 0;
+      }
+    }
+    if (this.isBowing || this.isCheering) {
+      this.emoteTimer = (this.emoteTimer || 0) + dt;
+      if (this.emoteTimer > 1.5) {
+        this.isBowing = false;
+        this.isCheering = false;
+        this.emoteTimer = 0;
       }
     }
 
@@ -130,10 +140,12 @@ export class Avatar {
       }
       // NPC idle emotes
       if (!this.isWalking && !this.isSitting && Math.random() < 0.0005) {
-        const idle = randChoice(['wave', 'dance', 'sit']);
+        const idle = randChoice(['wave', 'dance', 'sit', 'bow', 'cheer']);
         if (idle === 'wave') { this.isWaving = true; this.waveTimer = 0; }
         else if (idle === 'dance') { this.isDancing = true; setTimeout(() => this.isDancing = false, 3000); }
         else if (idle === 'sit') { this.isSitting = true; setTimeout(() => this.isSitting = false, 5000); }
+        else if (idle === 'bow') { this.isBowing = true; this.emoteTimer = 0; }
+        else if (idle === 'cheer') { this.isCheering = true; this.emoteTimer = 0; }
       }
     }
   }
@@ -179,6 +191,10 @@ export class Avatar {
       bob = Math.sin(Date.now() / 120) * 5;
     } else if (this.isSitting) {
       bob = 0;
+    } else if (this.isBowing) {
+      bob = Math.abs(Math.sin(Date.now() / 150)) * 8;
+    } else if (this.isCheering) {
+      bob = -Math.abs(Math.sin(Date.now() / 100)) * 6;
     } else {
       bob = Math.sin(Date.now() / 800) * 1.2; // idle breathing
     }

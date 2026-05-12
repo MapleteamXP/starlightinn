@@ -1010,6 +1010,15 @@ export function createFurnitureCanvas(type) {
       const a=(i/6)*Math.PI*2;
       ctx.beginPath(); ctx.arc(40+Math.cos(a)*8,34+Math.sin(a)*8,3,0,Math.PI*2);ctx.fill();
     }
+  } else if (type === 'photo_frame') {
+    ctx.fillStyle = '#8B4513';
+    ctx.beginPath(); ctx.moveTo(22,28);ctx.lineTo(58,28);ctx.lineTo(58,52);ctx.lineTo(22,52);ctx.closePath();ctx.fill();
+    ctx.fillStyle = '#F5F5DC';
+    ctx.fillRect(26,32,28,16);
+    ctx.strokeStyle = '#5D3A1A'; ctx.lineWidth = 2;
+    ctx.strokeRect(22,28,36,24);
+    ctx.fillStyle = '#5D3A1A';
+    ctx.beginPath(); ctx.moveTo(36,24);ctx.lineTo(44,24);ctx.lineTo(42,28);ctx.lineTo(38,28);ctx.closePath();ctx.fill();
   }
 
   ctx.strokeStyle = 'rgba(0,0,0,0.08)'
