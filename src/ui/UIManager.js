@@ -88,6 +88,7 @@ export class UIManager {
     this._ensurePanel('petPanel', 'My Pet', `<div id="petContent"></div>`);
     // Daily Rewards
     this._ensurePanel('dailyRewardPanel', 'Daily Rewards', `<div id="dailyRewardContent"></div>`);
+    this._ensurePanel('jukeboxPanel', 'Jukebox', `<div id="jukeboxContent"></div>`);
     // Achievements
     this._ensurePanel('achievementsPanel', 'Achievements', `<div class="achieve-list" id="achieveList"></div>`);
     // Leaderboard
@@ -1028,6 +1029,30 @@ export class UIManager {
     document.getElementById('dailyClaimBtn')?.addEventListener('click', onClaim);
     this.closeAllPanels();
     document.getElementById('dailyRewardPanel')?.classList.add('open');
+  }
+
+  showJukeboxPanel(tracks, currentTrack, onPlay, onStop) {
+    const content = document.getElementById('jukeboxContent');
+    if (!content) return;
+    let html = `<div style="text-align:center;padding:8px 0;"><div style="font-size:13px;color:var(--habbo-text-dim);">Select a track</div></div>`;
+    html += `<div style="display:flex;flex-direction:column;gap:8px;">`;
+    tracks.forEach(t => {
+      const isPlaying = currentTrack === t.id;
+      html += `<button class="jukebox-track" data-id="${t.id}" style="padding:12px;background:${isPlaying ? 'rgba(244,208,63,0.15)' : 'var(--habbo-dark)'};border:1px solid ${isPlaying ? 'var(--habbo-accent)' : 'var(--habbo-panel-border)'};border-radius:8px;color:white;font-family:inherit;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px;text-align:left;">
+        <span style="font-size:20px;">${t.emoji}</span>
+        <span style="flex:1;font-weight:700;">${t.name}</span>
+        ${isPlaying ? '<span style="color:var(--habbo-accent);font-size:11px;">▶ Playing</span>' : ''}
+      </button>`;
+    });
+    html += `</div>`;
+    html += `<button id="jukeboxStop" style="width:100%;margin-top:12px;padding:10px;background:var(--habbo-danger);color:white;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">⏹ Stop Music</button>`;
+    content.innerHTML = html;
+    content.querySelectorAll('.jukebox-track').forEach(btn => {
+      btn.addEventListener('click', () => onPlay && onPlay(btn.dataset.id));
+    });
+    document.getElementById('jukeboxStop')?.addEventListener('click', onStop);
+    this.closeAllPanels();
+    document.getElementById('jukeboxPanel')?.classList.add('open');
   }
 
   setTypingIndicator(visible, text = '') {

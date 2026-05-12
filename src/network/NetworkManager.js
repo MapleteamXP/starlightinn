@@ -251,7 +251,39 @@ export class NetworkManager {
 
       case 'pong':
         const latency = Date.now() - msg.time;
-        // Could display latency somewhere
+        break;
+
+      case 'trade_request':
+        if (this.game && this.game.uiManager) {
+          this.game.uiManager.showNotification(`Trade request from ${msg.from}`, 'info');
+          // Could show accept/decline dialog
+        }
+        break;
+
+      case 'trade_accept':
+        if (this.game && this.game.uiManager) {
+          this.game.uiManager.showNotification(`${msg.from} accepted your trade!`, 'success');
+        }
+        break;
+
+      case 'trade_offer':
+        // Update trade window with their items
+        break;
+
+      case 'trade_confirm':
+        if (this.game && this.game.uiManager) {
+          this.game.uiManager.showNotification('Trade confirmed!', 'success');
+        }
+        break;
+
+      case 'trade_cancel':
+        if (this.game && this.game.uiManager) {
+          this.game.uiManager.showNotification('Trade cancelled.', 'error');
+        }
+        break;
+
+      case 'leaderboard_data':
+        // Could update leaderboard panel with server data
         break;
 
       case 'error':
@@ -301,6 +333,34 @@ export class NetworkManager {
 
   getRooms() {
     this.send({ type: 'get_rooms' });
+  }
+
+  submitScore(game, score) {
+    this.send({ type: 'leaderboard_score', game, score });
+  }
+
+  getLeaderboard(game) {
+    this.send({ type: 'get_leaderboard', game });
+  }
+
+  requestTrade(targetId) {
+    this.send({ type: 'trade_request', targetId });
+  }
+
+  acceptTrade(targetId) {
+    this.send({ type: 'trade_accept', targetId });
+  }
+
+  sendTradeOffer(targetId, items) {
+    this.send({ type: 'trade_offer', targetId, items });
+  }
+
+  confirmTrade(targetId) {
+    this.send({ type: 'trade_confirm', targetId });
+  }
+
+  cancelTrade(targetId) {
+    this.send({ type: 'trade_cancel', targetId });
   }
 
   // ── Remote Player Update (called every frame) ──

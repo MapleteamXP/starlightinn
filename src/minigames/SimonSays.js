@@ -240,6 +240,8 @@ export class SimonSays {
     if (this.game) {
       this.game.currencySystem.add(Math.floor(this.score / 2));
       this.game.uiManager?.showNotification(`Simon Says: +★${Math.floor(this.score/2)}`, 'success');
+      this.game.leaderboardSystem?.submit('simon_says', this.score);
+      this.game.networkManager?.submitScore('simon_says', this.score);
     }
   }
 
@@ -261,6 +263,8 @@ export class SimonSays {
     if (this.game) {
       this.game.currencySystem.add(this.score);
       this.game.uiManager?.showNotification(`Simon Says perfect! +★${this.score}`, 'success');
+      this.game.leaderboardSystem?.submit('simon_says', this.score);
+      this.game.networkManager?.submitScore('simon_says', this.score);
     }
   }
 

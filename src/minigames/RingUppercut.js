@@ -47,7 +47,8 @@ export class RingUppercut extends BaseMinigame {
     this.result = won ? 'win' : 'lose';
     this.game.soundManager.play(won ? 'win' : 'error');
     const score = won ? (this.maxCombo * 50 + Math.floor(this.playerHealth) * 10) : (this.maxCombo * 30);
-    this.game.leaderboardSystem.submit('ringuppercut', score, { combo: this.maxCombo, health: Math.floor(this.playerHealth), won });
+    this.game.leaderboardSystem?.submit('ringuppercut', score, { combo: this.maxCombo, health: Math.floor(this.playerHealth), won });
+    this.game.networkManager?.submitScore('ringuppercut', score);
     super.end(won);
   }
 

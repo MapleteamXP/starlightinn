@@ -2010,6 +2010,213 @@ var StarlightEngine = (() => {
       ctx.beginPath();
       ctx.arc(44, 28, 4, 0, Math.PI * 2);
       ctx.fill();
+    } else if (type === "snowman") {
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(40, 52, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(40, 30, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#F4A460";
+      ctx.beginPath();
+      ctx.moveTo(40, 28);
+      ctx.lineTo(52, 26);
+      ctx.lineTo(40, 30);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#222";
+      ctx.beginPath();
+      ctx.arc(36, 26, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(44, 26, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#8B0000";
+      ctx.fillRect(32, 16, 16, 4);
+    } else if (type === "cactus") {
+      ctx.fillStyle = "#2E8B57";
+      ctx.beginPath();
+      ctx.roundRect(34, 32, 12, 36, 6);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.roundRect(22, 44, 10, 18, 5);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.roundRect(48, 40, 10, 16, 5);
+      ctx.fill();
+      ctx.fillStyle = "#3CB371";
+      ctx.beginPath();
+      ctx.arc(38, 40, 4, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (type === "telescope") {
+      ctx.fillStyle = "#4a4a4a";
+      ctx.beginPath();
+      ctx.moveTo(36, 20);
+      ctx.lineTo(44, 16);
+      ctx.lineTo(52, 40);
+      ctx.lineTo(44, 44);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#C0C0C0";
+      ctx.beginPath();
+      ctx.ellipse(40, 44, 14, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#87CEEB";
+      ctx.beginPath();
+      ctx.arc(44, 24, 3, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (type === "crystal_ball") {
+      ctx.fillStyle = "#4B0082";
+      ctx.beginPath();
+      ctx.moveTo(28, 48);
+      ctx.lineTo(52, 48);
+      ctx.lineTo(48, 60);
+      ctx.lineTo(32, 60);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "rgba(150,100,255,0.5)";
+      ctx.beginPath();
+      ctx.arc(40, 32, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(200,180,255,0.4)";
+      ctx.beginPath();
+      ctx.arc(36, 28, 6, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (type === "hammock") {
+      ctx.fillStyle = "#8B4513";
+      ctx.beginPath();
+      ctx.moveTo(8, 32);
+      ctx.lineTo(12, 28);
+      ctx.lineTo(12, 56);
+      ctx.lineTo(8, 52);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(68, 32);
+      ctx.lineTo(72, 28);
+      ctx.lineTo(72, 56);
+      ctx.lineTo(68, 52);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#E74C3C";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(10, 36);
+      ctx.quadraticCurveTo(40, 56, 70, 36);
+      ctx.stroke();
+      ctx.strokeStyle = "#C0392B";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(10, 40);
+      ctx.quadraticCurveTo(40, 60, 70, 40);
+      ctx.stroke();
+    } else if (type === "bbq") {
+      ctx.fillStyle = "#333";
+      ctx.beginPath();
+      ctx.ellipse(40, 52, 16, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#555";
+      ctx.beginPath();
+      ctx.moveTo(28, 32);
+      ctx.lineTo(52, 32);
+      ctx.lineTo(48, 52);
+      ctx.lineTo(32, 52);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#FF6347";
+      ctx.beginPath();
+      ctx.ellipse(40, 32, 10, 3, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(36, 28, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(44, 28, 2, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (type === "pizza") {
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.moveTo(28, 36);
+      ctx.lineTo(52, 28);
+      ctx.lineTo(56, 32);
+      ctx.lineTo(56, 48);
+      ctx.lineTo(32, 56);
+      ctx.lineTo(28, 52);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#FFD700";
+      ctx.beginPath();
+      ctx.moveTo(32, 36);
+      ctx.lineTo(50, 30);
+      ctx.lineTo(50, 44);
+      ctx.lineTo(32, 50);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#E74C3C";
+      ctx.beginPath();
+      ctx.arc(38, 38, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(44, 36, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(42, 42, 2, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (type === "globe") {
+      ctx.fillStyle = "#8B4513";
+      ctx.beginPath();
+      ctx.moveTo(32, 48);
+      ctx.lineTo(48, 48);
+      ctx.lineTo(44, 56);
+      ctx.lineTo(36, 56);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#3498DB";
+      ctx.beginPath();
+      ctx.arc(40, 30, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#2ECC71";
+      ctx.beginPath();
+      ctx.arc(36, 26, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(46, 32, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#C0C0C0";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(40, 30, 14, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(26, 30);
+      ctx.lineTo(54, 30);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(40, 16);
+      ctx.lineTo(40, 44);
+      ctx.stroke();
+    } else if (type === "disco_ball") {
+      ctx.fillStyle = "#888";
+      ctx.beginPath();
+      ctx.moveTo(38, 12);
+      ctx.lineTo(42, 12);
+      ctx.lineTo(42, 20);
+      ctx.lineTo(38, 20);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#C0C0C0";
+      ctx.beginPath();
+      ctx.arc(40, 34, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.4)";
+      for (let i = 0; i < 6; i++) {
+        const a = i / 6 * Math.PI * 2;
+        ctx.beginPath();
+        ctx.arc(40 + Math.cos(a) * 8, 34 + Math.sin(a) * 8, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
     ctx.strokeStyle = "rgba(0,0,0,0.08)";
     ctx.lineWidth = 1;
@@ -2280,7 +2487,16 @@ var StarlightEngine = (() => {
         { id: "phone", name: "Rotary Phone", price: 90, icon: "\u{1F4DE}", footprint: [1, 1], stackable: true, desc: "Old-school communication.", category: "electronics" },
         { id: "radio", name: "Vintage Radio", price: 130, icon: "\u{1F4FB}", footprint: [1, 1], stackable: false, desc: "Tune in to good vibes.", category: "electronics" },
         { id: "guitar", name: "Acoustic Guitar", price: 350, icon: "\u{1F3B8}", footprint: [1, 1], stackable: false, desc: "Strum a melody.", category: "electronics" },
-        { id: "easel", name: "Artist easel", price: 110, icon: "\u{1F3A8}", footprint: [1, 1], stackable: false, desc: "Paint your masterpiece.", category: "decor" }
+        { id: "easel", name: "Artist easel", price: 110, icon: "\u{1F3A8}", footprint: [1, 1], stackable: false, desc: "Paint your masterpiece.", category: "decor" },
+        { id: "snowman", name: "Snowman", price: 120, icon: "\u26C4", footprint: [1, 1], stackable: false, desc: "Winter companion.", category: "decor" },
+        { id: "cactus", name: "Saguaro Cactus", price: 90, icon: "\u{1F335}", footprint: [1, 1], stackable: false, desc: "Desert vibes.", category: "decor" },
+        { id: "telescope", name: "Stargazer Telescope", price: 600, icon: "\u{1F52D}", footprint: [1, 1], stackable: false, desc: "Explore the cosmos.", category: "rare" },
+        { id: "crystal_ball", name: "Crystal Ball", price: 450, icon: "\u{1F52E}", footprint: [1, 1], stackable: true, desc: "See the future.", category: "rare" },
+        { id: "hammock", name: "Lazy Hammock", price: 280, icon: "\u{1F3DD}\uFE0F", footprint: [2, 1], stackable: false, desc: "Take a nap.", category: "seating" },
+        { id: "bbq", name: "BBQ Grill", price: 220, icon: "\u{1F356}", footprint: [1, 1], stackable: false, desc: "Summer cookouts.", category: "kitchen" },
+        { id: "pizza", name: "Pizza Box", price: 35, icon: "\u{1F355}", footprint: [1, 1], stackable: true, desc: "Everyone loves pizza.", category: "kitchen" },
+        { id: "globe", name: "World Globe", price: 180, icon: "\u{1F30D}", footprint: [1, 1], stackable: true, desc: "Travel the world.", category: "decor" },
+        { id: "disco_ball", name: "Disco Ball", price: 400, icon: "\u{1F57A}", footprint: [1, 1], stackable: true, desc: "Party time!", category: "lighting" }
       ];
       CATALOG_CATEGORIES = [
         { id: "all", name: "All", icon: "\u{1F4E6}" },
@@ -3811,6 +4027,7 @@ var StarlightEngine = (() => {
           this._ensurePanel("friendsPanel", "Friends", `<div class="friend-list" id="friendList"></div>`);
           this._ensurePanel("petPanel", "My Pet", `<div id="petContent"></div>`);
           this._ensurePanel("dailyRewardPanel", "Daily Rewards", `<div id="dailyRewardContent"></div>`);
+          this._ensurePanel("jukeboxPanel", "Jukebox", `<div id="jukeboxContent"></div>`);
           this._ensurePanel("achievementsPanel", "Achievements", `<div class="achieve-list" id="achieveList"></div>`);
           this._ensurePanel("leaderboardPanel", "High Scores", `<div id="leaderboardContent"></div>`);
           this._ensurePanel("craftingPanel", "Crafting Workshop", `<div class="craft-list" id="craftList"></div>`);
@@ -4738,6 +4955,29 @@ var StarlightEngine = (() => {
           this.closeAllPanels();
           document.getElementById("dailyRewardPanel")?.classList.add("open");
         }
+        showJukeboxPanel(tracks, currentTrack, onPlay, onStop) {
+          const content = document.getElementById("jukeboxContent");
+          if (!content) return;
+          let html = `<div style="text-align:center;padding:8px 0;"><div style="font-size:13px;color:var(--habbo-text-dim);">Select a track</div></div>`;
+          html += `<div style="display:flex;flex-direction:column;gap:8px;">`;
+          tracks.forEach((t) => {
+            const isPlaying = currentTrack === t.id;
+            html += `<button class="jukebox-track" data-id="${t.id}" style="padding:12px;background:${isPlaying ? "rgba(244,208,63,0.15)" : "var(--habbo-dark)"};border:1px solid ${isPlaying ? "var(--habbo-accent)" : "var(--habbo-panel-border)"};border-radius:8px;color:white;font-family:inherit;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px;text-align:left;">
+        <span style="font-size:20px;">${t.emoji}</span>
+        <span style="flex:1;font-weight:700;">${t.name}</span>
+        ${isPlaying ? '<span style="color:var(--habbo-accent);font-size:11px;">\u25B6 Playing</span>' : ""}
+      </button>`;
+          });
+          html += `</div>`;
+          html += `<button id="jukeboxStop" style="width:100%;margin-top:12px;padding:10px;background:var(--habbo-danger);color:white;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">\u23F9 Stop Music</button>`;
+          content.innerHTML = html;
+          content.querySelectorAll(".jukebox-track").forEach((btn) => {
+            btn.addEventListener("click", () => onPlay && onPlay(btn.dataset.id));
+          });
+          document.getElementById("jukeboxStop")?.addEventListener("click", onStop);
+          this.closeAllPanels();
+          document.getElementById("jukeboxPanel")?.classList.add("open");
+        }
         setTypingIndicator(visible, text = "") {
           const bar = document.getElementById("typingIndicatorBar");
           if (!bar) return;
@@ -4859,7 +5099,8 @@ var StarlightEngine = (() => {
           this.result = won ? "win" : "lose";
           this.game.soundManager.play(won ? "win" : "error");
           const score = won ? this.maxCombo * 50 + Math.floor(this.playerHealth) * 10 : this.maxCombo * 30;
-          this.game.leaderboardSystem.submit("ringuppercut", score, { combo: this.maxCombo, health: Math.floor(this.playerHealth), won });
+          this.game.leaderboardSystem?.submit("ringuppercut", score, { combo: this.maxCombo, health: Math.floor(this.playerHealth), won });
+          this.game.networkManager?.submitScore("ringuppercut", score);
           super.end(won);
         }
         attemptAttack() {
@@ -5042,6 +5283,11 @@ var StarlightEngine = (() => {
         }
         end(won) {
           this.game.canvas.removeEventListener("click", this._click);
+          const score = won ? Math.max(0, this.matched * 100 - this.moves * 5 + Math.floor(this.duration - this.timer) * 10) : this.score;
+          if (score > 0) {
+            this.game.leaderboardSystem?.submit("memorymatch", score, { moves: this.moves, time: Math.floor(this.timer) });
+            this.game.networkManager?.submitScore("memorymatch", score);
+          }
           super.end(won);
         }
         _buildDeck() {
@@ -5096,8 +5342,6 @@ var StarlightEngine = (() => {
               this.score += 100;
               this.game.soundManager.play("buy");
               if (this.matched >= this.cards.length / 2) {
-                const score = this.matched * 100 - this.moves * 5 + Math.floor(this.duration - this.timer) * 10;
-                this.game.leaderboardSystem.submit("memorymatch", Math.max(0, score), { moves: this.moves, time: Math.floor(this.timer) });
                 this.end(true);
               }
             } else {
@@ -5208,6 +5452,11 @@ var StarlightEngine = (() => {
         }
         end(won) {
           this.game.canvas.removeEventListener("click", this._click);
+          const score = won ? Math.max(0, 2e3 - this.moves * 10 + Math.floor(this.duration - this.timer) * 20) : 0;
+          if (score > 0) {
+            this.game.leaderboardSystem?.submit("tilepuzzle", score, { moves: this.moves, time: Math.floor(this.timer) });
+            this.game.networkManager?.submitScore("tilepuzzle", score);
+          }
           super.end(won);
         }
         _buildBoard() {
@@ -5260,8 +5509,6 @@ var StarlightEngine = (() => {
                 this.game.soundManager.play("click");
                 if (this._checkSolved()) {
                   this.solved = true;
-                  const score = 2e3 - this.moves * 10 + Math.floor(this.duration - this.timer) * 20;
-                  this.game.leaderboardSystem.submit("tilepuzzle", Math.max(0, score), { moves: this.moves, time: Math.floor(this.timer) });
                   this.end(true);
                 }
               } else {
@@ -5556,6 +5803,8 @@ var StarlightEngine = (() => {
           if (this.game) {
             this.game.currencySystem.add(Math.floor(this.score / 2));
             this.game.uiManager?.showNotification(`Simon Says: +\u2605${Math.floor(this.score / 2)}`, "success");
+            this.game.leaderboardSystem?.submit("simon_says", this.score);
+            this.game.networkManager?.submitScore("simon_says", this.score);
           }
         }
         _win() {
@@ -5576,6 +5825,8 @@ var StarlightEngine = (() => {
           if (this.game) {
             this.game.currencySystem.add(this.score);
             this.game.uiManager?.showNotification(`Simon Says perfect! +\u2605${this.score}`, "success");
+            this.game.leaderboardSystem?.submit("simon_says", this.score);
+            this.game.networkManager?.submitScore("simon_says", this.score);
           }
         }
         _lighten(hex, percent) {
@@ -5723,6 +5974,8 @@ var StarlightEngine = (() => {
             this.game.uiManager?.showNotification(`Fishing trip done! +\u2605${this.score}`, "success");
             this.game.achievementSystem?.track("minigame");
             if (this.catches.length >= 3) this.game.achievementSystem?.track("win");
+            this.game.leaderboardSystem?.submit("fishing", this.score);
+            this.game.networkManager?.submitScore("fishing", this.score);
           }
         }
         update(dt) {
@@ -5935,6 +6188,37 @@ var StarlightEngine = (() => {
             }
           } catch (e) {
           }
+        }
+        playJukeboxTrack(trackId) {
+          this.stopJukebox();
+          if (!this.enabled || !trackId) return;
+          this._ensureContext();
+          if (!this.ctx) return;
+          this.currentJukeboxTrack = trackId;
+          const tracks = {
+            chill: { bpm: 80, notes: [261, 329, 392, 523, 392, 329, 261, 196], type: "sine" },
+            upbeat: { bpm: 120, notes: [392, 392, 349, 349, 329, 329, 349, 392], type: "triangle" },
+            retro: { bpm: 100, notes: [220, 261, 329, 392, 329, 261, 220, 196], type: "square" },
+            jazz: { bpm: 90, notes: [261, 311, 349, 392, 466, 392, 349, 311], type: "sine" }
+          };
+          const track = tracks[trackId];
+          if (!track) return;
+          const beatDur = 60 / track.bpm;
+          this.jukeboxInterval = setInterval(() => {
+            if (!this.enabled) {
+              this.stopJukebox();
+              return;
+            }
+            const note = track.notes[Math.floor(Date.now() / (beatDur * 1e3)) % track.notes.length];
+            this.playTone(note, beatDur * 0.8, track.type);
+          }, beatDur * 1e3);
+        }
+        stopJukebox() {
+          if (this.jukeboxInterval) {
+            clearInterval(this.jukeboxInterval);
+            this.jukeboxInterval = null;
+          }
+          this.currentJukeboxTrack = null;
         }
         play(type) {
           if (!this.enabled) return;
@@ -7401,6 +7685,30 @@ var StarlightEngine = (() => {
             case "pong":
               const latency = Date.now() - msg.time;
               break;
+            case "trade_request":
+              if (this.game && this.game.uiManager) {
+                this.game.uiManager.showNotification(`Trade request from ${msg.from}`, "info");
+              }
+              break;
+            case "trade_accept":
+              if (this.game && this.game.uiManager) {
+                this.game.uiManager.showNotification(`${msg.from} accepted your trade!`, "success");
+              }
+              break;
+            case "trade_offer":
+              break;
+            case "trade_confirm":
+              if (this.game && this.game.uiManager) {
+                this.game.uiManager.showNotification("Trade confirmed!", "success");
+              }
+              break;
+            case "trade_cancel":
+              if (this.game && this.game.uiManager) {
+                this.game.uiManager.showNotification("Trade cancelled.", "error");
+              }
+              break;
+            case "leaderboard_data":
+              break;
             case "error":
               console.error("[NET] Server error:", msg.message);
               if (this.game && this.game.uiManager) {
@@ -7439,6 +7747,27 @@ var StarlightEngine = (() => {
         }
         getRooms() {
           this.send({ type: "get_rooms" });
+        }
+        submitScore(game, score) {
+          this.send({ type: "leaderboard_score", game, score });
+        }
+        getLeaderboard(game) {
+          this.send({ type: "get_leaderboard", game });
+        }
+        requestTrade(targetId) {
+          this.send({ type: "trade_request", targetId });
+        }
+        acceptTrade(targetId) {
+          this.send({ type: "trade_accept", targetId });
+        }
+        sendTradeOffer(targetId, items) {
+          this.send({ type: "trade_offer", targetId, items });
+        }
+        confirmTrade(targetId) {
+          this.send({ type: "trade_confirm", targetId });
+        }
+        cancelTrade(targetId) {
+          this.send({ type: "trade_cancel", targetId });
         }
         // ── Remote Player Update (called every frame) ──
         updateRemotePlayers(dt) {
@@ -8013,6 +8342,15 @@ var StarlightEngine = (() => {
               this.progressionSystem.addXP(25);
               this.treasures = this.treasures.filter((t) => t !== treasure);
               this.achievementSystem.track("walk");
+              return;
+            }
+            const clickedFurniture = this.room.furniture.find((f) => f.occupies(tx, ty));
+            if (clickedFurniture && clickedFurniture.type === "jukebox") {
+              this.openJukebox();
+              return;
+            }
+            if (clickedFurniture && clickedFurniture.type === "arcade") {
+              this.startMinigame(SimonSays);
               return;
             }
             const clickedAvatar = this.room.avatars.find((a) => a !== this.player && Math.round(a.x) === tx && Math.round(a.y) === ty);
@@ -9199,6 +9537,22 @@ var StarlightEngine = (() => {
               this.player.moveTo(Math.round(avatar.x), Math.round(avatar.y), this.room);
             }
           }, isRemote, remoteId);
+        }
+        openJukebox() {
+          const tracks = [
+            { id: "chill", name: "Chill Vibes", emoji: "\u{1F30A}" },
+            { id: "upbeat", name: "Upbeat Pop", emoji: "\u{1F389}" },
+            { id: "retro", name: "Retro Arcade", emoji: "\u{1F47E}" },
+            { id: "jazz", name: "Smooth Jazz", emoji: "\u{1F3B7}" }
+          ];
+          const current = this.soundManager.currentJukeboxTrack;
+          this.uiManager.showJukeboxPanel(tracks, current, (trackId) => {
+            this.soundManager.playJukeboxTrack(trackId);
+            this.uiManager.showNotification(`Now playing: ${tracks.find((t) => t.id === trackId)?.name || "Music"}`, "success");
+          }, () => {
+            this.soundManager.stopJukebox();
+            this.uiManager.showNotification("Music stopped", "info");
+          });
         }
         openNPCTrade(npc) {
           const items = FURNITURE_CATALOG.filter((i) => i.price < 400).sort(() => Math.random() - 0.5).slice(0, 4);

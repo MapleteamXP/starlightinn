@@ -131,6 +131,8 @@ export class FishingGame {
       this.game.uiManager?.showNotification(`Fishing trip done! +★${this.score}`, 'success');
       this.game.achievementSystem?.track('minigame');
       if (this.catches.length >= 3) this.game.achievementSystem?.track('win');
+      this.game.leaderboardSystem?.submit('fishing', this.score);
+      this.game.networkManager?.submitScore('fishing', this.score);
     }
   }
 

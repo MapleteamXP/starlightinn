@@ -503,6 +503,17 @@ export class Game {
         this.achievementSystem.track('walk');
         return;
       }
+      // Check interactive furniture
+      const clickedFurniture = this.room.furniture.find(f => f.occupies(tx, ty));
+      if (clickedFurniture && clickedFurniture.type === 'jukebox') {
+        this.openJukebox();
+        return;
+      }
+      if (clickedFurniture && clickedFurniture.type === 'arcade') {
+        this.startMinigame(SimonSays);
+        return;
+      }
+
       // Check avatar click (NPC or remote player)
       const clickedAvatar = this.room.avatars.find(a => a !== this.player && Math.round(a.x) === tx && Math.round(a.y) === ty);
       if (clickedAvatar) {
@@ -1473,6 +1484,23 @@ export class Game {
         this.player.moveTo(Math.round(avatar.x), Math.round(avatar.y), this.room);
       }
     }, isRemote, remoteId);
+  }
+
+  openJukebox() {
+    const tracks = [
+      { id: 'chill', name: 'Chill Vibes', emoji: '🌊' },
+      { id: 'upbeat', name: 'Upbeat Pop', emoji: '🎉' },
+      { id: 'retro', name: 'Retro Arcade', emoji: '👾' },
+      { id: 'jazz', name: 'Smooth Jazz', emoji: '🎷' },
+    ];
+    const current = this.soundManager.currentJukeboxTrack;
+    this.uiManager.showJukeboxPanel(tracks, current, trackId => {
+      this.soundManager.playJukeboxTrack(trackId);
+      this.uiManager.showNotification(`Now playing: ${tracks.find(t => t.id === trackId)?.name || 'Music'}`, 'success');
+    }, () => {
+      this.soundManager.stopJukebox();
+      this.uiManager.showNotification('Music stopped', 'info');
+    });
   }
 
   openNPCTrade(npc) {

@@ -26,6 +26,11 @@ export class TilePuzzle extends BaseMinigame {
 
   end(won) {
     this.game.canvas.removeEventListener('click', this._click);
+    const score = won ? Math.max(0, 2000 - this.moves * 10 + Math.floor((this.duration - this.timer)) * 20) : 0;
+    if (score > 0) {
+      this.game.leaderboardSystem?.submit('tilepuzzle', score, { moves: this.moves, time: Math.floor(this.timer) });
+      this.game.networkManager?.submitScore('tilepuzzle', score);
+    }
     super.end(won);
   }
 
@@ -84,8 +89,6 @@ export class TilePuzzle extends BaseMinigame {
           this.game.soundManager.play('click');
           if (this._checkSolved()) {
             this.solved = true;
-            const score = 2000 - this.moves * 10 + Math.floor((this.duration - this.timer)) * 20;
-            this.game.leaderboardSystem.submit('tilepuzzle', Math.max(0, score), { moves: this.moves, time: Math.floor(this.timer) });
             this.end(true);
           }
         } else {

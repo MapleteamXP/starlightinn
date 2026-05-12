@@ -285,6 +285,103 @@ function handleMessage(ws, msg) {
       break;
     }
 
+    case 'leaderboard_score': {
+      if (!player) return;
+      const { game, score } = msg;
+      if (!game || typeof score !== 'number') return;
+      // Store in a global leaderboard map
+      if (!global.leaderboard) global.leaderboard = {};
+      if (!global.leaderboard[game]) global.leaderboard[game] = [];
+      global.leaderboard[game].push({
+        name: player.name,
+        id: player.id,
+        score,
+        timestamp: Date.now()
+      });
+      // Keep top 50 per game
+      global.leaderboard[game].sort((a, b) => b.score - a.score);
+      if (global.leaderboard[game].length > 50) global.leaderboard[game].length = 50;
+      ws.send(JSON.stringify({ type: 'leaderboard_saved', game }));
+      break;
+    }
+
+    case 'get_leaderboard': {
+      const { game } = msg;
+      const scores = (global.leaderboard && global.leaderboard[game]) || [];
+      ws.send(JSON.stringify({
+        type: 'leaderboard_data',
+        game,
+        scores: scores.slice(0, 20)
+      }));
+      break;
+    }
+
+    case 'trade_request': {
+      if (!player || !player.roomId) return;
+      const target = playerManager.getById(msg.targetId);
+      if (target && target.ws.readyState === 1) {
+        target.ws.send(JSON.stringify({
+          type: 'trade_request',
+          from: player.name,
+          fromId: player.id
+        }));
+      }
+      break;
+    }
+
+    case 'trade_accept': {
+      if (!player) return;
+      const target = playerManager.getById(msg.targetId);
+      if (target && target.ws.readyState === 1) {
+        target.ws.send(JSON.stringify({
+          type: 'trade_accept',
+          from: player.name,
+          fromId: player.id
+        }));
+      }
+      break;
+    }
+
+    case 'trade_offer': {
+      if (!player) return;
+      const target = playerManager.getById(msg.targetId);
+      if (target && target.ws.readyState === 1) {
+        target.ws.send(JSON.stringify({
+          type: 'trade_offer',
+          from: player.name,
+          fromId: player.id,
+          items: msg.items
+        }));
+      }
+      break;
+    }
+
+    case 'trade_confirm': {
+      if (!player) return;
+      const target = playerManager.getById(msg.targetId);
+      if (target && target.ws.readyState === 1) {
+        target.ws.send(JSON.stringify({
+          type: 'trade_confirm',
+          from: player.name,
+          fromId: player.id
+        }));
+      }
+      break;
+    }
+
+    case 'trade_cancel': {
+      if (!player) return;
+      const target = playerManager.getById(msg.targetId);
+      if (target && target.ws.readyState === 1) {
+        target.ws.send(JSON.stringify({
+          type: 'trade_cancel',
+          from: player.name,
+          fromId: player.id
+        }));
+      }
+      break;
+    }
+
     default:
       ws.send(JSON.stringify({ type: 'error', message: `Unknown message type: ${msg.type}` }));
   }

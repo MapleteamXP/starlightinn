@@ -43,7 +43,16 @@ export const FURNITURE_CATALOG = [
   { id: 'phone', name: 'Rotary Phone', price: 90, icon: '\uD83D\uDCDE', footprint: [1, 1], stackable: true, desc: 'Old-school communication.', category: 'electronics' },
   { id: 'radio', name: 'Vintage Radio', price: 130, icon: '\uD83D\uDCFB', footprint: [1, 1], stackable: false, desc: 'Tune in to good vibes.', category: 'electronics' },
   { id: 'guitar', name: 'Acoustic Guitar', price: 350, icon: '\uD83C\uDFB8', footprint: [1, 1], stackable: false, desc: 'Strum a melody.', category: 'electronics' },
-  { id: 'easel', name: 'Artist easel', price: 110, icon: '\uD83C\uDFA8', footprint: [1, 1], stackable: false, desc: 'Paint your masterpiece.', category: 'decor' }
+  { id: 'easel', name: 'Artist easel', price: 110, icon: '\uD83C\uDFA8', footprint: [1, 1], stackable: false, desc: 'Paint your masterpiece.', category: 'decor' },
+  { id: 'snowman', name: 'Snowman', price: 120, icon: '\u26C4', footprint: [1, 1], stackable: false, desc: 'Winter companion.', category: 'decor' },
+  { id: 'cactus', name: 'Saguaro Cactus', price: 90, icon: '\uD83C\uDF35', footprint: [1, 1], stackable: false, desc: 'Desert vibes.', category: 'decor' },
+  { id: 'telescope', name: 'Stargazer Telescope', price: 600, icon: '\uD83D\uDD2D', footprint: [1, 1], stackable: false, desc: 'Explore the cosmos.', category: 'rare' },
+  { id: 'crystal_ball', name: 'Crystal Ball', price: 450, icon: '\uD83D\uDD2E', footprint: [1, 1], stackable: true, desc: 'See the future.', category: 'rare' },
+  { id: 'hammock', name: 'Lazy Hammock', price: 280, icon: '\uD83C\uDFDD\uFE0F', footprint: [2, 1], stackable: false, desc: 'Take a nap.', category: 'seating' },
+  { id: 'bbq', name: 'BBQ Grill', price: 220, icon: '\uD83C\uDF56', footprint: [1, 1], stackable: false, desc: 'Summer cookouts.', category: 'kitchen' },
+  { id: 'pizza', name: 'Pizza Box', price: 35, icon: '\uD83C\uDF55', footprint: [1, 1], stackable: true, desc: 'Everyone loves pizza.', category: 'kitchen' },
+  { id: 'globe', name: 'World Globe', price: 180, icon: '\uD83C\uDF0D', footprint: [1, 1], stackable: true, desc: 'Travel the world.', category: 'decor' },
+  { id: 'disco_ball', name: 'Disco Ball', price: 400, icon: '\uD83D\uDD7A', footprint: [1, 1], stackable: true, desc: 'Party time!', category: 'lighting' }
 ];
 
 export const CATALOG_CATEGORIES = [

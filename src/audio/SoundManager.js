@@ -56,6 +56,35 @@ export class SoundManager {
     } catch (e) {}
   }
 
+  playJukeboxTrack(trackId) {
+    this.stopJukebox();
+    if (!this.enabled || !trackId) return;
+    this._ensureContext();
+    if (!this.ctx) return;
+    this.currentJukeboxTrack = trackId;
+
+    const tracks = {
+      chill: { bpm: 80, notes: [261, 329, 392, 523, 392, 329, 261, 196], type: 'sine' },
+      upbeat: { bpm: 120, notes: [392, 392, 349, 349, 329, 329, 349, 392], type: 'triangle' },
+      retro: { bpm: 100, notes: [220, 261, 329, 392, 329, 261, 220, 196], type: 'square' },
+      jazz: { bpm: 90, notes: [261, 311, 349, 392, 466, 392, 349, 311], type: 'sine' },
+    };
+    const track = tracks[trackId];
+    if (!track) return;
+
+    const beatDur = 60 / track.bpm;
+    this.jukeboxInterval = setInterval(() => {
+      if (!this.enabled) { this.stopJukebox(); return; }
+      const note = track.notes[Math.floor(Date.now() / (beatDur * 1000)) % track.notes.length];
+      this.playTone(note, beatDur * 0.8, track.type);
+    }, beatDur * 1000);
+  }
+
+  stopJukebox() {
+    if (this.jukeboxInterval) { clearInterval(this.jukeboxInterval); this.jukeboxInterval = null; }
+    this.currentJukeboxTrack = null;
+  }
+
   play(type) {
     if (!this.enabled) return;
     this._ensureContext();
