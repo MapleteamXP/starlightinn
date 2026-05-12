@@ -4224,6 +4224,38 @@ var StarlightEngine = (() => {
           const timeMod = hour >= 18 || hour <= 2 ? 1.4 : hour >= 9 && hour <= 17 ? 1 : 0.6;
           return Math.floor((base + variance) * timeMod);
         }
+        showBotDialog(bot, dialogItems) {
+          const existing = document.getElementById("botDialog");
+          if (existing) existing.remove();
+          const div = document.createElement("div");
+          div.id = "botDialog";
+          div.style.cssText = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;background:var(--habbo-panel);border:2px solid var(--habbo-accent);border-radius:12px;padding:16px;z-index:400;box-shadow:0 8px 32px rgba(0,0,0,0.4);font-family:Nunito,sans-serif;color:#fff;";
+          div.innerHTML = `
+      <div style="text-align:center;font-size:32px;margin-bottom:8px;">${bot.emoji}</div>
+      <div style="text-align:center;font-weight:700;margin-bottom:4px;">${bot.name}</div>
+      <div style="text-align:center;font-size:12px;color:var(--habbo-text-dim);margin-bottom:14px;">${bot.greeting}</div>
+      <div id="botDialogActions" style="display:flex;flex-direction:column;gap:6px;"></div>
+    `;
+          document.body.appendChild(div);
+          const actionsDiv = div.querySelector("#botDialogActions");
+          if (dialogItems && dialogItems.length > 0) {
+            dialogItems.forEach((item) => {
+              const btn = document.createElement("button");
+              btn.textContent = item.text;
+              btn.style.cssText = "padding:8px;background:var(--habbo-dark);color:white;border:1px solid var(--habbo-panel-border);border-radius:8px;font-family:inherit;font-size:12px;cursor:pointer;font-weight:700;transition:all 0.15s;";
+              btn.addEventListener("mouseenter", () => btn.style.background = "var(--habbo-light)");
+              btn.addEventListener("mouseleave", () => btn.style.background = "var(--habbo-dark)");
+              btn.addEventListener("click", () => {
+                item.action();
+                if (item.text.includes("close") || item.text.includes("Goodbye") || item.text.includes("later") || item.text.includes("today")) div.remove();
+              });
+              actionsDiv.appendChild(btn);
+            });
+          }
+          setTimeout(() => {
+            if (div.parentNode) div.remove();
+          }, 15e3);
+        }
         showRateRoomDialog(onRate) {
           const overlay = document.createElement("div");
           overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:3000;";
@@ -4890,7 +4922,7 @@ var StarlightEngine = (() => {
             if (div.parentNode) div.remove();
           }, 8e3);
         }
-        showPlayerProfile(avatar, actions, isRemote = false, remoteId = null, isIgnored = false) {
+        showPlayerProfile(avatar, actions, isRemote = false, remoteId = null, isIgnored = false, achievements = []) {
           const existing = document.getElementById("playerProfile");
           if (existing) existing.remove();
           const div = document.createElement("div");
@@ -4922,6 +4954,7 @@ var StarlightEngine = (() => {
           ${avatar.glassesType !== "none" ? `<span style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">${glassesEmoji[avatar.glassesType]} ${avatar.glassesType}</span>` : ""}
         </div>
       </div>
+      ${achievements.length > 0 ? `<div style="background:var(--habbo-dark);border-radius:8px;padding:10px;margin-bottom:12px;"><div style="font-size:11px;color:var(--habbo-text-dim);margin-bottom:6px;">Achievements</div><div style="display:flex;gap:6px;flex-wrap:wrap;font-size:16px;">${achievements.map((a) => `<span title="${a.name}">${a.icon}</span>`).join("")}</div></div>` : ""}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <button id="ppWalk" style="padding:8px;background:var(--habbo-light);color:white;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">\u{1F6B6} Walk To</button>
         ${isRemote ? `<button id="ppWhisper" style="padding:8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">\u{1F4AC} Whisper</button>` : ""}
@@ -5246,7 +5279,7 @@ var StarlightEngine = (() => {
           this.closeAllPanels();
           document.getElementById("dailyRewardPanel")?.classList.add("open");
         }
-        showJukeboxPanel(tracks, currentTrack, onPlay, onStop) {
+        showJukeboxPanel(tracks, currentTrack, volume, onPlay, onStop, onVolumeChange, onShuffle) {
           const content = document.getElementById("jukeboxContent");
           if (!content) return;
           let html = `<div style="text-align:center;padding:8px 0;"><div style="font-size:13px;color:var(--habbo-text-dim);">Select a track</div></div>`;
@@ -5260,12 +5293,15 @@ var StarlightEngine = (() => {
       </button>`;
           });
           html += `</div>`;
-          html += `<button id="jukeboxStop" style="width:100%;margin-top:12px;padding:10px;background:var(--habbo-danger);color:white;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">\u23F9 Stop Music</button>`;
+          html += `<div style="margin-top:12px;display:flex;align-items:center;gap:8px;"><span style="font-size:12px;color:var(--habbo-text-dim);">Vol</span><input type="range" id="jukeboxVol" min="0" max="1" step="0.05" value="${volume}" style="flex:1;"></div>`;
+          html += `<div style="margin-top:10px;display:flex;gap:8px;"><button id="jukeboxShuffle" style="flex:1;padding:10px;background:var(--habbo-light);color:white;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">\u{1F500} Shuffle</button><button id="jukeboxStop" style="flex:1;padding:10px;background:var(--habbo-danger);color:white;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">\u23F9 Stop</button></div>`;
           content.innerHTML = html;
           content.querySelectorAll(".jukebox-track").forEach((btn) => {
             btn.addEventListener("click", () => onPlay && onPlay(btn.dataset.id));
           });
           document.getElementById("jukeboxStop")?.addEventListener("click", onStop);
+          document.getElementById("jukeboxShuffle")?.addEventListener("click", onShuffle);
+          document.getElementById("jukeboxVol")?.addEventListener("input", (e) => onVolumeChange && onVolumeChange(parseFloat(e.target.value)));
           this.closeAllPanels();
           document.getElementById("jukeboxPanel")?.classList.add("open");
         }
@@ -6490,7 +6526,10 @@ var StarlightEngine = (() => {
             chill: { bpm: 80, notes: [261, 329, 392, 523, 392, 329, 261, 196], type: "sine" },
             upbeat: { bpm: 120, notes: [392, 392, 349, 349, 329, 329, 349, 392], type: "triangle" },
             retro: { bpm: 100, notes: [220, 261, 329, 392, 329, 261, 220, 196], type: "square" },
-            jazz: { bpm: 90, notes: [261, 311, 349, 392, 466, 392, 349, 311], type: "sine" }
+            jazz: { bpm: 90, notes: [261, 311, 349, 392, 466, 392, 349, 311], type: "sine" },
+            lofi: { bpm: 70, notes: [196, 233, 261, 311, 261, 233, 196, 174], type: "sine" },
+            dance: { bpm: 130, notes: [440, 440, 392, 392, 349, 349, 392, 440], type: "sawtooth" },
+            dreamy: { bpm: 85, notes: [329, 392, 523, 659, 523, 392, 329, 261], type: "sine" }
           };
           const track = tracks[trackId];
           if (!track) return;
@@ -7087,7 +7126,18 @@ var StarlightEngine = (() => {
   });
 
   // src/world/Events.js
-  var EVENT_TYPES, EventSystem;
+  function isScheduledEventActive(evt) {
+    const now = /* @__PURE__ */ new Date();
+    const hour = now.getHours();
+    if (evt.dayCheck) {
+      return evt.dayCheck.includes(now.getDay());
+    }
+    if (evt.startHour > evt.endHour) {
+      return hour >= evt.startHour || hour < evt.endHour % 24;
+    }
+    return hour >= evt.startHour && hour < evt.endHour;
+  }
+  var EVENT_TYPES, SCHEDULED_EVENTS, EventSystem;
   var init_Events = __esm({
     "src/world/Events.js"() {
       EVENT_TYPES = [
@@ -7096,6 +7146,12 @@ var StarlightEngine = (() => {
         { id: "happy_hour", name: "\u{1F389} Happy Hour", desc: "NPCs are extra chatty and friendly!", duration: 60 },
         { id: "lucky_find", name: "\u{1F340} Lucky Find", desc: "A random furniture item appeared in your inventory!", duration: 0 },
         { id: "dance_party", name: "\u{1F483} Dance Party", desc: "Everyone is dancing! Double XP for 90 seconds!", duration: 90 }
+      ];
+      SCHEDULED_EVENTS = [
+        { id: "morning_bonus", name: "\u{1F305} Morning Bonus", desc: "Log in between 6-10 AM for 2x XP!", startHour: 6, endHour: 10, reward: { xp: 50, coins: 100 } },
+        { id: "lunch_rush", name: "\u{1F355} Lunch Rush", desc: "12-2 PM: All catalog items 20% off!", startHour: 12, endHour: 14, reward: { discount: 0.8 } },
+        { id: "night_owl", name: "\u{1F989} Night Owl", desc: "10 PM-2 AM: Rare items spawn in treasure chests!", startHour: 22, endHour: 26, reward: { rareLoot: true } },
+        { id: "weekend_fiesta", name: "\u{1F389} Weekend Fiesta", desc: "Sat-Sun: Double coins all day!", dayCheck: [0, 6], reward: { coins: 200 } }
       ];
       EventSystem = class {
         constructor(game) {
@@ -7107,6 +7163,23 @@ var StarlightEngine = (() => {
           this.treasureRush = false;
           this.happyHour = false;
           this.danceParty = false;
+          this.activeScheduled = [];
+          this.scheduledCheckTimer = 0;
+          this.claimedScheduled = /* @__PURE__ */ new Set();
+          this.loadClaimed();
+        }
+        loadClaimed() {
+          try {
+            const data = JSON.parse(localStorage.getItem("starlight_scheduled_claimed"));
+            if (data) this.claimedScheduled = new Set(data);
+          } catch (e) {
+          }
+        }
+        saveClaimed() {
+          try {
+            localStorage.setItem("starlight_scheduled_claimed", JSON.stringify(Array.from(this.claimedScheduled)));
+          } catch (e) {
+          }
         }
         update(dt) {
           if (this.activeEvent) {
@@ -7116,6 +7189,33 @@ var StarlightEngine = (() => {
           }
           this.nextEventIn -= dt;
           if (this.nextEventIn <= 0) this._triggerEvent();
+          this.scheduledCheckTimer += dt;
+          if (this.scheduledCheckTimer >= 30) {
+            this.scheduledCheckTimer = 0;
+            this._checkScheduledEvents();
+          }
+        }
+        _checkScheduledEvents() {
+          const prev = this.activeScheduled.map((e) => e.id);
+          this.activeScheduled = SCHEDULED_EVENTS.filter(isScheduledEventActive);
+          this.activeScheduled.forEach((evt) => {
+            const todayKey = `${evt.id}_${(/* @__PURE__ */ new Date()).toDateString()}`;
+            if (!this.claimedScheduled.has(todayKey)) {
+              this.claimedScheduled.add(todayKey);
+              this.saveClaimed();
+              this._grantScheduledReward(evt);
+            }
+          });
+        }
+        _grantScheduledReward(evt) {
+          if (!this.game) return;
+          this.game.uiManager.showNotification(`${evt.name} is active! ${evt.desc}`, "success");
+          if (evt.reward.xp) this.game.progressionSystem.addXP(evt.reward.xp);
+          if (evt.reward.coins) this.game.currencySystem.add(evt.reward.coins);
+          if (evt.reward.discount) this.game.uiManager.showNotification("Discount applied to catalog!", "info");
+        }
+        getScheduledEvents() {
+          return SCHEDULED_EVENTS.filter(isScheduledEventActive);
         }
         _triggerEvent() {
           const event = EVENT_TYPES[Math.floor(Math.random() * EVENT_TYPES.length)];
@@ -7819,6 +7919,149 @@ var StarlightEngine = (() => {
     }
   });
 
+  // src/social/RoomBots.js
+  var BOT_TEMPLATES, RoomBotSystem;
+  var init_RoomBots = __esm({
+    "src/social/RoomBots.js"() {
+      BOT_TEMPLATES = [
+        {
+          id: "shop_bot",
+          name: "Vendor Bot",
+          emoji: "\u{1F916}",
+          greeting: "Welcome! I sell rare items. What would you like?",
+          dialog: [
+            { text: "Buy rare lamp (\u2605500)", action: "buy", item: "lamp", price: 500 },
+            { text: "Buy crystal ball (\u2605450)", action: "buy", item: "crystal_ball", price: 450 },
+            { text: "Just browsing", action: "close" }
+          ]
+        },
+        {
+          id: "guide_bot",
+          name: "Guide Bot",
+          emoji: "\u{1F4D6}",
+          greeting: "Hello! Need help navigating the inn?",
+          dialog: [
+            { text: "How do I earn coins?", action: "chat", response: "Play minigames, find treasures, or complete daily challenges!" },
+            { text: "How do I customize my room?", action: "chat", response: "Open the navigator, go to My Room, and use the catalog!" },
+            { text: "Tell me a joke", action: "chat", response: "Why did the avatar sit on the lamp? To lighten up! \u{1F4A1}" },
+            { text: "Goodbye", action: "close" }
+          ]
+        },
+        {
+          id: "quest_bot",
+          name: "Quest Giver",
+          emoji: "\u{1F4DC}",
+          greeting: "Greetings adventurer! I have a task for you.",
+          dialog: [
+            { text: "Accept daily task", action: "quest", reward: 100 },
+            { text: "Maybe later", action: "close" }
+          ]
+        },
+        {
+          id: "fortune_bot",
+          name: "Mystic Bot",
+          emoji: "\u{1F52E}",
+          greeting: "The stars align for you today...",
+          dialog: [
+            { text: "Read my fortune (\u260550)", action: "fortune", price: 50 },
+            { text: "Not today", action: "close" }
+          ]
+        }
+      ];
+      RoomBotSystem = class {
+        constructor(game) {
+          this.game = game;
+          this.bots = [];
+        }
+        spawn(type, x, y) {
+          const template = BOT_TEMPLATES.find((b) => b.id === type);
+          if (!template) return null;
+          const bot = {
+            ...template,
+            x,
+            y,
+            id: `bot_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+            animOffset: Math.random() * Math.PI * 2
+          };
+          this.bots.push(bot);
+          return bot;
+        }
+        remove(botId) {
+          this.bots = this.bots.filter((b) => b.id !== botId);
+        }
+        getBotAt(x, y) {
+          return this.bots.find((b) => Math.round(b.x) === x && Math.round(b.y) === y);
+        }
+        draw(ctx, camera) {
+          this.bots.forEach((bot) => {
+            const sp = this.game.isoToScreen(bot.x, bot.y);
+            const x = sp.x + camera.x;
+            const y = sp.y + camera.y - 10;
+            const bob = Math.sin(Date.now() / 400 + bot.animOffset) * 2;
+            ctx.fillStyle = "rgba(0,0,0,0.15)";
+            ctx.beginPath();
+            ctx.ellipse(x, y + 8, 10, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "rgba(100,180,255,0.9)";
+            ctx.beginPath();
+            ctx.arc(x, y + bob, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "rgba(255,255,255,0.5)";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.font = "14px Nunito, sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(bot.emoji, x, y + bob);
+            ctx.fillStyle = "rgba(0,0,0,0.5)";
+            const nameW = ctx.measureText(bot.name).width + 8;
+            ctx.beginPath();
+            ctx.roundRect(x - nameW / 2, y - 28, nameW, 14, 7);
+            ctx.fill();
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 7px Nunito, sans-serif";
+            ctx.fillText(bot.name, x, y - 20);
+          });
+        }
+        handleDialog(bot) {
+          if (!bot || !bot.dialog) return;
+          const items = bot.dialog.map((d) => ({
+            text: d.text,
+            action: () => {
+              if (d.action === "close") return;
+              if (d.action === "buy" && this.game) {
+                if (this.game.currencySystem.spend(d.price)) {
+                  this.game.inventorySystem.add(d.item, 1);
+                  this.game.uiManager.showNotification(`Bought ${d.item}!`, "success");
+                  this.game.soundManager.play("buy");
+                } else {
+                  this.game.uiManager.showNotification("Not enough coins!", "error");
+                }
+              }
+              if (d.action === "chat" && this.game) {
+                this.game.uiManager.showNotification(d.response, "info");
+              }
+              if (d.action === "quest" && this.game) {
+                this.game.questSystem.track("win");
+                this.game.currencySystem.add(d.reward);
+                this.game.uiManager.showNotification(`Quest complete! +\u2605${d.reward}`, "success");
+              }
+              if (d.action === "fortune" && this.game) {
+                if (this.game.currencySystem.spend(d.price)) {
+                  const fortunes = ["Great fortune awaits!", "Beware of Mondays.", "A friend will bring joy.", "Wealth is coming your way.", "Take a risk today!"];
+                  this.game.uiManager.showNotification(`\u{1F52E} ${fortunes[Math.floor(Math.random() * fortunes.length)]}`, "success");
+                } else {
+                  this.game.uiManager.showNotification("Not enough coins!", "error");
+                }
+              }
+            }
+          }));
+          return items;
+        }
+      };
+    }
+  });
+
   // src/economy/Quests.js
   var QUEST_TEMPLATES, QuestSystem;
   var init_Quests = __esm({
@@ -8390,6 +8633,7 @@ var StarlightEngine = (() => {
       init_Inbox();
       init_ClubSystem();
       init_RoomRatings();
+      init_RoomBots();
       init_Quests();
       init_NetworkManager();
       init_WardrobeSystem();
@@ -8483,6 +8727,7 @@ var StarlightEngine = (() => {
           this.inboxSystem = new InboxSystem(this);
           this.clubSystem = new ClubSystem();
           this.roomRatingSystem = new RoomRatingSystem();
+          this.roomBotSystem = new RoomBotSystem(this);
           this.questSystem = new QuestSystem(this);
           this.achievementSystem = new AchievementSystem(this);
           this.leaderboardSystem = new LeaderboardSystem();
@@ -8518,6 +8763,9 @@ var StarlightEngine = (() => {
           this.loadRoom(ROOM_TEMPLATES[0], false);
           this.loadAvatarFromStorage();
           this.applyAvatarToPlayer();
+          this.roomBotSystem.spawn("guide_bot", 3, 3);
+          this.roomBotSystem.spawn("shop_bot", 7, 5);
+          this.roomBotSystem.spawn("fortune_bot", 5, 7);
           this.spawnNPCs(this.settings.npcCount);
           this.achievementSystem.visitRoom(ROOM_TEMPLATES[0].id);
           this.challengeSystem.track("visit");
@@ -8902,6 +9150,19 @@ var StarlightEngine = (() => {
             }
             if (clickedFurniture && clickedFurniture.type === "arcade") {
               this.startMinigame(SimonSays);
+              return;
+            }
+            if (clickedFurniture) {
+              const interact = this.getFurnitureInteraction(clickedFurniture.type);
+              if (interact) {
+                this.player.moveTo(tx, ty, this.room);
+                setTimeout(() => interact.action(this.player, this), 300);
+                return;
+              }
+            }
+            const clickedBot = this.roomBotSystem.getBotAt(tx, ty);
+            if (clickedBot) {
+              this.uiManager.showBotDialog(clickedBot, this.roomBotSystem.handleDialog(clickedBot));
               return;
             }
             const clickedAvatar = this.room.avatars.find((a) => a !== this.player && Math.round(a.x) === tx && Math.round(a.y) === ty);
@@ -10194,49 +10455,117 @@ var StarlightEngine = (() => {
           const greeting = greetings[month];
           if (greeting) this.uiManager.showNotification(greeting, "info");
         }
+        getFurnitureInteraction(type) {
+          const interactions = {
+            chair: { action: (player, game) => {
+              player.isSitting = true;
+              player.say("Comfy! \u{1FA91}", game.chatColor, "emote");
+              game.soundManager.play("click");
+            } },
+            bed: { action: (player, game) => {
+              player.isSitting = true;
+              player.say("Zzz... \u{1F6CF}\uFE0F", game.chatColor, "emote");
+              game.soundManager.play("click");
+            } },
+            hammock: { action: (player, game) => {
+              player.isSitting = true;
+              player.say("So relaxing... \u{1F334}", game.chatColor, "emote");
+              game.soundManager.play("click");
+            } },
+            piano: { action: (player, game) => {
+              const notes = ["\u{1F3B5} Do", "\u{1F3B5} Re", "\u{1F3B5} Mi", "\u{1F3B5} Fa", "\u{1F3B5} Sol"];
+              player.say(notes[Math.floor(Math.random() * notes.length)], game.chatColor, "emote");
+              game.soundManager.play("buy");
+            } },
+            guitar: { action: (player, game) => {
+              player.say("\u{1F3B8} *strums*", game.chatColor, "emote");
+              game.soundManager.play("buy");
+            } },
+            fireplace: { action: (player, game) => {
+              player.say("So warm... \u{1F525}", game.chatColor, "emote");
+              game.spawnParticles(player.x, player.y, "#e74c3c", 6);
+            } },
+            fountain: { action: (player, game) => {
+              player.say("So refreshing! \u{1F4A7}", game.chatColor, "emote");
+              game.spawnParticles(player.x, player.y, "#87CEEB", 6);
+            } },
+            tv: { action: (player, game) => {
+              const shows = ["\u{1F4FA} Breaking News", "\u{1F4FA} Cooking Show", "\u{1F4FA} Cartoons", "\u{1F4FA} Space documentary"];
+              player.say(shows[Math.floor(Math.random() * shows.length)], game.chatColor, "emote");
+              game.soundManager.play("click");
+            } },
+            telescope: { action: (player, game) => {
+              player.say("\u{1F52D} I see stars!", game.chatColor, "emote");
+              game.soundManager.play("click");
+            } },
+            crystal_ball: { action: (player, game) => {
+              const fortunes = ["\u{1F52E} You will be rich!", "\u{1F52E} Adventure awaits", "\u{1F52E} A friend will visit", "\u{1F52E} Lucky day ahead"];
+              player.say(fortunes[Math.floor(Math.random() * fortunes.length)], game.chatColor, "emote");
+              game.soundManager.play("click");
+            } }
+          };
+          return interactions[type] || null;
+        }
         showPlayerProfile(avatar) {
           const isRemote = avatar.id && avatar.id.startsWith("remote_");
           const remoteId = isRemote ? avatar.id.slice(7) : null;
-          this.uiManager.showPlayerProfile(avatar, {
-            onWhisper: () => {
-              const input = document.getElementById("chatInput");
-              if (input) {
-                input.value = `/whisper ${avatar.name} `;
-                input.focus();
+          this.uiManager.showPlayerProfile(
+            avatar,
+            {
+              onWhisper: () => {
+                const input = document.getElementById("chatInput");
+                if (input) {
+                  input.value = `/whisper ${avatar.name} `;
+                  input.focus();
+                }
+              },
+              onFriend: () => {
+                this.uiManager.showNotification(`Friend request sent to ${avatar.name}!`, "success");
+              },
+              onTrade: () => {
+                this.uiManager.showNotification(`Trade request sent to ${avatar.name}!`, "info");
+              },
+              onWalk: () => {
+                this.player.moveTo(Math.round(avatar.x), Math.round(avatar.y), this.room);
+              },
+              onIgnore: () => {
+                if (this.ignoredPlayers.has(avatar.name)) {
+                  this.unignorePlayer(avatar.name);
+                } else {
+                  this.ignorePlayer(avatar.name);
+                }
               }
             },
-            onFriend: () => {
-              this.uiManager.showNotification(`Friend request sent to ${avatar.name}!`, "success");
-            },
-            onTrade: () => {
-              this.uiManager.showNotification(`Trade request sent to ${avatar.name}!`, "info");
-            },
-            onWalk: () => {
-              this.player.moveTo(Math.round(avatar.x), Math.round(avatar.y), this.room);
-            },
-            onIgnore: () => {
-              if (this.ignoredPlayers.has(avatar.name)) {
-                this.unignorePlayer(avatar.name);
-              } else {
-                this.ignorePlayer(avatar.name);
-              }
-            }
-          }, isRemote, remoteId, this.ignoredPlayers.has(avatar.name));
+            isRemote,
+            remoteId,
+            this.ignoredPlayers.has(avatar.name),
+            this.achievementSystem.getList().filter((a) => a.unlocked)
+          );
         }
         openJukebox() {
           const tracks = [
             { id: "chill", name: "Chill Vibes", emoji: "\u{1F30A}" },
             { id: "upbeat", name: "Upbeat Pop", emoji: "\u{1F389}" },
             { id: "retro", name: "Retro Arcade", emoji: "\u{1F47E}" },
-            { id: "jazz", name: "Smooth Jazz", emoji: "\u{1F3B7}" }
+            { id: "jazz", name: "Smooth Jazz", emoji: "\u{1F3B7}" },
+            { id: "lofi", name: "Lo-Fi Study", emoji: "\u{1F4DA}" },
+            { id: "dance", name: "Dance Floor", emoji: "\u{1F483}" },
+            { id: "dreamy", name: "Dreamy Clouds", emoji: "\u2601\uFE0F" }
           ];
           const current = this.soundManager.currentJukeboxTrack;
-          this.uiManager.showJukeboxPanel(tracks, current, (trackId) => {
+          this.uiManager.showJukeboxPanel(tracks, current, this.soundManager.volume, (trackId) => {
             this.soundManager.playJukeboxTrack(trackId);
             this.uiManager.showNotification(`Now playing: ${tracks.find((t) => t.id === trackId)?.name || "Music"}`, "success");
           }, () => {
             this.soundManager.stopJukebox();
             this.uiManager.showNotification("Music stopped", "info");
+          }, (vol) => {
+            this.soundManager.volume = vol;
+          }, () => {
+            const shuffled = tracks.sort(() => Math.random() - 0.5);
+            const pick = shuffled[0].id;
+            this.soundManager.playJukeboxTrack(pick);
+            this.uiManager.showNotification(`Shuffle: ${shuffled[0].name}`, "success");
           });
         }
         openNPCTrade(npc) {
@@ -10686,6 +11015,9 @@ var StarlightEngine = (() => {
           if (this.player && this.petSystem) {
             this.petSystem.draw(ctx, this.player.x, this.player.y, this.camera);
           }
+          if (this.roomBotSystem) {
+            this.roomBotSystem.draw(ctx, this.camera);
+          }
           if (this.hoverFurniture) {
             const fsp = isoToScreen(this.hoverFurniture.x, this.hoverFurniture.y);
             const sx = fsp.x + this.camera.x, sy = fsp.y + this.camera.y - 60;
@@ -10815,6 +11147,39 @@ var StarlightEngine = (() => {
           grad.addColorStop(1, g2);
           ctx.fillStyle = grad;
           ctx.fillRect(cx - w / 4, cy - h / 4, w, h);
+          const px = (x, speed) => cx + this.camera.x * speed + x;
+          const py = (y, speed) => cy + this.camera.y * speed + y;
+          if (rid === "beach") {
+            ctx.fillStyle = "rgba(255,255,255,0.08)";
+            for (let i = 0; i < 5; i++) {
+              const cx1 = px(i * w / 5 + 40, 0.1);
+              const cy1 = py(h * 0.1 + Math.sin(i * 2) * 30, 0.05);
+              ctx.beginPath();
+              ctx.arc(cx1, cy1, 30 + i * 5, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          } else if (rid === "rooftop") {
+            ctx.fillStyle = "rgba(5,5,15,0.4)";
+            for (let i = 0; i < 8; i++) {
+              const bx = px(i * w / 8 - 20, 0.15);
+              const bh = 60 + Math.sin(i * 3) * 40;
+              ctx.fillRect(bx, cy + h * 0.5 - bh, w / 8 + 4, bh);
+            }
+          } else if (rid === "forest") {
+            ctx.fillStyle = "rgba(10,25,10,0.3)";
+            for (let i = 0; i < 7; i++) {
+              const tx = px(i * w / 7 + 15, 0.12);
+              const ty = cy + h * 0.35;
+              ctx.beginPath();
+              ctx.moveTo(tx, ty);
+              ctx.lineTo(tx + 10, ty - 50);
+              ctx.lineTo(tx + 20, ty);
+              ctx.fill();
+              ctx.beginPath();
+              ctx.arc(tx + 10, ty - 50, 25, Math.PI, 0);
+              ctx.fill();
+            }
+          }
           if (rid === "beach") {
             ctx.fillStyle = "rgba(255,220,100,0.3)";
             ctx.beginPath();
@@ -10824,13 +11189,13 @@ var StarlightEngine = (() => {
             ctx.fillRect(cx - w / 4, cy + h * 0.45, w, h * 0.3);
             ctx.fillStyle = "rgba(30,60,30,0.4)";
             for (let i = 0; i < 4; i++) {
-              const px = cx + i * w / 5 + 30;
-              const py = cy + h * 0.5;
+              const px2 = cx + i * w / 5 + 30;
+              const py2 = cy + h * 0.5;
               ctx.beginPath();
-              ctx.ellipse(px, py, 8, 40, 0, 0, Math.PI * 2);
+              ctx.ellipse(px2, py2, 8, 40, 0, 0, Math.PI * 2);
               ctx.fill();
               ctx.beginPath();
-              ctx.arc(px, py - 35, 25, Math.PI, 0);
+              ctx.arc(px2, py2 - 35, 25, Math.PI, 0);
               ctx.fill();
             }
           } else if (rid === "forest") {
@@ -11177,17 +11542,29 @@ var StarlightEngine = (() => {
               ctx.font = "bold 8px Nunito, sans-serif";
               ctx.fillText("AFK", sp.x, sp.y - 22);
             }
+            const title = !avatar.isNPC && this.progressionSystem ? this.progressionSystem.getTitle() : avatar.isNPC ? "" : "";
+            if (title) {
+              const titleW = ctx.measureText(title).width + 10;
+              ctx.fillStyle = "rgba(0,0,0,0.5)";
+              roundRect(ctx, sp.x - titleW / 2, sp.y - 46, titleW, 12, 6);
+              ctx.fill();
+              ctx.fillStyle = "var(--habbo-accent)";
+              ctx.font = "bold 7px Nunito, sans-serif";
+              ctx.textAlign = "center";
+              ctx.fillText(title, sp.x, sp.y - 38);
+            }
             const level = avatar.isNPC ? avatar.npcLevel || Math.floor(Math.random() * 8) + 1 : this.progressionSystem?.getProgress()?.level || 1;
             const lvlColors = ["#95a5a6", "#2ecc71", "#3498db", "#9b59b6", "#f1c40f", "#e67e22", "#e74c3c"];
             const lvlColor = lvlColors[Math.min(level - 1, lvlColors.length - 1)];
             const badgeW = ctx.measureText("Lv." + level).width + 8;
+            const badgeY = title ? 58 : 44;
             ctx.fillStyle = lvlColor;
-            roundRect(ctx, sp.x - badgeW / 2, sp.y - 44, badgeW, 14, 7);
+            roundRect(ctx, sp.x - badgeW / 2, sp.y - badgeY, badgeW, 14, 7);
             ctx.fill();
             ctx.fillStyle = "#fff";
             ctx.font = "bold 7px Nunito, sans-serif";
             ctx.textAlign = "center";
-            ctx.fillText("Lv." + level, sp.x, sp.y - 36);
+            ctx.fillText("Lv." + level, sp.x, sp.y - badgeY + 8);
           }
         }
         renderMinimap() {

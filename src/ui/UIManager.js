@@ -256,6 +256,34 @@ export class UIManager {
     return Math.floor((base + variance) * timeMod);
   }
 
+  showBotDialog(bot, dialogItems) {
+    const existing = document.getElementById('botDialog');
+    if (existing) existing.remove();
+    const div = document.createElement('div');
+    div.id = 'botDialog';
+    div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;background:var(--habbo-panel);border:2px solid var(--habbo-accent);border-radius:12px;padding:16px;z-index:400;box-shadow:0 8px 32px rgba(0,0,0,0.4);font-family:Nunito,sans-serif;color:#fff;';
+    div.innerHTML = `
+      <div style="text-align:center;font-size:32px;margin-bottom:8px;">${bot.emoji}</div>
+      <div style="text-align:center;font-weight:700;margin-bottom:4px;">${bot.name}</div>
+      <div style="text-align:center;font-size:12px;color:var(--habbo-text-dim);margin-bottom:14px;">${bot.greeting}</div>
+      <div id="botDialogActions" style="display:flex;flex-direction:column;gap:6px;"></div>
+    `;
+    document.body.appendChild(div);
+    const actionsDiv = div.querySelector('#botDialogActions');
+    if (dialogItems && dialogItems.length > 0) {
+      dialogItems.forEach(item => {
+        const btn = document.createElement('button');
+        btn.textContent = item.text;
+        btn.style.cssText = 'padding:8px;background:var(--habbo-dark);color:white;border:1px solid var(--habbo-panel-border);border-radius:8px;font-family:inherit;font-size:12px;cursor:pointer;font-weight:700;transition:all 0.15s;';
+        btn.addEventListener('mouseenter', () => btn.style.background = 'var(--habbo-light)');
+        btn.addEventListener('mouseleave', () => btn.style.background = 'var(--habbo-dark)');
+        btn.addEventListener('click', () => { item.action(); if (item.text.includes('close') || item.text.includes('Goodbye') || item.text.includes('later') || item.text.includes('today')) div.remove(); });
+        actionsDiv.appendChild(btn);
+      });
+    }
+    setTimeout(() => { if (div.parentNode) div.remove(); }, 15000);
+  }
+
   showRateRoomDialog(onRate) {
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:3000;';
@@ -902,7 +930,7 @@ export class UIManager {
     setTimeout(() => { if (div.parentNode) div.remove(); }, 8000);
   }
 
-  showPlayerProfile(avatar, actions, isRemote = false, remoteId = null, isIgnored = false) {
+  showPlayerProfile(avatar, actions, isRemote = false, remoteId = null, isIgnored = false, achievements = []) {
     const existing = document.getElementById('playerProfile');
     if (existing) existing.remove();
     const div = document.createElement('div');
@@ -936,6 +964,7 @@ export class UIManager {
           ${avatar.glassesType !== 'none' ? `<span style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:10px;color:white;">${glassesEmoji[avatar.glassesType]} ${avatar.glassesType}</span>` : ''}
         </div>
       </div>
+      ${achievements.length > 0 ? `<div style="background:var(--habbo-dark);border-radius:8px;padding:10px;margin-bottom:12px;"><div style="font-size:11px;color:var(--habbo-text-dim);margin-bottom:6px;">Achievements</div><div style="display:flex;gap:6px;flex-wrap:wrap;font-size:16px;">${achievements.map(a => `<span title="${a.name}">${a.icon}</span>`).join('')}</div></div>` : ''}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <button id="ppWalk" style="padding:8px;background:var(--habbo-light);color:white;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">🚶 Walk To</button>
         ${isRemote ? `<button id="ppWhisper" style="padding:8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">💬 Whisper</button>` : ''}
@@ -1258,7 +1287,7 @@ export class UIManager {
     document.getElementById('dailyRewardPanel')?.classList.add('open');
   }
 
-  showJukeboxPanel(tracks, currentTrack, onPlay, onStop) {
+  showJukeboxPanel(tracks, currentTrack, volume, onPlay, onStop, onVolumeChange, onShuffle) {
     const content = document.getElementById('jukeboxContent');
     if (!content) return;
     let html = `<div style="text-align:center;padding:8px 0;"><div style="font-size:13px;color:var(--habbo-text-dim);">Select a track</div></div>`;
@@ -1272,12 +1301,15 @@ export class UIManager {
       </button>`;
     });
     html += `</div>`;
-    html += `<button id="jukeboxStop" style="width:100%;margin-top:12px;padding:10px;background:var(--habbo-danger);color:white;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">⏹ Stop Music</button>`;
+    html += `<div style="margin-top:12px;display:flex;align-items:center;gap:8px;"><span style="font-size:12px;color:var(--habbo-text-dim);">Vol</span><input type="range" id="jukeboxVol" min="0" max="1" step="0.05" value="${volume}" style="flex:1;"></div>`;
+    html += `<div style="margin-top:10px;display:flex;gap:8px;"><button id="jukeboxShuffle" style="flex:1;padding:10px;background:var(--habbo-light);color:white;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">🔀 Shuffle</button><button id="jukeboxStop" style="flex:1;padding:10px;background:var(--habbo-danger);color:white;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">⏹ Stop</button></div>`;
     content.innerHTML = html;
     content.querySelectorAll('.jukebox-track').forEach(btn => {
       btn.addEventListener('click', () => onPlay && onPlay(btn.dataset.id));
     });
     document.getElementById('jukeboxStop')?.addEventListener('click', onStop);
+    document.getElementById('jukeboxShuffle')?.addEventListener('click', onShuffle);
+    document.getElementById('jukeboxVol')?.addEventListener('input', e => onVolumeChange && onVolumeChange(parseFloat(e.target.value)));
     this.closeAllPanels();
     document.getElementById('jukeboxPanel')?.classList.add('open');
   }

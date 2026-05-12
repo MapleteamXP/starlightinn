@@ -10,6 +10,25 @@ const EVENT_TYPES = [
   { id: 'dance_party', name: '\u{1F483} Dance Party', desc: 'Everyone is dancing! Double XP for 90 seconds!', duration: 90 },
 ];
 
+const SCHEDULED_EVENTS = [
+  { id: 'morning_bonus', name: '🌅 Morning Bonus', desc: 'Log in between 6-10 AM for 2x XP!', startHour: 6, endHour: 10, reward: { xp: 50, coins: 100 } },
+  { id: 'lunch_rush', name: '🍕 Lunch Rush', desc: '12-2 PM: All catalog items 20% off!', startHour: 12, endHour: 14, reward: { discount: 0.8 } },
+  { id: 'night_owl', name: '🦉 Night Owl', desc: '10 PM-2 AM: Rare items spawn in treasure chests!', startHour: 22, endHour: 26, reward: { rareLoot: true } },
+  { id: 'weekend_fiesta', name: '🎉 Weekend Fiesta', desc: 'Sat-Sun: Double coins all day!', dayCheck: [0, 6], reward: { coins: 200 } },
+];
+
+function isScheduledEventActive(evt) {
+  const now = new Date();
+  const hour = now.getHours();
+  if (evt.dayCheck) {
+    return evt.dayCheck.includes(now.getDay());
+  }
+  if (evt.startHour > evt.endHour) {
+    return hour >= evt.startHour || hour < (evt.endHour % 24);
+  }
+  return hour >= evt.startHour && hour < evt.endHour;
+}
+
 export class EventSystem {
   constructor(game) {
     this.game = game;
@@ -20,6 +39,21 @@ export class EventSystem {
     this.treasureRush = false;
     this.happyHour = false;
     this.danceParty = false;
+    this.activeScheduled = [];
+    this.scheduledCheckTimer = 0;
+    this.claimedScheduled = new Set();
+    this.loadClaimed();
+  }
+
+  loadClaimed() {
+    try {
+      const data = JSON.parse(localStorage.getItem('starlight_scheduled_claimed'));
+      if (data) this.claimedScheduled = new Set(data);
+    } catch (e) {}
+  }
+
+  saveClaimed() {
+    try { localStorage.setItem('starlight_scheduled_claimed', JSON.stringify(Array.from(this.claimedScheduled))); } catch (e) {}
   }
 
   update(dt) {
@@ -30,6 +64,37 @@ export class EventSystem {
     }
     this.nextEventIn -= dt;
     if (this.nextEventIn <= 0) this._triggerEvent();
+
+    this.scheduledCheckTimer += dt;
+    if (this.scheduledCheckTimer >= 30) {
+      this.scheduledCheckTimer = 0;
+      this._checkScheduledEvents();
+    }
+  }
+
+  _checkScheduledEvents() {
+    const prev = this.activeScheduled.map(e => e.id);
+    this.activeScheduled = SCHEDULED_EVENTS.filter(isScheduledEventActive);
+    this.activeScheduled.forEach(evt => {
+      const todayKey = `${evt.id}_${new Date().toDateString()}`;
+      if (!this.claimedScheduled.has(todayKey)) {
+        this.claimedScheduled.add(todayKey);
+        this.saveClaimed();
+        this._grantScheduledReward(evt);
+      }
+    });
+  }
+
+  _grantScheduledReward(evt) {
+    if (!this.game) return;
+    this.game.uiManager.showNotification(`${evt.name} is active! ${evt.desc}`, 'success');
+    if (evt.reward.xp) this.game.progressionSystem.addXP(evt.reward.xp);
+    if (evt.reward.coins) this.game.currencySystem.add(evt.reward.coins);
+    if (evt.reward.discount) this.game.uiManager.showNotification('Discount applied to catalog!', 'info');
+  }
+
+  getScheduledEvents() {
+    return SCHEDULED_EVENTS.filter(isScheduledEventActive);
   }
 
   _triggerEvent() {

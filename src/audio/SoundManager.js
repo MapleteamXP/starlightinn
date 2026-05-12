@@ -68,6 +68,9 @@ export class SoundManager {
       upbeat: { bpm: 120, notes: [392, 392, 349, 349, 329, 329, 349, 392], type: 'triangle' },
       retro: { bpm: 100, notes: [220, 261, 329, 392, 329, 261, 220, 196], type: 'square' },
       jazz: { bpm: 90, notes: [261, 311, 349, 392, 466, 392, 349, 311], type: 'sine' },
+      lofi: { bpm: 70, notes: [196, 233, 261, 311, 261, 233, 196, 174], type: 'sine' },
+      dance: { bpm: 130, notes: [440, 440, 392, 392, 349, 349, 392, 440], type: 'sawtooth' },
+      dreamy: { bpm: 85, notes: [329, 392, 523, 659, 523, 392, 329, 261], type: 'sine' },
     };
     const track = tracks[trackId];
     if (!track) return;

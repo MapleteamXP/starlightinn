@@ -40,6 +40,7 @@ import { PetSystem } from '../world/Pet.js';
 import { InboxSystem } from '../social/Inbox.js';
 import { ClubSystem } from '../social/ClubSystem.js';
 import { RoomRatingSystem } from '../social/RoomRatings.js';
+import { RoomBotSystem } from '../social/RoomBots.js';
 import { QuestSystem } from '../economy/Quests.js';
 import { NetworkManager } from '../network/NetworkManager.js';
 import { WardrobeSystem } from '../customization/WardrobeSystem.js';
@@ -130,6 +131,7 @@ export class Game {
     this.inboxSystem = new InboxSystem(this);
     this.clubSystem = new ClubSystem();
     this.roomRatingSystem = new RoomRatingSystem();
+    this.roomBotSystem = new RoomBotSystem(this);
     this.questSystem = new QuestSystem(this);
     this.achievementSystem = new AchievementSystem(this);
     this.leaderboardSystem = new LeaderboardSystem();
@@ -167,6 +169,10 @@ export class Game {
     this.loadRoom(ROOM_TEMPLATES[0], false);
     this.loadAvatarFromStorage();
     this.applyAvatarToPlayer();
+    // Spawn default room bots
+    this.roomBotSystem.spawn('guide_bot', 3, 3);
+    this.roomBotSystem.spawn('shop_bot', 7, 5);
+    this.roomBotSystem.spawn('fortune_bot', 5, 7);
     this.spawnNPCs(this.settings.npcCount);
     this.achievementSystem.visitRoom(ROOM_TEMPLATES[0].id);
     this.challengeSystem.track('visit');
@@ -522,6 +528,22 @@ export class Game {
       }
       if (clickedFurniture && clickedFurniture.type === 'arcade') {
         this.startMinigame(SimonSays);
+        return;
+      }
+      // Furniture interactions
+      if (clickedFurniture) {
+        const interact = this.getFurnitureInteraction(clickedFurniture.type);
+        if (interact) {
+          this.player.moveTo(tx, ty, this.room);
+          setTimeout(() => interact.action(this.player, this), 300);
+          return;
+        }
+      }
+
+      // Check room bot click
+      const clickedBot = this.roomBotSystem.getBotAt(tx, ty);
+      if (clickedBot) {
+        this.uiManager.showBotDialog(clickedBot, this.roomBotSystem.handleDialog(clickedBot));
         return;
       }
 
@@ -1581,6 +1603,22 @@ export class Game {
     if (greeting) this.uiManager.showNotification(greeting, 'info');
   }
 
+  getFurnitureInteraction(type) {
+    const interactions = {
+      chair: { action: (player, game) => { player.isSitting = true; player.say('Comfy! 🪑', game.chatColor, 'emote'); game.soundManager.play('click'); } },
+      bed: { action: (player, game) => { player.isSitting = true; player.say('Zzz... 🛏️', game.chatColor, 'emote'); game.soundManager.play('click'); } },
+      hammock: { action: (player, game) => { player.isSitting = true; player.say('So relaxing... 🌴', game.chatColor, 'emote'); game.soundManager.play('click'); } },
+      piano: { action: (player, game) => { const notes = ['🎵 Do', '🎵 Re', '🎵 Mi', '🎵 Fa', '🎵 Sol']; player.say(notes[Math.floor(Math.random() * notes.length)], game.chatColor, 'emote'); game.soundManager.play('buy'); } },
+      guitar: { action: (player, game) => { player.say('🎸 *strums*', game.chatColor, 'emote'); game.soundManager.play('buy'); } },
+      fireplace: { action: (player, game) => { player.say('So warm... 🔥', game.chatColor, 'emote'); game.spawnParticles(player.x, player.y, '#e74c3c', 6); } },
+      fountain: { action: (player, game) => { player.say('So refreshing! 💧', game.chatColor, 'emote'); game.spawnParticles(player.x, player.y, '#87CEEB', 6); } },
+      tv: { action: (player, game) => { const shows = ['📺 Breaking News', '📺 Cooking Show', '📺 Cartoons', '📺 Space documentary']; player.say(shows[Math.floor(Math.random() * shows.length)], game.chatColor, 'emote'); game.soundManager.play('click'); } },
+      telescope: { action: (player, game) => { player.say('🔭 I see stars!', game.chatColor, 'emote'); game.soundManager.play('click'); } },
+      crystal_ball: { action: (player, game) => { const fortunes = ['🔮 You will be rich!', '🔮 Adventure awaits', '🔮 A friend will visit', '🔮 Lucky day ahead']; player.say(fortunes[Math.floor(Math.random() * fortunes.length)], game.chatColor, 'emote'); game.soundManager.play('click'); } },
+    };
+    return interactions[type] || null;
+  }
+
   showPlayerProfile(avatar) {
     const isRemote = avatar.id && avatar.id.startsWith('remote_');
     const remoteId = isRemote ? avatar.id.slice(7) : null;
@@ -1609,7 +1647,8 @@ export class Game {
           this.ignorePlayer(avatar.name);
         }
       }
-    }, isRemote, remoteId, this.ignoredPlayers.has(avatar.name));
+    }, isRemote, remoteId, this.ignoredPlayers.has(avatar.name),
+      this.achievementSystem.getList().filter(a => a.unlocked));
   }
 
   openJukebox() {
@@ -1618,14 +1657,24 @@ export class Game {
       { id: 'upbeat', name: 'Upbeat Pop', emoji: '🎉' },
       { id: 'retro', name: 'Retro Arcade', emoji: '👾' },
       { id: 'jazz', name: 'Smooth Jazz', emoji: '🎷' },
+      { id: 'lofi', name: 'Lo-Fi Study', emoji: '📚' },
+      { id: 'dance', name: 'Dance Floor', emoji: '💃' },
+      { id: 'dreamy', name: 'Dreamy Clouds', emoji: '☁️' },
     ];
     const current = this.soundManager.currentJukeboxTrack;
-    this.uiManager.showJukeboxPanel(tracks, current, trackId => {
+    this.uiManager.showJukeboxPanel(tracks, current, this.soundManager.volume, trackId => {
       this.soundManager.playJukeboxTrack(trackId);
       this.uiManager.showNotification(`Now playing: ${tracks.find(t => t.id === trackId)?.name || 'Music'}`, 'success');
     }, () => {
       this.soundManager.stopJukebox();
       this.uiManager.showNotification('Music stopped', 'info');
+    }, vol => {
+      this.soundManager.volume = vol;
+    }, () => {
+      const shuffled = tracks.sort(() => Math.random() - 0.5);
+      const pick = shuffled[0].id;
+      this.soundManager.playJukeboxTrack(pick);
+      this.uiManager.showNotification(`Shuffle: ${shuffled[0].name}`, 'success');
     });
   }
 
@@ -2090,6 +2139,10 @@ export class Game {
     if (this.player && this.petSystem) {
       this.petSystem.draw(ctx, this.player.x, this.player.y, this.camera);
     }
+    // Room bots
+    if (this.roomBotSystem) {
+      this.roomBotSystem.draw(ctx, this.camera);
+    }
     // Furniture hover tooltip
     if (this.hoverFurniture) {
       const fsp = isoToScreen(this.hoverFurniture.x, this.hoverFurniture.y);
@@ -2225,6 +2278,37 @@ export class Game {
     grad.addColorStop(1, g2);
     ctx.fillStyle = grad;
     ctx.fillRect(cx - w/4, cy - h/4, w, h);
+
+    // Parallax layers (move slower than camera)
+    const px = (x, speed) => cx + (this.camera.x * speed) + x;
+    const py = (y, speed) => cy + (this.camera.y * speed) + y;
+
+    if (rid === 'beach') {
+      // Parallax clouds
+      ctx.fillStyle = 'rgba(255,255,255,0.08)';
+      for (let i = 0; i < 5; i++) {
+        const cx1 = px((i * w/5) + 40, 0.1);
+        const cy1 = py(h*0.1 + Math.sin(i*2)*30, 0.05);
+        ctx.beginPath(); ctx.arc(cx1, cy1, 30 + i*5, 0, Math.PI*2); ctx.fill();
+      }
+    } else if (rid === 'rooftop') {
+      // Parallax distant buildings
+      ctx.fillStyle = 'rgba(5,5,15,0.4)';
+      for (let i = 0; i < 8; i++) {
+        const bx = px((i * w/8) - 20, 0.15);
+        const bh = 60 + Math.sin(i*3)*40;
+        ctx.fillRect(bx, cy + h*0.5 - bh, w/8 + 4, bh);
+      }
+    } else if (rid === 'forest') {
+      // Parallax distant trees
+      ctx.fillStyle = 'rgba(10,25,10,0.3)';
+      for (let i = 0; i < 7; i++) {
+        const tx = px((i * w/7) + 15, 0.12);
+        const ty = cy + h*0.35;
+        ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(tx+10, ty-50); ctx.lineTo(tx+20, ty); ctx.fill();
+        ctx.beginPath(); ctx.arc(tx+10, ty-50, 25, Math.PI, 0); ctx.fill();
+      }
+    }
 
     // Room-specific decorative elements
     if (rid === 'beach') {
@@ -2543,18 +2627,31 @@ export class Game {
         ctx.font = 'bold 8px Nunito, sans-serif';
         ctx.fillText('AFK', sp.x, sp.y - 22);
       }
+      // Title badge
+      const title = !avatar.isNPC && this.progressionSystem ? this.progressionSystem.getTitle() : (avatar.isNPC ? '' : '');
+      if (title) {
+        const titleW = ctx.measureText(title).width + 10;
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        roundRect(ctx, sp.x - titleW / 2, sp.y - 46, titleW, 12, 6);
+        ctx.fill();
+        ctx.fillStyle = 'var(--habbo-accent)';
+        ctx.font = 'bold 7px Nunito, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(title, sp.x, sp.y - 38);
+      }
       // Level badge
       const level = avatar.isNPC ? (avatar.npcLevel || Math.floor(Math.random() * 8) + 1) : (this.progressionSystem?.getProgress()?.level || 1);
       const lvlColors = ['#95a5a6', '#2ecc71', '#3498db', '#9b59b6', '#f1c40f', '#e67e22', '#e74c3c'];
       const lvlColor = lvlColors[Math.min(level - 1, lvlColors.length - 1)];
       const badgeW = ctx.measureText('Lv.' + level).width + 8;
+      const badgeY = title ? 58 : 44;
       ctx.fillStyle = lvlColor;
-      roundRect(ctx, sp.x - badgeW / 2, sp.y - 44, badgeW, 14, 7);
+      roundRect(ctx, sp.x - badgeW / 2, sp.y - badgeY, badgeW, 14, 7);
       ctx.fill();
       ctx.fillStyle = '#fff';
       ctx.font = 'bold 7px Nunito, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('Lv.' + level, sp.x, sp.y - 36);
+      ctx.fillText('Lv.' + level, sp.x, sp.y - badgeY + 8);
     }
   }
 
