@@ -41,6 +41,7 @@ import { InboxSystem } from '../social/Inbox.js';
 import { ClubSystem } from '../social/ClubSystem.js';
 import { RoomRatingSystem } from '../social/RoomRatings.js';
 import { RoomBotSystem } from '../social/RoomBots.js';
+import { MarketplaceSystem } from '../economy/Marketplace.js';
 import { QuestSystem } from '../economy/Quests.js';
 import { NetworkManager } from '../network/NetworkManager.js';
 import { WardrobeSystem } from '../customization/WardrobeSystem.js';
@@ -87,6 +88,10 @@ export class Game {
     this.loadFavorites();
     this.ignoredPlayers = new Set();
     this.loadIgnoredPlayers();
+    this.myRoomCoOwners = new Set();
+    this.myRoomModerators = new Set();
+    this.myRoomBanned = new Set();
+    this.loadRoomPermissions();
     this.myRoomSize = 10;
     this.myRoomName = 'My Room';
     this.recentRooms = [];
@@ -132,6 +137,7 @@ export class Game {
     this.clubSystem = new ClubSystem();
     this.roomRatingSystem = new RoomRatingSystem();
     this.roomBotSystem = new RoomBotSystem(this);
+    this.marketplaceSystem = new MarketplaceSystem();
     this.questSystem = new QuestSystem(this);
     this.achievementSystem = new AchievementSystem(this);
     this.leaderboardSystem = new LeaderboardSystem();
@@ -280,6 +286,10 @@ export class Game {
     }
     this.player.game = this;
     this.room.avatars.push(this.player);
+    // Clear bots for non-myroom, load for myroom
+    if (this.roomBotSystem) {
+      if (this.room.id !== 'myroom') this.roomBotSystem.bots = [];
+    }
     this.statsSystem.enterRoom(template.name || template.id);
     this.soundManager.playAmbient(template.id);
 
@@ -636,6 +646,7 @@ export class Game {
     document.getElementById('btnStats')?.addEventListener('click', () => { this.uiManager.togglePanel('statsPanel'); this.renderStatsPanel(); });
     document.getElementById('btnShortcuts')?.addEventListener('click', () => { this.uiManager.togglePanel('shortcutsPanel'); this.renderShortcutsPanel(); });
     document.getElementById('btnClubs')?.addEventListener('click', () => { this.uiManager.togglePanel('clubsPanel'); this.renderClubsPanel(); });
+    document.getElementById('btnMarketplace')?.addEventListener('click', () => { this.uiManager.togglePanel('marketplacePanel'); this.renderMarketplacePanel(); });
     document.getElementById('btnChallenges')?.addEventListener('click', () => { this.uiManager.togglePanel('challengesPanel'); this.renderChallengesPanel(); });
     document.getElementById('btnActiveQuest')?.addEventListener('click', () => { this.uiManager.togglePanel('questPanel'); this.renderQuestPanel(); });
     document.getElementById('btnNotifications')?.addEventListener('click', () => { this.uiManager.togglePanel('notificationsPanel'); this.uiManager.renderNotificationHistory(); });
@@ -949,6 +960,39 @@ export class Game {
 
   saveIgnoredPlayers() {
     try { localStorage.setItem('starlight_ignored', JSON.stringify(Array.from(this.ignoredPlayers))); } catch (e) {}
+  }
+
+  loadRoomPermissions() {
+    try {
+      const data = JSON.parse(localStorage.getItem('starlight_room_perms'));
+      if (data) {
+        this.myRoomCoOwners = new Set(data.coOwners || []);
+        this.myRoomModerators = new Set(data.moderators || []);
+        this.myRoomBanned = new Set(data.banned || []);
+      }
+    } catch (e) {}
+  }
+
+  saveRoomPermissions() {
+    try {
+      localStorage.setItem('starlight_room_perms', JSON.stringify({
+        coOwners: Array.from(this.myRoomCoOwners),
+        moderators: Array.from(this.myRoomModerators),
+        banned: Array.from(this.myRoomBanned)
+      }));
+    } catch (e) {}
+  }
+
+  banPlayer(name) {
+    this.myRoomBanned.add(name);
+    this.saveRoomPermissions();
+    this.uiManager.showNotification(`Banned ${name} from your room.`, 'info');
+  }
+
+  unbanPlayer(name) {
+    this.myRoomBanned.delete(name);
+    this.saveRoomPermissions();
+    this.uiManager.showNotification(`Unbanned ${name}.`, 'info');
   }
 
   ignorePlayer(name) {
@@ -1339,6 +1383,7 @@ export class Game {
       daily: { streak: this.dailyRewards.streak, lastClaim: this.dailyRewards.lastClaim },
       leaderboard: this.leaderboardSystem.scores,
       myroom: localStorage.getItem('starlight_myroom'),
+      roomPerms: { coOwners: Array.from(this.myRoomCoOwners), moderators: Array.from(this.myRoomModerators), banned: Array.from(this.myRoomBanned) },
       inbox: { messages: this.inboxSystem.messages, unreadCount: this.inboxSystem.unreadCount },
       settings: { showWeather: this.settings.showWeather, myRoomPrivate: this.settings.myRoomPrivate, showTimestamps: this.settings.showTimestamps, chatBubbleDuration: this.settings.chatBubbleDuration },
       bookmarks: Array.from(this.bookmarkedRooms),
@@ -1374,6 +1419,12 @@ export class Game {
         if (data.daily) { this.dailyRewards.streak = data.daily.streak || 0; this.dailyRewards.lastClaim = data.daily.lastClaim || 0; this.dailyRewards.save(); }
         if (data.leaderboard) { this.leaderboardSystem.scores = data.leaderboard; this.leaderboardSystem.save(); }
         if (data.myroom) { localStorage.setItem('starlight_myroom', data.myroom); }
+      if (data.roomPerms) {
+        this.myRoomCoOwners = new Set(data.roomPerms.coOwners || []);
+        this.myRoomModerators = new Set(data.roomPerms.moderators || []);
+        this.myRoomBanned = new Set(data.roomPerms.banned || []);
+        this.saveRoomPermissions();
+      }
         if (data.inbox) { this.inboxSystem.messages = data.inbox.messages || []; this.inboxSystem.unreadCount = data.inbox.unreadCount || 0; this.inboxSystem.save(); }
         if (data.settings) { this.settings.showWeather = data.settings.showWeather !== false; this.settings.myRoomPrivate = data.settings.myRoomPrivate === true; this.settings.showTimestamps = data.settings.showTimestamps !== false; this.settings.chatBubbleDuration = data.settings.chatBubbleDuration || 4.5; this.saveSettings(); }
         if (data.quests) { this.questSystem.active = data.quests.active || null; this.questSystem.completed = data.quests.completed || []; this.questSystem.save(); }
@@ -1412,7 +1463,8 @@ export class Game {
       const data = {
         furniture: this.room.furniture.map(f => ({ type: f.type, x: f.x, y: f.y, z: f.z, rotation: f.rotation || 0 })),
         floor: this.room.floorType,
-        wall: this.room.wallColor
+        wall: this.room.wallColor,
+        bots: this.roomBotSystem ? this.roomBotSystem.serialize() : []
       };
       localStorage.setItem('starlight_myroom', JSON.stringify(data));
     } catch (e) {}
@@ -1425,6 +1477,7 @@ export class Game {
         this.room.furniture = (data.furniture || []).map(f => new Furniture(f.type, f.x, f.y, f.z, f.rotation || 0));
         if (data.floor) this.room.floorType = data.floor;
         if (data.wall) this.room.wallColor = data.wall;
+        if (this.roomBotSystem && data.bots) this.roomBotSystem.deserialize(data.bots);
       }
     } catch (e) {}
   }
@@ -1646,9 +1699,16 @@ export class Game {
         } else {
           this.ignorePlayer(avatar.name);
         }
+      },
+      onBan: () => {
+        if (this.myRoomBanned.has(avatar.name)) {
+          this.unbanPlayer(avatar.name);
+        } else {
+          this.banPlayer(avatar.name);
+        }
       }
     }, isRemote, remoteId, this.ignoredPlayers.has(avatar.name),
-      this.achievementSystem.getList().filter(a => a.unlocked));
+      this.achievementSystem.getList().filter(a => a.unlocked), this.myRoomBanned.has(avatar.name));
   }
 
   openJukebox() {
@@ -1731,6 +1791,44 @@ export class Game {
       { key: 'Right-click item', action: 'Sell from inventory' },
       { key: 'Double-click', action: 'Quick walk to tile' },
     ]);
+  }
+
+  renderMarketplacePanel() {
+    const inventory = this.inventorySystem.getAll();
+    const items = Object.keys(inventory).map(type => {
+      const cat = FURNITURE_CATALOG.find(c => c.id === type);
+      return cat ? { type, name: cat.name, icon: cat.icon, count: inventory[type], price: cat.price } : null;
+    }).filter(Boolean);
+    this.uiManager.renderMarketplace(
+      this.marketplaceSystem,
+      items,
+      (listingId) => {
+        const result = this.marketplaceSystem.buyListing(listingId, this.currencySystem, this.inventorySystem);
+        if (result.success) {
+          this.uiManager.showNotification(`Bought ${result.listing.itemName}!`, 'success');
+          this.soundManager.play('buy');
+        } else {
+          this.uiManager.showNotification(result.error, 'error');
+        }
+        this.renderMarketplacePanel();
+        this.uiManager.updateCurrency(this.currencySystem.get());
+      },
+      (type, price) => {
+        if (this.inventorySystem.getCount(type) > 0) {
+          this.inventorySystem.add(type, -1);
+          this.marketplaceSystem.listItem(type, price, 'You');
+          this.uiManager.showNotification('Item listed!', 'success');
+          this.renderMarketplacePanel();
+        }
+      },
+      (listingId) => {
+        if (this.marketplaceSystem.cancelListing(listingId, 'You')) {
+          this.inventorySystem.add(this.marketplaceSystem.listings.find(l => l.id === listingId)?.itemType, 1);
+          this.uiManager.showNotification('Listing cancelled.', 'info');
+          this.renderMarketplacePanel();
+        }
+      }
+    );
   }
 
   renderClubsPanel() {
@@ -2256,6 +2354,19 @@ export class Game {
     const cx = -this.camera.x;
     const cy = -this.camera.y;
 
+    // Seasonal overlay
+    const month = new Date().getMonth();
+    const day = new Date().getDate();
+    let seasonalTint = null;
+    if (month === 9 && day >= 25) seasonalTint = 'rgba(255,140,0,0.08)'; // Halloween
+    else if (month === 11 && day >= 20) seasonalTint = 'rgba(200,220,255,0.1)'; // Winter
+    else if (month === 1 && day >= 10 && day <= 14) seasonalTint = 'rgba(255,180,200,0.08)'; // Valentines
+    else if (month === 6 && day <= 15) seasonalTint = 'rgba(255,255,150,0.06)'; // Summer
+    if (seasonalTint) {
+      ctx.fillStyle = seasonalTint;
+      ctx.fillRect(cx - w/4, cy - h/4, w, h);
+    }
+
     // Base gradient per room theme
     const gradients = {
       lobby: ['#1a3a42', '#0d2529'],
@@ -2282,6 +2393,36 @@ export class Game {
     // Parallax layers (move slower than camera)
     const px = (x, speed) => cx + (this.camera.x * speed) + x;
     const py = (y, speed) => cy + (this.camera.y * speed) + y;
+
+    // Seasonal decorations
+    const nowM = new Date().getMonth();
+    const nowD = new Date().getDate();
+    if (nowM === 9 && nowD >= 25) {
+      // Halloween pumpkins
+      ctx.fillStyle = 'rgba(255,140,0,0.15)';
+      for (let i = 0; i < 4; i++) {
+        const px1 = cx + (i * w/5) + 40;
+        const py1 = cy + h*0.75;
+        ctx.beginPath(); ctx.arc(px1, py1, 12, 0, Math.PI*2); ctx.fill();
+      }
+    } else if (nowM === 11 && nowD >= 20) {
+      // Winter snowflakes
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      for (let i = 0; i < 20; i++) {
+        const sx = cx + ((i*73 + time/30) % w);
+        const sy = cy + ((i*47 + time/20) % h);
+        ctx.beginPath(); ctx.arc(sx, sy, 2, 0, Math.PI*2); ctx.fill();
+      }
+    } else if (nowM === 1 && nowD >= 10 && nowD <= 14) {
+      // Valentine hearts
+      ctx.fillStyle = 'rgba(255,100,150,0.1)';
+      for (let i = 0; i < 6; i++) {
+        const hx = cx + (i * w/7) + 30;
+        const hy = cy + h*0.15 + Math.sin(time/800 + i)*10;
+        ctx.font = '20px Nunito, sans-serif';
+        ctx.fillText('❤', hx, hy);
+      }
+    }
 
     if (rid === 'beach') {
       // Parallax clouds

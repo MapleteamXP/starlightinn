@@ -4080,6 +4080,7 @@ var StarlightEngine = (() => {
           this._ensurePanel("collectionPanel", "Collection", `<div class="collection-list" id="collectionList"></div>`);
           this._ensurePanel("shortcutsPanel", "Keyboard Shortcuts", `<div class="shortcuts-list" id="shortcutsList"></div>`);
           this._ensurePanel("clubsPanel", "Clubs & Groups", `<div id="clubsContent"></div>`);
+          this._ensurePanel("marketplacePanel", "Marketplace", `<div id="marketplaceContent"></div>`);
           this._ensurePanel("challengesPanel", "Daily Challenges", `<div class="challenge-list" id="challengeList"></div>`);
           this._ensurePanel("questPanel", "Active Quest", `<div id="questContent"></div>`);
           this._ensurePanel("notificationsPanel", "Notification History", `<div class="notif-history" id="notifHistory"></div>`);
@@ -4922,7 +4923,7 @@ var StarlightEngine = (() => {
             if (div.parentNode) div.remove();
           }, 8e3);
         }
-        showPlayerProfile(avatar, actions, isRemote = false, remoteId = null, isIgnored = false, achievements = []) {
+        showPlayerProfile(avatar, actions, isRemote = false, remoteId = null, isIgnored = false, achievements = [], isBanned = false) {
           const existing = document.getElementById("playerProfile");
           if (existing) existing.remove();
           const div = document.createElement("div");
@@ -4961,6 +4962,7 @@ var StarlightEngine = (() => {
         ${isRemote ? `<button id="ppFriend" style="padding:8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">\u2B50 Add Friend</button>` : ""}
         ${isRemote ? `<button id="ppTrade" style="padding:8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">\u{1F91D} Trade</button>` : ""}
         ${isRemote ? `<button id="ppIgnore" style="padding:8px;background:${isIgnored ? "#e74c3c" : "var(--habbo-dark)"};color:#fff;border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">${isIgnored ? "Unignore" : "\u{1F6AB} Ignore"}</button>` : ""}
+        ${isRemote ? `<button id="ppBan" style="padding:8px;background:${isBanned ? "#e74c3c" : "var(--habbo-dark)"};color:#fff;border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">${isBanned ? "Unban" : "\u{1F528} Ban"}</button>` : ""}
       </div>
     `;
           document.body.appendChild(div);
@@ -4985,6 +4987,10 @@ var StarlightEngine = (() => {
             document.getElementById("ppIgnore")?.addEventListener("click", () => {
               div.remove();
               actions.onIgnore && actions.onIgnore();
+            });
+            document.getElementById("ppBan")?.addEventListener("click", () => {
+              div.remove();
+              actions.onBan && actions.onBan();
             });
           }
           setTimeout(() => {
@@ -5081,6 +5087,59 @@ var StarlightEngine = (() => {
           });
           content.querySelectorAll(".btn-leave-club").forEach((btn) => {
             btn.addEventListener("click", () => onLeave && onLeave(btn.dataset.id));
+          });
+        }
+        renderMarketplace(marketplace, inventoryItems, onBuy, onList, onCancel) {
+          const content = document.getElementById("marketplaceContent");
+          if (!content) return;
+          const listings = marketplace.getListings();
+          let html = `<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">`;
+          html += `<input type="text" id="mpSearch" placeholder="Search items..." style="flex:1;padding:6px 10px;border-radius:8px;border:1px solid var(--habbo-panel-border);background:var(--habbo-dark);color:#fff;font-family:inherit;font-size:12px;">`;
+          html += `<button id="mpSearchBtn" style="padding:6px 12px;background:var(--habbo-light);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:12px;">\u{1F50D}</button>`;
+          html += `</div>`;
+          if (listings.length > 0) {
+            html += `<div style="font-size:12px;font-weight:700;color:var(--habbo-accent);margin-bottom:8px;">Available Listings</div>`;
+            html += `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">`;
+            listings.forEach((l) => {
+              const isMine = !l.npc;
+              html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(0,0,0,0.2);border-radius:8px;">`;
+              html += `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:20px;">${l.icon}</span><div><div style="font-weight:700;font-size:13px;">${l.itemName}</div><div style="font-size:10px;color:var(--habbo-text-dim);">Seller: ${l.seller}</div></div></div>`;
+              html += `<div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:700;color:var(--habbo-accent);">\u2605${l.price}</span>`;
+              if (isMine) {
+                html += `<button class="btn-cancel-listing" data-id="${l.id}" style="padding:4px 10px;background:#e74c3c;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Cancel</button>`;
+              } else {
+                html += `<button class="btn-buy-listing" data-id="${l.id}" style="padding:4px 10px;background:var(--habbo-accent);color:var(--habbo-dark);border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;">Buy</button>`;
+              }
+              html += `</div></div>`;
+            });
+            html += `</div>`;
+          } else {
+            html += `<div style="text-align:center;color:var(--habbo-text-dim);font-size:12px;padding:20px;">No listings available.</div>`;
+          }
+          if (inventoryItems.length > 0) {
+            html += `<div style="font-size:12px;font-weight:700;color:var(--habbo-accent);margin-bottom:8px;">Sell Your Items</div>`;
+            html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+            inventoryItems.forEach((item) => {
+              html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(0,0,0,0.2);border-radius:8px;">`;
+              html += `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:20px;">${item.icon}</span><div><div style="font-weight:700;font-size:13px;">${item.name}</div><div style="font-size:10px;color:var(--habbo-text-dim);">You have ${item.count}</div></div></div>`;
+              html += `<button class="btn-list-item" data-type="${item.type}" data-price="${Math.floor(item.price * 0.9)}" style="padding:4px 10px;background:var(--habbo-light);color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">List \u2605${Math.floor(item.price * 0.9)}</button>`;
+              html += `</div>`;
+            });
+            html += `</div>`;
+          }
+          content.innerHTML = html;
+          document.getElementById("mpSearchBtn")?.addEventListener("click", () => {
+            const q = document.getElementById("mpSearch")?.value || "";
+            if (q) this.showNotification("Search applied \u2014 refresh panel to see results", "info");
+          });
+          content.querySelectorAll(".btn-buy-listing").forEach((btn) => {
+            btn.addEventListener("click", () => onBuy && onBuy(btn.dataset.id));
+          });
+          content.querySelectorAll(".btn-cancel-listing").forEach((btn) => {
+            btn.addEventListener("click", () => onCancel && onCancel(btn.dataset.id));
+          });
+          content.querySelectorAll(".btn-list-item").forEach((btn) => {
+            btn.addEventListener("click", () => onList && onList(btn.dataset.type, parseInt(btn.dataset.price)));
           });
         }
         renderStats(stats) {
@@ -7932,6 +7991,7 @@ var StarlightEngine = (() => {
           dialog: [
             { text: "Buy rare lamp (\u2605500)", action: "buy", item: "lamp", price: 500 },
             { text: "Buy crystal ball (\u2605450)", action: "buy", item: "crystal_ball", price: 450 },
+            { text: "Buy disco ball (\u2605400)", action: "buy", item: "disco_ball", price: 400 },
             { text: "Just browsing", action: "close" }
           ]
         },
@@ -7965,6 +8025,40 @@ var StarlightEngine = (() => {
           dialog: [
             { text: "Read my fortune (\u260550)", action: "fortune", price: 50 },
             { text: "Not today", action: "close" }
+          ]
+        },
+        {
+          id: "banker_bot",
+          name: "Banker Bot",
+          emoji: "\u{1F3E6}",
+          greeting: "Greetings! Manage your StarCoins here.",
+          dialog: [
+            { text: "Deposit 100 (save for later)", action: "bank", deposit: 100 },
+            { text: "Withdraw 100", action: "bank", withdraw: 100 },
+            { text: "Check balance", action: "chat", response: "Use the currency display in the top bar!" },
+            { text: "Goodbye", action: "close" }
+          ]
+        },
+        {
+          id: "stylist_bot",
+          name: "Stylist Bot",
+          emoji: "\u2702\uFE0F",
+          greeting: "Want a fresh look? I can help!",
+          dialog: [
+            { text: "Randomize my outfit (free)", action: "style", random: true },
+            { text: "Give me a tip", action: "chat", response: "Match your hat color to your shoes for extra style points!" },
+            { text: "No thanks", action: "close" }
+          ]
+        },
+        {
+          id: "game_host_bot",
+          name: "Game Host",
+          emoji: "\u{1F3B2}",
+          greeting: "Feeling lucky? Play a quick game!",
+          dialog: [
+            { text: "Roll dice (\u260510)", action: "game", type: "dice", price: 10 },
+            { text: "Coin flip (\u260510)", action: "game", type: "coin", price: 10 },
+            { text: "Maybe later", action: "close" }
           ]
         }
       ];
@@ -8023,6 +8117,16 @@ var StarlightEngine = (() => {
             ctx.fillText(bot.name, x, y - 20);
           });
         }
+        serialize() {
+          return this.bots.map((b) => ({ type: b.id, x: b.x, y: b.y }));
+        }
+        deserialize(data) {
+          this.bots = [];
+          if (!data || !Array.isArray(data)) return;
+          data.forEach((b) => {
+            if (b.type && typeof b.x === "number" && typeof b.y === "number") this.spawn(b.type, b.x, b.y);
+          });
+        }
         handleDialog(bot) {
           if (!bot || !bot.dialog) return;
           const items = bot.dialog.map((d) => ({
@@ -8054,9 +8158,143 @@ var StarlightEngine = (() => {
                   this.game.uiManager.showNotification("Not enough coins!", "error");
                 }
               }
+              if (d.action === "bank" && this.game) {
+                if (d.deposit) {
+                  this.game.uiManager.showNotification("StarCoins are safely stored in your account!", "success");
+                } else if (d.withdraw) {
+                  this.game.uiManager.showNotification("Withdrawal processed!", "success");
+                }
+              }
+              if (d.action === "style" && this.game) {
+                if (d.random) {
+                  const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
+                  this.game.customize.hairColor = rand(["#090806", "#2C1608", "#71635A", "#B7A69E", "#D6C4C2", "#B55239", "#A52A2A", "#DC143C", "#4B0082", "#228B22"]);
+                  this.game.customize.shirtColor = rand(["#E74C3C", "#3498DB", "#2ECC71", "#F1C40F", "#9B59B6", "#E67E22", "#1ABC9C", "#34495E"]);
+                  this.game.customize.pantsColor = rand(["#2C3E50", "#34495E", "#1ABC9C", "#8E44AD", "#D35400", "#7F8C8D"]);
+                  this.game.applyAvatarToPlayer();
+                  this.game.saveAvatarToStorage();
+                  this.game.uiManager.showNotification("Fresh new look! \u2728", "success");
+                }
+              }
+              if (d.action === "game" && this.game) {
+                if (this.game.currencySystem.spend(d.price)) {
+                  if (d.type === "dice") {
+                    const roll = Math.floor(Math.random() * 6) + 1;
+                    const win = roll >= 4;
+                    if (win) this.game.currencySystem.add(d.price * 2);
+                    this.game.uiManager.showNotification(`\u{1F3B2} Rolled ${roll}! ${win ? "You won!" : "Better luck next time!"}`, win ? "success" : "info");
+                  } else if (d.type === "coin") {
+                    const flip = Math.random() < 0.5 ? "Heads" : "Tails";
+                    const win = flip === "Heads";
+                    if (win) this.game.currencySystem.add(d.price * 2);
+                    this.game.uiManager.showNotification(`\u{1FA99} ${flip}! ${win ? "You won!" : "Better luck next time!"}`, win ? "success" : "info");
+                  }
+                } else {
+                  this.game.uiManager.showNotification("Not enough coins!", "error");
+                }
+              }
             }
           }));
           return items;
+        }
+      };
+    }
+  });
+
+  // src/economy/Marketplace.js
+  var STORAGE_KEY3, MAX_LISTINGS, MarketplaceSystem;
+  var init_Marketplace = __esm({
+    "src/economy/Marketplace.js"() {
+      init_Data();
+      STORAGE_KEY3 = "starlight_marketplace";
+      MAX_LISTINGS = 10;
+      MarketplaceSystem = class {
+        constructor() {
+          this.listings = [];
+          this.load();
+        }
+        load() {
+          try {
+            const data = JSON.parse(localStorage.getItem(STORAGE_KEY3));
+            if (data && Array.isArray(data)) this.listings = data;
+          } catch (e) {
+          }
+          if (this.listings.length === 0) this._generateNPCListings();
+        }
+        save() {
+          try {
+            localStorage.setItem(STORAGE_KEY3, JSON.stringify(this.listings));
+          } catch (e) {
+          }
+        }
+        _generateNPCListings() {
+          const rareItems = FURNITURE_CATALOG.filter((i) => i.price >= 300);
+          for (let i = 0; i < 6; i++) {
+            const item = rareItems[Math.floor(Math.random() * rareItems.length)];
+            if (item) {
+              this.listings.push({
+                id: "npc_" + Date.now() + "_" + i,
+                seller: ["SkyWalker", "LunaStar", "PixelDream", "CocoBean", "NovaFlare"][i % 5],
+                itemType: item.id,
+                itemName: item.name,
+                price: Math.floor(item.price * (0.8 + Math.random() * 0.6)),
+                icon: item.icon,
+                npc: true,
+                listedAt: Date.now() - Math.random() * 864e5
+              });
+            }
+          }
+          this.save();
+        }
+        listItem(itemType, price, sellerName) {
+          const cat = FURNITURE_CATALOG.find((c) => c.id === itemType);
+          if (!cat) return null;
+          const userListings = this.listings.filter((l) => !l.npc && l.seller === sellerName);
+          if (userListings.length >= MAX_LISTINGS) return { error: "Max listings reached" };
+          const listing = {
+            id: "lst_" + Date.now().toString(36),
+            seller: sellerName,
+            itemType,
+            itemName: cat.name,
+            price,
+            icon: cat.icon,
+            npc: false,
+            listedAt: Date.now()
+          };
+          this.listings.push(listing);
+          this.save();
+          return listing;
+        }
+        buyListing(listingId, buyerCurrencySystem, buyerInventorySystem) {
+          const idx = this.listings.findIndex((l) => l.id === listingId);
+          if (idx === -1) return { error: "Listing not found" };
+          const listing = this.listings[idx];
+          if (!buyerCurrencySystem.spend(listing.price)) return { error: "Not enough coins" };
+          buyerInventorySystem.add(listing.itemType, 1);
+          this.listings.splice(idx, 1);
+          this.save();
+          return { success: true, listing };
+        }
+        cancelListing(listingId, sellerName) {
+          const idx = this.listings.findIndex((l) => l.id === listingId && l.seller === sellerName);
+          if (idx === -1) return false;
+          this.listings.splice(idx, 1);
+          this.save();
+          return true;
+        }
+        getListings() {
+          const now = Date.now();
+          const old = this.listings.filter((l) => l.npc && now - l.listedAt > 36e5);
+          old.forEach((o) => {
+            const idx = this.listings.indexOf(o);
+            if (idx > -1) this.listings.splice(idx, 1);
+          });
+          if (this.listings.length < 4) this._generateNPCListings();
+          return this.listings;
+        }
+        search(query) {
+          const q = query.toLowerCase();
+          return this.getListings().filter((l) => l.itemName.toLowerCase().includes(q) || l.seller.toLowerCase().includes(q));
         }
       };
     }
@@ -8501,10 +8739,10 @@ var StarlightEngine = (() => {
   });
 
   // src/customization/WardrobeSystem.js
-  var STORAGE_KEY3, MAX_PRESETS, WardrobeSystem;
+  var STORAGE_KEY4, MAX_PRESETS, WardrobeSystem;
   var init_WardrobeSystem = __esm({
     "src/customization/WardrobeSystem.js"() {
-      STORAGE_KEY3 = "starlight_wardrobe";
+      STORAGE_KEY4 = "starlight_wardrobe";
       MAX_PRESETS = 5;
       WardrobeSystem = class {
         constructor() {
@@ -8513,7 +8751,7 @@ var StarlightEngine = (() => {
         }
         load() {
           try {
-            const raw = localStorage.getItem(STORAGE_KEY3);
+            const raw = localStorage.getItem(STORAGE_KEY4);
             if (raw) this.presets = JSON.parse(raw);
           } catch (e) {
           }
@@ -8521,7 +8759,7 @@ var StarlightEngine = (() => {
         }
         save() {
           try {
-            localStorage.setItem(STORAGE_KEY3, JSON.stringify(this.presets));
+            localStorage.setItem(STORAGE_KEY4, JSON.stringify(this.presets));
           } catch (e) {
           }
         }
@@ -8634,6 +8872,7 @@ var StarlightEngine = (() => {
       init_ClubSystem();
       init_RoomRatings();
       init_RoomBots();
+      init_Marketplace();
       init_Quests();
       init_NetworkManager();
       init_WardrobeSystem();
@@ -8685,6 +8924,10 @@ var StarlightEngine = (() => {
           this.loadFavorites();
           this.ignoredPlayers = /* @__PURE__ */ new Set();
           this.loadIgnoredPlayers();
+          this.myRoomCoOwners = /* @__PURE__ */ new Set();
+          this.myRoomModerators = /* @__PURE__ */ new Set();
+          this.myRoomBanned = /* @__PURE__ */ new Set();
+          this.loadRoomPermissions();
           this.myRoomSize = 10;
           this.myRoomName = "My Room";
           this.recentRooms = [];
@@ -8728,6 +8971,7 @@ var StarlightEngine = (() => {
           this.clubSystem = new ClubSystem();
           this.roomRatingSystem = new RoomRatingSystem();
           this.roomBotSystem = new RoomBotSystem(this);
+          this.marketplaceSystem = new MarketplaceSystem();
           this.questSystem = new QuestSystem(this);
           this.achievementSystem = new AchievementSystem(this);
           this.leaderboardSystem = new LeaderboardSystem();
@@ -8867,6 +9111,9 @@ var StarlightEngine = (() => {
           }
           this.player.game = this;
           this.room.avatars.push(this.player);
+          if (this.roomBotSystem) {
+            if (this.room.id !== "myroom") this.roomBotSystem.bots = [];
+          }
           this.statsSystem.enterRoom(template.name || template.id);
           this.soundManager.playAmbient(template.id);
           this.npcManager.npcs.forEach((n) => {
@@ -9279,6 +9526,10 @@ var StarlightEngine = (() => {
           document.getElementById("btnClubs")?.addEventListener("click", () => {
             this.uiManager.togglePanel("clubsPanel");
             this.renderClubsPanel();
+          });
+          document.getElementById("btnMarketplace")?.addEventListener("click", () => {
+            this.uiManager.togglePanel("marketplacePanel");
+            this.renderMarketplacePanel();
           });
           document.getElementById("btnChallenges")?.addEventListener("click", () => {
             this.uiManager.togglePanel("challengesPanel");
@@ -9740,6 +9991,37 @@ var StarlightEngine = (() => {
           } catch (e) {
           }
         }
+        loadRoomPermissions() {
+          try {
+            const data = JSON.parse(localStorage.getItem("starlight_room_perms"));
+            if (data) {
+              this.myRoomCoOwners = new Set(data.coOwners || []);
+              this.myRoomModerators = new Set(data.moderators || []);
+              this.myRoomBanned = new Set(data.banned || []);
+            }
+          } catch (e) {
+          }
+        }
+        saveRoomPermissions() {
+          try {
+            localStorage.setItem("starlight_room_perms", JSON.stringify({
+              coOwners: Array.from(this.myRoomCoOwners),
+              moderators: Array.from(this.myRoomModerators),
+              banned: Array.from(this.myRoomBanned)
+            }));
+          } catch (e) {
+          }
+        }
+        banPlayer(name) {
+          this.myRoomBanned.add(name);
+          this.saveRoomPermissions();
+          this.uiManager.showNotification(`Banned ${name} from your room.`, "info");
+        }
+        unbanPlayer(name) {
+          this.myRoomBanned.delete(name);
+          this.saveRoomPermissions();
+          this.uiManager.showNotification(`Unbanned ${name}.`, "info");
+        }
         ignorePlayer(name) {
           this.ignoredPlayers.add(name);
           this.saveIgnoredPlayers();
@@ -10135,6 +10417,7 @@ var StarlightEngine = (() => {
             daily: { streak: this.dailyRewards.streak, lastClaim: this.dailyRewards.lastClaim },
             leaderboard: this.leaderboardSystem.scores,
             myroom: localStorage.getItem("starlight_myroom"),
+            roomPerms: { coOwners: Array.from(this.myRoomCoOwners), moderators: Array.from(this.myRoomModerators), banned: Array.from(this.myRoomBanned) },
             inbox: { messages: this.inboxSystem.messages, unreadCount: this.inboxSystem.unreadCount },
             settings: { showWeather: this.settings.showWeather, myRoomPrivate: this.settings.myRoomPrivate, showTimestamps: this.settings.showTimestamps, chatBubbleDuration: this.settings.chatBubbleDuration },
             bookmarks: Array.from(this.bookmarkedRooms),
@@ -10205,6 +10488,12 @@ var StarlightEngine = (() => {
               if (data.myroom) {
                 localStorage.setItem("starlight_myroom", data.myroom);
               }
+              if (data.roomPerms) {
+                this.myRoomCoOwners = new Set(data.roomPerms.coOwners || []);
+                this.myRoomModerators = new Set(data.roomPerms.moderators || []);
+                this.myRoomBanned = new Set(data.roomPerms.banned || []);
+                this.saveRoomPermissions();
+              }
               if (data.inbox) {
                 this.inboxSystem.messages = data.inbox.messages || [];
                 this.inboxSystem.unreadCount = data.inbox.unreadCount || 0;
@@ -10264,7 +10553,8 @@ var StarlightEngine = (() => {
             const data = {
               furniture: this.room.furniture.map((f) => ({ type: f.type, x: f.x, y: f.y, z: f.z, rotation: f.rotation || 0 })),
               floor: this.room.floorType,
-              wall: this.room.wallColor
+              wall: this.room.wallColor,
+              bots: this.roomBotSystem ? this.roomBotSystem.serialize() : []
             };
             localStorage.setItem("starlight_myroom", JSON.stringify(data));
           } catch (e) {
@@ -10277,6 +10567,7 @@ var StarlightEngine = (() => {
               this.room.furniture = (data.furniture || []).map((f) => new Furniture(f.type, f.x, f.y, f.z, f.rotation || 0));
               if (data.floor) this.room.floorType = data.floor;
               if (data.wall) this.room.wallColor = data.wall;
+              if (this.roomBotSystem && data.bots) this.roomBotSystem.deserialize(data.bots);
             }
           } catch (e) {
           }
@@ -10534,12 +10825,20 @@ var StarlightEngine = (() => {
                 } else {
                   this.ignorePlayer(avatar.name);
                 }
+              },
+              onBan: () => {
+                if (this.myRoomBanned.has(avatar.name)) {
+                  this.unbanPlayer(avatar.name);
+                } else {
+                  this.banPlayer(avatar.name);
+                }
               }
             },
             isRemote,
             remoteId,
             this.ignoredPlayers.has(avatar.name),
-            this.achievementSystem.getList().filter((a) => a.unlocked)
+            this.achievementSystem.getList().filter((a) => a.unlocked),
+            this.myRoomBanned.has(avatar.name)
           );
         }
         openJukebox() {
@@ -10618,6 +10917,43 @@ var StarlightEngine = (() => {
             { key: "Right-click item", action: "Sell from inventory" },
             { key: "Double-click", action: "Quick walk to tile" }
           ]);
+        }
+        renderMarketplacePanel() {
+          const inventory = this.inventorySystem.getAll();
+          const items = Object.keys(inventory).map((type) => {
+            const cat = FURNITURE_CATALOG.find((c) => c.id === type);
+            return cat ? { type, name: cat.name, icon: cat.icon, count: inventory[type], price: cat.price } : null;
+          }).filter(Boolean);
+          this.uiManager.renderMarketplace(
+            this.marketplaceSystem,
+            items,
+            (listingId) => {
+              const result = this.marketplaceSystem.buyListing(listingId, this.currencySystem, this.inventorySystem);
+              if (result.success) {
+                this.uiManager.showNotification(`Bought ${result.listing.itemName}!`, "success");
+                this.soundManager.play("buy");
+              } else {
+                this.uiManager.showNotification(result.error, "error");
+              }
+              this.renderMarketplacePanel();
+              this.uiManager.updateCurrency(this.currencySystem.get());
+            },
+            (type, price) => {
+              if (this.inventorySystem.getCount(type) > 0) {
+                this.inventorySystem.add(type, -1);
+                this.marketplaceSystem.listItem(type, price, "You");
+                this.uiManager.showNotification("Item listed!", "success");
+                this.renderMarketplacePanel();
+              }
+            },
+            (listingId) => {
+              if (this.marketplaceSystem.cancelListing(listingId, "You")) {
+                this.inventorySystem.add(this.marketplaceSystem.listings.find((l) => l.id === listingId)?.itemType, 1);
+                this.uiManager.showNotification("Listing cancelled.", "info");
+                this.renderMarketplacePanel();
+              }
+            }
+          );
         }
         renderClubsPanel() {
           this.uiManager.renderClubsPanel(
@@ -11126,6 +11462,17 @@ var StarlightEngine = (() => {
           const h = this.height * 2;
           const cx = -this.camera.x;
           const cy = -this.camera.y;
+          const month = (/* @__PURE__ */ new Date()).getMonth();
+          const day = (/* @__PURE__ */ new Date()).getDate();
+          let seasonalTint = null;
+          if (month === 9 && day >= 25) seasonalTint = "rgba(255,140,0,0.08)";
+          else if (month === 11 && day >= 20) seasonalTint = "rgba(200,220,255,0.1)";
+          else if (month === 1 && day >= 10 && day <= 14) seasonalTint = "rgba(255,180,200,0.08)";
+          else if (month === 6 && day <= 15) seasonalTint = "rgba(255,255,150,0.06)";
+          if (seasonalTint) {
+            ctx.fillStyle = seasonalTint;
+            ctx.fillRect(cx - w / 4, cy - h / 4, w, h);
+          }
           const gradients = {
             lobby: ["#1a3a42", "#0d2529"],
             beach: ["#87CEEB", "#E0F6FF"],
@@ -11149,6 +11496,35 @@ var StarlightEngine = (() => {
           ctx.fillRect(cx - w / 4, cy - h / 4, w, h);
           const px = (x, speed) => cx + this.camera.x * speed + x;
           const py = (y, speed) => cy + this.camera.y * speed + y;
+          const nowM = (/* @__PURE__ */ new Date()).getMonth();
+          const nowD = (/* @__PURE__ */ new Date()).getDate();
+          if (nowM === 9 && nowD >= 25) {
+            ctx.fillStyle = "rgba(255,140,0,0.15)";
+            for (let i = 0; i < 4; i++) {
+              const px1 = cx + i * w / 5 + 40;
+              const py1 = cy + h * 0.75;
+              ctx.beginPath();
+              ctx.arc(px1, py1, 12, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          } else if (nowM === 11 && nowD >= 20) {
+            ctx.fillStyle = "rgba(255,255,255,0.3)";
+            for (let i = 0; i < 20; i++) {
+              const sx = cx + (i * 73 + time / 30) % w;
+              const sy = cy + (i * 47 + time / 20) % h;
+              ctx.beginPath();
+              ctx.arc(sx, sy, 2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          } else if (nowM === 1 && nowD >= 10 && nowD <= 14) {
+            ctx.fillStyle = "rgba(255,100,150,0.1)";
+            for (let i = 0; i < 6; i++) {
+              const hx = cx + i * w / 7 + 30;
+              const hy = cy + h * 0.15 + Math.sin(time / 800 + i) * 10;
+              ctx.font = "20px Nunito, sans-serif";
+              ctx.fillText("\u2764", hx, hy);
+            }
+          }
           if (rid === "beach") {
             ctx.fillStyle = "rgba(255,255,255,0.08)";
             for (let i = 0; i < 5; i++) {
@@ -11681,6 +12057,7 @@ var StarlightEngine = (() => {
         <button class="top-btn" id="btnNotifications">&#128276; Alerts</button>
         <button class="top-btn" id="btnInbox">&#128231; Mail</button>
         <button class="top-btn" id="btnClubs">&#127942; Clubs</button>
+        <button class="top-btn" id="btnMarketplace">&#128722; Market</button>
         <button class="top-btn" id="btnCollection">&#127912; Collection</button>
       </div>
     </div>

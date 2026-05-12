@@ -11,6 +11,7 @@ const BOT_TEMPLATES = [
     dialog: [
       { text: 'Buy rare lamp (★500)', action: 'buy', item: 'lamp', price: 500 },
       { text: 'Buy crystal ball (★450)', action: 'buy', item: 'crystal_ball', price: 450 },
+      { text: 'Buy disco ball (★400)', action: 'buy', item: 'disco_ball', price: 400 },
       { text: 'Just browsing', action: 'close' }
     ]
   },
@@ -44,6 +45,40 @@ const BOT_TEMPLATES = [
     dialog: [
       { text: 'Read my fortune (★50)', action: 'fortune', price: 50 },
       { text: 'Not today', action: 'close' }
+    ]
+  },
+  {
+    id: 'banker_bot',
+    name: 'Banker Bot',
+    emoji: '🏦',
+    greeting: 'Greetings! Manage your StarCoins here.',
+    dialog: [
+      { text: 'Deposit 100 (save for later)', action: 'bank', deposit: 100 },
+      { text: 'Withdraw 100', action: 'bank', withdraw: 100 },
+      { text: 'Check balance', action: 'chat', response: 'Use the currency display in the top bar!' },
+      { text: 'Goodbye', action: 'close' }
+    ]
+  },
+  {
+    id: 'stylist_bot',
+    name: 'Stylist Bot',
+    emoji: '✂️',
+    greeting: 'Want a fresh look? I can help!',
+    dialog: [
+      { text: 'Randomize my outfit (free)', action: 'style', random: true },
+      { text: 'Give me a tip', action: 'chat', response: 'Match your hat color to your shoes for extra style points!' },
+      { text: 'No thanks', action: 'close' }
+    ]
+  },
+  {
+    id: 'game_host_bot',
+    name: 'Game Host',
+    emoji: '🎲',
+    greeting: 'Feeling lucky? Play a quick game!',
+    dialog: [
+      { text: 'Roll dice (★10)', action: 'game', type: 'dice', price: 10 },
+      { text: 'Coin flip (★10)', action: 'game', type: 'coin', price: 10 },
+      { text: 'Maybe later', action: 'close' }
     ]
   }
 ];
@@ -108,6 +143,16 @@ export class RoomBotSystem {
     });
   }
 
+  serialize() {
+    return this.bots.map(b => ({ type: b.id, x: b.x, y: b.y }));
+  }
+
+  deserialize(data) {
+    this.bots = [];
+    if (!data || !Array.isArray(data)) return;
+    data.forEach(b => { if (b.type && typeof b.x === 'number' && typeof b.y === 'number') this.spawn(b.type, b.x, b.y); });
+  }
+
   handleDialog(bot) {
     if (!bot || !bot.dialog) return;
     const items = bot.dialog.map(d => ({
@@ -135,6 +180,41 @@ export class RoomBotSystem {
           if (this.game.currencySystem.spend(d.price)) {
             const fortunes = ['Great fortune awaits!', 'Beware of Mondays.', 'A friend will bring joy.', 'Wealth is coming your way.', 'Take a risk today!'];
             this.game.uiManager.showNotification(`🔮 ${fortunes[Math.floor(Math.random() * fortunes.length)]}`, 'success');
+          } else {
+            this.game.uiManager.showNotification('Not enough coins!', 'error');
+          }
+        }
+        if (d.action === 'bank' && this.game) {
+          if (d.deposit) {
+            this.game.uiManager.showNotification('StarCoins are safely stored in your account!', 'success');
+          } else if (d.withdraw) {
+            this.game.uiManager.showNotification('Withdrawal processed!', 'success');
+          }
+        }
+        if (d.action === 'style' && this.game) {
+          if (d.random) {
+            const rand = arr => arr[Math.floor(Math.random() * arr.length)];
+            this.game.customize.hairColor = rand(['#090806','#2C1608','#71635A','#B7A69E','#D6C4C2','#B55239','#A52A2A','#DC143C','#4B0082','#228B22']);
+            this.game.customize.shirtColor = rand(['#E74C3C','#3498DB','#2ECC71','#F1C40F','#9B59B6','#E67E22','#1ABC9C','#34495E']);
+            this.game.customize.pantsColor = rand(['#2C3E50','#34495E','#1ABC9C','#8E44AD','#D35400','#7F8C8D']);
+            this.game.applyAvatarToPlayer();
+            this.game.saveAvatarToStorage();
+            this.game.uiManager.showNotification('Fresh new look! ✨', 'success');
+          }
+        }
+        if (d.action === 'game' && this.game) {
+          if (this.game.currencySystem.spend(d.price)) {
+            if (d.type === 'dice') {
+              const roll = Math.floor(Math.random() * 6) + 1;
+              const win = roll >= 4;
+              if (win) this.game.currencySystem.add(d.price * 2);
+              this.game.uiManager.showNotification(`🎲 Rolled ${roll}! ${win ? 'You won!' : 'Better luck next time!'}`, win ? 'success' : 'info');
+            } else if (d.type === 'coin') {
+              const flip = Math.random() < 0.5 ? 'Heads' : 'Tails';
+              const win = flip === 'Heads';
+              if (win) this.game.currencySystem.add(d.price * 2);
+              this.game.uiManager.showNotification(`🪙 ${flip}! ${win ? 'You won!' : 'Better luck next time!'}`, win ? 'success' : 'info');
+            }
           } else {
             this.game.uiManager.showNotification('Not enough coins!', 'error');
           }

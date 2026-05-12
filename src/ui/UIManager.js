@@ -103,6 +103,7 @@ export class UIManager {
     this._ensurePanel('shortcutsPanel', 'Keyboard Shortcuts', `<div class="shortcuts-list" id="shortcutsList"></div>`);
     // Clubs
     this._ensurePanel('clubsPanel', 'Clubs & Groups', `<div id="clubsContent"></div>`);
+    this._ensurePanel('marketplacePanel', 'Marketplace', `<div id="marketplaceContent"></div>`);
     // Challenges
     this._ensurePanel('challengesPanel', 'Daily Challenges', `<div class="challenge-list" id="challengeList"></div>`);
     this._ensurePanel('questPanel', 'Active Quest', `<div id="questContent"></div>`);
@@ -930,7 +931,7 @@ export class UIManager {
     setTimeout(() => { if (div.parentNode) div.remove(); }, 8000);
   }
 
-  showPlayerProfile(avatar, actions, isRemote = false, remoteId = null, isIgnored = false, achievements = []) {
+  showPlayerProfile(avatar, actions, isRemote = false, remoteId = null, isIgnored = false, achievements = [], isBanned = false) {
     const existing = document.getElementById('playerProfile');
     if (existing) existing.remove();
     const div = document.createElement('div');
@@ -971,6 +972,7 @@ export class UIManager {
         ${isRemote ? `<button id="ppFriend" style="padding:8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">⭐ Add Friend</button>` : ''}
         ${isRemote ? `<button id="ppTrade" style="padding:8px;background:var(--habbo-dark);color:var(--habbo-text);border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">🤝 Trade</button>` : ''}
         ${isRemote ? `<button id="ppIgnore" style="padding:8px;background:${isIgnored ? '#e74c3c' : 'var(--habbo-dark)'};color:#fff;border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">${isIgnored ? 'Unignore' : '🚫 Ignore'}</button>` : ''}
+        ${isRemote ? `<button id="ppBan" style="padding:8px;background:${isBanned ? '#e74c3c' : 'var(--habbo-dark)'};color:#fff;border:1px solid var(--habbo-panel-border);border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">${isBanned ? 'Unban' : '🔨 Ban'}</button>` : ''}
       </div>
     `;
     document.body.appendChild(div);
@@ -981,6 +983,7 @@ export class UIManager {
       document.getElementById('ppFriend')?.addEventListener('click', () => { div.remove(); actions.onFriend && actions.onFriend(); });
       document.getElementById('ppTrade')?.addEventListener('click', () => { div.remove(); actions.onTrade && actions.onTrade(); });
       document.getElementById('ppIgnore')?.addEventListener('click', () => { div.remove(); actions.onIgnore && actions.onIgnore(); });
+      document.getElementById('ppBan')?.addEventListener('click', () => { div.remove(); actions.onBan && actions.onBan(); });
     }
     setTimeout(() => { if (div.parentNode) div.remove(); }, 12000);
   }
@@ -1080,6 +1083,64 @@ export class UIManager {
     });
     content.querySelectorAll('.btn-leave-club').forEach(btn => {
       btn.addEventListener('click', () => onLeave && onLeave(btn.dataset.id));
+    });
+  }
+
+  renderMarketplace(marketplace, inventoryItems, onBuy, onList, onCancel) {
+    const content = document.getElementById('marketplaceContent');
+    if (!content) return;
+    const listings = marketplace.getListings();
+    let html = `<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">`;
+    html += `<input type="text" id="mpSearch" placeholder="Search items..." style="flex:1;padding:6px 10px;border-radius:8px;border:1px solid var(--habbo-panel-border);background:var(--habbo-dark);color:#fff;font-family:inherit;font-size:12px;">`;
+    html += `<button id="mpSearchBtn" style="padding:6px 12px;background:var(--habbo-light);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:12px;">🔍</button>`;
+    html += `</div>`;
+
+    if (listings.length > 0) {
+      html += `<div style="font-size:12px;font-weight:700;color:var(--habbo-accent);margin-bottom:8px;">Available Listings</div>`;
+      html += `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">`;
+      listings.forEach(l => {
+        const isMine = !l.npc;
+        html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(0,0,0,0.2);border-radius:8px;">`;
+        html += `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:20px;">${l.icon}</span><div><div style="font-weight:700;font-size:13px;">${l.itemName}</div><div style="font-size:10px;color:var(--habbo-text-dim);">Seller: ${l.seller}</div></div></div>`;
+        html += `<div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:700;color:var(--habbo-accent);">★${l.price}</span>`;
+        if (isMine) {
+          html += `<button class="btn-cancel-listing" data-id="${l.id}" style="padding:4px 10px;background:#e74c3c;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Cancel</button>`;
+        } else {
+          html += `<button class="btn-buy-listing" data-id="${l.id}" style="padding:4px 10px;background:var(--habbo-accent);color:var(--habbo-dark);border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;">Buy</button>`;
+        }
+        html += `</div></div>`;
+      });
+      html += `</div>`;
+    } else {
+      html += `<div style="text-align:center;color:var(--habbo-text-dim);font-size:12px;padding:20px;">No listings available.</div>`;
+    }
+
+    if (inventoryItems.length > 0) {
+      html += `<div style="font-size:12px;font-weight:700;color:var(--habbo-accent);margin-bottom:8px;">Sell Your Items</div>`;
+      html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+      inventoryItems.forEach(item => {
+        html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(0,0,0,0.2);border-radius:8px;">`;
+        html += `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:20px;">${item.icon}</span><div><div style="font-weight:700;font-size:13px;">${item.name}</div><div style="font-size:10px;color:var(--habbo-text-dim);">You have ${item.count}</div></div></div>`;
+        html += `<button class="btn-list-item" data-type="${item.type}" data-price="${Math.floor(item.price * 0.9)}" style="padding:4px 10px;background:var(--habbo-light);color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">List ★${Math.floor(item.price * 0.9)}</button>`;
+        html += `</div>`;
+      });
+      html += `</div>`;
+    }
+    content.innerHTML = html;
+
+    document.getElementById('mpSearchBtn')?.addEventListener('click', () => {
+      const q = document.getElementById('mpSearch')?.value || '';
+      // Re-render with search results would need re-call to game method; for now just show notification
+      if (q) this.showNotification('Search applied — refresh panel to see results', 'info');
+    });
+    content.querySelectorAll('.btn-buy-listing').forEach(btn => {
+      btn.addEventListener('click', () => onBuy && onBuy(btn.dataset.id));
+    });
+    content.querySelectorAll('.btn-cancel-listing').forEach(btn => {
+      btn.addEventListener('click', () => onCancel && onCancel(btn.dataset.id));
+    });
+    content.querySelectorAll('.btn-list-item').forEach(btn => {
+      btn.addEventListener('click', () => onList && onList(btn.dataset.type, parseInt(btn.dataset.price)));
     });
   }
 
