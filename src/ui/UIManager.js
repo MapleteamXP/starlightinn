@@ -74,6 +74,7 @@ export class UIManager {
       <div class="customize-row"><label>Glasses</label><select id="glassesSelect"><option value="none">None</option><option value="shades">Shades</option><option value="round">Round</option><option value="heart">Heart</option></select></div>
       <div class="customize-row"><label>Title</label><select id="titleSelect" style="flex:1;"></select></div>
       <div class="customize-actions"><button class="btn-random" id="btnRandomLook">Random</button><button class="btn-save" id="btnSaveLook">Save Look</button></div>
+      <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.1);padding-top:10px;"><div style="font-size:12px;font-weight:700;color:var(--habbo-accent);margin-bottom:6px;">Wardrobe Presets (1-5)</div><div class="wardrobe-slots" id="wardrobeSlots"></div></div>
     `);
     // Chat History
     this._ensurePanel('chatPanel', 'Chat History', `<div class="chat-history" id="chatHistory"></div>`);
@@ -100,6 +101,8 @@ export class UIManager {
     this._ensurePanel('collectionPanel', 'Collection', `<div class="collection-list" id="collectionList"></div>`);
     // Shortcuts
     this._ensurePanel('shortcutsPanel', 'Keyboard Shortcuts', `<div class="shortcuts-list" id="shortcutsList"></div>`);
+    // Clubs
+    this._ensurePanel('clubsPanel', 'Clubs & Groups', `<div id="clubsContent"></div>`);
     // Challenges
     this._ensurePanel('challengesPanel', 'Daily Challenges', `<div class="challenge-list" id="challengeList"></div>`);
     this._ensurePanel('questPanel', 'Active Quest', `<div id="questContent"></div>`);
@@ -251,6 +254,27 @@ export class UIManager {
     const variance = Math.floor(Math.sin(Date.now() / 3600000 + roomId.length) * 6 + 6);
     const timeMod = (hour >= 18 || hour <= 2) ? 1.4 : (hour >= 9 && hour <= 17) ? 1.0 : 0.6;
     return Math.floor((base + variance) * timeMod);
+  }
+
+  showDoorbell(roomName, onKnock) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:3000;';
+    const panel = document.createElement('div');
+    panel.style.cssText = 'background:var(--habbo-dark);border:2px solid var(--habbo-accent);border-radius:12px;padding:20px;width:240px;text-align:center;color:#fff;font-family:inherit;';
+    panel.innerHTML = `
+      <div style="font-size:32px;margin-bottom:8px;">🔒</div>
+      <div style="font-weight:700;margin-bottom:4px;">${roomName}</div>
+      <div style="font-size:12px;color:var(--habbo-text-dim);margin-bottom:16px;">This room is private. Knock to request entry.</div>
+      <div style="display:flex;gap:8px;">
+        <button id="dbCancel" style="flex:1;padding:8px;border:none;border-radius:8px;background:#555;color:#fff;cursor:pointer;font-family:inherit;">Cancel</button>
+        <button id="dbKnock" style="flex:1;padding:8px;border:none;border-radius:8px;background:var(--habbo-accent);color:var(--habbo-dark);cursor:pointer;font-family:inherit;font-weight:700;">Knock</button>
+      </div>
+    `;
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    panel.querySelector('#dbCancel')?.addEventListener('click', () => overlay.remove());
+    panel.querySelector('#dbKnock')?.addEventListener('click', () => { onKnock && onKnock(); overlay.remove(); });
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
   }
 
   showAchievementPopup(ach) {
@@ -429,9 +453,45 @@ export class UIManager {
       const rarity = item.price >= 500 ? '★★★' : (item.price >= 200 ? '★★' : '★');
       const rarityColor = item.price >= 500 ? '#f4d03f' : (item.price >= 200 ? '#e67e22' : '#aaa');
       div.innerHTML = `<div class="cat-rarity" style="color:${rarityColor}">${rarity}</div><div class="cat-icon">${item.icon}</div><div class="cat-name">${item.name}</div><div class="cat-price">\u2605 ${item.price}</div>`;
-      div.addEventListener('click', () => onBuy && onBuy(item));
+      div.addEventListener('click', () => this.showCatalogBuyPopup(item, currency, onBuy));
       grid.appendChild(div);
     });
+  }
+
+  showCatalogBuyPopup(item, currency, onBuy) {
+    let quantity = 1;
+    const overlay = document.createElement('div');
+    overlay.id = 'catalogBuyOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:3000;';
+    const panel = document.createElement('div');
+    panel.style.cssText = 'background:var(--habbo-dark);border:2px solid var(--habbo-accent);border-radius:12px;padding:20px;width:260px;color:#fff;font-family:inherit;';
+    const updateTotal = () => {
+      const total = item.price * quantity;
+      const canAfford = total <= currency;
+      panel.innerHTML = `
+        <div style="text-align:center;font-size:32px;margin-bottom:8px;">${item.icon}</div>
+        <div style="text-align:center;font-weight:700;margin-bottom:4px;">${item.name}</div>
+        <div style="text-align:center;font-size:12px;color:var(--habbo-text-dim);margin-bottom:12px;">${item.desc}</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
+          <button id="cbqMinus" style="width:28px;height:28px;border-radius:50%;border:none;background:var(--habbo-light);color:#fff;font-size:16px;cursor:pointer;">-</button>
+          <span id="cbqNum" style="font-size:18px;font-weight:700;width:30px;text-align:center;">${quantity}</span>
+          <button id="cbqPlus" style="width:28px;height:28px;border-radius:50%;border:none;background:var(--habbo-light);color:#fff;font-size:16px;cursor:pointer;">+</button>
+        </div>
+        <div style="text-align:center;margin-bottom:16px;font-size:14px;">Total: <span style="color:${canAfford ? 'var(--habbo-accent)' : '#e74c3c'};font-weight:700;">★${total}</span></div>
+        <div style="display:flex;gap:8px;">
+          <button id="cbqCancel" style="flex:1;padding:8px;border:none;border-radius:8px;background:#555;color:#fff;cursor:pointer;font-family:inherit;">Cancel</button>
+          <button id="cbqBuy" style="flex:1;padding:8px;border:none;border-radius:8px;background:${canAfford ? 'var(--habbo-accent)' : '#777'};color:#fff;cursor:${canAfford ? 'pointer' : 'not-allowed'};font-family:inherit;font-weight:700;" ${canAfford ? '' : 'disabled'}>Buy</button>
+        </div>
+      `;
+      panel.querySelector('#cbqMinus')?.addEventListener('click', () => { if (quantity > 1) { quantity--; updateTotal(); } });
+      panel.querySelector('#cbqPlus')?.addEventListener('click', () => { if (quantity < 10) { quantity++; updateTotal(); } });
+      panel.querySelector('#cbqCancel')?.addEventListener('click', () => overlay.remove());
+      panel.querySelector('#cbqBuy')?.addEventListener('click', () => { onBuy && onBuy(item, quantity); overlay.remove(); });
+    };
+    updateTotal();
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
   }
 
   renderInventory(inventory, selected, onSelect, onSell, onSellAll, favorites, onToggleFavorite, sortBy, onSort, getRarityColor) {
@@ -514,7 +574,7 @@ export class UIManager {
     }
   }
 
-  renderCustomizePanel(customize, onChange, onSave, onRandom, titles, currentTitle, onTitleChange) {
+  renderCustomizePanel(customize, onChange, onSave, onRandom, titles, currentTitle, onTitleChange, wardrobePresets, onWardrobeSave, onWardrobeApply, onWardrobeDelete) {
     // Update selects
     const hairStyleSelect = document.getElementById('hairStyleSelect');
     const hatSelect = document.getElementById('hatSelect');
@@ -559,6 +619,36 @@ export class UIManager {
     }
 
     this.renderCustomizePreview(customize);
+
+    // Wardrobe presets
+    const wardrobeContainer = document.getElementById('wardrobeSlots');
+    if (wardrobeContainer && wardrobePresets) {
+      wardrobeContainer.innerHTML = '';
+      wardrobePresets.forEach((preset, idx) => {
+        const slot = document.createElement('div');
+        slot.className = 'wardrobe-slot' + (preset ? ' filled' : '');
+        slot.style.cssText = 'width:44px;height:52px;border-radius:8px;border:2px solid rgba(255,255,255,0.15);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;position:relative;background:rgba(0,0,0,0.2);';
+        if (preset) {
+          slot.style.borderColor = 'var(--habbo-accent)';
+          slot.innerHTML = `<div style="font-size:18px;">${preset.hatType !== 'none' ? '👤' : '👕'}</div><div style="font-size:9px;color:#aaa;margin-top:2px;">${idx + 1}</div>`;
+          slot.title = `Apply outfit ${idx + 1}`;
+          slot.addEventListener('click', () => onWardrobeApply && onWardrobeApply(idx));
+          const del = document.createElement('div');
+          del.innerHTML = '×';
+          del.style.cssText = 'position:absolute;top:-4px;right:-4px;width:14px;height:14px;border-radius:50%;background:#e74c3c;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;';
+          del.addEventListener('click', ev => { ev.stopPropagation(); onWardrobeDelete && onWardrobeDelete(idx); });
+          slot.appendChild(del);
+        } else {
+          slot.innerHTML = `<div style="font-size:16px;color:#666;">+</div><div style="font-size:9px;color:#666;margin-top:2px;">${idx + 1}</div>`;
+          slot.title = `Save current look to slot ${idx + 1}`;
+          slot.addEventListener('click', () => onWardrobeSave && onWardrobeSave(idx));
+        }
+        slot.addEventListener('mouseenter', () => slot.style.transform = 'scale(1.08)');
+        slot.addEventListener('mouseleave', () => slot.style.transform = 'scale(1)');
+        wardrobeContainer.appendChild(slot);
+      });
+      wardrobeContainer.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;';
+    }
   }
 
   renderColorPresets(containerId, colors, current, key, onChange) {
@@ -824,6 +914,68 @@ export class UIManager {
       div.className = 'shortcut-row';
       div.innerHTML = `<span class="shortcut-key">${s.key}</span><span class="shortcut-action">${s.action}</span>`;
       list.appendChild(div);
+    });
+  }
+
+  renderClubsPanel(clubSystem, onCreate, onJoin, onLeave, onDelete) {
+    const content = document.getElementById('clubsContent');
+    if (!content) return;
+    const myClubs = clubSystem.getMyClubs();
+    const allClubs = clubSystem.getAll();
+    let html = `<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">`;
+    html += `<input type="text" id="clubNameInput" placeholder="Club name..." maxlength="20" style="flex:1;min-width:120px;padding:6px 10px;border-radius:8px;border:1px solid var(--habbo-panel-border);background:var(--habbo-dark);color:#fff;font-family:inherit;font-size:12px;">`;
+    html += `<select id="clubColorSelect" style="padding:6px;border-radius:8px;border:1px solid var(--habbo-panel-border);background:var(--habbo-dark);color:#fff;font-family:inherit;font-size:12px;">`;
+    clubSystem.getBadgeColors().forEach(c => html += `<option value="${c}" style="background:${c}">${c}</option>`);
+    html += `</select>`;
+    html += `<select id="clubIconSelect" style="padding:6px;border-radius:8px;border:1px solid var(--habbo-panel-border);background:var(--habbo-dark);color:#fff;font-family:inherit;font-size:12px;">`;
+    clubSystem.getBadgeIcons().forEach(i => html += `<option value="${i}">${i}</option>`);
+    html += `</select>`;
+    html += `<button id="btnCreateClub" style="padding:6px 14px;background:var(--habbo-accent);color:var(--habbo-dark);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:12px;">Create</button>`;
+    html += `</div>`;
+
+    if (myClubs.length > 0) {
+      html += `<div style="font-size:12px;font-weight:700;color:var(--habbo-accent);margin-bottom:8px;">My Clubs</div>`;
+      html += `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">`;
+      myClubs.forEach(c => {
+        html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(0,0,0,0.2);border-radius:8px;border-left:4px solid ${c.badgeColor};">`;
+        html += `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:20px;">${c.badgeIcon}</span><div><div style="font-weight:700;font-size:13px;">${c.name}</div><div style="font-size:10px;color:var(--habbo-text-dim);">${c.members.length} members</div></div></div>`;
+        html += `<button class="btn-leave-club" data-id="${c.id}" style="padding:4px 10px;background:#e74c3c;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Leave</button>`;
+        html += `</div>`;
+      });
+      html += `</div>`;
+    }
+
+    if (allClubs.length > 0) {
+      html += `<div style="font-size:12px;font-weight:700;color:var(--habbo-accent);margin-bottom:8px;">All Clubs</div>`;
+      html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+      allClubs.forEach(c => {
+        const isMember = clubSystem.myClubs.has(c.id);
+        html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(0,0,0,0.2);border-radius:8px;border-left:4px solid ${c.badgeColor};">`;
+        html += `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:20px;">${c.badgeIcon}</span><div><div style="font-weight:700;font-size:13px;">${c.name}</div><div style="font-size:10px;color:var(--habbo-text-dim);">${c.members.length} members</div></div></div>`;
+        if (isMember) {
+          html += `<button class="btn-leave-club" data-id="${c.id}" style="padding:4px 10px;background:#e74c3c;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Leave</button>`;
+        } else {
+          html += `<button class="btn-join-club" data-id="${c.id}" style="padding:4px 10px;background:var(--habbo-accent);color:var(--habbo-dark);border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;">Join</button>`;
+        }
+        html += `</div>`;
+      });
+      html += `</div>`;
+    } else {
+      html += `<div style="text-align:center;color:var(--habbo-text-dim);font-size:12px;padding:20px;">No clubs yet. Create the first one!</div>`;
+    }
+    content.innerHTML = html;
+
+    document.getElementById('btnCreateClub')?.addEventListener('click', () => {
+      const name = document.getElementById('clubNameInput')?.value;
+      const color = document.getElementById('clubColorSelect')?.value;
+      const icon = document.getElementById('clubIconSelect')?.value;
+      onCreate && onCreate(name, color, icon);
+    });
+    content.querySelectorAll('.btn-join-club').forEach(btn => {
+      btn.addEventListener('click', () => onJoin && onJoin(btn.dataset.id));
+    });
+    content.querySelectorAll('.btn-leave-club').forEach(btn => {
+      btn.addEventListener('click', () => onLeave && onLeave(btn.dataset.id));
     });
   }
 

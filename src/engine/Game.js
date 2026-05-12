@@ -38,8 +38,10 @@ import { TutorialSystem } from '../ui/Tutorial.js';
 import { ProgressionSystem } from '../economy/Progression.js';
 import { PetSystem } from '../world/Pet.js';
 import { InboxSystem } from '../social/Inbox.js';
+import { ClubSystem } from '../social/ClubSystem.js';
 import { QuestSystem } from '../economy/Quests.js';
 import { NetworkManager } from '../network/NetworkManager.js';
+import { WardrobeSystem } from '../customization/WardrobeSystem.js';
 
 class Particle {
   constructor(x, y, color, life, vx, vy) {
@@ -123,9 +125,11 @@ export class Game {
     this.friendSystem = new FriendSystem(this);
     this.petSystem = new PetSystem(this);
     this.inboxSystem = new InboxSystem(this);
+    this.clubSystem = new ClubSystem();
     this.questSystem = new QuestSystem(this);
     this.achievementSystem = new AchievementSystem(this);
     this.leaderboardSystem = new LeaderboardSystem();
+    this.wardrobeSystem = new WardrobeSystem();
     this.craftingSystem = new CraftingSystem(this.inventorySystem);
     this.statsSystem = new StatsSystem();
     this.eventSystem = new EventSystem(this);
@@ -448,6 +452,9 @@ export class Game {
         case 'e':
           this.toggleEmoteWheel();
           break;
+        case '1': case '2': case '3': case '4': case '5':
+          this.applyWardrobePreset(parseInt(e.key) - 1);
+          break;
         case 'escape':
           if (this.photoMode) { this.togglePhotoMode(); }
           else {
@@ -602,6 +609,7 @@ export class Game {
     document.getElementById('btnCrafting')?.addEventListener('click', () => { this.uiManager.togglePanel('craftingPanel'); this.renderCraftingPanel(); });
     document.getElementById('btnStats')?.addEventListener('click', () => { this.uiManager.togglePanel('statsPanel'); this.renderStatsPanel(); });
     document.getElementById('btnShortcuts')?.addEventListener('click', () => { this.uiManager.togglePanel('shortcutsPanel'); this.renderShortcutsPanel(); });
+    document.getElementById('btnClubs')?.addEventListener('click', () => { this.uiManager.togglePanel('clubsPanel'); this.renderClubsPanel(); });
     document.getElementById('btnChallenges')?.addEventListener('click', () => { this.uiManager.togglePanel('challengesPanel'); this.renderChallengesPanel(); });
     document.getElementById('btnActiveQuest')?.addEventListener('click', () => { this.uiManager.togglePanel('questPanel'); this.renderQuestPanel(); });
     document.getElementById('btnNotifications')?.addEventListener('click', () => { this.uiManager.togglePanel('notificationsPanel'); this.uiManager.renderNotificationHistory(); });
@@ -979,6 +987,20 @@ export class Game {
     const searchInput = document.getElementById('roomSearchInput');
     const searchQuery = searchInput ? searchInput.value : '';
     this.uiManager.renderNavigator(ROOM_TEMPLATES, this.recentRooms, room => {
+      if (room.id === 'myroom' && this.settings.myRoomPrivate) {
+        this.uiManager.showDoorbell(room.name, () => {
+          this.uiManager.showNotification('You knocked on the door...', 'info');
+          setTimeout(() => {
+            this.uiManager.showNotification('Welcome in! 🚪', 'success');
+            this.loadRoom(room);
+            this.trackRecentRoom(room);
+            this.achievementSystem.visitRoom(room.id);
+            this.statsSystem.inc('roomsVisited');
+            this.uiManager.closeAllPanels();
+          }, 1500);
+        });
+        return;
+      }
       this.loadRoom(room);
       this.trackRecentRoom(room);
       this.achievementSystem.visitRoom(room.id);
@@ -1047,19 +1069,21 @@ export class Game {
     let items = this.catalogCategory === 'all' ? FURNITURE_CATALOG : FURNITURE_CATALOG.filter(i => i.category === this.catalogCategory);
     if (searchQuery) items = items.filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase()) || i.id.toLowerCase().includes(searchQuery.toLowerCase()));
     this.uiManager.renderCatalog(items, CATALOG_CATEGORIES, this.catalogCategory, this.currencySystem.get(),
-      item => {
-        if (this.currencySystem.spend(item.price)) {
-          this.inventorySystem.add(item.id, 1);
+      (item, quantity = 1) => {
+        const total = item.price * quantity;
+        if (this.currencySystem.spend(total)) {
+          this.inventorySystem.add(item.id, quantity);
           this.uiManager.updateCurrency(this.currencySystem.get());
           this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
-          this.uiManager.showNotification(`Purchased ${item.name}!`);
+          this.uiManager.showNotification(`Purchased ${quantity}x ${item.name}!`);
           this.soundManager.play('buy');
           this.achievementSystem.track('buy');
           this.statsSystem.inc('furnitureBought');
           this.challengeSystem.track('buy');
-          this.progressionSystem.addXP(10);
-          this.statsSystem.inc('totalCoinsSpent', item.price);
+          this.progressionSystem.addXP(10 * quantity);
+          this.statsSystem.inc('totalCoinsSpent', total);
           this.renderCatalog();
+          this.renderInventory();
         } else {
           this.uiManager.showNotification('Not enough StarCoins!', 'error');
           this.soundManager.play('error');
@@ -1140,6 +1164,31 @@ export class Game {
     try { localStorage.setItem('starlight_avatar', JSON.stringify(this.customize)); } catch (e) {}
   }
 
+  applyWardrobePreset(index) {
+    if (this.wardrobeSystem.applyPreset(index, this.customize)) {
+      this.applyAvatarToPlayer();
+      this.saveAvatarToStorage();
+      this.renderCustomizePanel();
+      this.uiManager.showNotification(`Outfit ${index + 1} equipped!`, 'success');
+    } else {
+      this.uiManager.showNotification(`Outfit ${index + 1} is empty. Save a look first!`, 'info');
+    }
+  }
+
+  saveWardrobePreset(index) {
+    if (this.wardrobeSystem.setPreset(index, this.customize)) {
+      this.uiManager.showNotification(`Outfit ${index + 1} saved!`, 'success');
+      this.renderCustomizePanel();
+    }
+  }
+
+  deleteWardrobePreset(index) {
+    if (this.wardrobeSystem.deletePreset(index)) {
+      this.uiManager.showNotification(`Outfit ${index + 1} deleted.`, 'info');
+      this.renderCustomizePanel();
+    }
+  }
+
   applyAvatarToPlayer() {
     if (!this.player) return;
     const c = this.customize;
@@ -1180,7 +1229,11 @@ export class Game {
       this.progressionSystem.setEquippedTitle(title);
       this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
       this.uiManager.showNotification(`Title changed to ${title}!`);
-    });
+    }, this.wardrobeSystem.getAll(),
+    idx => this.saveWardrobePreset(idx),
+    idx => this.applyWardrobePreset(idx),
+    idx => this.deleteWardrobePreset(idx)
+    );
   }
 
   renderColorPresets(containerId, colors, current, key) {
@@ -1549,12 +1602,43 @@ export class Game {
       { key: 'Q', action: 'Toggle quest panel' },
       { key: 'C', action: 'Collection panel' },
       { key: 'N', action: 'Screenshot gallery' },
+      { key: '1-5', action: 'Quick-switch outfit preset' },
       { key: 'ESC', action: 'Close panels / exit photo mode' },
       { key: 'Space', action: 'Punch in minigames' },
       { key: 'Click + Drag', action: 'Pan camera' },
       { key: 'Right-click item', action: 'Sell from inventory' },
       { key: 'Double-click', action: 'Quick walk to tile' },
     ]);
+  }
+
+  renderClubsPanel() {
+    this.uiManager.renderClubsPanel(
+      this.clubSystem,
+      (name, color, icon) => {
+        const club = this.clubSystem.create(name, color, icon);
+        if (club) {
+          this.uiManager.showNotification(`Created club "${club.name}"!`, 'success');
+          this.renderClubsPanel();
+        } else {
+          this.uiManager.showNotification('Invalid club name (2-20 chars).', 'error');
+        }
+      },
+      clubId => {
+        this.clubSystem.join(clubId);
+        this.uiManager.showNotification('Joined club!', 'success');
+        this.renderClubsPanel();
+      },
+      clubId => {
+        this.clubSystem.leave(clubId);
+        this.uiManager.showNotification('Left club.', 'info');
+        this.renderClubsPanel();
+      },
+      clubId => {
+        this.clubSystem.delete(clubId);
+        this.uiManager.showNotification('Club deleted.', 'info');
+        this.renderClubsPanel();
+      }
+    );
   }
 
   renderCraftingPanel() {

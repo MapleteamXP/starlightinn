@@ -39,6 +39,7 @@ function createUI() {
         <button class="top-btn" id="btnActiveQuest">&#128220; Mission</button>
         <button class="top-btn" id="btnNotifications">&#128276; Alerts</button>
         <button class="top-btn" id="btnInbox">&#128231; Mail</button>
+        <button class="top-btn" id="btnClubs">&#127942; Clubs</button>
         <button class="top-btn" id="btnCollection">&#127912; Collection</button>
       </div>
     </div>

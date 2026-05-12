@@ -4018,6 +4018,7 @@ var StarlightEngine = (() => {
       <div class="customize-row"><label>Glasses</label><select id="glassesSelect"><option value="none">None</option><option value="shades">Shades</option><option value="round">Round</option><option value="heart">Heart</option></select></div>
       <div class="customize-row"><label>Title</label><select id="titleSelect" style="flex:1;"></select></div>
       <div class="customize-actions"><button class="btn-random" id="btnRandomLook">Random</button><button class="btn-save" id="btnSaveLook">Save Look</button></div>
+      <div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.1);padding-top:10px;"><div style="font-size:12px;font-weight:700;color:var(--habbo-accent);margin-bottom:6px;">Wardrobe Presets (1-5)</div><div class="wardrobe-slots" id="wardrobeSlots"></div></div>
     `);
           this._ensurePanel("chatPanel", "Chat History", `<div class="chat-history" id="chatHistory"></div>`);
           this._ensurePanel("minigamePanel", "Minigames", `
@@ -4034,6 +4035,7 @@ var StarlightEngine = (() => {
           this._ensurePanel("statsPanel", "Player Stats", `<div class="stats-list" id="statsList"></div>`);
           this._ensurePanel("collectionPanel", "Collection", `<div class="collection-list" id="collectionList"></div>`);
           this._ensurePanel("shortcutsPanel", "Keyboard Shortcuts", `<div class="shortcuts-list" id="shortcutsList"></div>`);
+          this._ensurePanel("clubsPanel", "Clubs & Groups", `<div id="clubsContent"></div>`);
           this._ensurePanel("challengesPanel", "Daily Challenges", `<div class="challenge-list" id="challengeList"></div>`);
           this._ensurePanel("questPanel", "Active Quest", `<div id="questContent"></div>`);
           this._ensurePanel("notificationsPanel", "Notification History", `<div class="notif-history" id="notifHistory"></div>`);
@@ -4177,6 +4179,31 @@ var StarlightEngine = (() => {
           const variance = Math.floor(Math.sin(Date.now() / 36e5 + roomId.length) * 6 + 6);
           const timeMod = hour >= 18 || hour <= 2 ? 1.4 : hour >= 9 && hour <= 17 ? 1 : 0.6;
           return Math.floor((base + variance) * timeMod);
+        }
+        showDoorbell(roomName, onKnock) {
+          const overlay = document.createElement("div");
+          overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:3000;";
+          const panel = document.createElement("div");
+          panel.style.cssText = "background:var(--habbo-dark);border:2px solid var(--habbo-accent);border-radius:12px;padding:20px;width:240px;text-align:center;color:#fff;font-family:inherit;";
+          panel.innerHTML = `
+      <div style="font-size:32px;margin-bottom:8px;">\u{1F512}</div>
+      <div style="font-weight:700;margin-bottom:4px;">${roomName}</div>
+      <div style="font-size:12px;color:var(--habbo-text-dim);margin-bottom:16px;">This room is private. Knock to request entry.</div>
+      <div style="display:flex;gap:8px;">
+        <button id="dbCancel" style="flex:1;padding:8px;border:none;border-radius:8px;background:#555;color:#fff;cursor:pointer;font-family:inherit;">Cancel</button>
+        <button id="dbKnock" style="flex:1;padding:8px;border:none;border-radius:8px;background:var(--habbo-accent);color:var(--habbo-dark);cursor:pointer;font-family:inherit;font-weight:700;">Knock</button>
+      </div>
+    `;
+          overlay.appendChild(panel);
+          document.body.appendChild(overlay);
+          panel.querySelector("#dbCancel")?.addEventListener("click", () => overlay.remove());
+          panel.querySelector("#dbKnock")?.addEventListener("click", () => {
+            onKnock && onKnock();
+            overlay.remove();
+          });
+          overlay.addEventListener("click", (e) => {
+            if (e.target === overlay) overlay.remove();
+          });
         }
         showAchievementPopup(ach) {
           const existing = document.querySelector(".achievement-popup");
@@ -4354,8 +4381,58 @@ var StarlightEngine = (() => {
             const rarity = item.price >= 500 ? "\u2605\u2605\u2605" : item.price >= 200 ? "\u2605\u2605" : "\u2605";
             const rarityColor = item.price >= 500 ? "#f4d03f" : item.price >= 200 ? "#e67e22" : "#aaa";
             div.innerHTML = `<div class="cat-rarity" style="color:${rarityColor}">${rarity}</div><div class="cat-icon">${item.icon}</div><div class="cat-name">${item.name}</div><div class="cat-price">\u2605 ${item.price}</div>`;
-            div.addEventListener("click", () => onBuy && onBuy(item));
+            div.addEventListener("click", () => this.showCatalogBuyPopup(item, currency, onBuy));
             grid.appendChild(div);
+          });
+        }
+        showCatalogBuyPopup(item, currency, onBuy) {
+          let quantity = 1;
+          const overlay = document.createElement("div");
+          overlay.id = "catalogBuyOverlay";
+          overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:3000;";
+          const panel = document.createElement("div");
+          panel.style.cssText = "background:var(--habbo-dark);border:2px solid var(--habbo-accent);border-radius:12px;padding:20px;width:260px;color:#fff;font-family:inherit;";
+          const updateTotal = () => {
+            const total = item.price * quantity;
+            const canAfford = total <= currency;
+            panel.innerHTML = `
+        <div style="text-align:center;font-size:32px;margin-bottom:8px;">${item.icon}</div>
+        <div style="text-align:center;font-weight:700;margin-bottom:4px;">${item.name}</div>
+        <div style="text-align:center;font-size:12px;color:var(--habbo-text-dim);margin-bottom:12px;">${item.desc}</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
+          <button id="cbqMinus" style="width:28px;height:28px;border-radius:50%;border:none;background:var(--habbo-light);color:#fff;font-size:16px;cursor:pointer;">-</button>
+          <span id="cbqNum" style="font-size:18px;font-weight:700;width:30px;text-align:center;">${quantity}</span>
+          <button id="cbqPlus" style="width:28px;height:28px;border-radius:50%;border:none;background:var(--habbo-light);color:#fff;font-size:16px;cursor:pointer;">+</button>
+        </div>
+        <div style="text-align:center;margin-bottom:16px;font-size:14px;">Total: <span style="color:${canAfford ? "var(--habbo-accent)" : "#e74c3c"};font-weight:700;">\u2605${total}</span></div>
+        <div style="display:flex;gap:8px;">
+          <button id="cbqCancel" style="flex:1;padding:8px;border:none;border-radius:8px;background:#555;color:#fff;cursor:pointer;font-family:inherit;">Cancel</button>
+          <button id="cbqBuy" style="flex:1;padding:8px;border:none;border-radius:8px;background:${canAfford ? "var(--habbo-accent)" : "#777"};color:#fff;cursor:${canAfford ? "pointer" : "not-allowed"};font-family:inherit;font-weight:700;" ${canAfford ? "" : "disabled"}>Buy</button>
+        </div>
+      `;
+            panel.querySelector("#cbqMinus")?.addEventListener("click", () => {
+              if (quantity > 1) {
+                quantity--;
+                updateTotal();
+              }
+            });
+            panel.querySelector("#cbqPlus")?.addEventListener("click", () => {
+              if (quantity < 10) {
+                quantity++;
+                updateTotal();
+              }
+            });
+            panel.querySelector("#cbqCancel")?.addEventListener("click", () => overlay.remove());
+            panel.querySelector("#cbqBuy")?.addEventListener("click", () => {
+              onBuy && onBuy(item, quantity);
+              overlay.remove();
+            });
+          };
+          updateTotal();
+          overlay.appendChild(panel);
+          document.body.appendChild(overlay);
+          overlay.addEventListener("click", (e) => {
+            if (e.target === overlay) overlay.remove();
           });
         }
         renderInventory(inventory, selected, onSelect, onSell, onSellAll, favorites, onToggleFavorite, sortBy, onSort, getRarityColor) {
@@ -4440,7 +4517,7 @@ var StarlightEngine = (() => {
             });
           }
         }
-        renderCustomizePanel(customize, onChange, onSave, onRandom, titles, currentTitle, onTitleChange) {
+        renderCustomizePanel(customize, onChange, onSave, onRandom, titles, currentTitle, onTitleChange, wardrobePresets, onWardrobeSave, onWardrobeApply, onWardrobeDelete) {
           const hairStyleSelect = document.getElementById("hairStyleSelect");
           const hatSelect = document.getElementById("hatSelect");
           const glassesSelect = document.getElementById("glassesSelect");
@@ -4479,6 +4556,37 @@ var StarlightEngine = (() => {
             newBtn.addEventListener("click", onRandom);
           }
           this.renderCustomizePreview(customize);
+          const wardrobeContainer = document.getElementById("wardrobeSlots");
+          if (wardrobeContainer && wardrobePresets) {
+            wardrobeContainer.innerHTML = "";
+            wardrobePresets.forEach((preset, idx) => {
+              const slot = document.createElement("div");
+              slot.className = "wardrobe-slot" + (preset ? " filled" : "");
+              slot.style.cssText = "width:44px;height:52px;border-radius:8px;border:2px solid rgba(255,255,255,0.15);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;position:relative;background:rgba(0,0,0,0.2);";
+              if (preset) {
+                slot.style.borderColor = "var(--habbo-accent)";
+                slot.innerHTML = `<div style="font-size:18px;">${preset.hatType !== "none" ? "\u{1F464}" : "\u{1F455}"}</div><div style="font-size:9px;color:#aaa;margin-top:2px;">${idx + 1}</div>`;
+                slot.title = `Apply outfit ${idx + 1}`;
+                slot.addEventListener("click", () => onWardrobeApply && onWardrobeApply(idx));
+                const del = document.createElement("div");
+                del.innerHTML = "\xD7";
+                del.style.cssText = "position:absolute;top:-4px;right:-4px;width:14px;height:14px;border-radius:50%;background:#e74c3c;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;";
+                del.addEventListener("click", (ev) => {
+                  ev.stopPropagation();
+                  onWardrobeDelete && onWardrobeDelete(idx);
+                });
+                slot.appendChild(del);
+              } else {
+                slot.innerHTML = `<div style="font-size:16px;color:#666;">+</div><div style="font-size:9px;color:#666;margin-top:2px;">${idx + 1}</div>`;
+                slot.title = `Save current look to slot ${idx + 1}`;
+                slot.addEventListener("click", () => onWardrobeSave && onWardrobeSave(idx));
+              }
+              slot.addEventListener("mouseenter", () => slot.style.transform = "scale(1.08)");
+              slot.addEventListener("mouseleave", () => slot.style.transform = "scale(1)");
+              wardrobeContainer.appendChild(slot);
+            });
+            wardrobeContainer.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;";
+          }
         }
         renderColorPresets(containerId, colors, current, key, onChange) {
           const container = document.getElementById(containerId);
@@ -4757,6 +4865,64 @@ var StarlightEngine = (() => {
             div.className = "shortcut-row";
             div.innerHTML = `<span class="shortcut-key">${s.key}</span><span class="shortcut-action">${s.action}</span>`;
             list.appendChild(div);
+          });
+        }
+        renderClubsPanel(clubSystem, onCreate, onJoin, onLeave, onDelete) {
+          const content = document.getElementById("clubsContent");
+          if (!content) return;
+          const myClubs = clubSystem.getMyClubs();
+          const allClubs = clubSystem.getAll();
+          let html = `<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">`;
+          html += `<input type="text" id="clubNameInput" placeholder="Club name..." maxlength="20" style="flex:1;min-width:120px;padding:6px 10px;border-radius:8px;border:1px solid var(--habbo-panel-border);background:var(--habbo-dark);color:#fff;font-family:inherit;font-size:12px;">`;
+          html += `<select id="clubColorSelect" style="padding:6px;border-radius:8px;border:1px solid var(--habbo-panel-border);background:var(--habbo-dark);color:#fff;font-family:inherit;font-size:12px;">`;
+          clubSystem.getBadgeColors().forEach((c) => html += `<option value="${c}" style="background:${c}">${c}</option>`);
+          html += `</select>`;
+          html += `<select id="clubIconSelect" style="padding:6px;border-radius:8px;border:1px solid var(--habbo-panel-border);background:var(--habbo-dark);color:#fff;font-family:inherit;font-size:12px;">`;
+          clubSystem.getBadgeIcons().forEach((i) => html += `<option value="${i}">${i}</option>`);
+          html += `</select>`;
+          html += `<button id="btnCreateClub" style="padding:6px 14px;background:var(--habbo-accent);color:var(--habbo-dark);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:12px;">Create</button>`;
+          html += `</div>`;
+          if (myClubs.length > 0) {
+            html += `<div style="font-size:12px;font-weight:700;color:var(--habbo-accent);margin-bottom:8px;">My Clubs</div>`;
+            html += `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">`;
+            myClubs.forEach((c) => {
+              html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(0,0,0,0.2);border-radius:8px;border-left:4px solid ${c.badgeColor};">`;
+              html += `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:20px;">${c.badgeIcon}</span><div><div style="font-weight:700;font-size:13px;">${c.name}</div><div style="font-size:10px;color:var(--habbo-text-dim);">${c.members.length} members</div></div></div>`;
+              html += `<button class="btn-leave-club" data-id="${c.id}" style="padding:4px 10px;background:#e74c3c;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Leave</button>`;
+              html += `</div>`;
+            });
+            html += `</div>`;
+          }
+          if (allClubs.length > 0) {
+            html += `<div style="font-size:12px;font-weight:700;color:var(--habbo-accent);margin-bottom:8px;">All Clubs</div>`;
+            html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+            allClubs.forEach((c) => {
+              const isMember = clubSystem.myClubs.has(c.id);
+              html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(0,0,0,0.2);border-radius:8px;border-left:4px solid ${c.badgeColor};">`;
+              html += `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:20px;">${c.badgeIcon}</span><div><div style="font-weight:700;font-size:13px;">${c.name}</div><div style="font-size:10px;color:var(--habbo-text-dim);">${c.members.length} members</div></div></div>`;
+              if (isMember) {
+                html += `<button class="btn-leave-club" data-id="${c.id}" style="padding:4px 10px;background:#e74c3c;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">Leave</button>`;
+              } else {
+                html += `<button class="btn-join-club" data-id="${c.id}" style="padding:4px 10px;background:var(--habbo-accent);color:var(--habbo-dark);border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;">Join</button>`;
+              }
+              html += `</div>`;
+            });
+            html += `</div>`;
+          } else {
+            html += `<div style="text-align:center;color:var(--habbo-text-dim);font-size:12px;padding:20px;">No clubs yet. Create the first one!</div>`;
+          }
+          content.innerHTML = html;
+          document.getElementById("btnCreateClub")?.addEventListener("click", () => {
+            const name = document.getElementById("clubNameInput")?.value;
+            const color = document.getElementById("clubColorSelect")?.value;
+            const icon = document.getElementById("clubIconSelect")?.value;
+            onCreate && onCreate(name, color, icon);
+          });
+          content.querySelectorAll(".btn-join-club").forEach((btn) => {
+            btn.addEventListener("click", () => onJoin && onJoin(btn.dataset.id));
+          });
+          content.querySelectorAll(".btn-leave-club").forEach((btn) => {
+            btn.addEventListener("click", () => onLeave && onLeave(btn.dataset.id));
           });
         }
         renderStats(stats) {
@@ -7380,6 +7546,98 @@ var StarlightEngine = (() => {
     }
   });
 
+  // src/social/ClubSystem.js
+  var STORAGE_KEY, BADGE_COLORS, BADGE_ICONS, ClubSystem;
+  var init_ClubSystem = __esm({
+    "src/social/ClubSystem.js"() {
+      STORAGE_KEY = "starlight_clubs";
+      BADGE_COLORS = ["#E74C3C", "#3498DB", "#2ECC71", "#F1C40F", "#9B59B6", "#E67E22", "#1ABC9C", "#FF6B6B"];
+      BADGE_ICONS = ["\u2B50", "\u{1F525}", "\u{1F48E}", "\u{1F319}", "\u26A1", "\u{1F338}", "\u{1F3B5}", "\u{1F3C6}"];
+      ClubSystem = class {
+        constructor() {
+          this.clubs = [];
+          this.myClubs = /* @__PURE__ */ new Set();
+          this.load();
+        }
+        load() {
+          try {
+            const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            if (data) {
+              this.clubs = data.clubs || [];
+              this.myClubs = new Set(data.myClubs || []);
+            }
+          } catch (e) {
+          }
+        }
+        save() {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+              clubs: this.clubs,
+              myClubs: Array.from(this.myClubs)
+            }));
+          } catch (e) {
+          }
+        }
+        create(name, badgeColor, badgeIcon) {
+          if (!name || name.trim().length < 2 || name.trim().length > 20) return null;
+          const id = "club_" + Date.now().toString(36);
+          const club = {
+            id,
+            name: name.trim(),
+            badgeColor: badgeColor || BADGE_COLORS[0],
+            badgeIcon: badgeIcon || BADGE_ICONS[0],
+            members: [],
+            createdAt: Date.now(),
+            owner: "You"
+          };
+          this.clubs.push(club);
+          this.myClubs.add(id);
+          this.save();
+          return club;
+        }
+        delete(clubId) {
+          this.clubs = this.clubs.filter((c) => c.id !== clubId);
+          this.myClubs.delete(clubId);
+          this.save();
+        }
+        join(clubId) {
+          const club = this.clubs.find((c) => c.id === clubId);
+          if (!club) return false;
+          this.myClubs.add(clubId);
+          if (!club.members.includes("You")) club.members.push("You");
+          this.save();
+          return true;
+        }
+        leave(clubId) {
+          this.myClubs.delete(clubId);
+          const club = this.clubs.find((c) => c.id === clubId);
+          if (club) club.members = club.members.filter((m) => m !== "You");
+          this.save();
+        }
+        getClub(id) {
+          return this.clubs.find((c) => c.id === id);
+        }
+        getMyClubs() {
+          return this.clubs.filter((c) => this.myClubs.has(c.id));
+        }
+        getAll() {
+          return this.clubs;
+        }
+        getBadgeForMember(memberName) {
+          const clubs = this.clubs.filter((c) => c.members.includes(memberName));
+          if (clubs.length === 0) return null;
+          return { color: clubs[0].badgeColor, icon: clubs[0].badgeIcon, name: clubs[0].name };
+        }
+        getBadgeColors() {
+          return BADGE_COLORS;
+        }
+        getBadgeIcons() {
+          return BADGE_ICONS;
+        }
+      };
+    }
+  });
+
   // src/economy/Quests.js
   var QUEST_TEMPLATES, QuestSystem;
   var init_Quests = __esm({
@@ -7818,6 +8076,69 @@ var StarlightEngine = (() => {
     }
   });
 
+  // src/customization/WardrobeSystem.js
+  var STORAGE_KEY2, MAX_PRESETS, WardrobeSystem;
+  var init_WardrobeSystem = __esm({
+    "src/customization/WardrobeSystem.js"() {
+      STORAGE_KEY2 = "starlight_wardrobe";
+      MAX_PRESETS = 5;
+      WardrobeSystem = class {
+        constructor() {
+          this.presets = [];
+          this.load();
+        }
+        load() {
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY2);
+            if (raw) this.presets = JSON.parse(raw);
+          } catch (e) {
+          }
+          while (this.presets.length < MAX_PRESETS) this.presets.push(null);
+        }
+        save() {
+          try {
+            localStorage.setItem(STORAGE_KEY2, JSON.stringify(this.presets));
+          } catch (e) {
+          }
+        }
+        getPreset(index) {
+          if (index < 0 || index >= MAX_PRESETS) return null;
+          return this.presets[index];
+        }
+        setPreset(index, outfit) {
+          if (index < 0 || index >= MAX_PRESETS) return false;
+          this.presets[index] = { ...outfit, savedAt: Date.now() };
+          this.save();
+          return true;
+        }
+        deletePreset(index) {
+          if (index < 0 || index >= MAX_PRESETS) return false;
+          this.presets[index] = null;
+          this.save();
+          return true;
+        }
+        applyPreset(index, targetObj) {
+          const p = this.getPreset(index);
+          if (!p) return false;
+          Object.assign(targetObj, {
+            skinColor: p.skinColor,
+            hairColor: p.hairColor,
+            hairStyle: p.hairStyle,
+            shirtColor: p.shirtColor,
+            pantsColor: p.pantsColor,
+            shoeColor: p.shoeColor,
+            hatType: p.hatType,
+            glassesType: p.glassesType
+          });
+          return true;
+        }
+        getAll() {
+          return this.presets.map((p, i) => p ? { ...p, slot: i + 1 } : null);
+        }
+      };
+    }
+  });
+
   // src/engine/Game.js
   var Particle, Game;
   var init_Game = __esm({
@@ -7852,8 +8173,10 @@ var StarlightEngine = (() => {
       init_Progression();
       init_Pet();
       init_Inbox();
+      init_ClubSystem();
       init_Quests();
       init_NetworkManager();
+      init_WardrobeSystem();
       Particle = class {
         constructor(x, y, color, life, vx, vy) {
           this.x = x;
@@ -7940,9 +8263,11 @@ var StarlightEngine = (() => {
           this.friendSystem = new FriendSystem(this);
           this.petSystem = new PetSystem(this);
           this.inboxSystem = new InboxSystem(this);
+          this.clubSystem = new ClubSystem();
           this.questSystem = new QuestSystem(this);
           this.achievementSystem = new AchievementSystem(this);
           this.leaderboardSystem = new LeaderboardSystem();
+          this.wardrobeSystem = new WardrobeSystem();
           this.craftingSystem = new CraftingSystem(this.inventorySystem);
           this.statsSystem = new StatsSystem();
           this.eventSystem = new EventSystem(this);
@@ -8271,6 +8596,13 @@ var StarlightEngine = (() => {
               case "e":
                 this.toggleEmoteWheel();
                 break;
+              case "1":
+              case "2":
+              case "3":
+              case "4":
+              case "5":
+                this.applyWardrobePreset(parseInt(e.key) - 1);
+                break;
               case "escape":
                 if (this.photoMode) {
                   this.togglePhotoMode();
@@ -8463,6 +8795,10 @@ var StarlightEngine = (() => {
           document.getElementById("btnShortcuts")?.addEventListener("click", () => {
             this.uiManager.togglePanel("shortcutsPanel");
             this.renderShortcutsPanel();
+          });
+          document.getElementById("btnClubs")?.addEventListener("click", () => {
+            this.uiManager.togglePanel("clubsPanel");
+            this.renderClubsPanel();
           });
           document.getElementById("btnChallenges")?.addEventListener("click", () => {
             this.uiManager.togglePanel("challengesPanel");
@@ -8974,6 +9310,20 @@ var StarlightEngine = (() => {
           const searchInput = document.getElementById("roomSearchInput");
           const searchQuery = searchInput ? searchInput.value : "";
           this.uiManager.renderNavigator(ROOM_TEMPLATES, this.recentRooms, (room) => {
+            if (room.id === "myroom" && this.settings.myRoomPrivate) {
+              this.uiManager.showDoorbell(room.name, () => {
+                this.uiManager.showNotification("You knocked on the door...", "info");
+                setTimeout(() => {
+                  this.uiManager.showNotification("Welcome in! \u{1F6AA}", "success");
+                  this.loadRoom(room);
+                  this.trackRecentRoom(room);
+                  this.achievementSystem.visitRoom(room.id);
+                  this.statsSystem.inc("roomsVisited");
+                  this.uiManager.closeAllPanels();
+                }, 1500);
+              });
+              return;
+            }
             this.loadRoom(room);
             this.trackRecentRoom(room);
             this.achievementSystem.visitRoom(room.id);
@@ -9049,19 +9399,21 @@ var StarlightEngine = (() => {
             CATALOG_CATEGORIES,
             this.catalogCategory,
             this.currencySystem.get(),
-            (item) => {
-              if (this.currencySystem.spend(item.price)) {
-                this.inventorySystem.add(item.id, 1);
+            (item, quantity = 1) => {
+              const total = item.price * quantity;
+              if (this.currencySystem.spend(total)) {
+                this.inventorySystem.add(item.id, quantity);
                 this.uiManager.updateCurrency(this.currencySystem.get());
                 this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
-                this.uiManager.showNotification(`Purchased ${item.name}!`);
+                this.uiManager.showNotification(`Purchased ${quantity}x ${item.name}!`);
                 this.soundManager.play("buy");
                 this.achievementSystem.track("buy");
                 this.statsSystem.inc("furnitureBought");
                 this.challengeSystem.track("buy");
-                this.progressionSystem.addXP(10);
-                this.statsSystem.inc("totalCoinsSpent", item.price);
+                this.progressionSystem.addXP(10 * quantity);
+                this.statsSystem.inc("totalCoinsSpent", total);
                 this.renderCatalog();
+                this.renderInventory();
               } else {
                 this.uiManager.showNotification("Not enough StarCoins!", "error");
                 this.soundManager.play("error");
@@ -9147,6 +9499,28 @@ var StarlightEngine = (() => {
           } catch (e) {
           }
         }
+        applyWardrobePreset(index) {
+          if (this.wardrobeSystem.applyPreset(index, this.customize)) {
+            this.applyAvatarToPlayer();
+            this.saveAvatarToStorage();
+            this.renderCustomizePanel();
+            this.uiManager.showNotification(`Outfit ${index + 1} equipped!`, "success");
+          } else {
+            this.uiManager.showNotification(`Outfit ${index + 1} is empty. Save a look first!`, "info");
+          }
+        }
+        saveWardrobePreset(index) {
+          if (this.wardrobeSystem.setPreset(index, this.customize)) {
+            this.uiManager.showNotification(`Outfit ${index + 1} saved!`, "success");
+            this.renderCustomizePanel();
+          }
+        }
+        deleteWardrobePreset(index) {
+          if (this.wardrobeSystem.deletePreset(index)) {
+            this.uiManager.showNotification(`Outfit ${index + 1} deleted.`, "info");
+            this.renderCustomizePanel();
+          }
+        }
         applyAvatarToPlayer() {
           if (!this.player) return;
           const c = this.customize;
@@ -9161,32 +9535,44 @@ var StarlightEngine = (() => {
           clearAvatarCache(this.player.assetKey);
         }
         renderCustomizePanel() {
-          this.uiManager.renderCustomizePanel(this.customize, (key, val) => {
-            this.customize[key] = val;
-            this.renderCustomizePanel();
-          }, () => {
-            this.applyAvatarToPlayer();
-            this.saveAvatarToStorage();
-            this.uiManager.showNotification("Look saved!");
-            this.achievementSystem.track("customize");
-            this.challengeSystem.track("customize");
-            this.progressionSystem.addXP(10);
-          }, () => {
-            const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
-            this.customize.skinColor = rand(["#F5CBA7", "#E0AC69", "#8D5524", "#C68642", "#FFDBAC", "#AA7C58"]);
-            this.customize.hairColor = rand(["#090806", "#2C1608", "#71635A", "#B7A69E", "#D6C4C2", "#B55239", "#A52A2A", "#DC143C", "#4B0082", "#228B22"]);
-            this.customize.hairStyle = rand(["short", "spiky", "long", "mohawk", "bald", "curly", "bob"]);
-            this.customize.shirtColor = rand(["#E74C3C", "#3498DB", "#2ECC71", "#F1C40F", "#9B59B6", "#E67E22", "#1ABC9C", "#34495E"]);
-            this.customize.pantsColor = rand(["#2C3E50", "#34495E", "#1ABC9C", "#8E44AD", "#D35400", "#7F8C8D"]);
-            this.customize.shoeColor = rand(["#555555", "#333333", "#8B4513", "#000000"]);
-            this.customize.hatType = rand(["none", "none", "none", "cap", "beanie", "crown", "wizard"]);
-            this.customize.glassesType = rand(["none", "none", "none", "shades", "round"]);
-            this.renderCustomizePanel();
-          }, this.progressionSystem.getUnlockedTitles(), this.progressionSystem.getTitle(), (title) => {
-            this.progressionSystem.setEquippedTitle(title);
-            this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
-            this.uiManager.showNotification(`Title changed to ${title}!`);
-          });
+          this.uiManager.renderCustomizePanel(
+            this.customize,
+            (key, val) => {
+              this.customize[key] = val;
+              this.renderCustomizePanel();
+            },
+            () => {
+              this.applyAvatarToPlayer();
+              this.saveAvatarToStorage();
+              this.uiManager.showNotification("Look saved!");
+              this.achievementSystem.track("customize");
+              this.challengeSystem.track("customize");
+              this.progressionSystem.addXP(10);
+            },
+            () => {
+              const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
+              this.customize.skinColor = rand(["#F5CBA7", "#E0AC69", "#8D5524", "#C68642", "#FFDBAC", "#AA7C58"]);
+              this.customize.hairColor = rand(["#090806", "#2C1608", "#71635A", "#B7A69E", "#D6C4C2", "#B55239", "#A52A2A", "#DC143C", "#4B0082", "#228B22"]);
+              this.customize.hairStyle = rand(["short", "spiky", "long", "mohawk", "bald", "curly", "bob"]);
+              this.customize.shirtColor = rand(["#E74C3C", "#3498DB", "#2ECC71", "#F1C40F", "#9B59B6", "#E67E22", "#1ABC9C", "#34495E"]);
+              this.customize.pantsColor = rand(["#2C3E50", "#34495E", "#1ABC9C", "#8E44AD", "#D35400", "#7F8C8D"]);
+              this.customize.shoeColor = rand(["#555555", "#333333", "#8B4513", "#000000"]);
+              this.customize.hatType = rand(["none", "none", "none", "cap", "beanie", "crown", "wizard"]);
+              this.customize.glassesType = rand(["none", "none", "none", "shades", "round"]);
+              this.renderCustomizePanel();
+            },
+            this.progressionSystem.getUnlockedTitles(),
+            this.progressionSystem.getTitle(),
+            (title) => {
+              this.progressionSystem.setEquippedTitle(title);
+              this.uiManager.updateLevelDisplay(this.progressionSystem.getProgress());
+              this.uiManager.showNotification(`Title changed to ${title}!`);
+            },
+            this.wardrobeSystem.getAll(),
+            (idx) => this.saveWardrobePreset(idx),
+            (idx) => this.applyWardrobePreset(idx),
+            (idx) => this.deleteWardrobePreset(idx)
+          );
         }
         renderColorPresets(containerId, colors, current, key) {
           this.uiManager.renderColorPresets(containerId, colors, current, key, (k, v) => {
@@ -9597,12 +9983,42 @@ var StarlightEngine = (() => {
             { key: "Q", action: "Toggle quest panel" },
             { key: "C", action: "Collection panel" },
             { key: "N", action: "Screenshot gallery" },
+            { key: "1-5", action: "Quick-switch outfit preset" },
             { key: "ESC", action: "Close panels / exit photo mode" },
             { key: "Space", action: "Punch in minigames" },
             { key: "Click + Drag", action: "Pan camera" },
             { key: "Right-click item", action: "Sell from inventory" },
             { key: "Double-click", action: "Quick walk to tile" }
           ]);
+        }
+        renderClubsPanel() {
+          this.uiManager.renderClubsPanel(
+            this.clubSystem,
+            (name, color, icon) => {
+              const club = this.clubSystem.create(name, color, icon);
+              if (club) {
+                this.uiManager.showNotification(`Created club "${club.name}"!`, "success");
+                this.renderClubsPanel();
+              } else {
+                this.uiManager.showNotification("Invalid club name (2-20 chars).", "error");
+              }
+            },
+            (clubId) => {
+              this.clubSystem.join(clubId);
+              this.uiManager.showNotification("Joined club!", "success");
+              this.renderClubsPanel();
+            },
+            (clubId) => {
+              this.clubSystem.leave(clubId);
+              this.uiManager.showNotification("Left club.", "info");
+              this.renderClubsPanel();
+            },
+            (clubId) => {
+              this.clubSystem.delete(clubId);
+              this.uiManager.showNotification("Club deleted.", "info");
+              this.renderClubsPanel();
+            }
+          );
         }
         renderCraftingPanel() {
           this.uiManager.renderCrafting(this.craftingSystem.getAvailableRecipes(), (id) => {
@@ -10516,6 +10932,7 @@ var StarlightEngine = (() => {
         <button class="top-btn" id="btnActiveQuest">&#128220; Mission</button>
         <button class="top-btn" id="btnNotifications">&#128276; Alerts</button>
         <button class="top-btn" id="btnInbox">&#128231; Mail</button>
+        <button class="top-btn" id="btnClubs">&#127942; Clubs</button>
         <button class="top-btn" id="btnCollection">&#127912; Collection</button>
       </div>
     </div>
