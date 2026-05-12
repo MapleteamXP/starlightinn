@@ -12,52 +12,64 @@ Starlight Inn is a Habbo-style isometric virtual world.
 - Deploys via GitHub Actions from ./docs folder to Pages on push to main
 - Local dev server: cd server && npm install && npm start (port 3000)
 - Build: node build.js (esbuild bundles src/ into docs/index.html)
-- Bundle size: ~499.6 KB (v2.8)
+- Bundle size: ~517.9 KB (v2.9)
 
 ================================================================================
 VERSION HISTORY
 ================================================================================
-v2.8 (CURRENT — 2026-05-11)
-- Level badges floating above all avatars (color tiers: silver→green→blue→purple→gold→orange→red)
-- Expanded emote wheel: 14 emotes (wave, dance, laugh, cry, cool, love, sleep, clap, bow, cheer, wow, angry, think, fire)
-- Bow & cheer avatar animations with unique bobs
-- Furniture ambient animations for 12+ types (candle, telescope, popcorn, ice_cream, arcade, jukebox, dragon, fish_tank, plant)
-- Wardrobe export/import shareable base64 outfit codes with clipboard copy
-- Photo Frame furniture (displays latest gallery screenshot)
-- Crafting expansion: 8 new recipes (chandelier, neon_sign, jukebox, telescope, disco_ball, photo_frame, crystal_ball)
-- Room ratings: 1-5 stars + optional reviews, averages shown in navigator
-- Ignore list: ignore/unignore from player profiles, chat filtering, persisted in save data
+v2.9 (CURRENT — 2026-05-11)
+- Level title badge floating above avatar heads (shows equipped progression title)
+- Achievement badges displayed on player profile cards (unlocked achievements as emoji row)
+- Furniture interactions: click chair→sit, bed→sleep, piano→play note, guitar→strum,
+  fireplace→warm emote, fountain→refresh, TV→random show, telescope→stargaze, crystal_ball→fortune
+- Jukebox v2: 7 tracks, volume slider, shuffle button, play/stop with "Now Playing" indicator
+- Room background parallax scrolling layers (clouds for beach, distant buildings for rooftop,
+  distant trees for forest — move at 0.05-0.15x camera speed)
+- Scheduled daily/weekly events: Morning Bonus (6-10am), Lunch Rush (12-2pm), Night Owl (10pm-2am),
+  Weekend Fiesta (Sat-Sun) — auto-detected, grant rewards on first visit
+- Room Bots system: 4 bot types (Vendor Bot, Guide Bot, Quest Giver, Mystic Bot) with dialog trees,
+  shop functionality, fortune telling. 3 bots auto-spawn in lobby.
+- Ignore list: persists in save data, filters chat history, toggle from player profiles
+- Wardrobe export/import: base64 outfit codes with clipboard copy
+- Photo Frame furniture: displays latest gallery screenshot
+- Crafting expansion: 8 new recipes (chandelier, neon_sign, jukebox, telescope, disco_ball,
+  photo_frame, crystal_ball)
+- Room ratings: 1-5 stars + optional reviews, averages in navigator
+
+v2.8 (2026-05-11)
+- Level badges floating above all avatars (color tiers)
+- Expanded emote wheel: 14 emotes including bow & cheer with unique animations
+- Furniture ambient animations for 12+ types
+- NPC idle emotes expanded (bow, cheer)
 
 v2.7 (2026-05-11)
-- Wardrobe System: 5 outfit presets with hotkeys 1-5, save/switch/delete in customize panel
-- Bulk catalog buying: quantity selector (1-10) with total price preview
-- Club/Group System: create clubs with badge color+icon, join/leave, club panel
+- Wardrobe System: 5 outfit presets with hotkeys 1-5
+- Bulk catalog buying: quantity selector
+- Club/Group System with badges
 - Doorbell/knock system for private rooms
-- Pet follow visuals (already existed, confirmed working)
 
 v2.6 (2026-05-11)
-- Jukebox/music system with 6 room-specific ambient tracks and toggle
-- Server-side trade protocol (request/accept/decline/cancel/complete with item swap)
-- 4 new furniture: telescope, ice_cream, popcorn, cake
-- 2 new floor types: lava, space
-- Leaderboard sync across all 5 minigames (local + server)
+- Jukebox/music system with 6 room-specific ambient tracks
+- Server-side trade protocol
+- 4 new furniture items
+- 2 new floor types (lava, space)
+- Leaderboard sync across all 5 minigames
 
 v2.5 (2026-05-11)
-- WebSocket multiplayer server with RoomManager, PlayerManager, chat relay
-- Real-time position interpolation for remote players
-- Furniture place/remove sync across clients
-- Trade system UI + network handlers
-- Offline fallback with auto-reconnect every 10s
+- WebSocket multiplayer server
+- Real-time position interpolation
+- Furniture sync, chat relay, trade system
+- Offline fallback with auto-reconnect
 
 v2.0-v2.4 (Earlier)
 - ES module architecture, isometric renderer, A* pathfinding, z-sorting
 - Camera (zoom 0.5-2.0), click-to-move, double-click walk, auto-run (Shift)
-- Habbo-style chibi avatars: 9 hairstyles, 7 hats, 4 glasses, color pickers
+- Habbo-style chibi avatars: 9 hairstyles, 7 hats, 4 glasses
 - 13 themed rooms with atmospheric backgrounds
-- 53 furniture items in catalog (was 38, expanded)
+- 53 furniture items in catalog
 - Chat system: 20+ commands, rate limiting, filter, 12 bubble colors, emoji picker
-- 5 minigames: RingUppercut, MemoryMatch, TilePuzzle, SimonSays, FishingGame
-- Economy: Currency + Inventory, catalog, sell-back, bulk sell, favorites bar
+- 5 minigames with leaderboard sync
+- Economy: Currency + Inventory, catalog, sell-back, favorites bar
 - 20+ localStorage persistence keys
 - SoundManager with synthesized SFX and ambient drones
 - AchievementSystem, StatsSystem, DailyRewards, Progression (15 levels + titles)
@@ -76,11 +88,14 @@ FILE STRUCTURE
   engine/             — Core.js, Game.js
   assets/             — Generator.js
   world/              — Avatar.js, Furniture.js, Room.js, Data.js, Pet.js, Events.js
-  social/             — Chat.js, NPC.js, Friends.js, Leaderboard.js, Stats.js, Inbox.js, ClubSystem.js, RoomRatings.js
-  economy/            — Currency.js, Inventory.js, DailyRewards.js, Achievements.js, Crafting.js, Challenges.js, Progression.js, Quests.js
+  social/             — Chat.js, NPC.js, Friends.js, Leaderboard.js, Stats.js,
+                        Inbox.js, ClubSystem.js, RoomRatings.js, RoomBots.js
+  economy/            — Currency.js, Inventory.js, DailyRewards.js, Achievements.js,
+                        Crafting.js, Challenges.js, Progression.js, Quests.js
   ui/                 — UIManager.js, Tutorial.js
   security/           — Filter.js
-  minigames/          — Framework.js, RingUppercut.js, MemoryMatch.js, TilePuzzle.js, SimonSays.js, FishingGame.js
+  minigames/          — Framework.js, RingUppercut.js, MemoryMatch.js,
+                        TilePuzzle.js, SimonSays.js, FishingGame.js
   audio/              — SoundManager.js
   network/            — NetworkManager.js
   customization/      — WardrobeSystem.js
@@ -112,23 +127,23 @@ BUILD & DEPLOYMENT CHECKLIST
 KNOWN ISSUES / TECH DEBT
 ================================================================================
 - Generator.js procedural art limits visual quality (acceptable for scope)
-- Bundle size growing (~500KB) — monitor but still within limits
+- Bundle size growing (~518KB) — monitor but still within limits
 - CRLF warnings on Windows for index.html files (non-critical)
 - Server trade protocol needs live multiplayer testing
-- Drag-and-drop inventory not implemented
 - Mobile toolbar can get crowded with many buttons
+- Room bots don't persist across room changes (ephemeral)
 
 ================================================================================
-USER PRIORITIES (from conversation history)
+USER PRIORITIES
 ================================================================================
 1. "real habbo esque areas" ✅ (13 unique themed rooms)
-2. "multiple habbo style avatars" ✅ (one body type, many combos)
+2. "multiple habbo style avatars" ✅
 3. "clothes to wear and customize" ✅ (shirt/pants + hat/glasses + wardrobe presets)
 4. "all accessories and clothes must fit on characters properly" ✅
 5. "same structure for all characters" ✅
 6. "changing hair colors and clothes and skin all working" ✅
 7. "placeable items" ✅ (53 furniture types)
-8. "all rooms look different" ✅ (themed backgrounds + floor/wall types)
+8. "all rooms look different" ✅ (themed backgrounds + floor/wall types + parallax)
 9. "chatting system" ✅ (bubbles, commands, history, emojis, whispers)
 10. "security" ✅ (filter, safe mode, rate limiting, ignore list)
 11. "minigames" ✅ (5 minigames with leaderboard sync)
@@ -139,22 +154,27 @@ USER PRIORITIES (from conversation history)
 16. "pets" ✅
 17. "economy" ✅
 18. "multiplayer" ✅ (WebSocket server + client)
+19. "furniture interactions" ✅
+20. "room bots" ✅
+21. "scheduled events" ✅
 
 ================================================================================
 NEXT UP (suggested improvements)
 ================================================================================
-- Room Bots — scripted NPCs with shop/dialog functions
-- Player titles floating above avatar heads
-- Room background parallax scrolling layers
-- Achievement badges on player profiles
-- Furniture interactions (click chair to sit, bed to sleep, etc.)
-- Jukebox v2 — per-song selection, volume slider, shuffle
-- Scheduled daily/weekly events with special rewards
+- Room Bot persistence (save/load with room layout)
+- More room bot types (banker, stylist, minigame host)
 - Server-side persistence for multiplayer
-- More furniture types and animations
+- Player housing expansion (multiple rooms, room connections)
+- Trading marketplace / auction house
+- Seasonal/holiday room themes
+- More furniture animation types
+- Mobile toolbar overflow handling
+- Voice chat integration (WebRTC)
+- Room permissions (co-owners, moderators)
 
 ================================================================================
 SESSION NOTES
 ================================================================================
 User consistently approves all suggested features with "all yes continue".
 Build after every feature batch. Push to main after each version bump.
+Update kimibrain.txt after each major version.
