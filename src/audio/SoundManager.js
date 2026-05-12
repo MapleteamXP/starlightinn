@@ -216,4 +216,33 @@ export class SoundManager {
       osc.stop(now + duration);
     } catch (e) {}
   }
+
+  // Music Sequencer — compose custom tracks
+  loadSequencer() {
+    try {
+      const data = JSON.parse(localStorage.getItem('starlight_sequencer'));
+      if (data) return data;
+    } catch (e) {}
+    return { steps: 8, bpm: 120, notes: [261, 329, 392, 523, 659], grid: Array(8).fill(null).map(() => [0,0,0,0,0]) };
+  }
+
+  saveSequencer(seq) {
+    try { localStorage.setItem('starlight_sequencer', JSON.stringify(seq)); } catch (e) {}
+  }
+
+  playSequencer(seq, stepDuration = null) {
+    this.stopJukebox();
+    if (!this.enabled || !seq) return;
+    this._ensureContext();
+    if (!this.ctx) return;
+    this.currentJukeboxTrack = 'custom';
+    const dur = stepDuration || (60 / seq.bpm);
+    let step = 0;
+    this.jukeboxInterval = setInterval(() => {
+      if (!this.enabled) { this.stopJukebox(); return; }
+      const row = seq.grid[step % seq.steps];
+      row.forEach((on, i) => { if (on) this.playTone(seq.notes[i], dur * 0.8, 'triangle'); });
+      step++;
+    }, dur * 1000);
+  }
 }

@@ -13,6 +13,11 @@ export const ACHIEVEMENTS = [
   { id: 'explorer', name: 'Explorer', desc: 'Visit 10 different rooms', icon: '🗺️', target: 10, reward: 200, type: 'visit' },
   { id: 'customizer', name: 'Customizer', desc: 'Change your look 5 times', icon: '✂️', target: 5, reward: 100, type: 'customize' },
   { id: 'tycoon', name: 'Starlight Tycoon', desc: 'Earn 5,000 StarCoins total', icon: '💰', target: 5000, reward: 1000, type: 'earn' },
+  // Secret achievements
+  { id: 'night_owl', name: 'Night Owl', desc: 'Play after midnight', icon: '🦉', target: 1, reward: 200, type: 'secret_midnight', secret: true },
+  { id: 'serial_dancer', name: 'Serial Dancer', desc: 'Dance for 60 seconds straight', icon: '🕺', target: 1, reward: 150, type: 'secret_dance', secret: true },
+  { id: 'easter_egg', name: 'Curious Clicker', desc: 'Find the hidden feature', icon: '🥚', target: 1, reward: 300, type: 'secret_click', secret: true },
+  { id: 'hoarder', name: 'Hoarder', desc: 'Own 30 of the same item', icon: '📚', target: 30, reward: 500, type: 'secret_hoard', secret: true },
 ];
 
 export class AchievementSystem {
@@ -85,12 +90,18 @@ export class AchievementSystem {
       if (ach.type === 'visit') current = this.visitedRooms.size;
       else if (ach.type === 'collect') current = Object.keys(this.game.inventorySystem.getAll()).length;
       else if (ach.type === 'earn') current = this.totalEarned;
+      else if (ach.type === 'secret_hoard') {
+        const inv = this.game.inventorySystem.getAll();
+        current = Math.max(0, ...Object.values(inv));
+      }
       else current = this.progress[ach.type] || 0;
+      const unlocked = this.claimed.has(ach.id);
       return {
         ...ach,
         current: Math.min(current, ach.target),
         percent: Math.min(100, Math.floor((current / ach.target) * 100)),
-        unlocked: this.claimed.has(ach.id)
+        unlocked,
+        hidden: ach.secret && !unlocked
       };
     });
   }

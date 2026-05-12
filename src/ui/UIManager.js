@@ -899,18 +899,21 @@ export class UIManager {
     document.getElementById('petRelease')?.addEventListener('click', () => onAdopt && onAdopt(null));
   }
 
-  showNPCProfile(npc, onWalk, onTrade) {
+  showNPCProfile(npc, tier, onWalk, onTrade) {
     const existing = document.getElementById('npcProfile');
     if (existing) existing.remove();
     const div = document.createElement('div');
     div.id = 'npcProfile';
     div.className = 'npc-profile';
+    const tierColor = tier === 'Best Friend' ? '#e74c3c' : (tier === 'Close Friend' ? '#9b59b6' : (tier === 'Friend' ? '#2ecc71' : '#95a5a6'));
+    const hearts = npc.relationship >= 80 ? '❤️❤️❤️' : (npc.relationship >= 50 ? '❤️❤️' : (npc.relationship >= 20 ? '❤️' : ''));
     div.innerHTML = `
       <div class="npc-profile-header">
         <span style="font-size:28px;">${npc.hatType !== 'none' ? '🎩' : '👤'}</span>
         <div>
           <div style="font-weight:700;font-size:15px;">${npc.name}</div>
-          <div style="font-size:11px;color:var(--habbo-text-dim);">${npc.isSitting ? 'Sitting' : (npc.isDancing ? 'Dancing' : 'Walking around')}</div>
+          <div style="font-size:11px;color:${tierColor};font-weight:700;">${tier} ${hearts}</div>
+          <div style="font-size:10px;color:var(--habbo-text-dim);">${npc.isFollower ? '👥 Following you' : (npc.isSitting ? 'Sitting' : (npc.isDancing ? 'Dancing' : 'Walking around'))}</div>
         </div>
         <button class="npc-profile-close">&times;</button>
       </div>
@@ -1300,14 +1303,31 @@ export class UIManager {
     if (!container) return;
     container.innerHTML = '';
     let completed = 0;
+    let visible = 0;
     list.forEach(a => {
       if (a.unlocked) completed++;
       const div = document.createElement('div');
-      div.className = 'achieve-item' + (a.unlocked ? ' unlocked' : '');
+      if (a.hidden) {
+        // Locked secret achievement — mystery card
+        div.className = 'achieve-item secret';
+        div.innerHTML = `
+          <div class="achieve-icon">❓</div>
+          <div class="achieve-info">
+            <div class="achieve-name">???</div>
+            <div class="achieve-desc">Secret achievement — unlock to reveal!</div>
+            <div class="achieve-bar"><div style="width:0%"></div></div>
+          </div>
+          <div class="achieve-reward">🔒</div>
+        `;
+        container.appendChild(div);
+        return;
+      }
+      visible++;
+      div.className = 'achieve-item' + (a.unlocked ? ' unlocked' : '') + (a.secret ? ' secret unlocked' : '');
       div.innerHTML = `
         <div class="achieve-icon">${a.icon}</div>
         <div class="achieve-info">
-          <div class="achieve-name">${a.name}</div>
+          <div class="achieve-name">${a.name}${a.secret ? ' ✨' : ''}</div>
           <div class="achieve-desc">${a.desc}</div>
           <div class="achieve-bar"><div style="width:${a.percent}%"></div></div>
         </div>
@@ -1315,9 +1335,11 @@ export class UIManager {
       `;
       container.appendChild(div);
     });
+    const hiddenCount = list.filter(a => a.hidden).length;
+    const secretUnlocked = list.filter(a => a.secret && a.unlocked).length;
     const header = document.createElement('div');
     header.style.cssText = 'text-align:center;margin-bottom:12px;font-size:13px;color:var(--habbo-accent);font-weight:700;';
-    header.textContent = `${completed}/${list.length} Completed`;
+    header.textContent = `${completed}/${visible} Completed${hiddenCount > 0 ? ` (+${hiddenCount} secret hidden)` : ''}${secretUnlocked > 0 ? ` — ${secretUnlocked} secret found!` : ''}`;
     container.insertBefore(header, container.firstChild);
   }
 
@@ -1348,22 +1370,39 @@ export class UIManager {
     document.getElementById('dailyRewardPanel')?.classList.add('open');
   }
 
-  showJukeboxPanel(tracks, currentTrack, volume, onPlay, onStop, onVolumeChange, onShuffle) {
+  showJukeboxPanel(tracks, currentTrack, volume, onPlay, onStop, onVolumeChange, onShuffle, sequencer, onSequencerToggle, onSequencerPlay, onSequencerSave, onSequencerBpm) {
     const content = document.getElementById('jukeboxContent');
     if (!content) return;
-    let html = `<div style="text-align:center;padding:8px 0;"><div style="font-size:13px;color:var(--habbo-text-dim);">Select a track</div></div>`;
-    html += `<div style="display:flex;flex-direction:column;gap:8px;">`;
-    tracks.forEach(t => {
-      const isPlaying = currentTrack === t.id;
-      html += `<button class="jukebox-track" data-id="${t.id}" style="padding:12px;background:${isPlaying ? 'rgba(244,208,63,0.15)' : 'var(--habbo-dark)'};border:1px solid ${isPlaying ? 'var(--habbo-accent)' : 'var(--habbo-panel-border)'};border-radius:8px;color:white;font-family:inherit;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px;text-align:left;">
-        <span style="font-size:20px;">${t.emoji}</span>
-        <span style="flex:1;font-weight:700;">${t.name}</span>
-        ${isPlaying ? '<span style="color:var(--habbo-accent);font-size:11px;">▶ Playing</span>' : ''}
-      </button>`;
-    });
-    html += `</div>`;
-    html += `<div style="margin-top:12px;display:flex;align-items:center;gap:8px;"><span style="font-size:12px;color:var(--habbo-text-dim);">Vol</span><input type="range" id="jukeboxVol" min="0" max="1" step="0.05" value="${volume}" style="flex:1;"></div>`;
-    html += `<div style="margin-top:10px;display:flex;gap:8px;"><button id="jukeboxShuffle" style="flex:1;padding:10px;background:var(--habbo-light);color:white;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">🔀 Shuffle</button><button id="jukeboxStop" style="flex:1;padding:10px;background:var(--habbo-danger);color:white;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">⏹ Stop</button></div>`;
+    const tab = sequencer?.tab || 'tracks';
+    let html = `<div style="display:flex;gap:4px;margin-bottom:10px;"><button id="jbTabTracks" style="flex:1;padding:8px;background:${tab === 'tracks' ? 'var(--habbo-accent)' : 'var(--habbo-light)'};color:${tab === 'tracks' ? 'var(--habbo-dark)' : '#fff'};border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">🎵 Tracks</button><button id="jbTabComposer" style="flex:1;padding:8px;background:${tab === 'composer' ? 'var(--habbo-accent)' : 'var(--habbo-light)'};color:${tab === 'composer' ? 'var(--habbo-dark)' : '#fff'};border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">🎹 Composer</button></div>`;
+    if (tab === 'tracks') {
+      html += `<div style="text-align:center;padding:4px 0;"><div style="font-size:12px;color:var(--habbo-text-dim);">Select a track</div></div>`;
+      html += `<div style="display:flex;flex-direction:column;gap:8px;">`;
+      tracks.forEach(t => {
+        const isPlaying = currentTrack === t.id;
+        html += `<button class="jukebox-track" data-id="${t.id}" style="padding:12px;background:${isPlaying ? 'rgba(244,208,63,0.15)' : 'var(--habbo-dark)'};border:1px solid ${isPlaying ? 'var(--habbo-accent)' : 'var(--habbo-panel-border)'};border-radius:8px;color:white;font-family:inherit;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px;text-align:left;">
+          <span style="font-size:20px;">${t.emoji}</span>
+          <span style="flex:1;font-weight:700;">${t.name}</span>
+          ${isPlaying ? '<span style="color:var(--habbo-accent);font-size:11px;">▶ Playing</span>' : ''}
+        </button>`;
+      });
+      html += `</div>`;
+      html += `<div style="margin-top:12px;display:flex;align-items:center;gap:8px;"><span style="font-size:12px;color:var(--habbo-text-dim);">Vol</span><input type="range" id="jukeboxVol" min="0" max="1" step="0.05" value="${volume}" style="flex:1;"></div>`;
+      html += `<div style="margin-top:10px;display:flex;gap:8px;"><button id="jukeboxShuffle" style="flex:1;padding:10px;background:var(--habbo-light);color:white;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">🔀 Shuffle</button><button id="jukeboxStop" style="flex:1;padding:10px;background:var(--habbo-danger);color:white;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">⏹ Stop</button></div>`;
+    } else {
+      html += `<div style="text-align:center;padding:4px 0;"><div style="font-size:12px;color:var(--habbo-text-dim);">Click cells to toggle notes</div></div>`;
+      html += `<div style="display:grid;grid-template-columns:repeat(8,1fr);gap:3px;margin-bottom:10px;">`;
+      const noteEmojis = ['🎵','🎶','🎼','🎹','🎸'];
+      for (let n = sequencer.notes.length - 1; n >= 0; n--) {
+        for (let s = 0; s < sequencer.steps; s++) {
+          const on = sequencer.grid[s][n];
+          html += `<button class="seq-cell" data-step="${s}" data-note="${n}" style="padding:6px 0;background:${on ? 'var(--habbo-accent)' : 'rgba(0,0,0,0.2)'};color:${on ? 'var(--habbo-dark)' : '#fff'};border:1px solid var(--habbo-panel-border);border-radius:4px;font-size:14px;cursor:pointer;font-family:inherit;">${on ? noteEmojis[n] : ''}</button>`;
+        }
+      }
+      html += `</div>`;
+      html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span style="font-size:12px;color:var(--habbo-text-dim);">BPM</span><input type="range" id="seqBpm" min="60" max="200" step="5" value="${sequencer.bpm}" style="flex:1;"><span id="seqBpmVal" style="font-size:12px;color:var(--habbo-text-dim);min-width:36px;text-align:right;">${sequencer.bpm}</span></div>`;
+      html += `<div style="display:flex;gap:8px;"><button id="seqPlay" style="flex:1;padding:10px;background:var(--habbo-accent);color:var(--habbo-dark);border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">▶ Play</button><button id="seqSave" style="flex:1;padding:10px;background:var(--habbo-light);color:white;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">💾 Save</button><button id="seqClear" style="flex:1;padding:10px;background:var(--habbo-danger);color:white;border:none;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">🗑 Clear</button></div>`;
+    }
     content.innerHTML = html;
     content.querySelectorAll('.jukebox-track').forEach(btn => {
       btn.addEventListener('click', () => onPlay && onPlay(btn.dataset.id));
@@ -1371,6 +1410,23 @@ export class UIManager {
     document.getElementById('jukeboxStop')?.addEventListener('click', onStop);
     document.getElementById('jukeboxShuffle')?.addEventListener('click', onShuffle);
     document.getElementById('jukeboxVol')?.addEventListener('input', e => onVolumeChange && onVolumeChange(parseFloat(e.target.value)));
+    document.getElementById('jbTabTracks')?.addEventListener('click', () => onSequencerToggle && onSequencerToggle('tracks'));
+    document.getElementById('jbTabComposer')?.addEventListener('click', () => onSequencerToggle && onSequencerToggle('composer'));
+    document.getElementById('seqBpm')?.addEventListener('input', e => {
+      const val = parseInt(e.target.value);
+      document.getElementById('seqBpmVal').textContent = val;
+      onSequencerBpm && onSequencerBpm(val);
+    });
+    content.querySelectorAll('.seq-cell').forEach(cell => {
+      cell.addEventListener('click', () => {
+        const s = parseInt(cell.dataset.step);
+        const n = parseInt(cell.dataset.note);
+        onSequencerToggle && onSequencerToggle('toggle', s, n);
+      });
+    });
+    document.getElementById('seqPlay')?.addEventListener('click', onSequencerPlay);
+    document.getElementById('seqSave')?.addEventListener('click', onSequencerSave);
+    document.getElementById('seqClear')?.addEventListener('click', () => onSequencerToggle && onSequencerToggle('clear'));
     this.closeAllPanels();
     document.getElementById('jukeboxPanel')?.classList.add('open');
   }

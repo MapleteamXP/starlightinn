@@ -197,6 +197,33 @@ export class ChatManager {
             this.game.uiManager.showNotification('Status cleared', 'info');
           }
           return;
+        case 'weather':
+          const effects = ['none', 'rain', 'snow'];
+          const current = this.game.settings.roomEffect;
+          const next = effects[(effects.indexOf(current) + 1) % effects.length];
+          this.game.settings.roomEffect = next;
+          this.game.uiManager.showNotification(next === 'none' ? 'Weather cleared' : `${next === 'rain' ? '🌧️ Rain' : '❄️ Snow'} started!`);
+          return;
+        case 'effect':
+          const effs = ['none', 'rain', 'snow', 'disco', 'candlelight'];
+          const cur = this.game.settings.roomEffect;
+          const nx = effs[(effs.indexOf(cur) + 1) % effs.length];
+          this.game.settings.roomEffect = nx;
+          this.game.uiManager.showNotification(nx === 'none' ? 'Effects cleared' : `Effect: ${nx}`);
+          return;
+        case 'bot':
+          if (this.game.room && this.game.room.id === 'myroom' && this.game.roomBotSystem) {
+            const botTypes = ['shop_bot', 'guide_bot', 'quest_bot', 'fortune_bot', 'banker_bot', 'stylist_bot', 'game_host_bot'];
+            const type = args && botTypes.includes(args) ? args : botTypes[Math.floor(Math.random() * botTypes.length)];
+            const bx = Math.round(this.game.player.x);
+            const by = Math.round(this.game.player.y);
+            this.game.roomBotSystem.spawn(type, bx, by);
+            this.game.saveMyRoom();
+            this.game.uiManager.showNotification(`Spawned ${type.replace('_', ' ')}!`, 'success');
+          } else {
+            this.game.uiManager.showNotification('You can only spawn bots in My Room!', 'error');
+          }
+          return;
         default:
           if (this.game.uiManager) this.game.uiManager.showNotification(`Unknown command: /${cmd}. Type /help for commands.`, 'error');
           return;

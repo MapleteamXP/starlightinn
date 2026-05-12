@@ -41,6 +41,7 @@ export class Avatar {
     this.waveTimer = 0;
     this.lastChatTime = 0;
     this.relationship = 0;
+    this.isFollower = false;
     this.game = opts.game || null;
   }
 
@@ -125,12 +126,19 @@ export class Avatar {
       this.npcTimer -= dt;
       if (this.npcTimer <= 0 && !this.isWalking) {
         this.npcTimer = randInt(2, 6);
-        for (let i = 0; i < 10; i++) {
-          const tx = randInt(0, room.width - 1);
-          const ty = randInt(0, room.height - 1);
-          if (room.isWalkable(tx, ty)) {
-            this.moveTo(tx, ty, room);
-            break;
+        if (this.isFollower && this.game && this.game.player) {
+          const px = this.game.player.x, py = this.game.player.y;
+          const tx = Math.round(px + (Math.random() - 0.5) * 3);
+          const ty = Math.round(py + (Math.random() - 0.5) * 3);
+          if (room.isWalkable(tx, ty)) this.moveTo(tx, ty, room);
+        } else {
+          for (let i = 0; i < 10; i++) {
+            const tx = randInt(0, room.width - 1);
+            const ty = randInt(0, room.height - 1);
+            if (room.isWalkable(tx, ty)) {
+              this.moveTo(tx, ty, room);
+              break;
+            }
           }
         }
       }

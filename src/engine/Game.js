@@ -78,7 +78,7 @@ export class Game {
     this.room = null;
     this.player = null;
     this.particles = [];
-    this.settings = { showMinimap: true, showNames: true, showChat: true, npcCount: 3, camSpeed: 5, sound: false, safeMode: false, showWeather: true, myRoomPrivate: false, showTimestamps: true, chatBubbleDuration: 4.5 };
+    this.settings = { showMinimap: true, showNames: true, showChat: true, npcCount: 3, camSpeed: 5, sound: false, safeMode: false, showWeather: true, myRoomPrivate: false, showTimestamps: true, chatBubbleDuration: 4.5, roomEffect: 'none' };
     this.ownedThemes = ['classic'];
     this.currentTheme = 'classic';
     this.likedRooms = new Set();
@@ -128,6 +128,8 @@ export class Game {
     this.treasureTimer = 0;
     this.autoSaveTimer = 0;
     this.visitorLog = [];
+    this.danceTimer = 0;
+    this.midnightChecked = false;
     this.loadVisitorLog();
     this.networkManager = new NetworkManager(this);
     this.dailyRewards = new DailyRewardSystem(this);
@@ -149,6 +151,9 @@ export class Game {
     this.tutorialSystem = new TutorialSystem();
     this.progressionSystem = new ProgressionSystem(this);
     this.photoMode = false;
+    this.photoFilter = 'none';
+    this.photoFrame = 'none';
+    this.photoSticker = 'none';
     this.zoom = 1;
     this.simulatedPlayers = [];
     this.simPlayerTimer = 30 + Math.random() * 60;
@@ -454,6 +459,27 @@ export class Game {
         case 'r': this.placementRotation = (this.placementRotation + 1) % 4; this.uiManager.showNotification(`Rotation: ${this.placementRotation * 90}°`); break;
         case 'm': this.toggleMinimap(); break;
         case 'p': this.togglePhotoMode(); break;
+        case 'f':
+          if (this.photoMode) {
+            const filters = ['none', 'sepia', 'grayscale', 'vignette', 'warm'];
+            this.photoFilter = filters[(filters.indexOf(this.photoFilter) + 1) % filters.length];
+            this.uiManager.showNotification(`Filter: ${this.photoFilter}`, 'info');
+          }
+          break;
+        case 'g':
+          if (this.photoMode) {
+            const frames = ['none', 'polaroid', 'film', 'rounded', 'vintage'];
+            this.photoFrame = frames[(frames.indexOf(this.photoFrame) + 1) % frames.length];
+            this.uiManager.showNotification(`Frame: ${this.photoFrame}`, 'info');
+          }
+          break;
+        case 't':
+          if (this.photoMode) {
+            const stickers = ['none', 'heart', 'star', 'sparkle', 'cool'];
+            this.photoSticker = stickers[(stickers.indexOf(this.photoSticker) + 1) % stickers.length];
+            this.uiManager.showNotification(`Sticker: ${this.photoSticker}`, 'info');
+          }
+          break;
         case 's':
           if (this.photoMode) { this.takeScreenshot(); e.preventDefault(); }
           break;
@@ -564,13 +590,21 @@ export class Game {
           this.inboxSystem.maybeReceiveRandom();
           this.questSystem.track('talk');
           clickedAvatar.relationship = Math.min(100, clickedAvatar.relationship + 5);
+          const rel = clickedAvatar.relationship;
+          const tier = rel >= 80 ? 'Best Friend' : (rel >= 50 ? 'Close Friend' : (rel >= 20 ? 'Friend' : 'Stranger'));
+          if (rel === 20) this.uiManager.showNotification(`${clickedAvatar.name} is now your Friend!`, 'success');
+          if (rel === 50) this.uiManager.showNotification(`${clickedAvatar.name} is now your Close Friend!`, 'success');
+          if (rel === 80) {
+            this.uiManager.showNotification(`${clickedAvatar.name} is now your Best Friend! They will follow you around!`, 'success');
+            clickedAvatar.isFollower = true;
+          }
           if (Math.random() < 0.08) {
             const giftCoins = 10 + Math.floor(Math.random() * 41);
             this.currencySystem.add(giftCoins);
             this.uiManager.showNotification(`${clickedAvatar.name} gave you ★${giftCoins}!`, 'success');
             this.spawnParticles(tx, ty, '#f4d03f', 8);
           }
-          this.uiManager.showNPCProfile(clickedAvatar,
+          this.uiManager.showNPCProfile(clickedAvatar, tier,
             () => {
               this.player.moveTo(tx, ty, this.room);
               this.achievementSystem.track('walk');
@@ -779,6 +813,10 @@ export class Game {
     document.getElementById('settingWeather')?.addEventListener('change', e => { this.settings.showWeather = e.target.checked; this.saveSettings(); this.uiManager.showNotification(e.target.checked ? 'Weather effects on' : 'Weather effects off'); });
     document.getElementById('settingTimestamps')?.addEventListener('change', e => { this.settings.showTimestamps = e.target.checked; this.chatManager.showTimestamps = e.target.checked; this.saveSettings(); this.chatManager.renderHistory(); this.uiManager.showNotification(e.target.checked ? 'Timestamps on' : 'Timestamps off'); });
     document.getElementById('settingBubbleDuration')?.addEventListener('input', e => { this.settings.chatBubbleDuration = parseFloat(e.target.value); this.saveSettings(); });
+    document.getElementById('logo')?.addEventListener('click', () => {
+      this.achievementSystem.track('secret_click');
+      this.uiManager.showNotification('✨ You found a secret!', 'success');
+    });
     document.getElementById('btnLikeRoom')?.addEventListener('click', () => this.toggleLikeRoom());
     document.getElementById('btnRateRoom')?.addEventListener('click', () => this.uiManager.showRateRoomDialog((stars, review) => this.rateCurrentRoom(stars, review)));
     document.getElementById('btnExportSave')?.addEventListener('click', () => this.exportSave());
@@ -845,15 +883,56 @@ export class Game {
   }
   async takeScreenshot() {
     try {
-      const dataUrl = this.canvas.toDataURL('image/png');
+      let dataUrl = this.canvas.toDataURL('image/png');
+      // Apply filter + frame + sticker on a new canvas
+      if (this.photoFilter !== 'none' || this.photoFrame !== 'none' || this.photoSticker !== 'none') {
+        const img = new Image();
+        img.src = dataUrl;
+        await new Promise(r => img.onload = r);
+        const c = document.createElement('canvas');
+        c.width = img.width; c.height = img.height;
+        const ctx = c.getContext('2d');
+        // Filter
+        const filters = { sepia: 'sepia(0.6)', grayscale: 'grayscale(0.8)', vignette: 'brightness(0.9)', warm: 'sepia(0.3) saturate(1.3)' };
+        ctx.filter = filters[this.photoFilter] || 'none';
+        ctx.drawImage(img, 0, 0);
+        ctx.filter = 'none';
+        // Frame
+        const w = c.width, h = c.height;
+        if (this.photoFrame === 'polaroid') {
+          const pad = Math.min(w, h) * 0.06;
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, w, pad); ctx.fillRect(0, h - pad * 2, w, pad * 2);
+          ctx.fillRect(0, 0, pad, h); ctx.fillRect(w - pad, 0, pad, h);
+        } else if (this.photoFrame === 'film') {
+          ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 8;
+          ctx.strokeRect(4, 4, w - 8, h - 8);
+          for (let i = 0; i < w; i += 20) { ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(i, 0, 10, 6); ctx.fillRect(i, h - 6, 10, 6); }
+        } else if (this.photoFrame === 'rounded') {
+          ctx.globalCompositeOperation = 'destination-in';
+          ctx.beginPath(); ctx.roundRect(0, 0, w, h, 40); ctx.fill();
+          ctx.globalCompositeOperation = 'source-over';
+        } else if (this.photoFrame === 'vintage') {
+          ctx.fillStyle = 'rgba(60,40,20,0.15)'; ctx.fillRect(0, 0, w, h);
+          ctx.strokeStyle = 'rgba(120,80,40,0.4)'; ctx.lineWidth = 12;
+          ctx.strokeRect(6, 6, w - 12, h - 12);
+        }
+        // Sticker
+        const stickers = { heart: '❤️', star: '⭐', sparkle: '✨', cool: '😎' };
+        if (stickers[this.photoSticker]) {
+          ctx.font = `${Math.min(w, h) * 0.12}px serif`;
+          ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+          ctx.fillText(stickers[this.photoSticker], w - 20, 20);
+        }
+        dataUrl = c.toDataURL('image/png');
+      }
       let gallery = [];
       try { gallery = JSON.parse(localStorage.getItem('starlight_gallery')) || []; } catch (e) {}
-      gallery.unshift({ data: dataUrl, date: Date.now() });
+      gallery.unshift({ data: dataUrl, date: Date.now(), filter: this.photoFilter, frame: this.photoFrame, sticker: this.photoSticker });
       if (gallery.length > 10) gallery = gallery.slice(0, 10);
       localStorage.setItem('starlight_gallery', JSON.stringify(gallery));
       this.uiManager.showNotification('Screenshot saved! Press N to view gallery.', 'success');
       this.soundManager.play('click');
-      // Try to copy to clipboard
       try {
         const blob = await (await fetch(dataUrl)).blob();
         await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
@@ -864,19 +943,49 @@ export class Game {
 
   togglePhotoMode() {
     this.photoMode = !this.photoMode;
-    const ui = document.getElementById('uiOverlay');
     const bars = document.getElementById('topBar');
     const toolbar = document.getElementById('toolbar');
     const chat = document.getElementById('chatBar');
     const roomInfo = document.getElementById('roomInfo');
     const notif = document.getElementById('notificationArea');
     const els = [bars, toolbar, chat, roomInfo, notif];
+    let photoHud = document.getElementById('photoHud');
     if (this.photoMode) {
       this.uiManager.closeAllPanels();
       els.forEach(el => { if (el) el.style.opacity = '0'; });
-      this.uiManager.showNotification('Photo Mode — Press P or ESC to exit', 'info');
+      this.uiManager.showNotification('Photo Mode — P=exit  S=screenshot  F=filter  G=frame  T=sticker', 'info', 4000);
+      if (!photoHud) {
+        photoHud = document.createElement('div');
+        photoHud.id = 'photoHud';
+        photoHud.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:1000;';
+        document.body.appendChild(photoHud);
+      }
+      photoHud.innerHTML = `
+        <button id="phFilter" style="padding:8px 14px;background:rgba(0,0,0,0.5);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;">Filter</button>
+        <button id="phFrame" style="padding:8px 14px;background:rgba(0,0,0,0.5);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;">Frame</button>
+        <button id="phSticker" style="padding:8px 14px;background:rgba(0,0,0,0.5);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;">Sticker</button>
+        <button id="phShot" style="padding:8px 14px;background:var(--habbo-accent);color:var(--habbo-dark);border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📸 Snap</button>
+      `;
+      photoHud.style.display = 'flex';
+      document.getElementById('phFilter')?.addEventListener('click', () => {
+        const filters = ['none', 'sepia', 'grayscale', 'vignette', 'warm'];
+        this.photoFilter = filters[(filters.indexOf(this.photoFilter) + 1) % filters.length];
+        this.uiManager.showNotification(`Filter: ${this.photoFilter}`, 'info');
+      });
+      document.getElementById('phFrame')?.addEventListener('click', () => {
+        const frames = ['none', 'polaroid', 'film', 'rounded', 'vintage'];
+        this.photoFrame = frames[(frames.indexOf(this.photoFrame) + 1) % frames.length];
+        this.uiManager.showNotification(`Frame: ${this.photoFrame}`, 'info');
+      });
+      document.getElementById('phSticker')?.addEventListener('click', () => {
+        const stickers = ['none', 'heart', 'star', 'sparkle', 'cool'];
+        this.photoSticker = stickers[(stickers.indexOf(this.photoSticker) + 1) % stickers.length];
+        this.uiManager.showNotification(`Sticker: ${this.photoSticker}`, 'info');
+      });
+      document.getElementById('phShot')?.addEventListener('click', () => this.takeScreenshot());
     } else {
       els.forEach(el => { if (el) el.style.opacity = '1'; });
+      if (photoHud) photoHud.style.display = 'none';
     }
   }
 
@@ -1663,7 +1772,9 @@ export class Game {
       hammock: { action: (player, game) => { player.isSitting = true; player.say('So relaxing... 🌴', game.chatColor, 'emote'); game.soundManager.play('click'); } },
       piano: { action: (player, game) => { const notes = ['🎵 Do', '🎵 Re', '🎵 Mi', '🎵 Fa', '🎵 Sol']; player.say(notes[Math.floor(Math.random() * notes.length)], game.chatColor, 'emote'); game.soundManager.play('buy'); } },
       guitar: { action: (player, game) => { player.say('🎸 *strums*', game.chatColor, 'emote'); game.soundManager.play('buy'); } },
-      fireplace: { action: (player, game) => { player.say('So warm... 🔥', game.chatColor, 'emote'); game.spawnParticles(player.x, player.y, '#e74c3c', 6); } },
+      fireplace: { action: (player, game) => { player.say('So warm... 🔥', game.chatColor, 'emote'); game.spawnParticles(player.x, player.y, '#e74c3c', 6); game.settings.roomEffect = game.settings.roomEffect === 'candlelight' ? 'none' : 'candlelight'; game.uiManager.showNotification(game.settings.roomEffect === 'candlelight' ? 'Candlelight mode on 🕯️' : 'Candlelight mode off'); } },
+      candle: { action: (player, game) => { game.settings.roomEffect = game.settings.roomEffect === 'candlelight' ? 'none' : 'candlelight'; game.uiManager.showNotification(game.settings.roomEffect === 'candlelight' ? 'Candlelight mode on 🕯️' : 'Candlelight mode off'); } },
+      disco_ball: { action: (player, game) => { game.settings.roomEffect = game.settings.roomEffect === 'disco' ? 'none' : 'disco'; game.uiManager.showNotification(game.settings.roomEffect === 'disco' ? 'Disco mode on! 🕺' : 'Disco mode off'); if (game.settings.roomEffect === 'disco' && game.room) game.room.avatars.forEach(a => a.isDancing = true); } },
       fountain: { action: (player, game) => { player.say('So refreshing! 💧', game.chatColor, 'emote'); game.spawnParticles(player.x, player.y, '#87CEEB', 6); } },
       tv: { action: (player, game) => { const shows = ['📺 Breaking News', '📺 Cooking Show', '📺 Cartoons', '📺 Space documentary']; player.say(shows[Math.floor(Math.random() * shows.length)], game.chatColor, 'emote'); game.soundManager.play('click'); } },
       telescope: { action: (player, game) => { player.say('🔭 I see stars!', game.chatColor, 'emote'); game.soundManager.play('click'); } },
@@ -1722,6 +1833,7 @@ export class Game {
       { id: 'dreamy', name: 'Dreamy Clouds', emoji: '☁️' },
     ];
     const current = this.soundManager.currentJukeboxTrack;
+    if (!this.sequencer) this.sequencer = this.soundManager.loadSequencer();
     this.uiManager.showJukeboxPanel(tracks, current, this.soundManager.volume, trackId => {
       this.soundManager.playJukeboxTrack(trackId);
       this.uiManager.showNotification(`Now playing: ${tracks.find(t => t.id === trackId)?.name || 'Music'}`, 'success');
@@ -1735,6 +1847,25 @@ export class Game {
       const pick = shuffled[0].id;
       this.soundManager.playJukeboxTrack(pick);
       this.uiManager.showNotification(`Shuffle: ${shuffled[0].name}`, 'success');
+    }, this.sequencer, (action, s, n) => {
+      if (action === 'tracks' || action === 'composer') {
+        this.sequencer.tab = action;
+        this.openJukebox();
+      } else if (action === 'toggle' && typeof s === 'number' && typeof n === 'number') {
+        this.sequencer.grid[s][n] = this.sequencer.grid[s][n] ? 0 : 1;
+        this.openJukebox();
+      } else if (action === 'clear') {
+        this.sequencer.grid = Array(this.sequencer.steps).fill(null).map(() => [0,0,0,0,0]);
+        this.openJukebox();
+      }
+    }, () => {
+      this.soundManager.playSequencer(this.sequencer);
+      this.uiManager.showNotification('Playing custom track! 🎹', 'success');
+    }, () => {
+      this.soundManager.saveSequencer(this.sequencer);
+      this.uiManager.showNotification('Track saved! 💾', 'success');
+    }, bpm => {
+      this.sequencer.bpm = bpm;
     });
   }
 
@@ -1781,6 +1912,9 @@ export class Game {
       { key: 'R', action: 'Rotate placement' },
       { key: 'M', action: 'Toggle minimap' },
       { key: 'P', action: 'Toggle photo mode' },
+      { key: 'F', action: 'Cycle photo filter' },
+      { key: 'G', action: 'Cycle photo frame' },
+      { key: 'T', action: 'Cycle photo sticker' },
       { key: 'Q', action: 'Toggle quest panel' },
       { key: 'C', action: 'Collection panel' },
       { key: 'N', action: 'Screenshot gallery' },
@@ -1790,6 +1924,8 @@ export class Game {
       { key: 'Click + Drag', action: 'Pan camera' },
       { key: 'Right-click item', action: 'Sell from inventory' },
       { key: 'Double-click', action: 'Quick walk to tile' },
+      { key: 'J', action: 'Jukebox panel' },
+      { key: 'B', action: 'Room bots panel' },
     ]);
   }
 
@@ -1979,6 +2115,23 @@ export class Game {
       this.petSystem.tick(dt);
       this.statsSystem.tick(dt);
       this.eventSystem.update(dt);
+      // Secret achievement: midnight owl
+      const hour = new Date().getHours();
+      if (hour >= 0 && hour < 4 && !this.midnightChecked) {
+        this.midnightChecked = true;
+        this.achievementSystem.track('secret_midnight');
+      }
+      if (hour >= 4) this.midnightChecked = false;
+      // Secret achievement: serial dancer
+      if (this.player && this.player.isDancing) {
+        this.danceTimer += dt;
+        if (this.danceTimer >= 60) {
+          this.danceTimer = 0;
+          this.achievementSystem.track('secret_dance');
+        }
+      } else {
+        this.danceTimer = 0;
+      }
       this.challengeSystem._refreshIfNeeded();
       const challenges = this.challengeSystem.getList ? this.challengeSystem.getList() : [];
       const active = challenges.find(c => !c.completed);
@@ -2087,6 +2240,11 @@ export class Game {
 
     if (!this.room) return;
     ctx.save();
+    // Apply photo filter
+    if (this.photoFilter === 'sepia') ctx.filter = 'sepia(0.6)';
+    else if (this.photoFilter === 'grayscale') ctx.filter = 'grayscale(0.8)';
+    else if (this.photoFilter === 'warm') ctx.filter = 'sepia(0.3) saturate(1.3)';
+    else ctx.filter = 'none';
     ctx.translate(this.width / 2, this.height / 2);
     ctx.scale(this.zoom, this.zoom);
     ctx.translate(-this.width / 2 + this.camera.x + this.screenShake.x, -this.height / 2 + this.camera.y + this.screenShake.y);
@@ -2233,6 +2391,16 @@ export class Game {
     }
 
     ctx.restore();
+    // Vignette filter overlay
+    if (this.photoFilter === 'vignette') {
+      const grad = ctx.createRadialGradient(this.width/2, this.height/2, this.width*0.3, this.width/2, this.height/2, this.width*0.7);
+      grad.addColorStop(0, 'rgba(0,0,0,0)');
+      grad.addColorStop(1, 'rgba(0,0,0,0.5)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, this.width, this.height);
+    }
+    ctx.filter = 'none';
+    this.drawRoomEffects(ctx);
     this.particles.forEach(p => p.draw(ctx));
     if (this.player && this.petSystem) {
       this.petSystem.draw(ctx, this.player.x, this.player.y, this.camera);
@@ -2342,6 +2510,46 @@ export class Game {
         ctx.arc(rx, ry, 1.5, 0, Math.PI * 2);
         ctx.fill();
       }
+    }
+  }
+
+  drawRoomEffects(ctx) {
+    const time = Date.now();
+    const w = this.width, h = this.height;
+    const effect = this.settings.roomEffect;
+
+    if (effect === 'rain') {
+      ctx.strokeStyle = 'rgba(173,216,230,0.4)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 40; i++) {
+        const rx = ((i * 47 + time / 8) % w);
+        const ry = ((i * 31 + time / 2) % h);
+        ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx - 2, ry + 12); ctx.stroke();
+      }
+    } else if (effect === 'snow') {
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      for (let i = 0; i < 30; i++) {
+        const sx = ((i * 73 + time / 20) % w);
+        const sy = ((i * 53 + time / 12) % h);
+        const size = 1.5 + Math.sin(i)*1;
+        ctx.beginPath(); ctx.arc(sx, sy, size, 0, Math.PI*2); ctx.fill();
+      }
+    } else if (effect === 'disco') {
+      for (let i = 0; i < 4; i++) {
+        const angle = (time / 500 + i * Math.PI / 2);
+        const dx = w/2 + Math.cos(angle) * w * 0.4;
+        const dy = h * 0.1 + Math.sin(angle * 0.7) * 50;
+        const grad = ctx.createRadialGradient(dx, dy, 5, dx, dy, 120);
+        const hues = ['255,0,255', '0,255,255', '255,255,0', '0,255,0'];
+        grad.addColorStop(0, `rgba(${hues[i]},0.15)`);
+        grad.addColorStop(1, `rgba(${hues[i]},0)`);
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.arc(dx, dy, 120, 0, Math.PI*2); ctx.fill();
+      }
+    } else if (effect === 'candlelight') {
+      const flicker = 0.08 + Math.sin(time / 150) * 0.03;
+      ctx.fillStyle = `rgba(255,180,80,${flicker})`;
+      ctx.fillRect(0, 0, w, h);
     }
   }
 
